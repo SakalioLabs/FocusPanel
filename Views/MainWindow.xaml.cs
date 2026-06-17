@@ -18,12 +18,12 @@ namespace FocusPanel.Views
         private bool _isExit = false;
         private Screen _currentScreen = null!;
 
-        // Win11 rounded corners for borderless windows
+        // The panel is a right-edge drawer; keep the host window square and let XAML round only the exposed left edge.
         [DllImport("dwmapi.dll", PreserveSig = true)]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
         private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-        private const int DWMWCP_ROUND = 2;
+        private const int DWMWCP_DONOTROUND = 1;
 
         // Foreground window detection
         [DllImport("user32.dll")]
@@ -156,7 +156,7 @@ namespace FocusPanel.Views
                 _currentScreen = Screen.FromHandle(hwnd);
                 PositionAtRightEdge(_currentScreen);
 
-                int cornerPref = DWMWCP_ROUND;
+                int cornerPref = DWMWCP_DONOTROUND;
                 DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPref, sizeof(int));
             }
 

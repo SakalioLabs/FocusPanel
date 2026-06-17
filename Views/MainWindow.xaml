@@ -45,7 +45,7 @@
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
 
-            <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#F2F4F6F8"/>
+            <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFF4F6F8"/>
             <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FFFFFFFF"/>
             <SolidColorBrush x:Key="RailBackgroundBrush" Color="#FFEDEFF3"/>
             <SolidColorBrush x:Key="PanelStrokeBrush" Color="#FFD8DCE3"/>
@@ -98,11 +98,10 @@
                     Width="80"
                     HorizontalAlignment="Right"
                     Background="{StaticResource PanelBackgroundBrush}"
-                    Margin="0,10,10,10"
-                    CornerRadius="18"
-                    Effect="{StaticResource PanelShadow}"
+                    Margin="0,10,0,10"
+                    CornerRadius="18,0,0,18"
                     BorderBrush="{StaticResource PanelStrokeBrush}"
-                    BorderThickness="1"
+                    BorderThickness="1,1,0,1"
                     ClipToBounds="True"
                     AllowDrop="True"
                     MouseEnter="Sidebar_MouseEnter"

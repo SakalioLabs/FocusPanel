@@ -27,6 +27,7 @@
 - Improved the organizer toolbar, popups, empty state, rename dialog, and rescue tools presentation.
 - Refined the Apple-inspired styling after review to reduce excessive transparency, gradients, and heavy shadows in favor of a cleaner Finder-like panel and organizer layout.
 - Reworked the organizer layout after visual QA: removed the nested left action rail, moved organizer actions into a single top toolbar, unified icon sizing/color, and standardized partition card radius, borders, and drag feedback.
+- Fixed right-edge drawer chrome: removed right-side rounded corners, removed outer shadow halo, disabled host-window DWM rounding, and made the drawer background fully opaque.
 
 ### Desktop-Only Panel Behavior
 - Improved panel visibility behavior so it can stay available in the desktop scene while avoiding obstruction of normal foreground applications.
