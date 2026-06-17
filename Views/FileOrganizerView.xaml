@@ -6,56 +6,97 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:vm="clr-namespace:FocusPanel.ViewModels"
              xmlns:converters="clr-namespace:FocusPanel.Converters"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:FileOrganizerViewModel}"
-             d:DesignHeight="700" d:DesignWidth="1000">
+             d:DesignHeight="700"
+             d:DesignWidth="1000">
     <UserControl.Resources>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
         <converters:EqualityConverter x:Key="EqualityConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <converters:BindingProxy x:Key="VmProxy" Data="{Binding}" />
-        <SolidColorBrush x:Key="OrganizerGlassBrush" Color="#FFFFFFFF"/>
-        <SolidColorBrush x:Key="OrganizerGlassStrongBrush" Color="#FFF8F9FB"/>
-        <SolidColorBrush x:Key="OrganizerGlassStrokeBrush" Color="#FFD8DCE3"/>
-        <SolidColorBrush x:Key="OrganizerInkBrush" Color="#FF1D1D1F"/>
-        <SolidColorBrush x:Key="OrganizerSubtleInkBrush" Color="#99000000"/>
-        <SolidColorBrush x:Key="OrganizerHoverBrush" Color="#FFF5F7FA"/>
-        <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#22007AFF"/>
-        <DropShadowEffect x:Key="OrganizerCardShadow" Color="#18000000" BlurRadius="10" ShadowDepth="0" Opacity="0.18"/>
+        <converters:BindingProxy x:Key="VmProxy" Data="{Binding}"/>
 
-        <!-- File Item Style (Grid Item) -->
-        <Style x:Key="FileItemStyle" TargetType="Border">
-            <EventSetter Event="MouseMove" Handler="FileCard_MouseMove"/>
+        <SolidColorBrush x:Key="OrganizerPageBrush" Color="#FFF5F6F8"/>
+        <SolidColorBrush x:Key="OrganizerCardBrush" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="OrganizerCardHeaderBrush" Color="#FFF8F9FB"/>
+        <SolidColorBrush x:Key="OrganizerCardBorderBrush" Color="#FFDDE1E7"/>
+        <SolidColorBrush x:Key="OrganizerHoverBrush" Color="#FFF1F4F8"/>
+        <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#22007AFF"/>
+        <SolidColorBrush x:Key="OrganizerTextBrush" Color="#FF1D1D1F"/>
+        <SolidColorBrush x:Key="OrganizerSubtleTextBrush" Color="#99000000"/>
+        <SolidColorBrush x:Key="OrganizerAccentBrush" Color="#FF6F4BD8"/>
+        <DropShadowEffect x:Key="OrganizerCardShadow" Color="#16000000" BlurRadius="8" ShadowDepth="1" Opacity="0.24"/>
+
+        <Style x:Key="OrganizerIconStyle" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Foreground" Value="{StaticResource OrganizerAccentBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="ToolbarButtonStyle" TargetType="ButtonBase" BasedOn="{StaticResource MaterialDesignIconButton}">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <Style x:Key="PopupPanelStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource OrganizerCardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OrganizerCardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Effect" Value="{StaticResource OrganizerCardShadow}"/>
+        </Style>
+
+        <Style x:Key="PartitionCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource OrganizerCardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OrganizerCardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+            <Setter Property="Effect" Value="{StaticResource OrganizerCardShadow}"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <Style x:Key="FileGridItemStyle" TargetType="Border">
             <EventSetter Event="PreviewMouseLeftButtonDown" Handler="FileCard_PreviewMouseLeftButtonDown"/>
+            <EventSetter Event="MouseMove" Handler="FileCard_MouseMove"/>
             <Setter Property="Width" Value="{Binding DataContext.CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="Height" Value="{Binding DataContext.CardHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="Margin" Value="5"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Background" Value="#00FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#00FFFFFF"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource OrganizerHoverBrush}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource OrganizerGlassStrokeBrush}"/>
-                </Trigger>
-                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource OrganizerSelectedBrush}"/>
-                    <Setter Property="BorderBrush" Value="#FF007AFF"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- File List Item Style (List View) -->
-        <Style x:Key="FileListItemStyle" TargetType="Border">
-            <EventSetter Event="MouseMove" Handler="FileCard_MouseMove"/>
-            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="FileCard_PreviewMouseLeftButtonDown"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="Margin" Value="0,3"/>
+            <Setter Property="Padding" Value="6"/>
             <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Background" Value="#00FFFFFF"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#00FFFFFF"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource OrganizerHoverBrush}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource OrganizerCardBorderBrush}"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource OrganizerSelectedBrush}"/>
+                    <Setter Property="BorderBrush" Value="#FF007AFF"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FileListItemStyle" TargetType="Border">
+            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="FileCard_PreviewMouseLeftButtonDown"/>
+            <EventSetter Event="MouseMove" Handler="FileCard_MouseMove"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Margin" Value="6,2"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource OrganizerHoverBrush}"/>
@@ -67,284 +108,240 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Sidebar Button Style (Simplified) -->
-        <Style x:Key="SidebarButtonStyle" TargetType="ButtonBase" BasedOn="{StaticResource MaterialDesignIconButton}">
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0,8"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
+        <ContextMenu x:Key="FileContextMenu">
+            <MenuItem Header="&#x6253;&#x5F00;"
+                      Command="{Binding Data.OpenFileCommand, Source={StaticResource VmProxy}}"
+                      CommandParameter="{Binding}"/>
+            <MenuItem Header="&#x79FB;&#x52A8;&#x5230;"
+                      ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
+                <MenuItem.ItemContainerStyle>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                        <Setter Property="Header" Value="{Binding Name}"/>
+                        <Setter Property="Command" Value="{Binding Data.AssignToPartitionCommand, Source={StaticResource VmProxy}}"/>
+                        <Setter Property="CommandParameter" Value="{Binding Name}"/>
+                    </Style>
+                </MenuItem.ItemContainerStyle>
+            </MenuItem>
+            <MenuItem Header="&#x6536;&#x7EB3;&#x5230;&#x9762;&#x677F;"
+                      ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
+                <MenuItem.ItemContainerStyle>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                        <Setter Property="Header" Value="{Binding Name}"/>
+                        <Setter Property="Command" Value="{Binding Data.HideFileToPanelCommand, Source={StaticResource VmProxy}}"/>
+                        <Setter Property="CommandParameter" Value="{Binding Name}"/>
+                    </Style>
+                </MenuItem.ItemContainerStyle>
+            </MenuItem>
+            <MenuItem Header="&#x6062;&#x590D;&#x5230;&#x684C;&#x9762;"
+                      Command="{Binding Data.RestoreFileFromPanelCommand, Source={StaticResource VmProxy}}"
+                      CommandParameter="{Binding}"/>
+        </ContextMenu>
 
-        <!-- Sidebar PopupBox Style (Unified) -->
-        <Style x:Key="SidebarPopupBoxStyle" TargetType="materialDesign:PopupBox">
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0,8"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="PlacementMode" Value="RightAndAlignTopEdges"/>
-            <Setter Property="StaysOpen" Value="True"/>
-            <Setter Property="PopupMode" Value="Click"/>
-            <Setter Property="ToolTipService.Placement" Value="Right"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="materialDesign:PopupBox">
-                        <ControlTemplate.Resources>
-                            <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignIconButton}">
-                                <Setter Property="Width" Value="40"/>
-                                <Setter Property="Height" Value="40"/>
-                                <Setter Property="Padding" Value="0"/>
-                                <Setter Property="Margin" Value="0"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                            </Style>
-                        </ControlTemplate.Resources>
-                        <Grid>
-                            <ToggleButton x:Name="Toggle" 
-                                          Content="{TemplateBinding ToggleContent}" 
-                                          ContentTemplate="{TemplateBinding ToggleContentTemplate}"
-                                          IsChecked="{Binding IsPopupOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
-                            <Popup x:Name="PART_Popup" 
-                                   AllowsTransparency="True" 
-                                   PlacementTarget="{Binding ElementName=Toggle}"
-                                   Placement="{TemplateBinding PlacementMode}"
-                                   StaysOpen="False"
-                                   IsOpen="{Binding IsPopupOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                <materialDesign:Card Content="{TemplateBinding PopupContent}" ContentTemplate="{TemplateBinding PopupContentTemplate}" Margin="5" Padding="8"/>
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <DataTemplate x:Key="FileGridTemplate">
+            <Border Style="{StaticResource FileGridItemStyle}"
+                    ToolTip="{Binding FullPath}"
+                    ContextMenu="{StaticResource FileContextMenu}">
+                <Border.InputBindings>
+                    <MouseBinding Gesture="LeftClick"
+                                  Command="{Binding Data.SelectFileCommand, Source={StaticResource VmProxy}}"
+                                  CommandParameter="{Binding}"/>
+                    <MouseBinding Gesture="LeftDoubleClick"
+                                  Command="{Binding Data.OpenFileCommand, Source={StaticResource VmProxy}}"
+                                  CommandParameter="{Binding}"/>
+                </Border.InputBindings>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Image Source="{Binding Icon}"
+                           Width="{Binding Data.IconImageSize, Source={StaticResource VmProxy}}"
+                           Height="{Binding Data.IconImageSize, Source={StaticResource VmProxy}}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           SnapsToDevicePixels="True"/>
+                    <TextBlock Grid.Row="1"
+                               Text="{Binding DisplayName}"
+                               FontSize="12"
+                               Foreground="{StaticResource OrganizerTextBrush}"
+                               TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap"
+                               Margin="0,6,0,0"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
 
-        <!-- Standard Icon Style -->
-        <Style x:Key="SidebarIconStyle" TargetType="materialDesign:PackIcon">
-            <Setter Property="Width" Value="24"/>
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Opacity" Value="0.7"/>
-        </Style>
+        <DataTemplate x:Key="FileListTemplate">
+            <Border Style="{StaticResource FileListItemStyle}"
+                    ToolTip="{Binding FullPath}"
+                    ContextMenu="{StaticResource FileContextMenu}">
+                <Border.InputBindings>
+                    <MouseBinding Gesture="LeftClick"
+                                  Command="{Binding Data.SelectFileCommand, Source={StaticResource VmProxy}}"
+                                  CommandParameter="{Binding}"/>
+                    <MouseBinding Gesture="LeftDoubleClick"
+                                  Command="{Binding Data.OpenFileCommand, Source={StaticResource VmProxy}}"
+                                  CommandParameter="{Binding}"/>
+                </Border.InputBindings>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Image Source="{Binding Icon}"
+                           Width="18"
+                           Height="18"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           SnapsToDevicePixels="True"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding DisplayName}"
+                               FontSize="13"
+                               Foreground="{StaticResource OrganizerTextBrush}"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
 
-        <!-- Partition Style (Masonry Card) -->
-        <Style x:Key="MasonryPartitionStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource OrganizerGlassBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OrganizerGlassStrokeBrush}"/>
-            <Setter Property="CornerRadius" Value="14"/>
-            <Setter Property="Margin" Value="0,0,0,14"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Effect" Value="{StaticResource OrganizerCardShadow}"/>
-            <!-- Auto Height for Content Fit -->
-            <Setter Property="VerticalAlignment" Value="Top"/>
-        </Style>
-
-        <!-- Partition Data Template -->
         <DataTemplate x:Key="PartitionTemplate">
-            <Border Style="{StaticResource MasonryPartitionStyle}"
+            <Border Style="{StaticResource PartitionCardStyle}"
                     AllowDrop="True"
                     Drop="Partition_Drop"
                     DragEnter="Partition_DragEnter"
                     DragOver="Partition_DragOver"
                     DragLeave="Partition_DragLeave">
-                <StackPanel>
-                    <!-- Header -->
-                    <Grid Height="44"
-                          AllowDrop="True"
-                          PreviewMouseLeftButtonDown="PartitionHeader_PreviewMouseLeftButtonDown"
-                          PreviewMouseMove="PartitionHeader_PreviewMouseMove"
-                          Drop="PartitionHeader_Drop">
-                        <Grid.Background>
-                            <SolidColorBrush Color="#FFF8F9FB"/>
-                        </Grid.Background>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="44"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                        <!-- Collapse Toggle -->
-                        <ToggleButton Grid.Column="0" IsChecked="{Binding IsExpanded}" Style="{StaticResource MaterialDesignFlatButton}" Width="30" Height="30" Padding="0" Margin="4,0,0,0" ToolTip="折叠/展开">
-                            <materialDesign:PackIcon Width="16" Height="16">
-                                <materialDesign:PackIcon.Style>
-                                    <Style TargetType="materialDesign:PackIcon">
-                                        <Setter Property="Kind" Value="ChevronDown"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsExpanded}" Value="False">
-                                                <Setter Property="Kind" Value="ChevronRight"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </materialDesign:PackIcon.Style>
-                            </materialDesign:PackIcon>
-                        </ToggleButton>
+                    <Border Grid.Row="0"
+                            Background="{StaticResource OrganizerCardHeaderBrush}"
+                            CornerRadius="10,10,0,0"
+                            BorderBrush="{StaticResource OrganizerCardBorderBrush}"
+                            BorderThickness="0,0,0,1"
+                            AllowDrop="True"
+                            PreviewMouseLeftButtonDown="PartitionHeader_PreviewMouseLeftButtonDown"
+                            PreviewMouseMove="PartitionHeader_PreviewMouseMove"
+                            Drop="PartitionHeader_Drop">
+                        <Grid Margin="10,0,8,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
-                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource OrganizerInkBrush}"/>
-                            <Border Background="#14007AFF" CornerRadius="9" Margin="8,0,0,0" Padding="7,1" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Files.Count}" FontSize="11" Foreground="#FF0066CC"/>
-                            </Border>
-                        </StackPanel>
+                            <ToggleButton Grid.Column="0"
+                                          IsChecked="{Binding IsExpanded}"
+                                          Style="{StaticResource MaterialDesignIconButton}"
+                                          Width="28"
+                                          Height="28"
+                                          Padding="0"
+                                          ToolTip="&#x5C55;&#x5F00;&#x6216;&#x6298;&#x53E0;">
+                                <materialDesign:PackIcon Width="17" Height="17" Foreground="{StaticResource OrganizerAccentBrush}">
+                                    <materialDesign:PackIcon.Style>
+                                        <Style TargetType="materialDesign:PackIcon">
+                                            <Setter Property="Kind" Value="ChevronDown"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsExpanded}" Value="False">
+                                                    <Setter Property="Kind" Value="ChevronRight"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </materialDesign:PackIcon.Style>
+                                </materialDesign:PackIcon>
+                            </ToggleButton>
 
-                        <materialDesign:PopupBox Grid.Column="2" PlacementMode="BottomAndAlignRightEdges" Padding="0" Margin="0,0,8,0" Height="24" Width="24">
-                            <materialDesign:PopupBox.ToggleContent>
-                                <materialDesign:PackIcon Kind="DotsVertical" Width="16" Height="16" Opacity="0.5"/>
-                            </materialDesign:PopupBox.ToggleContent>
-                            <StackPanel>
-                                <Button Command="{Binding DataContext.OpenPartitionFolderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        HorizontalAlignment="Left"
-                                        Style="{StaticResource MaterialDesignFlatButton}">
-                                    <TextBlock Text="Open in Explorer"/>
-                                </Button>
-                                <Button Command="{Binding DataContext.OpenRenameDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        HorizontalAlignment="Left"
-                                        Style="{StaticResource MaterialDesignFlatButton}">
-                                    <TextBlock Text="Rename"/>
-                                </Button>
-                                <Button Command="{Binding DataContext.DeletePartitionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        Visibility="{Binding IsCustom, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                        HorizontalAlignment="Left"
-                                        Style="{StaticResource MaterialDesignFlatButton}">
-                                    <TextBlock Text="Delete"/>
-                                </Button>
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        Margin="8,0,0,0">
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource OrganizerTextBrush}"
+                                           VerticalAlignment="Center"/>
+                                <Border Background="#14007AFF"
+                                        CornerRadius="9"
+                                        Padding="7,1"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Files.Count}"
+                                               FontSize="11"
+                                               Foreground="#FF007AFF"/>
+                                </Border>
                             </StackPanel>
-                        </materialDesign:PopupBox>
-                    </Grid>
 
-                    <!-- Files Content (Collapsible) -->
-                    <ContentControl Content="{Binding}" Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <materialDesign:PopupBox Grid.Column="2"
+                                                     PlacementMode="BottomAndAlignRightEdges"
+                                                     Padding="0"
+                                                     Height="28"
+                                                     Width="28">
+                                <materialDesign:PopupBox.ToggleContent>
+                                    <materialDesign:PackIcon Kind="DotsVertical"
+                                                             Width="18"
+                                                             Height="18"
+                                                             Foreground="{StaticResource OrganizerSubtleTextBrush}"/>
+                                </materialDesign:PopupBox.ToggleContent>
+                                <Border Style="{StaticResource PopupPanelStyle}">
+                                    <StackPanel Width="160">
+                                        <Button Command="{Binding Data.OpenPartitionFolderCommand, Source={StaticResource VmProxy}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                HorizontalContentAlignment="Left"
+                                                Content="&#x6253;&#x5F00;&#x6587;&#x4EF6;&#x5939;"/>
+                                        <Button Command="{Binding Data.OpenRenameDialogCommand, Source={StaticResource VmProxy}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                HorizontalContentAlignment="Left"
+                                                Content="&#x91CD;&#x547D;&#x540D;"/>
+                                        <Button Command="{Binding Data.DeletePartitionCommand, Source={StaticResource VmProxy}}"
+                                                CommandParameter="{Binding}"
+                                                Visibility="{Binding IsCustom, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                HorizontalContentAlignment="Left"
+                                                Content="&#x5220;&#x9664;"/>
+                                    </StackPanel>
+                                </Border>
+                            </materialDesign:PopupBox>
+                        </Grid>
+                    </Border>
+
+                    <ContentControl Grid.Row="1"
+                                    Content="{Binding}"
+                                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ContentControl.Style>
                             <Style TargetType="ContentControl">
                                 <Setter Property="ContentTemplate">
                                     <Setter.Value>
-                                        <!-- Default Grid View -->
                                         <DataTemplate>
-                                            <ItemsControl ItemsSource="{Binding Files}" Margin="4">
+                                            <ItemsControl ItemsSource="{Binding Files}" Margin="6">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
-                                                        <WrapPanel Orientation="Horizontal" />
+                                                        <WrapPanel Orientation="Horizontal"/>
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border Style="{StaticResource FileItemStyle}" ToolTip="{Binding FullPath}">
-                                                            <Border.InputBindings>
-                                                                <MouseBinding Gesture="LeftClick" 
-                                                                              Command="{Binding DataContext.SelectFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                              CommandParameter="{Binding}"/>
-                                                                <MouseBinding Gesture="LeftDoubleClick" 
-                                                                              Command="{Binding DataContext.OpenFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                              CommandParameter="{Binding}"/>
-                                                            </Border.InputBindings>
-                                                            <Border.ContextMenu>
-                                                                <ContextMenu>
-                                                                    <MenuItem Header="Open" Command="{Binding DataContext.OpenFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-                                                                    <MenuItem Header="Move to" ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
-                                                                        <MenuItem.ItemContainerStyle>
-                                                                            <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                                                                                <Setter Property="Header" Value="{Binding Name}"/>
-                                                                                <Setter Property="Command" Value="{Binding Data.AssignToPartitionCommand, Source={StaticResource VmProxy}}"/>
-                                                                                <Setter Property="CommandParameter" Value="{Binding Name}"/>
-                                                                            </Style>
-                                                                        </MenuItem.ItemContainerStyle>
-                                                                    </MenuItem>
-                                                                    <!-- 收纳到面板 -->
-                                                                    <MenuItem Header="收纳到面板" ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
-                                                                        <MenuItem.ItemContainerStyle>
-                                                                            <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                                                                                <Setter Property="Header" Value="{Binding Name}"/>
-                                                                                <Setter Property="Command" Value="{Binding Data.HideFileToPanelCommand, Source={StaticResource VmProxy}}"/>
-                                                                                <Setter Property="CommandParameter" Value="{Binding Name}"/>
-                                                                            </Style>
-                                                                        </MenuItem.ItemContainerStyle>
-                                                                    </MenuItem>
-                                                                    <!-- 取消收纳 -->
-                                                                    <MenuItem Header="取消收纳" Command="{Binding Data.RestoreFileFromPanelCommand, Source={StaticResource VmProxy}}" CommandParameter="{Binding}"/>
-                                                                </ContextMenu>
-                                                            </Border.ContextMenu>
-                                                            
-                                                            <Grid Margin="4">
-                                                                <Grid.RowDefinitions>
-                                                                    <RowDefinition Height="*"/>
-                                                                    <RowDefinition Height="Auto"/>
-                                                                </Grid.RowDefinitions>
-                                                                <Image Grid.Row="0" Source="{Binding Icon}" Width="{Binding DataContext.IconImageSize, RelativeSource={RelativeSource AncestorType=UserControl}}" Height="{Binding DataContext.IconImageSize, RelativeSource={RelativeSource AncestorType=UserControl}}" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" Margin="0,4"/>
-                                                                <TextBlock Grid.Row="1" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" HorizontalAlignment="Center" TextAlignment="Center" FontSize="11" Margin="4,4,4,4" Foreground="{DynamicResource MaterialDesignBody}"/>
-                                                            </Grid>
-                                                        </Border>
-                                                    </DataTemplate>
+                                                    <StaticResource ResourceKey="FileGridTemplate"/>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
                                         </DataTemplate>
                                     </Setter.Value>
                                 </Setter>
                                 <Style.Triggers>
-                                    <!-- List View Template -->
-                                    <DataTrigger Binding="{Binding DataContext.IsListView, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                    <DataTrigger Binding="{Binding Data.IsListView, Source={StaticResource VmProxy}}" Value="True">
                                         <Setter Property="ContentTemplate">
                                             <Setter.Value>
                                                 <DataTemplate>
-                                                    <ItemsControl ItemsSource="{Binding Files}" Margin="4">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <StackPanel Orientation="Vertical" />
-                                                            </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
+                                                    <ItemsControl ItemsSource="{Binding Files}" Margin="0,6,0,8">
                                                         <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <Border Style="{StaticResource FileListItemStyle}" ToolTip="{Binding FullPath}">
-                                                                    <Border.InputBindings>
-                                                                        <MouseBinding Gesture="LeftClick" 
-                                                                                      Command="{Binding DataContext.SelectFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                                      CommandParameter="{Binding}"/>
-                                                                        <MouseBinding Gesture="LeftDoubleClick" 
-                                                                                      Command="{Binding DataContext.OpenFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                                      CommandParameter="{Binding}"/>
-                                                                    </Border.InputBindings>
-                                                                    <Border.ContextMenu>
-                                                                        <ContextMenu>
-                                                                            <MenuItem Header="Open" Command="{Binding DataContext.OpenFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-                                                                            <MenuItem Header="Move to" ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
-                                                                                <MenuItem.ItemContainerStyle>
-                                                                                    <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                                                                                        <Setter Property="Header" Value="{Binding Name}"/>
-                                                                                        <Setter Property="Command" Value="{Binding Data.AssignToPartitionCommand, Source={StaticResource VmProxy}}"/>
-                                                                                        <Setter Property="CommandParameter" Value="{Binding Name}"/>
-                                                                                    </Style>
-                                                                                </MenuItem.ItemContainerStyle>
-                                                                            </MenuItem>
-                                                                    <!-- 收纳到面板 -->
-                                                                    <MenuItem Header="收纳到面板" ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
-                                                                        <MenuItem.ItemContainerStyle>
-                                                                            <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                                                                                <Setter Property="Header" Value="{Binding Name}"/>
-                                                                                <Setter Property="Command" Value="{Binding Data.HideFileToPanelCommand, Source={StaticResource VmProxy}}"/>
-                                                                                <Setter Property="CommandParameter" Value="{Binding Name}"/>
-                                                                            </Style>
-                                                                        </MenuItem.ItemContainerStyle>
-                                                                    </MenuItem>
-                                                                    <!-- 取消收纳 -->
-                                                                    <MenuItem Header="取消收纳" Command="{Binding Data.RestoreFileFromPanelCommand, Source={StaticResource VmProxy}}" CommandParameter="{Binding}"/>
-                                                                        </ContextMenu>
-                                                                    </Border.ContextMenu>
-                                                                    
-                                                                    <Grid Margin="8,0">
-                                                                        <Grid.ColumnDefinitions>
-                                                                            <ColumnDefinition Width="32"/>
-                                                                            <ColumnDefinition Width="*"/>
-                                                                        </Grid.ColumnDefinitions>
-                                                                        <Image Grid.Column="0" Source="{Binding Icon}" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource MaterialDesignBody}"/>
-                                                                    </Grid>
-                                                                </Border>
-                                                            </DataTemplate>
+                                                            <StaticResource ResourceKey="FileListTemplate"/>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
                                                 </DataTemplate>
@@ -355,217 +352,223 @@
                             </Style>
                         </ContentControl.Style>
                     </ContentControl>
-                </StackPanel>
+                </Grid>
             </Border>
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Background="#FFF3F5F8">
-        <Grid.ColumnDefinitions>
-            <!-- Left Sidebar (Tools) -->
-            <ColumnDefinition Width="Auto"/>
-            <!-- Content Area -->
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Grid Background="{StaticResource OrganizerPageBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <!-- Left Sidebar Toolbar -->
-        <Border Grid.Column="0" 
-                Background="#FFFFFFFF" 
-                BorderThickness="1" 
-                BorderBrush="{StaticResource OrganizerGlassStrokeBrush}"
-                CornerRadius="14"
-                Effect="{StaticResource OrganizerCardShadow}"
-                Padding="8,16"
-                Width="56"
-                Margin="0,0,12,0">
+        <Border Grid.Row="0"
+                Background="{StaticResource OrganizerCardBrush}"
+                BorderBrush="{StaticResource OrganizerCardBorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-                <!-- Top: Brand / Home -->
-                <StackPanel Grid.Row="0" HorizontalAlignment="Center">
-                     <materialDesign:PackIcon Kind="FolderStarOutline" Style="{StaticResource SidebarIconStyle}" Foreground="#FF007AFF" Opacity="1" Margin="0,0,0,16"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="FolderStarOutline"
+                                             Style="{StaticResource OrganizerIconStyle}"
+                                             Foreground="#FF007AFF"/>
+                    <TextBlock Text="&#x6536;&#x7EB3;&#x76D2;"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource OrganizerTextBrush}"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"/>
                 </StackPanel>
 
-                <!-- Middle: Actions -->
-                <StackPanel Grid.Row="1" HorizontalAlignment="Center">
-                    <!-- View Switcher -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Grid>
-                        <ToggleButton x:Name="ViewToggle" Style="{StaticResource MaterialDesignIconButton}" Width="40" Height="40" Padding="0" Margin="0,8">
-                            <materialDesign:PackIcon Kind="ViewModule" Style="{StaticResource SidebarIconStyle}"/>
+                        <ToggleButton x:Name="ViewToggle"
+                                      Style="{StaticResource ToolbarButtonStyle}"
+                                      ToolTip="&#x89C6;&#x56FE;&#x9009;&#x9879;">
+                            <materialDesign:PackIcon Kind="ViewModule" Style="{StaticResource OrganizerIconStyle}"/>
                         </ToggleButton>
-                        <Popup IsOpen="{Binding IsChecked, ElementName=ViewToggle, Mode=TwoWay}" 
+                        <Popup IsOpen="{Binding IsChecked, ElementName=ViewToggle, Mode=TwoWay}"
                                PlacementTarget="{Binding ElementName=ViewToggle}"
-                               Placement="Right"
+                               Placement="Bottom"
                                StaysOpen="False"
                                AllowsTransparency="True">
-                             <materialDesign:Card Margin="5" Padding="8">
-                                <StackPanel Width="220" Margin="12">
-                                    <!-- View Mode -->
-                                    <TextBlock Text="视图模式" Style="{StaticResource MaterialDesignCaptionTextBlock}" Opacity="0.6" Margin="0,0,0,8"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
+                                <StackPanel Width="220">
+                                    <TextBlock Text="&#x89C6;&#x56FE;&#x6A21;&#x5F0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                                         <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
                                                      IsChecked="{Binding IsListView, Converter={StaticResource InverseBoolConverter}}"
-                                                     Content="网格" Margin="0,0,8,0"/>
+                                                     Content="&#x7F51;&#x683C;"
+                                                     Margin="0,0,8,0"/>
                                         <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
                                                      IsChecked="{Binding IsListView}"
-                                                     Content="列表"/>
+                                                     Content="&#x5217;&#x8868;"/>
                                     </StackPanel>
 
-                                    <!-- Icon Size -->
-                                    <TextBlock Text="面板图标大小" Style="{StaticResource MaterialDesignCaptionTextBlock}" Opacity="0.6" Margin="0,0,0,8"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <TextBlock Text="&#x9762;&#x677F;&#x56FE;&#x6807;&#x5927;&#x5C0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                                         <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
-                                                     Content="小"
+                                                     Content="&#x5C0F;"
                                                      IsChecked="{Binding IconScale, Converter={StaticResource EqualityConverter}, ConverterParameter=0.8}"
-                                                     Command="{Binding SetIconScaleCommand}" CommandParameter="0.8"
+                                                     Command="{Binding SetIconScaleCommand}"
+                                                     CommandParameter="0.8"
                                                      Margin="0,0,8,0"/>
                                         <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
-                                                     Content="中"
+                                                     Content="&#x4E2D;"
                                                      IsChecked="{Binding IconScale, Converter={StaticResource EqualityConverter}, ConverterParameter=1.0}"
-                                                     Command="{Binding SetIconScaleCommand}" CommandParameter="1.0"
+                                                     Command="{Binding SetIconScaleCommand}"
+                                                     CommandParameter="1.0"
                                                      Margin="0,0,8,0"/>
                                         <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
-                                                     Content="大"
+                                                     Content="&#x5927;"
                                                      IsChecked="{Binding IconScale, Converter={StaticResource EqualityConverter}, ConverterParameter=1.2}"
-                                                     Command="{Binding SetIconScaleCommand}" CommandParameter="1.2"/>
+                                                     Command="{Binding SetIconScaleCommand}"
+                                                     CommandParameter="1.2"/>
                                     </StackPanel>
-                                    
-                                    <!-- Partition Mode -->
-                                    <TextBlock Text="分组方式" Style="{StaticResource MaterialDesignCaptionTextBlock}" Opacity="0.6" Margin="0,0,0,8"/>
+
+                                    <TextBlock Text="&#x5206;&#x7EC4;&#x65B9;&#x5F0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
                                     <RadioButton Style="{StaticResource MaterialDesignRadioButton}"
                                                  IsChecked="{Binding IsPersonalizedView}"
                                                  Command="{Binding ToggleViewCommand}"
-                                                 Content="自定义收纳盒" Margin="0,4"/>
+                                                 Content="&#x81EA;&#x5B9A;&#x4E49;&#x6536;&#x7EB3;&#x76D2;"
+                                                 Margin="0,3"/>
                                     <RadioButton Style="{StaticResource MaterialDesignRadioButton}"
                                                  IsChecked="{Binding IsPersonalizedView, Converter={StaticResource InverseBoolConverter}}"
                                                  Command="{Binding ToggleViewCommand}"
-                                                 Content="时间线" Margin="0,4"/>
+                                                 Content="&#x65F6;&#x95F4;&#x7EBF;"
+                                                 Margin="0,3"/>
                                 </StackPanel>
-                            </materialDesign:Card>
+                            </Border>
                         </Popup>
                     </Grid>
-                    
-                    <!-- Add Partition -->
+
                     <Grid Visibility="{Binding IsPersonalizedView, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ToggleButton x:Name="AddPartitionToggle" Style="{StaticResource MaterialDesignIconButton}" Width="40" Height="40" Padding="0" Margin="0,8">
-                            <materialDesign:PackIcon Kind="PlusBoxOutline" Style="{StaticResource SidebarIconStyle}"/>
+                        <ToggleButton x:Name="AddPartitionToggle"
+                                      Style="{StaticResource ToolbarButtonStyle}"
+                                      ToolTip="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;">
+                            <materialDesign:PackIcon Kind="PlusBoxOutline" Style="{StaticResource OrganizerIconStyle}"/>
                         </ToggleButton>
                         <Popup IsOpen="{Binding IsChecked, ElementName=AddPartitionToggle, Mode=TwoWay}"
                                PlacementTarget="{Binding ElementName=AddPartitionToggle}"
-                               Placement="Right"
+                               Placement="Bottom"
                                StaysOpen="False"
                                AllowsTransparency="True">
-                             <materialDesign:Card Margin="5" Padding="8">
-                                <StackPanel Width="200" FocusManager.FocusedElement="{Binding ElementName=PartitionNameBox}">
-                                     <TextBlock Text="新建收纳盒" FontWeight="Bold" Margin="12,12,12,8"/>
-                                     <TextBox x:Name="PartitionNameBox" Text="{Binding NewPartitionName, UpdateSourceTrigger=PropertyChanged}" 
-                                             materialDesign:HintAssist.Hint="名称"
+                            <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
+                                <StackPanel Width="210" FocusManager.FocusedElement="{Binding ElementName=PartitionNameBox}">
+                                    <TextBlock Text="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                    <TextBox x:Name="PartitionNameBox"
+                                             Text="{Binding NewPartitionName, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="&#x540D;&#x79F0;"
                                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Padding="8" Margin="12,0,12,8"/>
-                                    <Button Command="{Binding CreatePartitionCommand}" Content="创建" Style="{StaticResource MaterialDesignFlatButton}" Margin="12,0,12,12"/>
+                                             Padding="8"
+                                             Margin="0,0,0,10"/>
+                                    <Button Command="{Binding CreatePartitionCommand}"
+                                            Content="&#x521B;&#x5EFA;"
+                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            HorizontalAlignment="Right"/>
                                 </StackPanel>
-                            </materialDesign:Card>
+                            </Border>
                         </Popup>
                     </Grid>
 
-                    <Button Command="{Binding OrganizeAllCommand}" Style="{StaticResource SidebarButtonStyle}" ToolTip="自动整理全部文件" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="AutoFix" Style="{StaticResource SidebarIconStyle}"/>
+                    <Button Command="{Binding OrganizeAllCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="&#x81EA;&#x52A8;&#x6574;&#x7406;">
+                        <materialDesign:PackIcon Kind="AutoFix" Style="{StaticResource OrganizerIconStyle}"/>
+                    </Button>
+                    <Button Command="{Binding RefreshCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="&#x5237;&#x65B0;">
+                        <materialDesign:PackIcon Kind="Refresh" Style="{StaticResource OrganizerIconStyle}"/>
+                    </Button>
+                    <Button Command="{Binding ToggleDesktopCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="{Binding OrganizeButtonText}">
+                        <materialDesign:PackIcon Kind="{Binding OrganizeButtonIcon}" Style="{StaticResource OrganizerIconStyle}"/>
                     </Button>
 
-                    <Button Command="{Binding RefreshCommand}" Style="{StaticResource SidebarButtonStyle}" ToolTip="刷新" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="Refresh" Style="{StaticResource SidebarIconStyle}"/>
-                    </Button>
-
-                    <Button Command="{Binding ToggleDesktopCommand}" Style="{StaticResource SidebarButtonStyle}" ToolTip="{Binding OrganizeButtonText}" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="{Binding OrganizeButtonIcon}" Style="{StaticResource SidebarIconStyle}"/>
-                    </Button>
-                </StackPanel>
-
-                <!-- Bottom: Advanced -->
-                <StackPanel Grid.Row="2" HorizontalAlignment="Center">
-                     <Grid>
-                        <ToggleButton x:Name="RescueToggle" Style="{StaticResource MaterialDesignIconButton}" Width="40" Height="40" Padding="0" Margin="0,8">
-                             <materialDesign:PackIcon Kind="ToolboxOutline" Style="{StaticResource SidebarIconStyle}"/>
+                    <Grid>
+                        <ToggleButton x:Name="RescueToggle"
+                                      Style="{StaticResource ToolbarButtonStyle}"
+                                      ToolTip="&#x4FEE;&#x590D;&#x5DE5;&#x5177;">
+                            <materialDesign:PackIcon Kind="ToolboxOutline" Style="{StaticResource OrganizerIconStyle}"/>
                         </ToggleButton>
                         <Popup IsOpen="{Binding IsChecked, ElementName=RescueToggle, Mode=TwoWay}"
                                PlacementTarget="{Binding ElementName=RescueToggle}"
-                               Placement="Right"
+                               Placement="Bottom"
                                StaysOpen="False"
                                AllowsTransparency="True">
-                             <materialDesign:Card Margin="5" Padding="16">
-                                <StackPanel>
-                                    <TextBlock Text="修复工具" Style="{StaticResource MaterialDesignCaptionTextBlock}" Opacity="0.6" Margin="0,0,0,12"/>
-                                    
-                                    <Button Command="{Binding RescueCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,8" HorizontalContentAlignment="Left" Padding="8" BorderBrush="{DynamicResource MaterialDesignDivider}">
-                                        <Grid Width="150">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="32"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <materialDesign:PackIcon Kind="Lifebuoy" Width="20" Height="20" Foreground="#F44336" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="恢复桌面" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                                        </Grid>
-                                    </Button>
-                                    
-                                    <Button Command="{Binding SmartRescueCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" HorizontalContentAlignment="Left" Padding="8" BorderBrush="{DynamicResource MaterialDesignDivider}">
-                                        <Grid Width="150">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="32"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <materialDesign:PackIcon Kind="Brain" Width="20" Height="20" Foreground="#673AB7" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="智能分组" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                                        </Grid>
-                                    </Button>
+                            <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
+                                <StackPanel Width="170">
+                                    <TextBlock Text="&#x4FEE;&#x590D;&#x5DE5;&#x5177;" FontSize="12" Opacity="0.65" Margin="0,0,0,10"/>
+                                    <Button Command="{Binding RescueCommand}"
+                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="8"
+                                            Content="&#x6062;&#x590D;&#x684C;&#x9762;"/>
+                                    <Button Command="{Binding SmartRescueCommand}"
+                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="8"
+                                            Content="&#x667A;&#x80FD;&#x5206;&#x7EC4;"/>
                                 </StackPanel>
-                            </materialDesign:Card>
+                            </Border>
                         </Popup>
                     </Grid>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Main Content Area (Masonry Layout) -->
-        <Grid Grid.Column="1">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14" PreviewMouseLeftButtonDown="ContentArea_PreviewMouseLeftButtonDown">
+        <Grid Grid.Row="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          Padding="14"
+                          PreviewMouseLeftButtonDown="ContentArea_PreviewMouseLeftButtonDown">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Column 0 Drop Area -->
-                    <Border Grid.Column="0" Background="Transparent" AllowDrop="True" Drop="Column_Drop" Tag="0" Margin="0,0,8,0">
-                        <ItemsControl ItemsSource="{Binding PartitionsCol1}" ItemTemplate="{StaticResource PartitionTemplate}">
-                             <ItemsControl.ItemsPanel>
-                                 <ItemsPanelTemplate>
-                                     <StackPanel Orientation="Vertical"/>
-                                 </ItemsPanelTemplate>
-                             </ItemsControl.ItemsPanel>
+                    <Border Grid.Column="0"
+                            Background="Transparent"
+                            AllowDrop="True"
+                            Drop="Column_Drop"
+                            Tag="0"
+                            Margin="0,0,7,0">
+                        <ItemsControl ItemsSource="{Binding PartitionsCol1}"
+                                      ItemTemplate="{StaticResource PartitionTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                         </ItemsControl>
                     </Border>
 
-                    <!-- Column 1 Drop Area -->
-                    <Border Grid.Column="1" Background="Transparent" AllowDrop="True" Drop="Column_Drop" Tag="1" Margin="8,0,0,0">
-                        <ItemsControl ItemsSource="{Binding PartitionsCol2}" ItemTemplate="{StaticResource PartitionTemplate}">
-                             <ItemsControl.ItemsPanel>
-                                 <ItemsPanelTemplate>
-                                     <StackPanel Orientation="Vertical"/>
-                                 </ItemsPanelTemplate>
-                             </ItemsControl.ItemsPanel>
+                    <Border Grid.Column="1"
+                            Background="Transparent"
+                            AllowDrop="True"
+                            Drop="Column_Drop"
+                            Tag="1"
+                            Margin="7,0,0,0">
+                        <ItemsControl ItemsSource="{Binding PartitionsCol2}"
+                                      ItemTemplate="{StaticResource PartitionTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                         </ItemsControl>
                     </Border>
                 </Grid>
             </ScrollViewer>
 
-            <!-- Empty State Overlay -->
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                       FontSize="16" Opacity="0.4" TextAlignment="Center"
-                       Foreground="{DynamicResource MaterialDesignBody}">
+            <TextBlock HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       FontSize="14"
+                       Opacity="0.45"
+                       TextAlignment="Center"
+                       Foreground="{StaticResource OrganizerTextBrush}">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -576,32 +579,40 @@
                         </Style.Triggers>
                     </Style>
                 </TextBlock.Style>
-                <Run Text="点击 + 创建一个收纳盒"/>
-                <LineBreak/>
-                <Run Text="或从桌面拖入文件"/>
+                <Run Text="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;&#xFF0C;&#x6216;&#x628A;&#x684C;&#x9762;&#x6587;&#x4EF6;&#x62D6;&#x8FDB;&#x6765;"/>
             </TextBlock>
         </Grid>
 
-        <!-- Rename Dialog Overlay -->
-        <Grid Grid.ColumnSpan="2" 
-              Visibility="{Binding IsRenameDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}" 
+        <Grid Grid.RowSpan="2"
+              Visibility="{Binding IsRenameDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}"
               Background="#50000000"
               Panel.ZIndex="999">
-             <materialDesign:Card Width="300" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="16">
+            <Border Width="320"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Style="{StaticResource PopupPanelStyle}">
                 <StackPanel>
-                    <TextBlock Text="重命名收纳盒" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,16"/>
-                    <TextBox x:Name="RenameTextBox" 
-                             Text="{Binding RenamePartitionName, UpdateSourceTrigger=PropertyChanged}" 
+                    <TextBlock Text="&#x91CD;&#x547D;&#x540D;&#x6536;&#x7EB3;&#x76D2;"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,14"/>
+                    <TextBox x:Name="RenameTextBox"
+                             Text="{Binding RenamePartitionName, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             materialDesign:HintAssist.Hint="新名称"
-                             Margin="0,0,0,16"
+                             materialDesign:HintAssist.Hint="&#x65B0;&#x540D;&#x79F0;"
+                             Margin="0,0,0,14"
                              FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" Content="取消" Command="{Binding CancelRenameCommand}" Margin="0,0,8,0"/>
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" Content="重命名" Command="{Binding ConfirmRenameCommand}"/>
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Content="&#x53D6;&#x6D88;"
+                                Command="{Binding CancelRenameCommand}"
+                                Margin="0,0,8,0"/>
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Content="&#x91CD;&#x547D;&#x540D;"
+                                Command="{Binding ConfirmRenameCommand}"/>
                     </StackPanel>
                 </StackPanel>
-            </materialDesign:Card>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

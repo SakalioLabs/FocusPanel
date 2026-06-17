@@ -112,13 +112,13 @@ public partial class FileOrganizerView : UserControl
              {
                  // Insert After (Bottom Line)
                  border.BorderBrush = (Brush)FindResource("PrimaryHueMidBrush");
-                 border.BorderThickness = new Thickness(0, 0, 0, 4); 
+                 border.BorderThickness = new Thickness(1, 1, 1, 4);
              }
              else
              {
                  // Insert Before (Top Line)
                  border.BorderBrush = (Brush)FindResource("PrimaryHueMidBrush");
-                 border.BorderThickness = new Thickness(0, 4, 0, 0); 
+                 border.BorderThickness = new Thickness(1, 4, 1, 1);
              }
         }
     }
@@ -146,7 +146,7 @@ public partial class FileOrganizerView : UserControl
         if (sender is Border border)
         {
             border.BorderBrush = (Brush)FindResource("PrimaryHueMidBrush");
-            border.Background = (Brush)FindResource("MaterialDesignPaper"); // Ensure background is opaque for hit testing
+            border.Background = (Brush)FindResource("OrganizerCardBrush");
             // Keep thickness same to avoid jitter
         }
     }
@@ -155,9 +155,7 @@ public partial class FileOrganizerView : UserControl
     {
         if (sender is Border border)
         {
-            border.BorderBrush = Brushes.Transparent;
-            border.BorderThickness = new Thickness(0, 2, 0, 0); // Restore default
-            border.Background = Brushes.Transparent; 
+            RestorePartitionChrome(border);
         }
         
         // Stop scroll if leaving the container (optional, but safer)
@@ -179,9 +177,7 @@ public partial class FileOrganizerView : UserControl
             Point p = e.GetPosition(border);
             bool isBottom = p.Y > (border.ActualHeight / 2);
 
-            border.BorderBrush = Brushes.Transparent;
-            border.BorderThickness = new Thickness(0, 2, 0, 0); // Restore default
-            border.Background = Brushes.Transparent;
+            RestorePartitionChrome(border);
 
             // Debug
             System.Diagnostics.Debug.WriteLine("Partition_Drop Fired");
@@ -216,6 +212,13 @@ public partial class FileOrganizerView : UserControl
                 }
             }
         }
+    }
+
+    private void RestorePartitionChrome(Border border)
+    {
+        border.BorderBrush = (Brush)FindResource("OrganizerCardBorderBrush");
+        border.BorderThickness = new Thickness(1);
+        border.Background = (Brush)FindResource("OrganizerCardBrush");
     }
 
     // Partition Reordering
