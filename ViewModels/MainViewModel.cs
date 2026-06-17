@@ -30,7 +30,8 @@ public partial class MainViewModel : ObservableObject
         timer.Tick += (s, e) => CurrentTime = DateTime.Now;
         timer.Start();
 
-        CurrentViewModel = new TasksViewModel();
+        _fileOrganizerViewModel = new FileOrganizerViewModel();
+        CurrentViewModel = _fileOrganizerViewModel;
         // Enable auto-startup by default
         AutoStartupService.SetStartup(true);
     }
@@ -40,9 +41,6 @@ public partial class MainViewModel : ObservableObject
     {
         switch (destination)
         {
-            case "Dashboard":
-                CurrentViewModel = new DashboardViewModel();
-                break;
             case "Tasks":
                 CurrentViewModel = new TasksViewModel();
                 break;

@@ -9,8 +9,7 @@ namespace FocusPanel.Services;
 
 public class SmartOrganizerService
 {
-    private const int TimeGapThresholdHours = 4; // Break sessions if gap > 4 hours
-    private const double NameSimilarityThreshold = 0.6; // 60% similarity
+    private const int TimeGapThresholdHours = 4;
 
     public event Action<string> ProgressChanged;
     public event Action<int, int> ProgressUpdated;

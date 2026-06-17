@@ -275,14 +275,16 @@ public partial class FileOrganizerViewModel : ObservableObject
                     }
                 }
 
-                // 4. Distribute Files
-                var allFiles = _fileService.Files;
+                // 4. Distribute Files - 使用 AllFiles（包含已收纳的文件）
+                var allFiles = _fileService.AllFiles;
                 var uncategorizedFiles = new List<DesktopFile>();
 
                 foreach (var file in allFiles)
                 {
-                    var pref = dbPrefs.FirstOrDefault(p => p.FilePath == file.Name); 
-                    
+                    var pref = dbPrefs.FirstOrDefault(p => p.FilePath == file.Name);
+
+                    // 已收纳的文件（IsHiddenFromDesktop=true）显示在对应分区
+                    // 未收纳的文件如果没有分区则显示在 Unsorted
                     if (pref != null && partitionMap.ContainsKey(pref.PartitionName))
                     {
                         partitionMap[pref.PartitionName].Files.Add(file);
@@ -298,30 +300,7 @@ public partial class FileOrganizerViewModel : ObservableObject
                 // 5. Create Default Categories (if needed)
                 // Removed per user request: No default partitions, only custom ones.
                 
-                if (IsPersonalizedView)
-                {
-                     // Only add uncategorized files if they are not assigned to any partition.
-                     // But user said "don't need default partitions", so we should probably put them in a catch-all "Unsorted" 
-                     // OR just not show them? Usually "not showing" is dangerous (lost files).
-                     // The safest approach is a single "Unsorted" group.
-                     
-                     if (uncategorizedFiles.Any())
-                     {
-                          var unsortedName = "Unsorted";
-                          if (partitionMap.TryGetValue(unsortedName, out var p))
-                          {
-                              foreach (var file in uncategorizedFiles) p.Files.Add(file);
-                          }
-                          else
-                          {
-                              // Create a transient "Unsorted" partition for display only
-                              p = new PartitionViewModel(unsortedName) { IsCustom = false, ColumnIndex = 0 };
-                              foreach (var file in uncategorizedFiles) p.Files.Add(file);
-                              viewModels.Add(p);
-                          }
-                     }
-                }
-                else // Timeline View (Keep as is)
+                if (!IsPersonalizedView) // Timeline View (Keep as is)
                 {
                      var dateGroups = allFiles.GroupBy(f => f.DateGroup).OrderBy(g => GetDateGroupSortOrder(g.Key));
                      int i = 0;
@@ -416,6 +395,28 @@ public partial class FileOrganizerViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OrganizeAll()
+    {
+        if (_fileService.Files.Count == 0)
+        {
+            System.Windows.MessageBox.Show("No unorganized files on desktop.", "Organize All", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            return;
+        }
+
+        var result = System.Windows.MessageBox.Show(
+            $"This will organize all {_fileService.Files.Count} visible desktop files into partitions by type (Images, Documents, etc.)\n\nContinue?",
+            "Organize All Files",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Question);
+
+        if (result == System.Windows.MessageBoxResult.Yes)
+        {
+            await _fileService.OrganizeAllFiles();
+            BuildPartitions();
+        }
+    }
+
+    [RelayCommand]
     private async Task SmartRescue()
     {
         // 1. Ask user for confirmation
@@ -442,10 +443,23 @@ public partial class FileOrganizerViewModel : ObservableObject
         }
 
         await smartOrganizer.OrganizeByRelevance(recoveredPath);
-        
-        System.Windows.MessageBox.Show("Smart Organization Complete! Check the 'FocusPanel_Recovered' folder.");
+        await Refresh();
+        BuildPartitions();
+        System.Windows.MessageBox.Show("Smart Organization Complete! The panel has been refreshed.");
     }
     
+    [RelayCommand]
+    private void OpenPartitionFolder(PartitionViewModel partition)
+    {
+        if (partition == null) return;
+        try
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            System.Diagnostics.Process.Start("explorer.exe", desktopPath);
+        }
+        catch { }
+    }
+
     [RelayCommand]
     private void CreatePartition(string name = null)
     {
@@ -532,6 +546,14 @@ public partial class FileOrganizerViewModel : ObservableObject
     {
         if (partition == null) return;
 
+        var result = System.Windows.MessageBox.Show(
+            $"Delete partition \"{partition.Name}\"?\nFiles in this partition will become unorganized but remain on desktop.",
+            "Delete Partition",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes) return;
+
         using (var context = new AppDbContext())
         {
             var p = context.DesktopPartitions.FirstOrDefault(dp => dp.Name == partition.Name);
@@ -550,9 +572,57 @@ public partial class FileOrganizerViewModel : ObservableObject
     private void SelectFile(DesktopFile file)
     {
         if (file == null) return;
-        if (SelectedFile != null) SelectedFile.IsSelected = false;
+        if (SelectedFile != null && SelectedFile != file) SelectedFile.IsSelected = false;
         SelectedFile = file;
         SelectedFile.IsSelected = true;
+    }
+
+    public void ToggleFileSelection(DesktopFile file)
+    {
+        if (file == null) return;
+        file.IsSelected = !file.IsSelected;
+        if (file.IsSelected)
+            SelectedFile = file;
+        else if (SelectedFile == file)
+            SelectedFile = AllPartitions.SelectMany(p => p.Files).FirstOrDefault(f => f.IsSelected);
+    }
+
+    public void DeselectAllFiles()
+    {
+        foreach (var file in AllPartitions.SelectMany(p => p.Files).Where(f => f.IsSelected))
+        {
+            file.IsSelected = false;
+        }
+        SelectedFile = null;
+    }
+
+    public IEnumerable<DesktopFile> SelectedFiles =>
+        AllPartitions.SelectMany(p => p.Files).Where(f => f.IsSelected);
+
+    [RelayCommand]
+    private async Task BatchHideToPanel(string partitionName)
+    {
+        var selected = SelectedFiles.ToList();
+        if (selected.Count == 0 || string.IsNullOrEmpty(partitionName)) return;
+
+        foreach (var file in selected)
+        {
+            await _fileService.HideFileFromDesktop(file.Name, partitionName);
+        }
+        BuildPartitions();
+    }
+
+    [RelayCommand]
+    private async Task BatchRestoreFromPanel()
+    {
+        var selected = SelectedFiles.ToList();
+        if (selected.Count == 0) return;
+
+        foreach (var file in selected)
+        {
+            await _fileService.RestoreFileToDesktop(file.Name);
+        }
+        BuildPartitions();
     }
 
     [RelayCommand]
@@ -688,7 +758,7 @@ public partial class FileOrganizerViewModel : ObservableObject
             {
                 if (pref == null)
                 {
-                    pref = new DesktopFilePreference { FilePath = SelectedFile.Name };
+                    pref = new DesktopFilePreference { FilePath = SelectedFile.Name, PartitionName = "" };
                     context.DesktopFilePreferences.Add(pref);
                 }
                 pref.PartitionName = partitionName;
@@ -701,6 +771,28 @@ public partial class FileOrganizerViewModel : ObservableObject
             }
             context.SaveChanges();
         }
+        BuildPartitions();
+    }
+
+    [RelayCommand]
+    private async Task HideFileToPanel(string partitionName)
+    {
+        if (SelectedFile == null) return;
+
+        string fileName = SelectedFile.Name;
+        string targetPartition = partitionName ?? "Unsorted";
+
+        await _fileService.HideFileFromDesktop(fileName, targetPartition);
+        BuildPartitions();
+    }
+
+    [RelayCommand]
+    private async Task RestoreFileFromPanel()
+    {
+        if (SelectedFile == null) return;
+
+        string fileName = SelectedFile.Name;
+        await _fileService.RestoreFileToDesktop(fileName);
         BuildPartitions();
     }
 
@@ -755,7 +847,7 @@ public partial class FileOrganizerViewModel : ObservableObject
                 var pref = context.DesktopFilePreferences.FirstOrDefault(fp => fp.FilePath == fileName);
                 if (pref == null)
                 {
-                    pref = new DesktopFilePreference { FilePath = fileName };
+                    pref = new DesktopFilePreference { FilePath = fileName, PartitionName = "" };
                     context.DesktopFilePreferences.Add(pref);
                 }
                 pref.PartitionName = targetPartitionName;
@@ -780,31 +872,4 @@ public partial class FileOrganizerViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void RestoreDatabase()
-    {
-        var result = System.Windows.MessageBox.Show(
-            "Are you sure you want to restore the database from the latest backup?\nThe application will restart immediately.",
-            "Restore Database",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Warning);
-
-        if (result == System.Windows.MessageBoxResult.Yes)
-        {
-            try
-            {
-                string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
-                if (exePath.EndsWith(".dll"))
-                {
-                    exePath = exePath.Replace(".dll", ".exe");
-                }
-                System.Diagnostics.Process.Start(exePath, "--restore");
-                System.Windows.Application.Current.Shutdown();
-            }
-            catch (Exception ex)
-            {
-                 System.Windows.MessageBox.Show($"Failed to restart: {ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-            }
-        }
-    }
 }

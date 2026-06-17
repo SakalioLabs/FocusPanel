@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using FocusPanel.ViewModels;
+using FocusPanel.Services;
 using Microsoft.Win32;
 
 namespace FocusPanel.Views
@@ -44,6 +45,8 @@ namespace FocusPanel.Views
         private IntPtr _winEventHook;
         private WinEventDelegate _winEventDelegate;
         private bool _hiddenToTray;
+        private DesktopOverlayWindow? _desktopOverlay;
+        private bool _isDesktopFileDragging;
 
         public MainWindow()
         {
@@ -73,6 +76,7 @@ namespace FocusPanel.Views
             {
                 _currentScreen = null!;
                 RefreshScreenAndReposition();
+                _desktopOverlay?.RefreshOverlay();
             };
         }
 
@@ -162,6 +166,7 @@ namespace FocusPanel.Views
                 IntPtr.Zero, _winEventDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
 
             // Initial state: check if desktop is currently foreground
+            ShowDesktopOverlay();
             UpdateVisibilityForForeground();
         }
 
@@ -171,6 +176,13 @@ namespace FocusPanel.Views
             {
                 UnhookWinEvent(_winEventHook);
                 _winEventHook = IntPtr.Zero;
+            }
+
+            if (_isExit)
+            {
+                FileOrganizerService.OverlayRefreshRequested -= RefreshDesktopOverlay;
+                _desktopOverlay?.Close();
+                _desktopOverlay = null;
             }
 
             if (!_isExit)
@@ -197,6 +209,20 @@ namespace FocusPanel.Views
             System.Windows.Application.Current.Shutdown();
         }
 
+        private void ShowDesktopOverlay()
+        {
+            if (_desktopOverlay != null) return;
+
+            _desktopOverlay = new DesktopOverlayWindow();
+            FileOrganizerService.OverlayRefreshRequested += RefreshDesktopOverlay;
+            _desktopOverlay.Show();
+        }
+
+        private void RefreshDesktopOverlay()
+        {
+            Dispatcher.BeginInvoke(() => _desktopOverlay?.RefreshOverlay());
+        }
+
         private void Sidebar_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
             double rightEdge = GetRightEdgeTarget();
@@ -221,6 +247,8 @@ namespace FocusPanel.Views
 
         public void CollapseSidebar()
         {
+            if (_isDesktopFileDragging) return;
+
             double rightEdge = GetRightEdgeTarget();
 
             SidebarBorder.Width = 80;
@@ -237,6 +265,8 @@ namespace FocusPanel.Views
 
         private void Sidebar_DragLeave(object sender, System.Windows.DragEventArgs e)
         {
+            if (_isDesktopFileDragging) return;
+
             var pos = e.GetPosition(SidebarBorder);
             if (pos.X < 0 || pos.X >= SidebarBorder.ActualWidth || pos.Y < 0 || pos.Y >= SidebarBorder.ActualHeight)
             {
@@ -267,6 +297,9 @@ namespace FocusPanel.Views
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
         private void UpdateVisibilityForForeground()
         {
             IntPtr fg = GetForegroundWindow();
@@ -277,6 +310,13 @@ namespace FocusPanel.Views
             }
 
             if (fg == GetWindowHandle())
+            {
+                ShowOnDesktop();
+                return;
+            }
+
+            GetWindowThreadProcessId(fg, out uint foregroundProcessId);
+            if (foregroundProcessId == Environment.ProcessId)
             {
                 ShowOnDesktop();
                 return;
@@ -308,11 +348,42 @@ namespace FocusPanel.Views
 
         private void HideFromApps()
         {
+            if (_isDesktopFileDragging) return;
             if (SidebarBorder.IsKeyboardFocusWithin) return;
             if (Visibility != Visibility.Visible) return;
 
             Topmost = false;
             Visibility = Visibility.Collapsed;
+        }
+
+        public void BeginDesktopFileDrag()
+        {
+            _isDesktopFileDragging = true;
+            if (DataContext is MainViewModel vm && vm.NavigateCommand.CanExecute("Files"))
+                vm.NavigateCommand.Execute("Files");
+
+            _hiddenToTray = false;
+            Visibility = Visibility.Visible;
+            Show();
+            Topmost = true;
+            ExpandSidebar();
+        }
+
+        public void EndDesktopFileDrag()
+        {
+            _isDesktopFileDragging = false;
+            UpdateVisibilityForForeground();
+        }
+
+        private void ExpandSidebar()
+        {
+            double rightEdge = GetRightEdgeTarget();
+
+            SidebarBorder.Width = 800;
+            Width = 800;
+            Left = rightEdge - 800;
+            HeaderGrid.Opacity = 1;
+            ContentArea.Opacity = 1;
         }
     }
 }

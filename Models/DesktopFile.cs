@@ -38,6 +38,15 @@ public partial class DesktopFile : ObservableObject
     [ObservableProperty]
     private bool isSelected;
 
+    [ObservableProperty]
+    private bool isHidden; // 是否已收纳（桌面隐藏）
+
+    [ObservableProperty]
+    private double desktopX;
+
+    [ObservableProperty]
+    private double desktopY;
+
     public string Category => !string.IsNullOrEmpty(CustomPartition) ? CustomPartition : FileType;
 
     public string DateGroup

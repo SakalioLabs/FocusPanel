@@ -13,53 +13,71 @@ namespace FocusPanel.Services;
 
 public class FileOrganizerService
 {
+    public static event Action? OverlayRefreshRequested;
+
     private readonly string _desktopPath;
-    private readonly string _storagePath;
-    private FileSystemWatcher _watcher;
+    /// <summary>Storage folder ON desktop: Desktop\.FocusPanel\ — same disk = instant move</summary>
+    private readonly string _storageRoot;
+    private FileSystemWatcher _desktopWatcher;
     private FileSystemWatcher _storageWatcher;
 
-    // 完整的文件列表（包含已收纳的文件，用于面板显示）
+    /// <summary>All files: desktop visible + stored in .FocusPanel</summary>
     public ObservableCollection<DesktopFile> AllFiles { get; private set; } = new();
 
-    // 仅桌面可见文件（未收纳的）
+    /// <summary>Only desktop-root visible files (not stored)</summary>
     public ObservableCollection<DesktopFile> Files { get; private set; } = new();
 
     public event Action FilesChanged;
 
     private System.Threading.Timer _debounceTimer;
-    private const int DebounceInterval = 500; // ms
-
-    // 用于快速查找的字典
-    private readonly Dictionary<string, DesktopFile> _fileMap = new(StringComparer.OrdinalIgnoreCase);
+    private const int DebounceInterval = 500;
 
     public FileOrganizerService()
     {
         _desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        // Deprecated storage path, checking for restoration
-        _storagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FocusPanel", "DesktopStorage");
+        _storageRoot = Path.Combine(_desktopPath, ".FocusPanel");
 
-        InitializeWatcher();
-        // Initial scan
+        InitializeWatchers();
         RefreshFilesDebounced();
     }
 
-    private void InitializeWatcher()
+    private void InitializeWatchers()
     {
-        _watcher = new FileSystemWatcher(_desktopPath);
-        _watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
-        _watcher.Created += OnChanged;
-        _watcher.Deleted += OnChanged;
-        _watcher.Renamed += OnRenamed;
-        _watcher.EnableRaisingEvents = true;
+        // Watch desktop root for visible file changes
+        _desktopWatcher = new FileSystemWatcher(_desktopPath)
+        {
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+        };
+        _desktopWatcher.Created += OnChanged;
+        _desktopWatcher.Deleted += OnChanged;
+        _desktopWatcher.Renamed += OnRenamed;
+        _desktopWatcher.EnableRaisingEvents = true;
+
+        // Watch storage folder for internal changes (moves between partitions, etc.)
+        if (Directory.Exists(_storageRoot))
+        {
+            _storageWatcher = new FileSystemWatcher(_storageRoot)
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite,
+                IncludeSubdirectories = true
+            };
+            _storageWatcher.Created += (s, e) => RefreshFilesDebounced();
+            _storageWatcher.Deleted += (s, e) => RefreshFilesDebounced();
+            _storageWatcher.Renamed += (s, e) => RefreshFilesDebounced();
+            _storageWatcher.EnableRaisingEvents = true;
+        }
     }
 
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
+        // Ignore changes inside the storage folder from the desktop watcher
+        if (e.FullPath.StartsWith(_storageRoot, StringComparison.OrdinalIgnoreCase)) return;
         RefreshFilesDebounced();
     }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
+        if (e.FullPath.StartsWith(_storageRoot, StringComparison.OrdinalIgnoreCase)) return;
         RefreshFilesDebounced();
     }
 
@@ -68,178 +86,239 @@ public class FileOrganizerService
         _debounceTimer?.Dispose();
         _debounceTimer = new System.Threading.Timer(_ =>
         {
-            Application.Current.Dispatcher.Invoke(async () => await RefreshFiles());
+            Application.Current.Dispatcher.Invoke(async () =>
+            {
+                await RefreshFiles();
+                await AutoOrganizeIfEnabled();
+            });
         }, null, DebounceInterval, System.Threading.Timeout.Infinite);
     }
 
-    // 从数据库加载已收纳文件的路径集合
-    private HashSet<string> GetHiddenFilePaths()
+    private async Task AutoOrganizeIfEnabled()
     {
-        var hiddenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            using var context = new AppDbContext();
+            var config = context.AppConfigs.Find("FileOrganizer_AutoOrganize");
+            if (config != null && bool.TryParse(config.Value, out var enable) && enable && Files.Count > 0)
+            {
+                await OrganizeAllFiles();
+                FilesChanged?.Invoke();
+            }
+        }
+        catch { }
+    }
+
+    private sealed record DesktopPreferenceSnapshot(string PartitionName, bool IsHidden, double? X, double? Y);
+
+    private Dictionary<string, DesktopPreferenceSnapshot> LoadDesktopPreferences()
+    {
+        var map = new Dictionary<string, DesktopPreferenceSnapshot>(StringComparer.OrdinalIgnoreCase);
         try
         {
             using var context = new AppDbContext();
             context.EnsureSchema();
-            var prefs = context.DesktopFilePreferences
-                .Where(p => p.IsHiddenFromDesktop)
-                .ToList();
-
-            foreach (var pref in prefs)
-            {
-                hiddenPaths.Add(pref.FilePath);
-            }
+            foreach (var pref in context.DesktopFilePreferences)
+                map[pref.FilePath] = new DesktopPreferenceSnapshot(
+                    pref.PartitionName ?? "",
+                    pref.IsHiddenFromDesktop,
+                    pref.DesktopX,
+                    pref.DesktopY);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading hidden files: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"LoadDesktopPreferences error: {ex.Message}");
         }
-        return hiddenPaths;
+        return map;
     }
 
     public async Task RefreshFiles()
     {
         try
         {
-            var hiddenPaths = await Task.Run(() => GetHiddenFilePaths());
+            var preferences = await Task.Run(() => LoadDesktopPreferences());
 
             var files = await Task.Run(() =>
             {
                 var fileList = new List<DesktopFile>();
+                var desktopRootFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                // Scan Desktop
+                // 1. Scan desktop root — all files here are visible
                 if (Directory.Exists(_desktopPath))
                 {
-                    var dtInfo = new DirectoryInfo(_desktopPath);
-                    var allFiles = dtInfo.GetFiles().Where(f =>
-                        (!f.Attributes.HasFlag(FileAttributes.Hidden) || hiddenPaths.Contains(f.Name)) &&
-                        !f.Name.Equals("desktop.ini", StringComparison.OrdinalIgnoreCase)).ToList();
-
-                    // PERFORMANCE GUARD: If too many files, skip icon loading to prevent freeze
-                    bool skipIcons = allFiles.Count > 500;
-
-                    foreach (var file in allFiles)
+                    foreach (var file in new DirectoryInfo(_desktopPath).GetFiles())
                     {
-                        var desktopFile = CreateDesktopFile(file);
+                        if (file.Name.Equals("desktop.ini", StringComparison.OrdinalIgnoreCase)) continue;
+                        preferences.TryGetValue(file.Name, out var pref);
+                        bool isCollected = pref?.IsHidden ?? false;
+                        if (!isCollected && IsSystemHidden(file.Attributes)) continue;
+                        desktopRootFiles.Add(file.Name);
 
-                        // 检查是否已收纳
-                        desktopFile.IsHidden = hiddenPaths.Contains(file.Name);
-
-                        if (!skipIcons)
-                        {
-                            try
-                            {
-                                // Load icon in background thread
-                                desktopFile.Icon = IconHelper.GetIcon(file.FullName, true);
-                            }
-                            catch { }
-                        }
-
-                        fileList.Add(desktopFile);
+                        var df = BuildDesktopFile(file.FullName, file.Name, file.Extension,
+                            file.Length, file.CreationTime, ClassifyFile(file), isCollected, pref?.X, pref?.Y, fileList.Count);
+                        try { df.Icon = IconHelper.GetIcon(file.FullName, true); } catch { }
+                        fileList.Add(df);
                     }
-                    foreach (var dir in dtInfo.GetDirectories())
+
+                    foreach (var dir in new DirectoryInfo(_desktopPath).GetDirectories())
                     {
-                        if (dir.Attributes.HasFlag(FileAttributes.Hidden) && !hiddenPaths.Contains(dir.Name)) continue;
+                        // Skip our storage folder
+                        if (dir.Name.Equals(".FocusPanel", StringComparison.OrdinalIgnoreCase)) continue;
+                        preferences.TryGetValue(dir.Name, out var pref);
+                        bool isCollected = pref?.IsHidden ?? false;
+                        if (!isCollected && IsSystemHidden(dir.Attributes)) continue;
+                        desktopRootFiles.Add(dir.Name);
 
-                        var folderFile = CreateFolderFile(dir);
-
-                        // 检查是否已收纳
-                        folderFile.IsHidden = hiddenPaths.Contains(dir.Name);
-
-                        if (!skipIcons)
-                        {
-                            try
-                            {
-                                folderFile.Icon = IconHelper.GetIcon(dir.FullName, true);
-                            }
-                            catch { }
-                        }
-
-                        fileList.Add(folderFile);
+                        var df = BuildDesktopFile(dir.FullName, dir.Name, "", 0,
+                            dir.CreationTime, "Folder", isCollected, pref?.X, pref?.Y, fileList.Count);
+                        try { df.Icon = IconHelper.GetIcon(dir.FullName, true); } catch { }
+                        fileList.Add(df);
                     }
                 }
+
+                // 2. Scan storage folder — files here are "收纳" (hidden)
+                if (Directory.Exists(_storageRoot))
+                {
+                    foreach (var partitionDir in Directory.GetDirectories(_storageRoot))
+                    {
+                        string partitionName = Path.GetFileName(partitionDir);
+
+                        foreach (var filePath in Directory.GetFiles(partitionDir))
+                        {
+                            var fi = new FileInfo(filePath);
+                            // If a file with same name is on desktop root, skip (desktop version wins)
+                            if (desktopRootFiles.Contains(fi.Name)) continue;
+
+                            preferences.TryGetValue(fi.Name, out var pref);
+                            var df = BuildDesktopFile(fi.FullName, fi.Name, fi.Extension,
+                                fi.Length, fi.CreationTime, ClassifyFile(fi), true, pref?.X, pref?.Y, fileList.Count);
+                            try { df.Icon = IconHelper.GetIcon(fi.FullName, true); } catch { }
+                            fileList.Add(df);
+                        }
+
+                        foreach (var dirPath in Directory.GetDirectories(partitionDir))
+                        {
+                            var di = new DirectoryInfo(dirPath);
+                            if (desktopRootFiles.Contains(di.Name)) continue;
+
+                            preferences.TryGetValue(di.Name, out var pref);
+                            var df = BuildDesktopFile(di.FullName, di.Name, "", 0,
+                                di.CreationTime, "Folder", true, pref?.X, pref?.Y, fileList.Count);
+                            try { df.Icon = IconHelper.GetIcon(di.FullName, true); } catch { }
+                            fileList.Add(df);
+                        }
+                    }
+                }
+
+                // 3. Clean up DB: remove records for files no longer in storage
+                CleanStalePreferences(preferences, fileList);
 
                 return fileList.OrderByDescending(f => f.FileType == "Folder").ThenBy(f => f.Name).ToList();
             });
 
-            // 增量更新：找到变化并更新，而不是全量替换
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                UpdateFilesIncremental(files, hiddenPaths);
+                UpdateFilesIncremental(files);
+                ApplyCollectedIconState();
                 FilesChanged?.Invoke();
             });
         }
         catch (Exception ex)
         {
-            // Handle error (e.g. permission denied)
-            System.Diagnostics.Debug.WriteLine($"Error refreshing files: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"RefreshFiles error: {ex.Message}");
         }
     }
 
-    // 增量更新文件列表
-    private void UpdateFilesIncremental(List<DesktopFile> newFiles, HashSet<string> hiddenPaths)
+    private void CleanStalePreferences(Dictionary<string, DesktopPreferenceSnapshot> preferences, List<DesktopFile> currentFiles)
+    {
+        var currentNames = new HashSet<string>(
+            currentFiles.Where(f => f.IsHidden).Select(f => f.Name),
+            StringComparer.OrdinalIgnoreCase);
+
+        var stale = preferences.Where(p => p.Value.IsHidden && !currentNames.Contains(p.Key)).Select(p => p.Key).ToList();
+        if (stale.Count == 0) return;
+
+        try
+        {
+            using var context = new AppDbContext();
+            foreach (var name in stale)
+            {
+                var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == name);
+                if (pref != null)
+                {
+                    pref.IsHiddenFromDesktop = false;
+                }
+            }
+            context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"CleanStalePreferences error: {ex.Message}");
+        }
+    }
+
+    private static DesktopFile BuildDesktopFile(string fullPath, string name, string ext,
+        long size, DateTime created, string fileType, bool isHidden, double? desktopX, double? desktopY, int index)
+    {
+        double fallbackX = 16 + (index / 7) * 104;
+        double fallbackY = 16 + (index % 7) * 112;
+
+        return new DesktopFile
+        {
+            Name = name,
+            FullPath = fullPath,
+            Extension = ext,
+            Size = size,
+            CreatedAt = created,
+            FileType = fileType,
+            IsHidden = isHidden,
+            DesktopX = desktopX ?? fallbackX,
+            DesktopY = desktopY ?? fallbackY
+        };
+    }
+
+    private void UpdateFilesIncremental(List<DesktopFile> newFiles)
     {
         var newFileMap = new Dictionary<string, DesktopFile>(StringComparer.OrdinalIgnoreCase);
-        foreach (var f in newFiles)
-        {
-            newFileMap[f.Name] = f;
-        }
+        foreach (var f in newFiles) newFileMap[f.Name] = f;
 
-        // 1. 更新现有文件和添加新文件
         for (int i = AllFiles.Count - 1; i >= 0; i--)
         {
             var existing = AllFiles[i];
             if (newFileMap.TryGetValue(existing.Name, out var newFile))
             {
-                // 更新现有文件属性
                 existing.Icon = newFile.Icon;
                 existing.Size = newFile.Size;
+                existing.FullPath = newFile.FullPath;
                 existing.IsHidden = newFile.IsHidden;
                 newFileMap.Remove(existing.Name);
             }
             else
             {
-                // 文件已从桌面删除
                 AllFiles.RemoveAt(i);
             }
         }
 
-        // 2. 添加新文件
         foreach (var newFile in newFileMap.Values)
-        {
             AllFiles.Add(newFile);
-        }
 
-        // 3. 更新 Files 集合（仅未收纳的文件）- 桌面可见
+        // Files = only visible (desktop-root, not stored)
         var visibleFiles = AllFiles.Where(f => !f.IsHidden).ToList();
-
-        // 移除不再可见的
         for (int i = Files.Count - 1; i >= 0; i--)
         {
-            var f = Files[i];
-            if (!visibleFiles.Any(v => v.Name == f.Name))
-            {
+            if (!visibleFiles.Any(v => v.Name == Files[i].Name))
                 Files.RemoveAt(i);
-            }
         }
-
-        // 添加新出现的可见文件
         foreach (var vf in visibleFiles)
         {
             if (!Files.Any(f => f.Name == vf.Name))
-            {
                 Files.Add(vf);
-            }
-        }
-
-        // 更新映射字典
-        _fileMap.Clear();
-        foreach (var f in AllFiles)
-        {
-            _fileMap[f.Name] = f;
         }
     }
 
-    // 收纳文件：设置 IsHiddenFromDesktop = true，并更新桌面图标
+    // ============================================================
+    // 收纳：桌面根目录 → .FocusPanel/{partition}/  (同磁盘瞬移)
+    // ============================================================
     public async Task HideFileFromDesktop(string fileName, string partitionName)
     {
         await Task.Run(() =>
@@ -250,57 +329,46 @@ public class FileOrganizerService
             var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == fileName);
             if (pref == null)
             {
-                pref = new DesktopFilePreference { FilePath = fileName };
+                pref = new DesktopFilePreference { FilePath = fileName, PartitionName = "" };
                 context.DesktopFilePreferences.Add(pref);
             }
-
             pref.PartitionName = partitionName;
             pref.IsHiddenFromDesktop = true;
 
-            // 如果分区不存在，创建它
             if (!string.IsNullOrEmpty(partitionName) && !context.DesktopPartitions.Any(dp => dp.Name == partitionName))
             {
                 int maxOrder = context.DesktopPartitions.Any() ? context.DesktopPartitions.Max(dp => dp.OrderIndex) : -1;
                 context.DesktopPartitions.Add(new DesktopPartition { Name = partitionName, OrderIndex = maxOrder + 1 });
             }
-
             context.SaveChanges();
         });
 
-        // 设置文件 Hidden 属性，真正隐藏桌面图标
-        try
-        {
-            string fullPath = Path.Combine(_desktopPath, fileName);
-            if (File.Exists(fullPath) || Directory.Exists(fullPath))
-                File.SetAttributes(fullPath, File.GetAttributes(fullPath) | FileAttributes.Hidden);
-        }
-        catch { }
-
-        // 更新内存中的文件状态
-        if (_fileMap.TryGetValue(fileName, out var file))
+        // Update memory
+        if (AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile file)
         {
             file.IsHidden = true;
-
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                // 从 Files 集合中移除（桌面不可见）
-                var visibleFile = Files.FirstOrDefault(f => f.Name == fileName);
-                if (visibleFile != null)
-                {
-                    Files.Remove(visibleFile);
-                }
-
-                FilesChanged?.Invoke();
-            });
+            file.FullPath = Path.Combine(_desktopPath, fileName);
         }
 
-        // 清除该文件的图标缓存，强制重新加载
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            var vf = Files.FirstOrDefault(f => f.Name == fileName);
+            if (vf != null) Files.Remove(vf);
+            FilesChanged?.Invoke();
+        });
+
         IconHelper.ClearCache(fileName);
+        DesktopHelper.HideDesktopItem(fileName);
+        OverlayRefreshRequested?.Invoke();
     }
 
-    // 取消收纳：恢复桌面显示
-    public async Task RestoreFileToDesktop(string fileName)
+    // ============================================================
+    // 取消收纳：.FocusPanel/{partition}/ → 桌面根目录
+    // ============================================================
+    public async Task RestoreFileToDesktop(string fileName, double? desktopX = null, double? desktopY = null)
     {
+        string partitionName = "";
+
         await Task.Run(() =>
         {
             using var context = new AppDbContext();
@@ -309,40 +377,59 @@ public class FileOrganizerService
             var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == fileName);
             if (pref != null)
             {
+                partitionName = pref.PartitionName ?? "";
+            }
+
+            string srcDir = Path.Combine(_storageRoot, string.IsNullOrEmpty(partitionName) ? "Unsorted" : partitionName);
+            string srcPath = Path.Combine(srcDir, fileName);
+            string destPath = Path.Combine(_desktopPath, fileName);
+
+            if ((File.Exists(srcPath) || Directory.Exists(srcPath)) && (File.Exists(destPath) || Directory.Exists(destPath)))
+            {
+                string name = Path.GetFileNameWithoutExtension(fileName);
+                string ext = Path.GetExtension(fileName);
+                int count = 1;
+                while (File.Exists(destPath) || Directory.Exists(destPath))
+                    destPath = Path.Combine(_desktopPath, $"{name} ({count++}){ext}");
+            }
+
+            if (File.Exists(srcPath))
+                File.Move(srcPath, destPath);
+            else if (Directory.Exists(srcPath))
+                Directory.Move(srcPath, destPath);
+
+            if (pref != null)
+            {
                 pref.IsHiddenFromDesktop = false;
+                if (desktopX.HasValue) pref.DesktopX = desktopX.Value;
+                if (desktopY.HasValue) pref.DesktopY = desktopY.Value;
                 context.SaveChanges();
             }
         });
 
-        // 移除文件 Hidden 属性，恢复桌面图标
-        try
-        {
-            string fullPath = Path.Combine(_desktopPath, fileName);
-            if (File.Exists(fullPath) || Directory.Exists(fullPath))
-                File.SetAttributes(fullPath, File.GetAttributes(fullPath) & ~FileAttributes.Hidden);
-        }
-        catch { }
-
-        // 更新内存中的文件状态
-        if (_fileMap.TryGetValue(fileName, out var file))
+        // Update memory
+        if (AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile file)
         {
             file.IsHidden = false;
-
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                // 添加回 Files 集合（桌面可见）
-                if (!Files.Any(f => f.Name == fileName))
-                {
-                    Files.Add(file);
-                }
-
-                FilesChanged?.Invoke();
-            });
+            file.FullPath = Path.Combine(_desktopPath, fileName);
+            if (desktopX.HasValue) file.DesktopX = desktopX.Value;
+            if (desktopY.HasValue) file.DesktopY = desktopY.Value;
         }
+
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            if (!Files.Any(f => f.Name == fileName) && AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile df)
+                Files.Add(df);
+            FilesChanged?.Invoke();
+        });
+
+        DesktopHelper.ShowDesktopItem(fileName);
+        await Task.Delay(200);
+        ApplyCollectedIconState();
+        OverlayRefreshRequested?.Invoke();
     }
 
-    // 移动文件到其他分区（保留隐藏状态）
-    public async Task MoveToPartition(string fileName, string newPartitionName)
+    public async Task SaveDesktopPosition(string fileName, double desktopX, double desktopY)
     {
         await Task.Run(() =>
         {
@@ -352,114 +439,162 @@ public class FileOrganizerService
             var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == fileName);
             if (pref == null)
             {
-                pref = new DesktopFilePreference { FilePath = fileName };
+                pref = new DesktopFilePreference { FilePath = fileName, PartitionName = "" };
                 context.DesktopFilePreferences.Add(pref);
             }
 
-            pref.PartitionName = newPartitionName;
-            // 保持 IsHiddenFromDesktop 不变
+            pref.DesktopX = desktopX;
+            pref.DesktopY = desktopY;
+            context.SaveChanges();
+        });
 
-            // 如果分区不存在，创建它
+        if (AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile allFile)
+        {
+            allFile.DesktopX = desktopX;
+            allFile.DesktopY = desktopY;
+        }
+
+        if (Files.FirstOrDefault(f => f.Name == fileName) is DesktopFile visibleFile)
+        {
+            visibleFile.DesktopX = desktopX;
+            visibleFile.DesktopY = desktopY;
+        }
+    }
+
+    // 跨分区移动（存储目录内）
+    public async Task MoveToPartition(string fileName, string newPartitionName)
+    {
+        string oldPartition = "";
+
+        await Task.Run(() =>
+        {
+            using var context = new AppDbContext();
+            context.EnsureSchema();
+
+            var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == fileName);
+            bool isStored = pref?.IsHiddenFromDesktop ?? false;
+            oldPartition = pref?.PartitionName ?? "";
+
+            if (pref == null)
+            {
+                pref = new DesktopFilePreference { FilePath = fileName, PartitionName = "" };
+                context.DesktopFilePreferences.Add(pref);
+            }
+            pref.PartitionName = newPartitionName;
+
             if (!string.IsNullOrEmpty(newPartitionName) && !context.DesktopPartitions.Any(dp => dp.Name == newPartitionName))
             {
                 int maxOrder = context.DesktopPartitions.Any() ? context.DesktopPartitions.Max(dp => dp.OrderIndex) : -1;
                 context.DesktopPartitions.Add(new DesktopPartition { Name = newPartitionName, OrderIndex = maxOrder + 1 });
             }
-
             context.SaveChanges();
+
+            // Legacy stored files may still live under .FocusPanel. New collected files
+            // stay in Desktop root and only update their partition metadata.
+            if (isStored && !string.IsNullOrEmpty(oldPartition))
+            {
+                string srcDir = Path.Combine(_storageRoot, oldPartition);
+                string srcPath = Path.Combine(srcDir, fileName);
+                if (File.Exists(srcPath) || Directory.Exists(srcPath))
+                {
+                    string destDir = Path.Combine(_storageRoot, string.IsNullOrEmpty(newPartitionName) ? "Unsorted" : newPartitionName);
+                    if (!Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
+                    string destPath = Path.Combine(destDir, fileName);
+
+                    if (File.Exists(srcPath))
+                        File.Move(srcPath, destPath);
+                    else if (Directory.Exists(srcPath))
+                        Directory.Move(srcPath, destPath);
+                }
+            }
         });
 
-        // 触发 UI 更新
+        DesktopHelper.HideDesktopItem(fileName);
         FilesChanged?.Invoke();
+        OverlayRefreshRequested?.Invoke();
     }
 
-    private DesktopFile CreateDesktopFile(FileInfo file)
+    // ============================================================
+    // Helpers
+    // ============================================================
+
+    private static string ClassifyFile(FileInfo file)
     {
-        string type = "File";
         string ext = file.Extension.ToLower();
-        if (new[] { ".jpg", ".png", ".gif", ".bmp", ".jpeg", ".svg", ".webp" }.Contains(ext)) type = "Image";
-        else if (new[] { ".doc", ".docx", ".pdf", ".txt", ".md", ".rtf", ".xls", ".xlsx", ".ppt", ".pptx" }.Contains(ext)) type = "Document";
-        else if (new[] { ".exe", ".lnk", ".msi", ".bat", ".cmd" }.Contains(ext)) type = "Application";
-        else if (new[] { ".mp4", ".avi", ".mkv", ".mov", ".wmv" }.Contains(ext)) type = "Video";
-        else if (new[] { ".mp3", ".wav", ".flac", ".aac" }.Contains(ext)) type = "Audio";
-        else if (new[] { ".zip", ".rar", ".7z", ".tar", ".gz" }.Contains(ext)) type = "Archive";
-
-        return new DesktopFile
-        {
-            Name = file.Name,
-            FullPath = file.FullName,
-            Extension = file.Extension,
-            Size = file.Length,
-            CreatedAt = file.CreationTime,
-            FileType = type
-        };
+        if (new[] { ".jpg", ".png", ".gif", ".bmp", ".jpeg", ".svg", ".webp" }.Contains(ext)) return "Image";
+        if (new[] { ".doc", ".docx", ".pdf", ".txt", ".md", ".rtf", ".xls", ".xlsx", ".ppt", ".pptx" }.Contains(ext)) return "Document";
+        if (new[] { ".exe", ".lnk", ".msi", ".bat", ".cmd" }.Contains(ext)) return "Application";
+        if (new[] { ".mp4", ".avi", ".mkv", ".mov", ".wmv" }.Contains(ext)) return "Video";
+        if (new[] { ".mp3", ".wav", ".flac", ".aac" }.Contains(ext)) return "Audio";
+        if (new[] { ".zip", ".rar", ".7z", ".tar", ".gz" }.Contains(ext)) return "Archive";
+        return "File";
     }
 
-    private DesktopFile CreateFolderFile(DirectoryInfo dir)
+    public static string ClassifyFileStatic(string extension)
     {
-        return new DesktopFile
+        string ext = extension.ToLower();
+        if (new[] { ".jpg", ".png", ".gif", ".bmp", ".jpeg", ".svg", ".webp" }.Contains(ext)) return "Image";
+        if (new[] { ".doc", ".docx", ".pdf", ".txt", ".md", ".rtf", ".xls", ".xlsx", ".ppt", ".pptx" }.Contains(ext)) return "Document";
+        if (new[] { ".exe", ".lnk", ".msi", ".bat", ".cmd" }.Contains(ext)) return "Application";
+        if (new[] { ".mp4", ".avi", ".mkv", ".mov", ".wmv" }.Contains(ext)) return "Video";
+        if (new[] { ".mp3", ".wav", ".flac", ".aac" }.Contains(ext)) return "Audio";
+        if (new[] { ".zip", ".rar", ".7z", ".tar", ".gz" }.Contains(ext)) return "Archive";
+        return "File";
+    }
+
+    private static bool IsSystemHidden(FileAttributes attributes)
+    {
+        return attributes.HasFlag(FileAttributes.System)
+            || attributes.HasFlag(FileAttributes.Hidden);
+    }
+
+    private void ApplyCollectedIconState()
+    {
+        foreach (var file in AllFiles.Where(f => f.IsHidden).ToList())
         {
-            Name = dir.Name,
-            FullPath = dir.FullName,
-            Extension = "",
-            Size = 0,
-            CreatedAt = dir.CreationTime,
-            FileType = "Folder"
-        };
+            try { DesktopHelper.HideDesktopItem(file.Name); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"HideDesktopItem error: {ex.Message}"); }
+        }
     }
 
     public void ToggleDesktopIcons(bool show)
     {
-        // Add safety try-catch and check
-        try
-        {
-            DesktopHelper.ToggleDesktopIcons(show);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error toggling desktop icons: {ex.Message}");
-        }
+        try { DesktopHelper.ToggleDesktopIcons(show); }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"ToggleDesktopIcons error: {ex.Message}"); }
     }
 
+    // ============================================================
+    // Rescue (puts loose desktop files into FocusPanel_Recovered)
+    // ============================================================
     public async Task RescueFiles()
     {
         await Task.Run(() =>
         {
-            var desktopDir = new DirectoryInfo(_desktopPath);
             var rescueRoot = Path.Combine(_desktopPath, "FocusPanel_Recovered");
+            if (!Directory.Exists(rescueRoot)) Directory.CreateDirectory(rescueRoot);
 
-            if (!Directory.Exists(rescueRoot))
-            {
-                Directory.CreateDirectory(rescueRoot);
-            }
-
-            foreach (var file in desktopDir.GetFiles())
+            foreach (var file in new DirectoryInfo(_desktopPath).GetFiles())
             {
                 if (file.Attributes.HasFlag(FileAttributes.Hidden)) continue;
                 if (file.Name.Equals("desktop.ini", StringComparison.OrdinalIgnoreCase)) continue;
-                if (file.Extension.Equals(".lnk", StringComparison.OrdinalIgnoreCase)) continue; // Don't move shortcuts
+                if (file.Extension.Equals(".lnk", StringComparison.OrdinalIgnoreCase)) continue;
 
-                string targetPath = Path.Combine(rescueRoot, file.Name);
-
+                string target = Path.Combine(rescueRoot, file.Name);
                 try
                 {
-                    if (File.Exists(targetPath))
+                    if (File.Exists(target))
                     {
-                        // Rename
                         string name = Path.GetFileNameWithoutExtension(file.Name);
-                        string extension = file.Extension;
+                        string ext = file.Extension;
                         int count = 1;
-                        while (File.Exists(targetPath))
-                        {
-                            targetPath = Path.Combine(rescueRoot, $"{name} ({count++}){extension}");
-                        }
+                        while (File.Exists(target))
+                            target = Path.Combine(rescueRoot, $"{name} ({count++}){ext}");
                     }
-
-                    file.MoveTo(targetPath);
+                    file.MoveTo(target);
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Failed to rescue {file.Name}: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Rescue error: {ex.Message}");
                 }
             }
         });
@@ -467,80 +602,33 @@ public class FileOrganizerService
         RefreshFilesDebounced();
     }
 
-    private void RestoreFiles()
+    // ============================================================
+    // One-click organize
+    // ============================================================
+    private static readonly Dictionary<string, string> TypeToPartitionMap = new()
     {
-        try
+        { "Image", "图片" },
+        { "Document", "文档" },
+        { "Video", "视频" },
+        { "Audio", "音频" },
+        { "Archive", "压缩包" },
+        { "Application", "应用程序" },
+        { "Folder", "文件夹" },
+        { "File", "其他" },
+    };
+
+    public async Task OrganizeAllFiles()
+    {
+        var visibleFiles = Files.ToList();
+        if (visibleFiles.Count == 0) return;
+
+        foreach (var group in visibleFiles.GroupBy(f => f.FileType))
         {
-            var storageDir = new DirectoryInfo(_storagePath);
-            foreach (var file in storageDir.GetFiles("*", SearchOption.AllDirectories))
-            {
-                string targetPath = Path.Combine(_desktopPath, file.Name);
-
-                // Handle duplicate names
-                if (File.Exists(targetPath) || Directory.Exists(targetPath))
-                {
-                    string nameWithoutExt = Path.GetFileNameWithoutExtension(file.Name);
-                    string ext = file.Extension;
-                    int count = 1;
-                    while (File.Exists(targetPath) || Directory.Exists(targetPath))
-                    {
-                        targetPath = Path.Combine(_desktopPath, $"{nameWithoutExt} ({count++}){ext}");
-                    }
-                }
-
-                try
-                {
-                    file.MoveTo(targetPath);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Failed to restore file {file.Name}: {ex.Message}");
-                }
-            }
-
-            // Also restore directories
-            foreach (var categoryDir in storageDir.GetDirectories())
-            {
-                // Move files
-                foreach (var file in categoryDir.GetFiles())
-                {
-                    string targetPath = Path.Combine(_desktopPath, file.Name);
-                    if (File.Exists(targetPath))
-                    {
-                        string nameWithoutExt = Path.GetFileNameWithoutExtension(file.Name);
-                        string ext = file.Extension;
-                        int count = 1;
-                        while (File.Exists(targetPath))
-                        {
-                            targetPath = Path.Combine(_desktopPath, $"{nameWithoutExt} ({count++}){ext}");
-                        }
-                    }
-                    file.MoveTo(targetPath);
-                }
-
-                // Move directories
-                foreach (var dir in categoryDir.GetDirectories())
-                {
-                    string targetPath = Path.Combine(_desktopPath, dir.Name);
-                    if (Directory.Exists(targetPath))
-                    {
-                        string name = dir.Name;
-                        int count = 1;
-                        while (Directory.Exists(targetPath))
-                        {
-                            targetPath = Path.Combine(_desktopPath, $"{name} ({count++})");
-                        }
-                    }
-                    dir.MoveTo(targetPath);
-                }
-            }
-
-            // Clean up
-            storageDir.Delete(true);
+            string partitionName = TypeToPartitionMap.TryGetValue(group.Key, out var name) ? name : "其他";
+            foreach (var file in group)
+                await HideFileFromDesktop(file.Name, partitionName);
         }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to restore files: {ex.Message}");
-        }
+
+        RefreshFilesDebounced();
     }
 }

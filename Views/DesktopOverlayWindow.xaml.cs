@@ -1,0 +1,206 @@
+using System;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Interop;
+using FocusPanel.Helpers;
+using FocusPanel.Models;
+using FocusPanel.ViewModels;
+using Forms = System.Windows.Forms;
+
+namespace FocusPanel.Views;
+
+public partial class DesktopOverlayWindow : Window
+{
+    private const int GWL_EXSTYLE = -20;
+    private const int WS_EX_TOOLWINDOW = 0x00000080;
+    private const int WS_EX_NOACTIVATE = 0x08000000;
+    private Point _dragStartPoint;
+    private Point _dragOffset;
+    private DesktopFile? _manualDragFile;
+    private FrameworkElement? _manualDragElement;
+    private bool _isManualDragging;
+
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll")]
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    public DesktopOverlayWindow()
+    {
+        InitializeComponent();
+        DataContext = new DesktopOverlayViewModel();
+
+        Loaded += (_, _) =>
+        {
+            ApplyWindowStyles();
+            PositionOnDesktop();
+            DesktopHelper.ToggleDesktopIcons(false);
+        };
+        Closed += (_, _) => DesktopHelper.ToggleDesktopIcons(true);
+    }
+
+    public void RefreshOverlay()
+    {
+        DesktopHelper.ToggleDesktopIcons(false);
+
+        if (DataContext is DesktopOverlayViewModel vm)
+            vm.Refresh();
+    }
+
+    private void PositionOnDesktop()
+    {
+        var bounds = Forms.Screen.PrimaryScreen?.WorkingArea ?? Forms.Screen.AllScreens[0].WorkingArea;
+        Left = bounds.Left;
+        Top = bounds.Top;
+        Width = bounds.Width;
+        Height = bounds.Height;
+    }
+
+    private void ApplyWindowStyles()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero) return;
+
+        int styles = GetWindowLong(hwnd, GWL_EXSTYLE);
+        SetWindowLong(hwnd, GWL_EXSTYLE, styles | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE);
+    }
+
+    private void FileIcon_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not DesktopFile file) return;
+
+        _dragStartPoint = e.GetPosition(this);
+        _dragOffset = e.GetPosition(element);
+        _manualDragFile = file;
+        _manualDragElement = element;
+        _isManualDragging = false;
+        element.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void FileIcon_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        if (_manualDragElement == null || _manualDragFile == null) return;
+
+        var current = e.GetPosition(this);
+        if (!_isManualDragging
+            && Math.Abs(current.X - _dragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance
+            && Math.Abs(current.Y - _dragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        _isManualDragging = true;
+
+        var desktopPosition = e.GetPosition(DesktopCanvas);
+
+        if (desktopPosition.X >= Math.Max(0, ActualWidth - 90))
+        {
+            StartPanelDrag(_manualDragElement, _manualDragFile);
+            e.Handled = true;
+            return;
+        }
+
+        _manualDragFile.DesktopX = Clamp(desktopPosition.X - _dragOffset.X, 0, Math.Max(0, DesktopCanvas.ActualWidth - _manualDragElement.ActualWidth));
+        _manualDragFile.DesktopY = Clamp(desktopPosition.Y - _dragOffset.Y, 0, Math.Max(0, DesktopCanvas.ActualHeight - _manualDragElement.ActualHeight));
+        e.Handled = true;
+    }
+
+    private void FileIcon_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        SaveManualDragPosition();
+        e.Handled = true;
+    }
+
+    private void StartPanelDrag(FrameworkElement element, DesktopFile file)
+    {
+        element.ReleaseMouseCapture();
+        ClearManualDragState();
+
+        var data = new DataObject();
+        data.SetData(typeof(DesktopFile), file);
+
+        if (Application.Current.MainWindow is MainWindow mainWindow)
+            mainWindow.BeginDesktopFileDrag();
+
+        try
+        {
+            DragDrop.DoDragDrop(element, data, DragDropEffects.Move);
+        }
+        finally
+        {
+            if (Application.Current.MainWindow is MainWindow owner)
+                owner.EndDesktopFileDrag();
+        }
+    }
+
+    private void SaveManualDragPosition()
+    {
+        if (_manualDragElement != null)
+            _manualDragElement.ReleaseMouseCapture();
+
+        if (_isManualDragging
+            && _manualDragFile != null
+            && DataContext is DesktopOverlayViewModel vm)
+        {
+            var request = new DesktopDropRequest
+            {
+                File = _manualDragFile,
+                X = _manualDragFile.DesktopX + (_manualDragElement?.ActualWidth ?? vm.DesktopIconWidth) / 2,
+                Y = _manualDragFile.DesktopY + (_manualDragElement?.ActualHeight ?? vm.DesktopIconHeight) / 2
+            };
+
+            if (vm.RestoreOrMoveToDesktopCommand.CanExecute(request))
+                vm.RestoreOrMoveToDesktopCommand.Execute(request);
+        }
+
+        ClearManualDragState();
+    }
+
+    private void ClearManualDragState()
+    {
+        _manualDragFile = null;
+        _manualDragElement = null;
+        _isManualDragging = false;
+    }
+
+    private static double Clamp(double value, double min, double max)
+    {
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+    }
+
+    private void Desktop_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(DesktopFile)))
+        {
+            e.Effects = DragDropEffects.Move;
+            e.Handled = true;
+            return;
+        }
+
+        e.Effects = DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void Desktop_Drop(object sender, DragEventArgs e)
+    {
+        if (DataContext is not DesktopOverlayViewModel vm) return;
+        if (e.Data.GetData(typeof(DesktopFile)) is not DesktopFile file) return;
+
+        var position = e.GetPosition(DesktopCanvas);
+        var request = new DesktopDropRequest
+        {
+            File = file,
+            X = position.X,
+            Y = position.Y
+        };
+
+        if (vm.RestoreOrMoveToDesktopCommand.CanExecute(request))
+            vm.RestoreOrMoveToDesktopCommand.Execute(request);
+
+        e.Handled = true;
+    }
+}

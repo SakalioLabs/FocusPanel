@@ -33,14 +33,32 @@ public partial class FileOrganizerView : UserControl
         }
     }
 
+    private void FileCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement card && card.DataContext is DesktopFile file && DataContext is FileOrganizerViewModel vm)
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                vm.ToggleFileSelection(file);
+                e.Handled = true;
+            }
+            else
+            {
+                vm.SelectFileCommand.Execute(file);
+            }
+        }
+    }
+
     private void FileCard_MouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement card && card.DataContext is DesktopFile file)
         {
             if (DataContext is FileOrganizerViewModel vm)
             {
-                vm.SelectedFile = file; // Ensure selected for command
-                DragDrop.DoDragDrop(card, file, DragDropEffects.Move);
+                vm.SelectedFile = file;
+                var data = new DataObject();
+                data.SetData(typeof(DesktopFile), file);
+                DragDrop.DoDragDrop(card, data, DragDropEffects.Move);
             }
         }
     }
@@ -236,6 +254,15 @@ public partial class FileOrganizerView : UserControl
             {
                 vm.ReorderPartition(sourcePartition, targetPartition);
             }
+        }
+    }
+
+    private void ContentArea_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Deselect all when clicking empty space
+        if (DataContext is FileOrganizerViewModel vm)
+        {
+            vm.DeselectAllFiles();
         }
     }
 

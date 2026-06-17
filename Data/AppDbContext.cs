@@ -10,6 +10,9 @@ public class AppDbContext : DbContext
     public DbSet<DesktopPartition> DesktopPartitions { get; set; }
     public DbSet<DesktopFilePreference> DesktopFilePreferences { get; set; }
     public DbSet<AppConfig> AppConfigs { get; set; }
+    public DbSet<OkrObjective> OkrObjectives { get; set; }
+    public DbSet<OkrKeyResult> OkrKeyResults { get; set; }
+    public DbSet<OkrSyncLog> OkrSyncLogs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -38,6 +41,13 @@ public class AppDbContext : DbContext
             .IsRequired(false) // Explicitly make optional
             .OnDelete(DeleteBehavior.Cascade);
             
+        // OKR relationships
+        modelBuilder.Entity<OkrKeyResult>()
+            .HasOne(kr => kr.Objective)
+            .WithMany(o => o.KeyResults)
+            .HasForeignKey(kr => kr.ObjectiveId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Seed default Inbox project (Root Item)
         modelBuilder.Entity<TodoItem>().HasData(
             new TodoItem 
@@ -78,16 +88,87 @@ public class AppDbContext : DbContext
                 CREATE TABLE IF NOT EXISTS DesktopFilePreferences (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     FilePath TEXT,
-                    PartitionName TEXT
+                    PartitionName TEXT,
+                    IsHiddenFromDesktop INTEGER DEFAULT 0,
+                    DesktopX REAL,
+                    DesktopY REAL
                 );
                 
                 CREATE TABLE IF NOT EXISTS AppConfigs (
                     Key TEXT PRIMARY KEY,
                     Value TEXT
                 );
+
+                CREATE TABLE IF NOT EXISTS OkrObjectives (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    FeishuObjectiveId TEXT,
+                    UserId TEXT,
+                    Name TEXT NOT NULL DEFAULT '',
+                    Note TEXT,
+                    Progress REAL NOT NULL DEFAULT 0,
+                    Period TEXT,
+                    Weight REAL NOT NULL DEFAULT 1.0,
+                    CreatedAt TEXT NOT NULL,
+                    UpdatedAt TEXT NOT NULL,
+                    FeishuCreatedAt TEXT,
+                    FeishuUpdatedAt TEXT,
+                    SyncStatus INTEGER NOT NULL DEFAULT 0,
+                    LastSyncedAt TEXT,
+                    IsDeleted INTEGER NOT NULL DEFAULT 0
+                );
+
+                CREATE TABLE IF NOT EXISTS OkrKeyResults (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    FeishuKrId TEXT,
+                    ObjectiveId INTEGER NOT NULL,
+                    Name TEXT NOT NULL DEFAULT '',
+                    CurrentValue REAL NOT NULL DEFAULT 0,
+                    StartValue REAL NOT NULL DEFAULT 0,
+                    TargetValue REAL NOT NULL DEFAULT 100,
+                    Progress REAL NOT NULL DEFAULT 0,
+                    Weight REAL NOT NULL DEFAULT 1.0,
+                    Unit TEXT DEFAULT '%',
+                    CreatedAt TEXT NOT NULL,
+                    UpdatedAt TEXT NOT NULL,
+                    FeishuUpdatedAt TEXT,
+                    SyncStatus INTEGER NOT NULL DEFAULT 0,
+                    LastSyncedAt TEXT,
+                    IsDeleted INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY (ObjectiveId) REFERENCES OkrObjectives(Id) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS OkrSyncLogs (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Timestamp TEXT NOT NULL,
+                    Action TEXT NOT NULL DEFAULT '',
+                    EntityType TEXT NOT NULL DEFAULT '',
+                    LocalId INTEGER,
+                    FeishuId TEXT,
+                    Message TEXT NOT NULL DEFAULT '',
+                    DetailsJson TEXT
+                );
             ");
 
-            // Migration: Add ColumnIndex if not exists
+                        // Migration: Add IsHiddenFromDesktop if not exists
+            try 
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN IsHiddenFromDesktop INTEGER DEFAULT 0;");
+            } 
+            catch { }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN DesktopX REAL;");
+            }
+            catch { }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN DesktopY REAL;");
+            }
+            catch { }
+
+            //
             try 
             {
                 Database.ExecuteSqlRaw("ALTER TABLE DesktopPartitions ADD COLUMN ColumnIndex INTEGER DEFAULT 0;");
