@@ -25,6 +25,7 @@
 - Rebuilt the main shell with an Apple-inspired glassmorphism style: translucent surfaces, soft shadows, rounded panels, and lighter navigation.
 - Restyled the desktop organizer page with glass cards, polished partition headers, clearer file hover/selection states, and localized Chinese UI copy.
 - Improved the organizer toolbar, popups, empty state, rename dialog, and rescue tools presentation.
+- Refined the Apple-inspired styling after review to reduce excessive transparency, gradients, and heavy shadows in favor of a cleaner Finder-like panel and organizer layout.
 
 ### Desktop-Only Panel Behavior
 - Improved panel visibility behavior so it can stay available in the desktop scene while avoiding obstruction of normal foreground applications.

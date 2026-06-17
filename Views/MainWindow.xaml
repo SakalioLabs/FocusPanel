@@ -8,7 +8,7 @@
         xmlns:local="clr-namespace:FocusPanel.Views"
         xmlns:vm="clr-namespace:FocusPanel.ViewModels"
         mc:Ignorable="d"
-        TextElement.Foreground="#FF1D1D1F"
+        TextElement.Foreground="#1D1D1F"
         TextElement.FontWeight="Regular"
         TextElement.FontSize="13"
         TextOptions.TextFormattingMode="Ideal"
@@ -45,14 +45,14 @@
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
 
-            <SolidColorBrush x:Key="GlassSurfaceBrush" Color="#D9F7F8FB"/>
-            <SolidColorBrush x:Key="GlassCardBrush" Color="#C9FFFFFF"/>
-            <SolidColorBrush x:Key="GlassRailBrush" Color="#7AFFFFFF"/>
-            <SolidColorBrush x:Key="GlassStrokeBrush" Color="#9AFFFFFF"/>
-            <SolidColorBrush x:Key="GlassTextBrush" Color="#FF1D1D1F"/>
+            <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#F2F4F6F8"/>
+            <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FFFFFFFF"/>
+            <SolidColorBrush x:Key="RailBackgroundBrush" Color="#FFEDEFF3"/>
+            <SolidColorBrush x:Key="PanelStrokeBrush" Color="#FFD8DCE3"/>
+            <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FF1D1D1F"/>
             <SolidColorBrush x:Key="AppleBlueBrush" Color="#FF007AFF"/>
-            <DropShadowEffect x:Key="GlassPanelShadow" Color="#44000000" BlurRadius="28" ShadowDepth="0" Opacity="0.32"/>
-            <DropShadowEffect x:Key="GlassSoftShadow" Color="#22000000" BlurRadius="18" ShadowDepth="0" Opacity="0.22"/>
+            <DropShadowEffect x:Key="PanelShadow" Color="#33000000" BlurRadius="18" ShadowDepth="0" Opacity="0.22"/>
+            <DropShadowEffect x:Key="SoftShadow" Color="#18000000" BlurRadius="10" ShadowDepth="0" Opacity="0.18"/>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -63,8 +63,8 @@
                         DoubleClickCommand="{Binding ShowWindowCommand}">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="显示 FocusPanel" Command="{Binding ShowWindowCommand}" />
-                    <MenuItem Header="退出" Command="{Binding CloseAppCommand}" />
+                    <MenuItem Header="&#x663E;&#x793A; FocusPanel" Command="{Binding ShowWindowCommand}" />
+                    <MenuItem Header="&#x9000;&#x51FA;" Command="{Binding CloseAppCommand}" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
@@ -78,7 +78,7 @@
                                Foreground="White"
                                HorizontalAlignment="Center">
                         <TextBlock.Effect>
-                            <DropShadowEffect Color="#AA000000" BlurRadius="16" ShadowDepth="2" Opacity="0.35"/>
+                            <DropShadowEffect Color="#99000000" BlurRadius="12" ShadowDepth="1" Opacity="0.35"/>
                         </TextBlock.Effect>
                     </TextBlock>
                     <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:D}}"
@@ -88,7 +88,7 @@
                                HorizontalAlignment="Center"
                                Margin="0,-10,0,0">
                         <TextBlock.Effect>
-                            <DropShadowEffect Color="#AA000000" BlurRadius="10" ShadowDepth="1" Opacity="0.28"/>
+                            <DropShadowEffect Color="#99000000" BlurRadius="8" ShadowDepth="1" Opacity="0.25"/>
                         </TextBlock.Effect>
                     </TextBlock>
                 </StackPanel>
@@ -97,11 +97,11 @@
             <Border x:Name="SidebarBorder"
                     Width="80"
                     HorizontalAlignment="Right"
-                    Background="{StaticResource GlassSurfaceBrush}"
-                    Margin="0,16,16,16"
-                    CornerRadius="28"
-                    Effect="{StaticResource GlassPanelShadow}"
-                    BorderBrush="{StaticResource GlassStrokeBrush}"
+                    Background="{StaticResource PanelBackgroundBrush}"
+                    Margin="0,10,10,10"
+                    CornerRadius="18"
+                    Effect="{StaticResource PanelShadow}"
+                    BorderBrush="{StaticResource PanelStrokeBrush}"
                     BorderThickness="1"
                     ClipToBounds="True"
                     AllowDrop="True"
@@ -116,7 +116,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Grid x:Name="HeaderGrid" Grid.Row="0" Margin="20,16,16,10" Opacity="0">
+                    <Grid x:Name="HeaderGrid" Grid.Row="0" Margin="18,14,14,8" Opacity="0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
@@ -125,89 +125,88 @@
 
                         <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                 Click="CollapseSidebar_Click"
-                                ToolTip="折叠侧边栏"
+                                ToolTip="&#x6298;&#x53E0;&#x4FA7;&#x8FB9;&#x680F;"
                                 Height="32"
                                 Width="32"
                                 Margin="0,0,10,0">
-                            <materialDesign:PackIcon Kind="ChevronRight" Width="24" Height="24"/>
+                            <materialDesign:PackIcon Kind="ChevronRight" Width="22" Height="22"/>
                         </Button>
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="FolderStarOutline"
-                                                     Width="24"
-                                                     Height="24"
+                                                     Width="23"
+                                                     Height="23"
                                                      VerticalAlignment="Center"
                                                      Margin="0,0,10,0"
                                                      Foreground="{StaticResource AppleBlueBrush}"/>
-                            <TextBlock Text="桌面收纳"
+                            <TextBlock Text="&#x684C;&#x9762;&#x6536;&#x7EB3;"
                                        FontWeight="SemiBold"
                                        FontSize="16"
                                        VerticalAlignment="Center"
-                                       Foreground="{StaticResource GlassTextBrush}"/>
+                                       Foreground="{StaticResource PrimaryTextBrush}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="2" Orientation="Horizontal">
                             <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                     Command="{Binding MinimizeAppCommand}"
-                                    ToolTip="折叠"
+                                    ToolTip="&#x6298;&#x53E0;"
                                     Height="32"
                                     Width="32">
                                 <materialDesign:PackIcon Kind="WindowMinimize" Width="18" Height="18"/>
                             </Button>
                             <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                     Command="{Binding CloseAppCommand}"
-                                    ToolTip="退出"
+                                    ToolTip="&#x9000;&#x51FA;"
                                     Height="32"
                                     Width="32"
-                                    Margin="6,0,0,0">
+                                    Margin="4,0,0,0">
                                 <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
                             </Button>
                         </StackPanel>
                     </Grid>
 
-                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                    <Grid Grid.Row="1" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
                         <Border Grid.Column="0"
-                                Margin="15,0,0,15"
-                                Background="{StaticResource GlassRailBrush}"
-                                CornerRadius="22"
+                                Margin="14,0,0,14"
+                                Background="{StaticResource RailBackgroundBrush}"
+                                CornerRadius="16"
                                 Padding="6"
                                 VerticalAlignment="Center"
-                                Effect="{StaticResource GlassSoftShadow}"
-                                BorderBrush="{StaticResource GlassStrokeBrush}"
+                                BorderBrush="{StaticResource PanelStrokeBrush}"
                                 BorderThickness="1">
                             <StackPanel>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="Files" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="桌面收纳" Padding="10" Margin="0,4" Height="Auto" materialDesign:ButtonAssist.CornerRadius="16">
-                                    <materialDesign:PackIcon Kind="Folder" Width="24" Height="24"/>
+                                <Button Command="{Binding NavigateCommand}" CommandParameter="Files" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="&#x684C;&#x9762;&#x6536;&#x7EB3;" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
+                                    <materialDesign:PackIcon Kind="Folder" Width="23" Height="23"/>
                                 </Button>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="Tasks" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="任务" Padding="10" Margin="0,4" Height="Auto" materialDesign:ButtonAssist.CornerRadius="16">
-                                    <materialDesign:PackIcon Kind="CheckboxMarked" Width="24" Height="24"/>
+                                <Button Command="{Binding NavigateCommand}" CommandParameter="Tasks" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="&#x4EFB;&#x52A1;" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
+                                    <materialDesign:PackIcon Kind="CheckboxMarked" Width="23" Height="23"/>
                                 </Button>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="Pomodoro" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="番茄钟" Padding="10" Margin="0,4" Height="Auto" materialDesign:ButtonAssist.CornerRadius="16">
-                                    <materialDesign:PackIcon Kind="Timer" Width="24" Height="24"/>
+                                <Button Command="{Binding NavigateCommand}" CommandParameter="Pomodoro" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="&#x756A;&#x8304;&#x949F;" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
+                                    <materialDesign:PackIcon Kind="Timer" Width="23" Height="23"/>
                                 </Button>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="OKR" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="OKR" Padding="10" Margin="0,4" Height="Auto" materialDesign:ButtonAssist.CornerRadius="16">
-                                    <materialDesign:PackIcon Kind="Target" Width="24" Height="24"/>
+                                <Button Command="{Binding NavigateCommand}" CommandParameter="OKR" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="OKR" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
+                                    <materialDesign:PackIcon Kind="Target" Width="23" Height="23"/>
                                 </Button>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="AI" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="AI 助手" Padding="10" Margin="0,4" Height="Auto" materialDesign:ButtonAssist.CornerRadius="16">
-                                    <materialDesign:PackIcon Kind="Robot" Width="24" Height="24"/>
+                                <Button Command="{Binding NavigateCommand}" CommandParameter="AI" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="AI &#x52A9;&#x624B;" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
+                                    <materialDesign:PackIcon Kind="Robot" Width="23" Height="23"/>
                                 </Button>
 
-                                <Separator Background="{StaticResource GlassStrokeBrush}" Margin="4,8"/>
+                                <Separator Background="{StaticResource PanelStrokeBrush}" Margin="5,8"/>
 
                                 <Grid>
                                     <ToggleButton x:Name="SettingsToggle"
                                                   Style="{StaticResource MaterialDesignFlatButton}"
-                                                  ToolTip="数据与设置"
+                                                  ToolTip="&#x6570;&#x636E;&#x4E0E;&#x8BBE;&#x7F6E;"
                                                   Padding="10"
-                                                  Margin="0,4"
+                                                  Margin="0,3"
                                                   Height="Auto"
-                                                  materialDesign:ButtonAssist.CornerRadius="16">
-                                        <materialDesign:PackIcon Kind="DatabaseSettings" Width="24" Height="24"/>
+                                                  materialDesign:ButtonAssist.CornerRadius="12">
+                                        <materialDesign:PackIcon Kind="DatabaseSettings" Width="23" Height="23"/>
                                     </ToggleButton>
                                     <Popup IsOpen="{Binding IsChecked, ElementName=SettingsToggle, Mode=TwoWay}"
                                            StaysOpen="False"
@@ -217,17 +216,17 @@
                                            PopupAnimation="Fade">
                                         <Border Margin="8,0,0,0"
                                                 Padding="12"
-                                                CornerRadius="16"
-                                                Background="{StaticResource GlassSurfaceBrush}"
-                                                BorderBrush="{StaticResource GlassStrokeBrush}"
+                                                CornerRadius="12"
+                                                Background="{StaticResource ContentBackgroundBrush}"
+                                                BorderBrush="{StaticResource PanelStrokeBrush}"
                                                 BorderThickness="1"
-                                                Effect="{StaticResource GlassSoftShadow}">
+                                                Effect="{StaticResource SoftShadow}">
                                             <StackPanel>
-                                                <TextBlock Text="数据管理" Style="{StaticResource MaterialDesignCaptionTextBlock}" Opacity="0.65" Margin="8,4,8,8"/>
+                                                <TextBlock Text="&#x6570;&#x636E;&#x7BA1;&#x7406;" Style="{StaticResource MaterialDesignCaptionTextBlock}" Opacity="0.65" Margin="8,4,8,8"/>
                                                 <Button Command="{Binding RestoreDatabaseCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Padding="8,4">
                                                     <StackPanel Orientation="Horizontal">
                                                         <materialDesign:PackIcon Kind="BackupRestore" Margin="0,0,12,0" Foreground="Orange" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="恢复数据库" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="&#x6062;&#x590D;&#x6570;&#x636E;&#x5E93;" VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Button>
                                             </StackPanel>
@@ -239,14 +238,13 @@
 
                         <Border x:Name="ContentArea"
                                 Grid.Column="1"
-                                Margin="15,0,15,15"
-                                Background="{StaticResource GlassCardBrush}"
-                                CornerRadius="24"
-                                Padding="14"
+                                Margin="14,0,14,14"
+                                Background="{StaticResource ContentBackgroundBrush}"
+                                CornerRadius="16"
+                                Padding="12"
                                 Opacity="0"
-                                BorderBrush="{StaticResource GlassStrokeBrush}"
-                                BorderThickness="1"
-                                Effect="{StaticResource GlassSoftShadow}">
+                                BorderBrush="{StaticResource PanelStrokeBrush}"
+                                BorderThickness="1">
                             <ContentControl Content="{Binding CurrentViewModel}"/>
                         </Border>
                     </Grid>

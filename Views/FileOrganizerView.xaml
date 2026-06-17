@@ -14,14 +14,14 @@
         <converters:EqualityConverter x:Key="EqualityConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:BindingProxy x:Key="VmProxy" Data="{Binding}" />
-        <SolidColorBrush x:Key="OrganizerGlassBrush" Color="#70FFFFFF"/>
-        <SolidColorBrush x:Key="OrganizerGlassStrongBrush" Color="#A6FFFFFF"/>
-        <SolidColorBrush x:Key="OrganizerGlassStrokeBrush" Color="#99FFFFFF"/>
+        <SolidColorBrush x:Key="OrganizerGlassBrush" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="OrganizerGlassStrongBrush" Color="#FFF8F9FB"/>
+        <SolidColorBrush x:Key="OrganizerGlassStrokeBrush" Color="#FFD8DCE3"/>
         <SolidColorBrush x:Key="OrganizerInkBrush" Color="#FF1D1D1F"/>
         <SolidColorBrush x:Key="OrganizerSubtleInkBrush" Color="#99000000"/>
-        <SolidColorBrush x:Key="OrganizerHoverBrush" Color="#C4FFFFFF"/>
-        <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#4D007AFF"/>
-        <DropShadowEffect x:Key="OrganizerCardShadow" Color="#26000000" BlurRadius="18" ShadowDepth="0" Opacity="0.22"/>
+        <SolidColorBrush x:Key="OrganizerHoverBrush" Color="#FFF5F7FA"/>
+        <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#22007AFF"/>
+        <DropShadowEffect x:Key="OrganizerCardShadow" Color="#18000000" BlurRadius="10" ShadowDepth="0" Opacity="0.18"/>
 
         <!-- File Item Style (Grid Item) -->
         <Style x:Key="FileItemStyle" TargetType="Border">
@@ -29,11 +29,11 @@
             <EventSetter Event="PreviewMouseLeftButtonDown" Handler="FileCard_PreviewMouseLeftButtonDown"/>
             <Setter Property="Width" Value="{Binding DataContext.CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="Height" Value="{Binding DataContext.CardHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-            <Setter Property="Margin" Value="6"/>
-            <Setter Property="CornerRadius" Value="14"/>
-            <Setter Property="Background" Value="#46FFFFFF"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Background" Value="#00FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#70FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#00FFFFFF"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource OrganizerHoverBrush}"/>
@@ -52,10 +52,10 @@
             <EventSetter Event="PreviewMouseLeftButtonDown" Handler="FileCard_PreviewMouseLeftButtonDown"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="Margin" Value="0,3"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Background" Value="#44FFFFFF"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="#00FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#00FFFFFF"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource OrganizerHoverBrush}"/>
@@ -135,9 +135,9 @@
             <Setter Property="Background" Value="{StaticResource OrganizerGlassBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="{StaticResource OrganizerGlassStrokeBrush}"/>
-            <Setter Property="CornerRadius" Value="20"/>
-            <Setter Property="Margin" Value="0,0,0,18"/>
-            <Setter Property="Padding" Value="8"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="Effect" Value="{StaticResource OrganizerCardShadow}"/>
             <!-- Auto Height for Content Fit -->
             <Setter Property="VerticalAlignment" Value="Top"/>
@@ -153,16 +153,13 @@
                     DragLeave="Partition_DragLeave">
                 <StackPanel>
                     <!-- Header -->
-                    <Grid Height="46"
+                    <Grid Height="44"
                           AllowDrop="True"
                           PreviewMouseLeftButtonDown="PartitionHeader_PreviewMouseLeftButtonDown"
                           PreviewMouseMove="PartitionHeader_PreviewMouseMove"
                           Drop="PartitionHeader_Drop">
                         <Grid.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#78FFFFFF" Offset="0"/>
-                                <GradientStop Color="#32FFFFFF" Offset="1"/>
-                            </LinearGradientBrush>
+                            <SolidColorBrush Color="#FFF8F9FB"/>
                         </Grid.Background>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -188,7 +185,7 @@
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource OrganizerInkBrush}"/>
-                            <Border Background="#26007AFF" CornerRadius="9" Margin="8,0,0,0" Padding="7,1" VerticalAlignment="Center">
+                            <Border Background="#14007AFF" CornerRadius="9" Margin="8,0,0,0" Padding="7,1" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Files.Count}" FontSize="11" Foreground="#FF0066CC"/>
                             </Border>
                         </StackPanel>
@@ -363,14 +360,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid>
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#24FFFFFF" Offset="0"/>
-                <GradientStop Color="#10D6E6FF" Offset="0.55"/>
-                <GradientStop Color="#18FFFFFF" Offset="1"/>
-            </LinearGradientBrush>
-        </Grid.Background>
+    <Grid Background="#FFF3F5F8">
         <Grid.ColumnDefinitions>
             <!-- Left Sidebar (Tools) -->
             <ColumnDefinition Width="Auto"/>
@@ -380,14 +370,14 @@
 
         <!-- Left Sidebar Toolbar -->
         <Border Grid.Column="0" 
-                Background="{StaticResource OrganizerGlassBrush}" 
+                Background="#FFFFFFFF" 
                 BorderThickness="1" 
                 BorderBrush="{StaticResource OrganizerGlassStrokeBrush}"
-                CornerRadius="22"
+                CornerRadius="14"
                 Effect="{StaticResource OrganizerCardShadow}"
                 Padding="8,16"
                 Width="56"
-                Margin="0,0,16,0">
+                Margin="0,0,12,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -541,7 +531,7 @@
 
         <!-- Main Content Area (Masonry Layout) -->
         <Grid Grid.Column="1">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18" PreviewMouseLeftButtonDown="ContentArea_PreviewMouseLeftButtonDown">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14" PreviewMouseLeftButtonDown="ContentArea_PreviewMouseLeftButtonDown">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
