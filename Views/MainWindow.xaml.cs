@@ -391,7 +391,6 @@ namespace FocusPanel.Views
 
             _desktopOverlay?.ShowOnDesktop();
 
-            Topmost = false;
             if (WindowState == WindowState.Minimized)
                 WindowState = WindowState.Normal;
 
@@ -399,7 +398,13 @@ namespace FocusPanel.Views
                 Show();
 
             Visibility = Visibility.Visible;
+            KeepAboveShowDesktop();
             CollapseSidebar();
+        }
+
+        private void KeepAboveShowDesktop()
+        {
+            Topmost = true;
         }
 
         private void HideFromApps()

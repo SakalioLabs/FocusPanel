@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Threading;
 using FocusPanel.Helpers;
 using FocusPanel.Models;
 using FocusPanel.ViewModels;
@@ -18,6 +19,7 @@ public partial class DesktopOverlayWindow : Window
     private const int GWL_EXSTYLE = -20;
     private const int WS_EX_TOOLWINDOW = 0x00000080;
     private const int WS_EX_NOACTIVATE = 0x08000000;
+    private const int DWMWA_CLOAKED = 14;
     private Point _dragStartPoint;
     private Point _dragOffset;
     private DesktopFile? _manualDragFile;
@@ -29,6 +31,9 @@ public partial class DesktopOverlayWindow : Window
 
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
 
     public DesktopOverlayWindow()
     {
@@ -75,7 +80,7 @@ public partial class DesktopOverlayWindow : Window
             Show();
 
         Visibility = Visibility.Visible;
-        Topmost = false;
+        KeepAboveShowDesktop();
         SyncNativeDesktopIcons();
     }
 
@@ -84,6 +89,7 @@ public partial class DesktopOverlayWindow : Window
         if (IsVisible)
             Hide();
 
+        Topmost = false;
         SyncNativeDesktopIcons();
     }
 
@@ -96,10 +102,25 @@ public partial class DesktopOverlayWindow : Window
     {
         bool overlayHasIcons = IsVisible
             && WindowState != WindowState.Minimized
+            && !IsCloaked()
             && DataContext is DesktopOverlayViewModel vm
             && vm.Files.Count > 0;
 
         DesktopHelper.ToggleDesktopIcons(!overlayHasIcons);
+    }
+
+    private bool IsCloaked()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero) return true;
+
+        return DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, out int cloaked, sizeof(int)) == 0
+            && cloaked != 0;
+    }
+
+    private void KeepAboveShowDesktop()
+    {
+        Topmost = true;
     }
 
     private void PositionOnDesktop()

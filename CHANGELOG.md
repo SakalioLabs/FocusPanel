@@ -38,6 +38,8 @@
 - Fixed Windows Show Desktop recovery by restoring minimized overlay and panel windows when the foreground guard detects the desktop scene.
 - Added a minimized-state recovery hook so right-corner Show Desktop can pull FocusPanel back into the desktop scene after Windows minimizes it.
 - Fixed a wallpaper-only Show Desktop state by restoring native Explorer icons whenever the custom desktop overlay is minimized.
+- Added DWM cloaking detection so native desktop icons are restored if Windows Show Desktop hides the overlay without minimizing it.
+- Kept the overlay and panel in desktop-scene topmost mode so Windows Show Desktop cannot bury FocusPanel, while still dropping topmost and hiding as soon as another app becomes foreground.
 - Fixed a blank-desktop fail-safe issue by restoring Explorer's native desktop icons whenever the FocusPanel desktop overlay is hidden.
 - Hardened desktop-only window layering so both the desktop overlay and panel stay hidden outside the desktop scene and the panel never uses topmost mode over other applications.
 - Improved panel visibility behavior so it can stay available in the desktop scene while avoiding obstruction of normal foreground applications.
