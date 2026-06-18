@@ -44,7 +44,7 @@ public partial class DesktopOverlayWindow : Window
 
     public void RefreshOverlay()
     {
-        DesktopHelper.ToggleDesktopIcons(false);
+        DesktopHelper.ToggleDesktopIcons(IsVisible == false);
 
         if (DataContext is DesktopOverlayViewModel vm)
             vm.Refresh();
@@ -63,6 +63,8 @@ public partial class DesktopOverlayWindow : Window
     {
         if (IsVisible)
             Hide();
+
+        DesktopHelper.ToggleDesktopIcons(true);
     }
 
     private void PositionOnDesktop()

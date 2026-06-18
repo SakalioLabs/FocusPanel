@@ -31,6 +31,7 @@
 - Fixed right-edge drawer chrome: removed right-side rounded corners, removed outer shadow halo, disabled host-window DWM rounding, and made the drawer background fully opaque.
 
 ### Desktop-Only Panel Behavior
+- Fixed a blank-desktop fail-safe issue by restoring Explorer's native desktop icons whenever the FocusPanel desktop overlay is hidden.
 - Hardened desktop-only window layering so both the desktop overlay and panel stay hidden outside the desktop scene and the panel never uses topmost mode over other applications.
 - Improved panel visibility behavior so it can stay available in the desktop scene while avoiding obstruction of normal foreground applications.
 - Preserved drag-to-panel behavior while preventing the panel from disappearing during desktop collection workflows.
