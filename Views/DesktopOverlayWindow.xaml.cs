@@ -100,7 +100,7 @@ public partial class DesktopOverlayWindow : Window
         if (IsVisible)
             Hide();
 
-        Topmost = false;
+        DemoteFromTopmost();
         SyncNativeDesktopIcons();
     }
 
@@ -131,7 +131,7 @@ public partial class DesktopOverlayWindow : Window
 
     private void ShowWithoutActivating()
     {
-        Topmost = false;
+        DemoteFromTopmost();
         var hwnd = new WindowInteropHelper(this).Handle;
         if (hwnd != IntPtr.Zero)
         {
@@ -139,6 +139,14 @@ public partial class DesktopOverlayWindow : Window
             SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
             SetWindowPos(hwnd, HwndNotTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
         }
+    }
+
+    private void DemoteFromTopmost()
+    {
+        Topmost = false;
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd != IntPtr.Zero)
+            SetWindowPos(hwnd, HwndNotTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
 
     private void PositionOnDesktop()

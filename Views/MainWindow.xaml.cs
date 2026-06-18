@@ -377,9 +377,6 @@ namespace FocusPanel.Views
             if (fg == GetWindowHandle())
                 return true;
 
-            if (!IsWindowVisible(fg) || IsIconic(fg))
-                return true;
-
             GetWindowThreadProcessId(fg, out uint foregroundProcessId);
             if (foregroundProcessId == Environment.ProcessId)
                 return true;
@@ -411,11 +408,12 @@ namespace FocusPanel.Views
             Visibility = Visibility.Visible;
             ShowWithoutActivating();
             CollapseSidebar();
+            VerifyDesktopSceneStillActive();
         }
 
         private void ShowWithoutActivating()
         {
-            Topmost = false;
+            DemoteFromTopmost();
             var hwnd = GetWindowHandle();
             if (hwnd != IntPtr.Zero)
             {
@@ -425,14 +423,29 @@ namespace FocusPanel.Views
             }
         }
 
+        private async void VerifyDesktopSceneStillActive()
+        {
+            await Task.Delay(120);
+            if (!IsDesktopSceneForeground())
+                HideFromApps();
+        }
+
+        private void DemoteFromTopmost()
+        {
+            Topmost = false;
+            var hwnd = GetWindowHandle();
+            if (hwnd != IntPtr.Zero)
+                SetWindowPos(hwnd, HwndNotTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        }
+
         private void HideFromApps()
         {
             _desktopOverlay?.HideFromApps();
             DesktopHelper.ToggleDesktopIcons(true);
+            DemoteFromTopmost();
 
             if (Visibility != Visibility.Visible) return;
 
-            Topmost = false;
             Visibility = Visibility.Collapsed;
         }
 
