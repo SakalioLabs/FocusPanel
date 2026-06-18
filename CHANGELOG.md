@@ -7,6 +7,7 @@
 - Added free desktop icon placement with persisted `DesktopX` / `DesktopY` coordinates.
 - Added drag support from desktop into the organizer panel and back out to the desktop without triggering Explorer's same-name file prompt.
 - Added desktop icon sorting by name, type, date, and size.
+- Added blank-desktop double-click to hide or restore the custom desktop icons.
 - Expanded native-like desktop context menu actions: open, open with, show in Explorer, cut, copy, paste, rename, delete, refresh, properties, sorting, and desktop folder access.
 - Added adjustable desktop icon size from the desktop right-click menu: small, medium, large, and extra large.
 - Persisted desktop icon size in app configuration.

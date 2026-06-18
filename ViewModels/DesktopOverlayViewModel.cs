@@ -25,6 +25,9 @@ public partial class DesktopOverlayViewModel : ObservableObject
     public ObservableCollection<DesktopFile> Files => _fileService.Files;
 
     [ObservableProperty]
+    private bool areDesktopIconsVisible = true;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DesktopIconWidth))]
     [NotifyPropertyChangedFor(nameof(DesktopIconHeight))]
     [NotifyPropertyChangedFor(nameof(DesktopIconImageSize))]
@@ -48,6 +51,12 @@ public partial class DesktopOverlayViewModel : ObservableObject
         _fileService.FilesChanged += () => OnPropertyChanged(nameof(Files));
         LoadDesktopIconScale();
         _ = _fileService.RefreshFiles();
+    }
+
+    [RelayCommand]
+    private void ToggleDesktopIconVisibility()
+    {
+        AreDesktopIconsVisible = !AreDesktopIconsVisible;
     }
 
     [RelayCommand]

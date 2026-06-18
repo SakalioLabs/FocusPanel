@@ -11,11 +11,12 @@
         AllowDrop="True"
         DragOver="Desktop_DragOver"
         Drop="Desktop_Drop">
-    <Canvas x:Name="DesktopCanvas"
+        <Canvas x:Name="DesktopCanvas"
             Background="Transparent"
             AllowDrop="True"
             DragOver="Desktop_DragOver"
             Drop="Desktop_Drop"
+            MouseLeftButtonDown="DesktopCanvas_MouseLeftButtonDown"
             Tag="{Binding}">
         <Canvas.ContextMenu>
             <ContextMenu>
@@ -55,8 +56,23 @@
             </ContextMenu>
         </Canvas.ContextMenu>
 
+        <Rectangle Width="{Binding ActualWidth, ElementName=DesktopCanvas}"
+                   Height="{Binding ActualHeight, ElementName=DesktopCanvas}"
+                   Fill="#01000000"
+                   IsHitTestVisible="True"/>
+
         <ItemsControl ItemsSource="{Binding Files}"
                       Tag="{Binding}">
+            <ItemsControl.Style>
+                <Style TargetType="ItemsControl">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding AreDesktopIconsVisible}" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ItemsControl.Style>
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Canvas/>

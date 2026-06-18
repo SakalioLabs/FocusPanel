@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using FocusPanel.Helpers;
 using FocusPanel.Models;
 using FocusPanel.ViewModels;
@@ -78,6 +79,32 @@ public partial class DesktopOverlayWindow : Window
         _isManualDragging = false;
         element.CaptureMouse();
         e.Handled = true;
+    }
+
+    private void DesktopCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount != 2) return;
+        if (FindDesktopFileAncestor(e.OriginalSource as DependencyObject) != null) return;
+
+        if (DataContext is DesktopOverlayViewModel vm
+            && vm.ToggleDesktopIconVisibilityCommand.CanExecute(null))
+        {
+            vm.ToggleDesktopIconVisibilityCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    private static FrameworkElement? FindDesktopFileAncestor(DependencyObject? current)
+    {
+        while (current != null)
+        {
+            if (current is FrameworkElement element && element.DataContext is DesktopFile)
+                return element;
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private void FileIcon_MouseMove(object sender, MouseEventArgs e)
