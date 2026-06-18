@@ -55,9 +55,13 @@ public partial class DesktopOverlayWindow : Window
 
     public void ShowOnDesktop()
     {
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+
         if (!IsVisible)
             Show();
 
+        Visibility = Visibility.Visible;
         Topmost = false;
         SyncNativeDesktopIcons();
     }

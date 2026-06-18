@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -73,6 +74,7 @@ namespace FocusPanel.Views
             ShowInTaskbar = false;
 
             Loaded += MainWindow_Loaded;
+            StateChanged += MainWindow_StateChanged;
             Closing += MainWindow_Closing;
             Deactivated += MainWindow_Deactivated;
             LocationChanged += MainWindow_LocationChanged;
@@ -161,6 +163,15 @@ namespace FocusPanel.Views
 
         private void MainWindow_Deactivated(object? sender, EventArgs e)
         {
+        }
+
+        private async void MainWindow_StateChanged(object? sender, EventArgs e)
+        {
+            if (WindowState != WindowState.Minimized) return;
+
+            await Task.Delay(350);
+            if (WindowState == WindowState.Minimized && IsDesktopSceneForeground())
+                ShowOnDesktop();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -333,37 +344,7 @@ namespace FocusPanel.Views
 
         private void UpdateVisibilityForForeground()
         {
-            IntPtr fg = GetForegroundWindow();
-            if (fg == IntPtr.Zero)
-            {
-                ShowOnDesktop();
-                return;
-            }
-
-            if (fg == GetWindowHandle())
-            {
-                ShowOnDesktop();
-                return;
-            }
-
-            if (!IsWindowVisible(fg) || IsIconic(fg))
-            {
-                ShowOnDesktop();
-                return;
-            }
-
-            GetWindowThreadProcessId(fg, out uint foregroundProcessId);
-            if (foregroundProcessId == Environment.ProcessId)
-            {
-                ShowOnDesktop();
-                return;
-            }
-
-            var sb = new StringBuilder(256);
-            GetClassName(fg, sb, 256);
-            string cls = sb.ToString();
-
-            if (cls == "Progman" || cls == "WorkerW" || cls == "Shell_TrayWnd")
+            if (IsDesktopSceneForeground())
             {
                 ShowOnDesktop();
             }
@@ -371,6 +352,32 @@ namespace FocusPanel.Views
             {
                 HideFromApps();
             }
+        }
+
+        private bool IsDesktopSceneForeground()
+        {
+            IntPtr fg = GetForegroundWindow();
+            if (fg == IntPtr.Zero)
+                return true;
+
+            if (fg == GetWindowHandle())
+                return true;
+
+            if (!IsWindowVisible(fg) || IsIconic(fg))
+                return true;
+
+            GetWindowThreadProcessId(fg, out uint foregroundProcessId);
+            if (foregroundProcessId == Environment.ProcessId)
+                return true;
+
+            var sb = new StringBuilder(256);
+            GetClassName(fg, sb, 256);
+            string cls = sb.ToString();
+
+            return cls == "Progman"
+                || cls == "WorkerW"
+                || cls == "Shell_TrayWnd"
+                || cls == "Shell_SecondaryTrayWnd";
         }
 
         private void ShowOnDesktop()
@@ -384,11 +391,13 @@ namespace FocusPanel.Views
 
             _desktopOverlay?.ShowOnDesktop();
 
-            if (Visibility == Visibility.Visible) return;
-
             Topmost = false;
+            if (WindowState == WindowState.Minimized)
+                WindowState = WindowState.Normal;
+
             if (!IsVisible)
                 Show();
+
             Visibility = Visibility.Visible;
             CollapseSidebar();
         }
