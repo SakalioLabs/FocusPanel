@@ -17,11 +17,12 @@
         AllowsTransparency="True"
         WindowStyle="None"
         ShowInTaskbar="False"
+        ShowActivated="False"
         ResizeMode="NoResize"
         FontFamily="{DynamicResource MaterialDesignFont}"
         Title="{Binding Title}"
         Height="800"
-        Visibility="Collapsed">
+        Visibility="Hidden">
 
     <Window.Resources>
         <ResourceDictionary>

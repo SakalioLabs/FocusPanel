@@ -7,6 +7,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Threading;
 using FocusPanel.ViewModels;
 using FocusPanel.Services;
 using Microsoft.Win32;
@@ -47,6 +48,8 @@ namespace FocusPanel.Views
         private bool _hiddenToTray;
         private DesktopOverlayWindow? _desktopOverlay;
         private bool _isDesktopFileDragging;
+        private readonly DispatcherTimer _foregroundGuardTimer;
+        private bool _foregroundMonitorStarted;
 
         public MainWindow()
         {
@@ -72,6 +75,18 @@ namespace FocusPanel.Views
             Closing += MainWindow_Closing;
             Deactivated += MainWindow_Deactivated;
             LocationChanged += MainWindow_LocationChanged;
+            _foregroundGuardTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(250)
+            };
+            _foregroundGuardTimer.Tick += (_, _) => UpdateVisibilityForForeground();
+            StartForegroundMonitor();
+            Dispatcher.BeginInvoke(() =>
+            {
+                EnsureDesktopOverlay();
+                UpdateVisibilityForForeground();
+            }, DispatcherPriority.ApplicationIdle);
+
             SystemEvents.DisplaySettingsChanged += (s, e) =>
             {
                 _currentScreen = null!;
@@ -160,14 +175,20 @@ namespace FocusPanel.Views
                 DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPref, sizeof(int));
             }
 
-            // Set up foreground change detection
+            Visibility = Visibility.Collapsed;
+            Topmost = false;
+        }
+
+        private void StartForegroundMonitor()
+        {
+            if (_foregroundMonitorStarted) return;
+
             _winEventDelegate = new WinEventDelegate(WinEventProc);
             _winEventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
                 IntPtr.Zero, _winEventDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
 
-            // Initial state: check if desktop is currently foreground
-            ShowDesktopOverlay();
-            UpdateVisibilityForForeground();
+            _foregroundGuardTimer.Start();
+            _foregroundMonitorStarted = true;
         }
 
         private void MainWindow_Closing(object sender, CancelEventArgs e)
@@ -177,6 +198,8 @@ namespace FocusPanel.Views
                 UnhookWinEvent(_winEventHook);
                 _winEventHook = IntPtr.Zero;
             }
+
+            _foregroundGuardTimer.Stop();
 
             if (_isExit)
             {
@@ -209,13 +232,12 @@ namespace FocusPanel.Views
             System.Windows.Application.Current.Shutdown();
         }
 
-        private void ShowDesktopOverlay()
+        private void EnsureDesktopOverlay()
         {
             if (_desktopOverlay != null) return;
 
             _desktopOverlay = new DesktopOverlayWindow();
             FileOrganizerService.OverlayRefreshRequested += RefreshDesktopOverlay;
-            _desktopOverlay.Show();
         }
 
         private void RefreshDesktopOverlay()
@@ -339,17 +361,20 @@ namespace FocusPanel.Views
         private void ShowOnDesktop()
         {
             if (_hiddenToTray) return;
+
+            _desktopOverlay?.ShowOnDesktop();
+
             if (Visibility == Visibility.Visible) return;
 
+            Topmost = false;
             Visibility = Visibility.Visible;
-            Topmost = true;
             CollapseSidebar();
         }
 
         private void HideFromApps()
         {
-            if (_isDesktopFileDragging) return;
-            if (SidebarBorder.IsKeyboardFocusWithin) return;
+            _desktopOverlay?.HideFromApps();
+
             if (Visibility != Visibility.Visible) return;
 
             Topmost = false;
@@ -365,7 +390,7 @@ namespace FocusPanel.Views
             _hiddenToTray = false;
             Visibility = Visibility.Visible;
             Show();
-            Topmost = true;
+            Topmost = false;
             ExpandSidebar();
         }
 

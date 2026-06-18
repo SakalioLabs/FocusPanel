@@ -50,6 +50,21 @@ public partial class DesktopOverlayWindow : Window
             vm.Refresh();
     }
 
+    public void ShowOnDesktop()
+    {
+        if (!IsVisible)
+            Show();
+
+        Topmost = false;
+        DesktopHelper.ToggleDesktopIcons(false);
+    }
+
+    public void HideFromApps()
+    {
+        if (IsVisible)
+            Hide();
+    }
+
     private void PositionOnDesktop()
     {
         var bounds = Forms.Screen.PrimaryScreen?.WorkingArea ?? Forms.Screen.AllScreens[0].WorkingArea;
