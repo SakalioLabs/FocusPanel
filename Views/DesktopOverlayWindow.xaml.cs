@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Specialized;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -36,6 +37,7 @@ public partial class DesktopOverlayWindow : Window
         DataContext = viewModel;
         viewModel.Files.CollectionChanged += DesktopFiles_CollectionChanged;
 
+        StateChanged += DesktopOverlayWindow_StateChanged;
         Loaded += (_, _) =>
         {
             ApplyWindowStyles();
@@ -43,6 +45,17 @@ public partial class DesktopOverlayWindow : Window
             SyncNativeDesktopIcons();
         };
         Closed += (_, _) => DesktopHelper.ToggleDesktopIcons(true);
+    }
+
+    private async void DesktopOverlayWindow_StateChanged(object? sender, EventArgs e)
+    {
+        SyncNativeDesktopIcons();
+
+        if (WindowState != WindowState.Minimized) return;
+
+        await Task.Delay(350);
+        if (WindowState == WindowState.Minimized && IsVisible)
+            ShowOnDesktop();
     }
 
     public void RefreshOverlay()
@@ -82,6 +95,7 @@ public partial class DesktopOverlayWindow : Window
     private void SyncNativeDesktopIcons()
     {
         bool overlayHasIcons = IsVisible
+            && WindowState != WindowState.Minimized
             && DataContext is DesktopOverlayViewModel vm
             && vm.Files.Count > 0;
 
