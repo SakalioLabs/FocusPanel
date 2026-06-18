@@ -342,6 +342,20 @@ namespace FocusPanel.Views
         [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
+
+        private static readonly IntPtr HwndTopmost = new(-1);
+        private static readonly IntPtr HwndNotTopmost = new(-2);
+        private const int SW_SHOWNOACTIVATE = 4;
+        private const uint SWP_NOMOVE = 0x0002;
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOACTIVATE = 0x0010;
+        private const uint SWP_SHOWWINDOW = 0x0040;
+
         private void UpdateVisibilityForForeground()
         {
             if (IsDesktopSceneForeground())
@@ -391,20 +405,24 @@ namespace FocusPanel.Views
 
             _desktopOverlay?.ShowOnDesktop();
 
-            if (WindowState == WindowState.Minimized)
-                WindowState = WindowState.Normal;
-
             if (!IsVisible)
                 Show();
 
             Visibility = Visibility.Visible;
-            KeepAboveShowDesktop();
+            ShowWithoutActivating();
             CollapseSidebar();
         }
 
-        private void KeepAboveShowDesktop()
+        private void ShowWithoutActivating()
         {
-            Topmost = true;
+            Topmost = false;
+            var hwnd = GetWindowHandle();
+            if (hwnd != IntPtr.Zero)
+            {
+                ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+                SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                SetWindowPos(hwnd, HwndNotTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            }
         }
 
         private void HideFromApps()

@@ -32,8 +32,22 @@ public partial class DesktopOverlayWindow : Window
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
+
     [DllImport("dwmapi.dll", PreserveSig = true)]
     private static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
+
+    private static readonly IntPtr HwndTopmost = new(-1);
+    private static readonly IntPtr HwndNotTopmost = new(-2);
+    private const int SW_SHOWNOACTIVATE = 4;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOACTIVATE = 0x0010;
+    private const uint SWP_SHOWWINDOW = 0x0040;
 
     public DesktopOverlayWindow()
     {
@@ -73,14 +87,11 @@ public partial class DesktopOverlayWindow : Window
 
     public void ShowOnDesktop()
     {
-        if (WindowState == WindowState.Minimized)
-            WindowState = WindowState.Normal;
-
         if (!IsVisible)
             Show();
 
         Visibility = Visibility.Visible;
-        KeepAboveShowDesktop();
+        ShowWithoutActivating();
         SyncNativeDesktopIcons();
     }
 
@@ -118,9 +129,16 @@ public partial class DesktopOverlayWindow : Window
             && cloaked != 0;
     }
 
-    private void KeepAboveShowDesktop()
+    private void ShowWithoutActivating()
     {
-        Topmost = true;
+        Topmost = false;
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd != IntPtr.Zero)
+        {
+            ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+            SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            SetWindowPos(hwnd, HwndNotTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
     }
 
     private void PositionOnDesktop()
