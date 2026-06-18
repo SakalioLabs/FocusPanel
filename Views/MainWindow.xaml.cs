@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
+using FocusPanel.Helpers;
 using FocusPanel.ViewModels;
 using FocusPanel.Services;
 using Microsoft.Win32;
@@ -212,6 +213,8 @@ namespace FocusPanel.Views
             {
                 e.Cancel = true;
                 _hiddenToTray = true;
+                _desktopOverlay?.HideFromApps();
+                DesktopHelper.ToggleDesktopIcons(true);
                 this.Hide();
             }
         }
@@ -320,6 +323,12 @@ namespace FocusPanel.Views
         private static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
         private void UpdateVisibilityForForeground()
@@ -332,6 +341,12 @@ namespace FocusPanel.Views
             }
 
             if (fg == GetWindowHandle())
+            {
+                ShowOnDesktop();
+                return;
+            }
+
+            if (!IsWindowVisible(fg) || IsIconic(fg))
             {
                 ShowOnDesktop();
                 return;
@@ -360,13 +375,20 @@ namespace FocusPanel.Views
 
         private void ShowOnDesktop()
         {
-            if (_hiddenToTray) return;
+            if (_hiddenToTray)
+            {
+                _desktopOverlay?.HideFromApps();
+                DesktopHelper.ToggleDesktopIcons(true);
+                return;
+            }
 
             _desktopOverlay?.ShowOnDesktop();
 
             if (Visibility == Visibility.Visible) return;
 
             Topmost = false;
+            if (!IsVisible)
+                Show();
             Visibility = Visibility.Visible;
             CollapseSidebar();
         }
@@ -374,6 +396,7 @@ namespace FocusPanel.Views
         private void HideFromApps()
         {
             _desktopOverlay?.HideFromApps();
+            DesktopHelper.ToggleDesktopIcons(true);
 
             if (Visibility != Visibility.Visible) return;
 

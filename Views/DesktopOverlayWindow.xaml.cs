@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Specialized;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -31,23 +32,25 @@ public partial class DesktopOverlayWindow : Window
     public DesktopOverlayWindow()
     {
         InitializeComponent();
-        DataContext = new DesktopOverlayViewModel();
+        var viewModel = new DesktopOverlayViewModel();
+        DataContext = viewModel;
+        viewModel.Files.CollectionChanged += DesktopFiles_CollectionChanged;
 
         Loaded += (_, _) =>
         {
             ApplyWindowStyles();
             PositionOnDesktop();
-            DesktopHelper.ToggleDesktopIcons(false);
+            SyncNativeDesktopIcons();
         };
         Closed += (_, _) => DesktopHelper.ToggleDesktopIcons(true);
     }
 
     public void RefreshOverlay()
     {
-        DesktopHelper.ToggleDesktopIcons(IsVisible == false);
-
         if (DataContext is DesktopOverlayViewModel vm)
             vm.Refresh();
+
+        Dispatcher.BeginInvoke(SyncNativeDesktopIcons);
     }
 
     public void ShowOnDesktop()
@@ -56,7 +59,7 @@ public partial class DesktopOverlayWindow : Window
             Show();
 
         Topmost = false;
-        DesktopHelper.ToggleDesktopIcons(false);
+        SyncNativeDesktopIcons();
     }
 
     public void HideFromApps()
@@ -64,7 +67,21 @@ public partial class DesktopOverlayWindow : Window
         if (IsVisible)
             Hide();
 
-        DesktopHelper.ToggleDesktopIcons(true);
+        SyncNativeDesktopIcons();
+    }
+
+    private void DesktopFiles_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        Dispatcher.BeginInvoke(SyncNativeDesktopIcons);
+    }
+
+    private void SyncNativeDesktopIcons()
+    {
+        bool overlayHasIcons = IsVisible
+            && DataContext is DesktopOverlayViewModel vm
+            && vm.Files.Count > 0;
+
+        DesktopHelper.ToggleDesktopIcons(!overlayHasIcons);
     }
 
     private void PositionOnDesktop()

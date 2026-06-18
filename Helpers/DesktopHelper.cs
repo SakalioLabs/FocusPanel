@@ -12,6 +12,9 @@ public static class DesktopHelper
     private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
     [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, uint flags, uint timeout, out IntPtr result);
+
+    [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string className, string windowTitle);
 
     [DllImport("user32.dll")]
@@ -65,6 +68,8 @@ public static class DesktopHelper
     private const int LVIF_TEXT = 0x0001;
     private const int SHCNE_ASSOCCHANGED = 0x08000000;
     private const uint SHCNF_IDLIST = 0x0000;
+    private const uint SMTO_NORMAL = 0x0000;
+    private const uint WM_SPAWN_WORKERW = 0x052C;
 
     public static void ToggleDesktopIcons(bool show)
     {
@@ -148,7 +153,20 @@ public static class DesktopHelper
 
     private static IntPtr GetDesktopListViewHandle()
     {
-        IntPtr progman = FindWindow("Progman", "Program Manager");
+        var handle = TryGetDesktopListViewHandle();
+        if (handle != IntPtr.Zero)
+            return handle;
+
+        RebuildDesktopHost();
+        return TryGetDesktopListViewHandle();
+    }
+
+    private static IntPtr TryGetDesktopListViewHandle()
+    {
+        IntPtr progman = FindWindow("Progman", null);
+        if (progman == IntPtr.Zero)
+            progman = FindWindow("Progman", "Program Manager");
+
         IntPtr shellDllDefView = FindWindowEx(progman, IntPtr.Zero, "SHELLDLL_DefView", null);
 
         if (shellDllDefView == IntPtr.Zero)
@@ -175,6 +193,18 @@ public static class DesktopHelper
         }
 
         return IntPtr.Zero;
+    }
+
+    private static void RebuildDesktopHost()
+    {
+        IntPtr progman = FindWindow("Progman", null);
+        if (progman == IntPtr.Zero)
+            progman = FindWindow("Progman", "Program Manager");
+
+        if (progman == IntPtr.Zero) return;
+
+        SendMessageTimeout(progman, WM_SPAWN_WORKERW, IntPtr.Zero, IntPtr.Zero, SMTO_NORMAL, 1000, out _);
+        RefreshDesktop();
     }
 
     private static int FindDesktopItemIndex(IntPtr listViewHandle, string targetText)

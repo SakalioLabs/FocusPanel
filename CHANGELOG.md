@@ -31,6 +31,10 @@
 - Fixed right-edge drawer chrome: removed right-side rounded corners, removed outer shadow halo, disabled host-window DWM rounding, and made the drawer background fully opaque.
 
 ### Desktop-Only Panel Behavior
+- Fixed a blank-desktop recovery issue by removing unconditional native desktop icon hiding during overlay load/refresh and synchronizing Explorer icon visibility only after the custom desktop overlay has visible icon data.
+- Added startup, tray-hide, app-hide, exit, and unhandled-exception fail-safes that restore Explorer's native desktop icons.
+- Hardened desktop ListView discovery by rebuilding the Explorer desktop host before giving up on native icon recovery.
+- Fixed desktop-scene detection for minimized or invisible foreground windows and explicitly shows the hidden-startup main window before making the panel visible.
 - Fixed a blank-desktop fail-safe issue by restoring Explorer's native desktop icons whenever the FocusPanel desktop overlay is hidden.
 - Hardened desktop-only window layering so both the desktop overlay and panel stay hidden outside the desktop scene and the panel never uses topmost mode over other applications.
 - Improved panel visibility behavior so it can stay available in the desktop scene while avoiding obstruction of normal foreground applications.

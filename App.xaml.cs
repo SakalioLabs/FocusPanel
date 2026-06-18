@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using FocusPanel.Data;
+using FocusPanel.Helpers;
 using FocusPanel.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        RestoreNativeDesktopIcons();
 
         // Set working directory to the application's base directory
         System.IO.Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
@@ -111,9 +113,16 @@ public partial class App : Application
         }
     }
 
+    protected override void OnExit(ExitEventArgs e)
+    {
+        RestoreNativeDesktopIcons();
+        base.OnExit(e);
+    }
+
     private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         LogException(e.Exception);
+        RestoreNativeDesktopIcons();
         
         // Specific handling for SQLite "no such table" error which might bubble up
         if (e.Exception.Message.Contains("no such table") || e.Exception.InnerException?.Message.Contains("no such table") == true)
@@ -137,6 +146,7 @@ public partial class App : Application
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
+        RestoreNativeDesktopIcons();
         if (e.ExceptionObject is Exception ex)
         {
             LogException(ex);
@@ -153,5 +163,18 @@ public partial class App : Application
             File.AppendAllText(logFile, message);
         }
         catch { }
+    }
+
+    private static void RestoreNativeDesktopIcons()
+    {
+        try
+        {
+            DesktopHelper.ToggleDesktopIcons(true);
+            DesktopHelper.RefreshDesktop();
+        }
+        catch
+        {
+            // Best-effort recovery path. Startup and crash handling must never fail because Explorer is unavailable.
+        }
     }
 }
