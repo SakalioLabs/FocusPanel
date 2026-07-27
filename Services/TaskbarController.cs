@@ -34,10 +34,11 @@ public sealed class TaskbarController : ITaskbarController
     private Timer? _guardTimer;
     private TaskbarSessionState? _state;
     private string? _lastApplyError;
+    private TaskbarReplacementStopReason _lastStopReason = TaskbarReplacementStopReason.Unknown;
     private int _restoring;
     private int _guardRunning;
 
-    public event Action<string?>? ReplacementStopped;
+    public event Action<TaskbarReplacementStoppedEvent>? ReplacementStopped;
 
     public TaskbarController()
         : this(
@@ -333,7 +334,9 @@ public sealed class TaskbarController : ITaskbarController
         {
             if (File.Exists(_disabledFile))
             {
-                StopReplacementFromGuard("任务栏替代模式已通过紧急快捷键关闭。");
+                StopReplacementFromGuard(
+                    TaskbarReplacementStopReason.EmergencyRestore,
+                    "任务栏替代模式已通过紧急快捷键关闭。");
                 return;
             }
 
@@ -352,12 +355,14 @@ public sealed class TaskbarController : ITaskbarController
             catch (Exception ex)
             {
                 _lastApplyError = $"任务栏守护检测异常：{ex.Message}";
+                _lastStopReason = TaskbarReplacementStopReason.Unknown;
                 valid = false;
             }
 
             if (!valid)
             {
                 StopReplacementFromGuard(
+                    _lastStopReason,
                     $"{_lastApplyError ?? "任务栏替代状态失效"}，已恢复 Windows 任务栏。");
             }
         }
@@ -374,31 +379,37 @@ public sealed class TaskbarController : ITaskbarController
         if (taskbar == IntPtr.Zero)
         {
             _lastApplyError = "Explorer 任务栏宿主已重新创建或暂时不可用";
+            _lastStopReason = TaskbarReplacementStopReason.ExplorerHostChanged;
             return false;
         }
 
         if (_native.IsWindowVisible(taskbar))
         {
             _lastApplyError = "Windows 已重新显示原生任务栏";
+            _lastStopReason = TaskbarReplacementStopReason.WindowsTaskbarReappeared;
             return false;
         }
 
         if ((_native.GetAppBarState(taskbar) & AbsAutoHide) == 0)
         {
             _lastApplyError = "Windows 已取消任务栏自动隐藏状态";
+            _lastStopReason = TaskbarReplacementStopReason.Unknown;
             return false;
         }
 
         _lastApplyError = null;
+        _lastStopReason = TaskbarReplacementStopReason.Unknown;
         return true;
     }
 
-    private void StopReplacementFromGuard(string error)
+    private void StopReplacementFromGuard(
+        TaskbarReplacementStopReason reason,
+        string error)
     {
         Restore();
         try
         {
-            ReplacementStopped?.Invoke(error);
+            ReplacementStopped?.Invoke(new TaskbarReplacementStoppedEvent(reason, error));
         }
         catch
         {

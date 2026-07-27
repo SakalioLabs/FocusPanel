@@ -394,10 +394,16 @@ public partial class MainWindow : Window
     }
 
     private void CalendarButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
-    private void QuickControlsButton_Click(object sender, RoutedEventArgs e)
+    private void FocusCenterButton_Click(object sender, RoutedEventArgs e)
     {
         ExpandSidebar();
-        _viewModel.ToggleQuickSettingsCommand.Execute(null);
+        _viewModel.ToggleFocusCenterCommand.Execute(null);
+    }
+
+    private void StatusCenterButton_Click(object sender, RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        _viewModel.ToggleStatusCenterCommand.Execute(null);
     }
 
     private void CalendarPanelButton_Click(object sender, RoutedEventArgs e)
@@ -555,7 +561,8 @@ public partial class MainWindow : Window
     {
         _viewModel.IsSearchOpen = false;
         _viewModel.IsCalendarOpen = false;
-        _viewModel.IsQuickSettingsOpen = false;
+        _viewModel.IsFocusCenterOpen = false;
+        _viewModel.IsStatusCenterOpen = false;
         _viewModel.IsSettingsOpen = false;
         _viewModel.IsPowerMenuOpen = false;
     }
@@ -567,7 +574,8 @@ public partial class MainWindow : Window
 
         if (_viewModel.IsSearchOpen
             || _viewModel.IsCalendarOpen
-            || _viewModel.IsQuickSettingsOpen
+            || _viewModel.IsFocusCenterOpen
+            || _viewModel.IsStatusCenterOpen
             || _viewModel.IsSettingsOpen
             || _viewModel.IsPowerMenuOpen)
         {
@@ -593,7 +601,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        _viewModel.MarkReplacementEnabled(false, error);
+        _viewModel.MarkReplacementStopped(
+            TaskbarReplacementStopReason.StartupFailure,
+            error ?? "无法启用任务栏替代模式。");
         MessageBox.Show(
             error ?? "无法启用任务栏替代模式。",
             "已保留 Windows 任务栏",
@@ -607,7 +617,7 @@ public partial class MainWindow : Window
         _viewModel.MarkReplacementEnabled(false);
     }
 
-    private void Taskbar_ReplacementStopped(string? error)
+    private void Taskbar_ReplacementStopped(TaskbarReplacementStoppedEvent stopped)
     {
         if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
             return;
@@ -619,7 +629,7 @@ public partial class MainWindow : Window
                 if (_isExit)
                     return;
 
-                _viewModel.MarkReplacementEnabled(false, error);
+                _viewModel.MarkReplacementStopped(stopped.Reason, stopped.Message);
             });
         }
         catch (InvalidOperationException)

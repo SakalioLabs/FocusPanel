@@ -57,7 +57,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isCalendarOpen;
 
     [ObservableProperty]
-    private bool isQuickSettingsOpen;
+    private bool isFocusCenterOpen;
+
+    [ObservableProperty]
+    private bool isStatusCenterOpen;
 
     [ObservableProperty]
     private bool isSettingsOpen;
@@ -76,6 +79,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string replacementError = string.Empty;
+
+    [ObservableProperty]
+    private TaskbarReplacementStopReason? replacementStopReason;
+
+    [ObservableProperty]
+    private bool hasReplacementWarning;
+
+    [ObservableProperty]
+    private string lastWorkspace = "Files";
 
     [ObservableProperty]
     private bool startWithWindows;
@@ -240,6 +252,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Navigate(string? destination)
     {
+        CloseTransientPanels();
         switch (destination)
         {
             case "Tasks":
@@ -271,6 +284,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 return;
         }
 
+        LastWorkspace = destination;
         WorkspaceRequested?.Invoke(destination);
     }
 
@@ -384,7 +398,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ToggleSearch()
     {
-        IsSearchOpen = !IsSearchOpen;
+        bool open = !IsSearchOpen;
+        CloseTransientPanels();
+        IsSearchOpen = open;
         if (IsSearchOpen)
             RefreshSearchResults();
     }
@@ -398,18 +414,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ToggleQuickSettings()
+    private void ToggleFocusCenter()
     {
-        bool open = !IsQuickSettingsOpen;
+        bool open = !IsFocusCenterOpen;
         CloseTransientPanels();
-        IsQuickSettingsOpen = open;
+        IsFocusCenterOpen = open;
+    }
+
+    [RelayCommand]
+    private void ToggleStatusCenter()
+    {
+        bool open = !IsStatusCenterOpen;
+        CloseTransientPanels();
+        IsStatusCenterOpen = open;
     }
 
     [RelayCommand]
     private void ToggleSettings()
     {
         ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles;
-        IsSettingsOpen = !IsSettingsOpen;
+        bool open = !IsSettingsOpen;
+        CloseTransientPanels();
+        IsSettingsOpen = open;
     }
 
     [RelayCommand]
@@ -428,12 +454,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         => SetSystemActionResult(
             _systemStatus.OpenQuickSettings(),
             "无法唤起 Windows 快捷设置，请使用 Win+A。");
-
-    [RelayCommand]
-    private void OpenNotificationOverflow()
-        => SetSystemActionResult(
-            _systemStatus.OpenNotificationOverflow(),
-            "完整替代模式下无法可靠复制 Explorer 的第三方托盘溢出内容。可从对应应用或 FocusPanel 托盘菜单进入。");
 
     [RelayCommand]
     private void OpenNotifications()
@@ -536,14 +556,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsReplacementEnabled = enabled;
         IsOnboardingVisible = false;
+        HasReplacementWarning = !enabled && !string.IsNullOrWhiteSpace(error);
+        if (enabled || !HasReplacementWarning)
+            ReplacementStopReason = null;
         ReplacementStatus = enabled
             ? "侧边任务栏运行中 · Windows 任务栏已完整隐藏"
-            : "替代模式未启用，Windows 任务栏保持原设置";
+            : HasReplacementWarning
+                ? "Windows 任务栏已安全恢复"
+                : "替代模式未启用，Windows 任务栏保持原设置";
         ReplacementError = error ?? string.Empty;
         SaveBooleanConfig(FirstRunAcceptedKey, true);
         SaveBooleanConfig(ReplacementEnabledKey, enabled);
         AutoStartupService.SetStartup(enabled && StartWithWindows);
     }
+
+    public void MarkReplacementStopped(TaskbarReplacementStopReason reason, string message)
+    {
+        ReplacementStopReason = reason;
+        MarkReplacementEnabled(false, message);
+    }
+
+    [RelayCommand]
+    private void OpenLastWorkspace() => Navigate(LastWorkspace);
 
     [RelayCommand]
     private void CloseApp() => RequestClose?.Invoke();
@@ -707,7 +741,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsSearchOpen = false;
         IsCalendarOpen = false;
-        IsQuickSettingsOpen = false;
+        IsFocusCenterOpen = false;
+        IsStatusCenterOpen = false;
         IsSettingsOpen = false;
         IsPowerMenuOpen = false;
     }

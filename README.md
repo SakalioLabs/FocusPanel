@@ -14,13 +14,14 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 固定应用与运行应用按 Windows AppUserModelID 或可执行路径合并为单一任务栏图标；固定项保持用户顺序，未固定运行项保持本次运行中的稳定顺序。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用点击展开窗口列表，并可逐个切换、正常关闭或关闭全部窗口。
 - 运行项可通过右键固定；拖动未固定运行项会自动创建固定项并保存排序，取消固定后只要窗口仍在就继续显示。
-- 日期入口打开月历与今日任务，系统区提供音量、静音、网络、电池、通知、输入法、显示桌面和电源操作；音量图标支持滚轮调节和右键静音。
+- 紧凑栏固定为开始、搜索、任务视图、Focus 中心、状态中心和时间六个入口，中部只显示统一的固定/运行应用列表。
+- Focus 中心统一承载桌面收纳、任务、番茄钟、OKR、AI、最近使用模块和设置更新；状态中心集中音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
 - 开始按钮左键打开 Windows 开始菜单，右键提供 Win+X 风格系统管理菜单，包括安装的应用、电源选项、事件查看器、系统、设备管理器、网络连接、磁盘管理、计算机管理、终端、管理员终端、任务管理器、设置和文件资源管理器。
-- 紧凑栏按“应用 → FocusPanel 工作区 → Windows 核心操作 → 系统状态”分层；开始、任务视图、托盘、输入法、网络/音量、时钟、通知、显示桌面和 FocusPanel 设置保持独立入口。
+- 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
 
 ## 侧边任务栏完整替代与安全恢复
 
-完整替代模式先使用微软公开的 `ABM_SETSTATE + ABS_AUTOHIDE` 让 Explorer 释放工作区，再一次性隐藏主屏 `Shell_TrayWnd`。守护器只读取并验证状态，不会周期性执行 `ShowWindow` 或 `SPI_SETWORKAREA`，因此不会与 Explorer 在“占用/释放工作区”之间来回争抢。Windows 若主动恢复任务栏或 Explorer 宿主失效，FocusPanel 会退出替代模式并恢复原设置，而不是反复隐藏造成闪烁。
+完整替代模式先使用微软公开的 `ABM_SETSTATE + ABS_AUTOHIDE` 让 Explorer 释放工作区，再一次性隐藏主屏 `Shell_TrayWnd`。守护器只读取并验证状态，不会周期性执行 `ShowWindow` 或 `SPI_SETWORKAREA`，因此不会与 Explorer 在“占用/释放工作区”之间来回争抢。Windows 若主动恢复任务栏或 Explorer 宿主失效，FocusPanel 会退出替代模式并恢复原设置，而不是反复隐藏造成闪烁。状态中心和设置页会显示停止原因；确认环境正常后，由用户点击“重新接管任务栏”手动启用。
 
 首次启用前会显示安全说明。只有在侧边壳层、热区以及独立恢复守护进程都就绪后，FocusPanel 才会隐藏原任务栏；紧急快捷键注册失败时不会改变任务栏设置。
 
@@ -103,7 +104,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.23 `
+  -Version 0.9.24 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -112,7 +113,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.23-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.24-full.nupkg`：完整更新包。
 - `releases.win.json`、`assets.win.json` 和 `RELEASES`：更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -125,7 +126,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.23 `
+  -Version 0.9.24 `
   -Dotnet8Path dotnet
 ```
 

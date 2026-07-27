@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Automation;
 using System.Windows.Forms;
 
 namespace FocusPanel.Services;
@@ -219,54 +218,6 @@ public sealed class SystemStatusService : ISystemStatusService
         && (SystemInformation.PowerStatus.BatteryChargeStatus & BatteryChargeStatus.Charging) != 0;
 
     public bool OpenQuickSettings() => TrySendWindowsShortcut(WindowsShellAction.QuickSettings);
-
-    public bool OpenNotificationOverflow()
-    {
-        try
-        {
-            IntPtr taskbar = NativeMethods.FindWindow("Shell_TrayWnd", null);
-            if (taskbar == IntPtr.Zero)
-                return false;
-
-            AutomationElement root = AutomationElement.FromHandle(taskbar);
-            AutomationElementCollection elements = root.FindAll(
-                TreeScope.Descendants,
-                Condition.TrueCondition);
-            var nodes = new TrayAutomationNode[elements.Count];
-            for (int index = 0; index < elements.Count; index++)
-            {
-                AutomationElement element = elements[index];
-                nodes[index] = new TrayAutomationNode(
-                    element.Current.Name ?? string.Empty,
-                    element.Current.AutomationId ?? string.Empty,
-                    element.Current.ClassName ?? string.Empty,
-                    element.TryGetCurrentPattern(InvokePattern.Pattern, out _));
-            }
-
-            int targetIndex = TrayOverflowTargetSelector.FindBestCandidate(nodes);
-            if (targetIndex < 0
-                || !elements[targetIndex].TryGetCurrentPattern(InvokePattern.Pattern, out object? pattern)
-                || pattern is not InvokePattern invokePattern)
-            {
-                return false;
-            }
-
-            invokePattern.Invoke();
-            return true;
-        }
-        catch (ElementNotAvailableException)
-        {
-            return false;
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
-        catch (COMException)
-        {
-            return false;
-        }
-    }
 
     public bool OpenNotifications() => TrySendWindowsShortcut(WindowsShellAction.Notifications);
 

@@ -15,7 +15,6 @@ public interface ISystemStatusService : IDisposable
     int BatteryPercent { get; }
     bool IsCharging { get; }
     bool OpenQuickSettings();
-    bool OpenNotificationOverflow();
     bool OpenNotifications();
     bool OpenInputSwitcher();
     bool OpenStartMenu();

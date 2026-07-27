@@ -150,7 +150,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_UsesDirectSystemControlsInsteadOfSettingsShortcuts()
+    public void StatusCenter_ExposesSupportedSystemControls()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
@@ -165,7 +165,10 @@ public sealed class XamlResourceContractTests
         Assert.Contains("SleepComputerCommand", mainWindow);
         Assert.Contains("ShowDesktopCommand", mainWindow);
         Assert.Contains("Visibility=\"{Binding IsCalendarOpen", mainWindow);
-        Assert.Contains("Visibility=\"{Binding IsQuickSettingsOpen", mainWindow);
+        Assert.Contains("Visibility=\"{Binding IsStatusCenterOpen", mainWindow);
+        Assert.Contains("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
+        Assert.Contains("EnableReplacementCommand", mainWindow);
+        Assert.DoesNotContain("OpenNotificationOverflow", mainWindow);
 
         string systemStatus = File.ReadAllText(
             Path.Combine(root, "Services", "SystemStatusService.cs"));
@@ -175,7 +178,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_PreservesSettingsAndAvoidsLowHeightButtonOverflow()
+    public void CompactDock_HasExactlySixFixedEntriesAndOneApplicationList()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
@@ -186,14 +189,23 @@ public sealed class XamlResourceContractTests
 
         Assert.True(dockStart >= 0 && onboardingStart > dockStart);
         string compactDock = mainWindow[dockStart..onboardingStart];
-        Assert.Contains("Click=\"SettingsButton_Click\"", compactDock);
-        Assert.Contains("Command=\"{Binding ToggleSettingsCommand}\"", compactDock);
-        Assert.Contains("Click=\"QuickControlsButton_Click\"", compactDock);
-        Assert.Contains("OpenNotificationOverflowCommand", compactDock);
-        Assert.Contains("OpenInputSwitcherCommand", compactDock);
-        Assert.Contains("InputLanguageDisplay", compactDock);
-        Assert.Contains("InputMethodDisplay", compactDock);
+        Assert.Equal(6, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
+        Assert.Equal(1, compactDock.Split("ItemsSource=\"{Binding TaskbarApps}\"").Length - 1);
+        Assert.Contains("Click=\"FocusCenterButton_Click\"", compactDock);
+        Assert.Contains("Click=\"StatusCenterButton_Click\"", compactDock);
+        Assert.DoesNotContain("OpenNotificationOverflow", compactDock);
+        Assert.DoesNotContain("OpenInputSwitcherCommand", compactDock);
+        Assert.DoesNotContain("OpenNotificationsCommand", compactDock);
+        Assert.DoesNotContain("ToggleSettingsCommand", compactDock);
         Assert.DoesNotContain("BatteryPercent", compactDock);
+
+        string systemStatus = File.ReadAllText(
+            Path.Combine(root, "Services", "SystemStatusService.cs"));
+        string statusContract = File.ReadAllText(
+            Path.Combine(root, "Services", "ISystemStatusService.cs"));
+        Assert.DoesNotContain("OpenNotificationOverflow", systemStatus);
+        Assert.DoesNotContain("OpenNotificationOverflow", statusContract);
+        Assert.DoesNotContain("System.Windows.Automation", systemStatus);
 
         string onboarding = mainWindow[onboardingStart..];
         Assert.Contains("<Border Grid.Column=\"0\"", onboarding);

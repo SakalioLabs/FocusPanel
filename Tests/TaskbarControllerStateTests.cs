@@ -301,8 +301,8 @@ public sealed class TaskbarControllerStateTests
                 native,
                 new FakeWatchdogLauncher(),
                 sessionFile);
-            string? stoppedReason = null;
-            controller.ReplacementStopped += reason => stoppedReason = reason;
+            TaskbarReplacementStoppedEvent? stopped = null;
+            controller.ReplacementStopped += value => stopped = value;
 
             Assert.True(controller.TryEnableReplacement(out _));
             native.AppBarState = 2;
@@ -312,7 +312,8 @@ public sealed class TaskbarControllerStateTests
 
             Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
-            Assert.False(string.IsNullOrWhiteSpace(stoppedReason));
+            Assert.NotNull(stopped);
+            Assert.False(string.IsNullOrWhiteSpace(stopped.Message));
             Assert.False(File.Exists(sessionFile));
         }
         finally
@@ -338,8 +339,8 @@ public sealed class TaskbarControllerStateTests
                 native,
                 new FakeWatchdogLauncher(),
                 sessionFile);
-            string? stoppedReason = null;
-            controller.ReplacementStopped += reason => stoppedReason = reason;
+            TaskbarReplacementStoppedEvent? stopped = null;
+            controller.ReplacementStopped += value => stopped = value;
 
             Assert.True(controller.TryEnableReplacement(out _));
             Assert.Equal(1, native.HideWriteCount);
@@ -350,7 +351,65 @@ public sealed class TaskbarControllerStateTests
             Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
             Assert.Equal(1, native.HideWriteCount);
-            Assert.Contains("重新显示", stoppedReason);
+            Assert.NotNull(stopped);
+            Assert.Equal(TaskbarReplacementStopReason.WindowsTaskbarReappeared, stopped.Reason);
+            Assert.Contains("重新显示", stopped.Message);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void ExplorerHostChange_ReportsTypedReasonAndDoesNotRehide()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "FocusPanel.Tests", Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(directory, "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(native, new FakeWatchdogLauncher(), sessionFile);
+            TaskbarReplacementStoppedEvent? stopped = null;
+            controller.ReplacementStopped += value => stopped = value;
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            native.TaskbarHandle = IntPtr.Zero;
+            controller.RunGuardOnceForTests();
+
+            Assert.NotNull(stopped);
+            Assert.Equal(TaskbarReplacementStopReason.ExplorerHostChanged, stopped.Reason);
+            Assert.Equal(1, native.HideWriteCount);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void EmergencyDisableMarker_ReportsTypedReason()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "FocusPanel.Tests", Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(directory, "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(native, new FakeWatchdogLauncher(), sessionFile);
+            TaskbarReplacementStoppedEvent? stopped = null;
+            controller.ReplacementStopped += value => stopped = value;
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            File.WriteAllText(sessionFile + ".disabled", "disabled");
+            controller.RunGuardOnceForTests();
+
+            Assert.NotNull(stopped);
+            Assert.Equal(TaskbarReplacementStopReason.EmergencyRestore, stopped.Reason);
+            Assert.Equal(1, native.HideWriteCount);
         }
         finally
         {
@@ -373,6 +432,7 @@ public sealed class TaskbarControllerStateTests
 
     private sealed class FakeTaskbarNativeApi : ITaskbarNativeApi
     {
+        public IntPtr TaskbarHandle { get; set; } = new(1);
         public bool Visible { get; set; } = true;
         public uint AppBarState { get; set; } = 2;
         public int WorkAreaWriteCount { get; private set; }
@@ -397,7 +457,7 @@ public sealed class TaskbarControllerStateTests
             Bottom = 1040
         };
 
-        public IntPtr FindPrimaryTaskbar() => new(1);
+        public IntPtr FindPrimaryTaskbar() => TaskbarHandle;
 
         public bool IsWindowVisible(IntPtr taskbar) => Visible;
 
