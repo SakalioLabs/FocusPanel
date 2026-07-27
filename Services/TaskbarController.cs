@@ -21,6 +21,7 @@ public sealed class TaskbarController : ITaskbarController
     private const uint SpifSendChange = 0x0002;
     private const uint AbmGetState = 0x00000004;
     private const uint AbmSetState = 0x0000000A;
+    private const string MutationMutexName = @"Local\FocusPanel.TaskbarMutation";
     private static readonly JsonSerializerOptions SessionJsonOptions = new()
     {
         IncludeFields = true
@@ -148,6 +149,7 @@ public sealed class TaskbarController : ITaskbarController
 
     internal static void RestoreSessionFile(string sessionFile, ITaskbarNativeApi native)
     {
+        using var mutation = AcquireMutationMutex();
         TaskbarSessionState? state = null;
         try
         {
@@ -162,15 +164,24 @@ public sealed class TaskbarController : ITaskbarController
         }
 
         IntPtr taskbar = native.FindPrimaryTaskbar();
-        if (taskbar != IntPtr.Zero)
-        {
-            native.SetTaskbarVisible(taskbar, state == null || state.TaskbarWasVisible);
-            if (state != null)
-                native.SetAppBarState(taskbar, state.OriginalAppBarState);
-        }
-
         if (state != null)
             native.SetWorkArea(state.OriginalWorkArea);
+
+        if (taskbar != IntPtr.Zero)
+        {
+            if (state != null)
+                native.SetAppBarState(taskbar, state.OriginalAppBarState);
+
+            bool shouldBeVisible = state == null || state.TaskbarWasVisible;
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                if (native.SetTaskbarVisible(taskbar, shouldBeVisible)
+                    && native.IsWindowVisible(taskbar) == shouldBeVisible)
+                {
+                    break;
+                }
+            }
+        }
 
         try
         {
@@ -185,6 +196,7 @@ public sealed class TaskbarController : ITaskbarController
 
     private bool ApplyReplacement()
     {
+        using var mutation = AcquireMutationMutex();
         if (_state == null)
         {
             _lastApplyError = "任务栏恢复会话尚未建立";
@@ -198,14 +210,28 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if (!_native.SetWorkArea(_state.PrimaryBounds))
+        if (File.Exists(_disabledFile))
+        {
+            _lastApplyError = "本次替代会话已经被紧急停用";
+            return false;
+        }
+
+        if (!_native.TryGetWorkArea(out NativeRect currentWorkArea))
+        {
+            _lastApplyError = "无法读取当前 Windows 工作区";
+            return false;
+        }
+
+        if (!RectsEqual(currentWorkArea, _state.PrimaryBounds)
+            && !_native.SetWorkArea(_state.PrimaryBounds))
         {
             _lastApplyError = "Windows 拒绝释放主屏工作区";
             return false;
         }
 
-        if (!_native.SetTaskbarVisible(taskbar, false)
-            || _native.IsWindowVisible(taskbar))
+        if (_native.IsWindowVisible(taskbar)
+            && (!_native.SetTaskbarVisible(taskbar, false)
+                || _native.IsWindowVisible(taskbar)))
         {
             _lastApplyError = "Windows 任务栏窗口仍然可见";
             return false;
@@ -213,6 +239,52 @@ public sealed class TaskbarController : ITaskbarController
 
         _lastApplyError = null;
         return true;
+    }
+
+    private static bool RectsEqual(NativeRect left, NativeRect right)
+        => left.Left == right.Left
+            && left.Top == right.Top
+            && left.Right == right.Right
+            && left.Bottom == right.Bottom;
+
+    private static IDisposable AcquireMutationMutex()
+    {
+        var mutex = new Mutex(false, MutationMutexName);
+        try
+        {
+            try
+            {
+                if (!mutex.WaitOne(TimeSpan.FromSeconds(3)))
+                    throw new TimeoutException("等待任务栏状态锁超时。");
+            }
+            catch (AbandonedMutexException)
+            {
+                // The previous owner crashed; this process now owns the mutex.
+            }
+
+            return new MutexLease(mutex);
+        }
+        catch
+        {
+            mutex.Dispose();
+            throw;
+        }
+    }
+
+    private sealed class MutexLease : IDisposable
+    {
+        private Mutex? _mutex;
+
+        public MutexLease(Mutex mutex) => _mutex = mutex;
+
+        public void Dispose()
+        {
+            Mutex? mutex = Interlocked.Exchange(ref _mutex, null);
+            if (mutex == null)
+                return;
+            mutex.ReleaseMutex();
+            mutex.Dispose();
+        }
     }
 
     private void GuardReplacement()
@@ -229,6 +301,8 @@ public sealed class TaskbarController : ITaskbarController
         if (!ApplyReplacement())
             Restore();
     }
+
+    internal void RunGuardOnceForTests() => GuardReplacement();
 
     public void Dispose() => Restore();
 

@@ -352,7 +352,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void TogglePowerMenu() => IsPowerMenuOpen = !IsPowerMenuOpen;
+    private void TogglePowerMenu()
+    {
+        bool open = !IsPowerMenuOpen;
+        CloseTransientPanels();
+        IsPowerMenuOpen = open;
+    }
 
     [RelayCommand]
     private void ToggleMute() => IsMuted = !IsMuted;

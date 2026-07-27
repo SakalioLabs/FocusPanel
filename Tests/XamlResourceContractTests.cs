@@ -174,6 +174,29 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("ms-settings:typing", systemStatus);
     }
 
+    [Fact]
+    public void CompactDock_PreservesSettingsAndAvoidsLowHeightButtonOverflow()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
+        int dockStart = mainWindow.IndexOf("<!-- Compact app dock -->", StringComparison.Ordinal);
+        int onboardingStart = mainWindow.IndexOf(
+            "<!-- First-run safety onboarding -->",
+            StringComparison.Ordinal);
+
+        Assert.True(dockStart >= 0 && onboardingStart > dockStart);
+        string compactDock = mainWindow[dockStart..onboardingStart];
+        Assert.Contains("Click=\"SettingsButton_Click\"", compactDock);
+        Assert.Contains("Command=\"{Binding ToggleSettingsCommand}\"", compactDock);
+        Assert.Contains("Click=\"QuickControlsButton_Click\"", compactDock);
+        Assert.DoesNotContain("OpenInputSwitcherCommand", compactDock);
+        Assert.DoesNotContain("BatteryPercent", compactDock);
+
+        string onboarding = mainWindow[onboardingStart..];
+        Assert.Contains("<Border Grid.Column=\"0\"", onboarding);
+        Assert.DoesNotContain("Grid.ColumnSpan=\"2\"", onboarding);
+    }
+
     private static HashSet<string> ReadDefinedKeys(params string[] paths)
     {
         var keys = new HashSet<string>(StringComparer.Ordinal);

@@ -361,11 +361,12 @@
                                 </TextBlock.Style>
                             </TextBlock>
 
-                            <UniformGrid Columns="4">
+                            <UniformGrid Columns="5">
                                 <Button Style="{StaticResource FocusSecondaryButton}" Content="输入法" Command="{Binding OpenInputSwitcherCommand}"/>
                                 <Button Style="{StaticResource FocusSecondaryButton}" Content="通知" Command="{Binding OpenNotificationsCommand}"/>
                                 <Button Style="{StaticResource FocusSecondaryButton}" Content="锁定" Command="{Binding LockComputerCommand}"/>
                                 <Button Style="{StaticResource FocusSecondaryButton}" Content="睡眠" Command="{Binding SleepComputerCommand}"/>
+                                <Button Style="{StaticResource FocusSecondaryButton}" Content="电源" Command="{Binding TogglePowerMenuCommand}"/>
                             </UniformGrid>
                         </StackPanel>
                     </Border>
@@ -684,7 +685,7 @@
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
                             <Button Style="{StaticResource FocusIconButton}"
                                     Click="QuickControlsButton_Click"
-                                    ToolTip="{Binding NetworkDisplayName, StringFormat=网络：{0} · 点击直接控制}">
+                                    ToolTip="网络、音量、电池与输入法">
                                 <TextBlock>
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
@@ -698,19 +699,6 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                            </Button>
-                            <Button Style="{StaticResource FocusIconButton}"
-                                    Click="QuickControlsButton_Click"
-                                    ToolTip="{Binding MasterVolume, StringFormat=系统音量：{0:P0}}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource FocusIconText}"
-                                               FontSize="15"
-                                               Text="&#xE767;"/>
-                                    <TextBlock Text="{Binding MasterVolume, StringFormat={}{0:P0}}"
-                                               HorizontalAlignment="Center"
-                                               FontSize="8"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
-                                </StackPanel>
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
                                     Click="CalendarPanelButton_Click"
@@ -731,39 +719,13 @@
                                     ToolTip="打开 Windows 通知中心">
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xEA8F;"/>
                             </Button>
-                            <Button Style="{StaticResource FocusIconButton}"
-                                    Command="{Binding OpenInputSwitcherCommand}"
-                                    ToolTip="切换输入法">
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE775;"/>
-                            </Button>
-                            <Button Style="{StaticResource FocusIconButton}"
-                                    Click="QuickControlsButton_Click"
-                                    ToolTip="{Binding BatteryPercent, StringFormat=电池：{0}%}">
-                                <Button.Visibility>
-                                    <Binding Path="HasBattery" Converter="{StaticResource BooleanToVisibilityConverter}"/>
-                                </Button.Visibility>
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource FocusIconText}" FontSize="14" Text="&#xE850;"/>
-                                    <TextBlock Text="{Binding BatteryPercent, StringFormat={}{0}%}"
-                                               HorizontalAlignment="Center"
-                                               FontSize="8"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
-                                </StackPanel>
-                            </Button>
                             <Button Style="{StaticResource FocusIconButton}" Command="{Binding ShowDesktopCommand}" ToolTip="显示桌面">
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE7C4;"/>
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
-                                    Click="OpenButtonContextMenu"
-                                    ToolTip="通知、设置与电源">
-                                <Button.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Header="通知中心" Command="{Binding PlacementTarget.DataContext.OpenNotificationsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <Separator/>
-                                        <MenuItem Header="FocusPanel 设置" Click="SettingsMenuItem_Click"/>
-                                        <MenuItem Header="电源菜单" Click="PowerMenuItem_Click"/>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
+                                    Click="SettingsButton_Click"
+                                    Command="{Binding ToggleSettingsCommand}"
+                                    ToolTip="FocusPanel 设置">
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE713;"/>
                             </Button>
                         </StackPanel>
@@ -771,7 +733,7 @@
                 </Border>
 
                 <!-- First-run safety onboarding -->
-                <Border Grid.ColumnSpan="2"
+                <Border Grid.Column="0"
                         Panel.ZIndex="50"
                         Margin="0"
                         Padding="28"

@@ -139,6 +139,40 @@ public sealed class TaskbarControllerStateTests
         }
     }
 
+    [Fact]
+    public void StableReplacement_GuardDoesNotRewriteWorkAreaOrTaskbar()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(directory, "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            int workAreaWrites = native.WorkAreaWriteCount;
+            int visibilityWrites = native.TaskbarVisibilityWriteCount;
+
+            controller.RunGuardOnceForTests();
+            controller.RunGuardOnceForTests();
+
+            Assert.Equal(workAreaWrites, native.WorkAreaWriteCount);
+            Assert.Equal(visibilityWrites, native.TaskbarVisibilityWriteCount);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
     private sealed class FakeWatchdogLauncher : ITaskbarWatchdogLauncher
     {
         public int StartCount { get; private set; }
@@ -156,6 +190,7 @@ public sealed class TaskbarControllerStateTests
         public bool Visible { get; set; } = true;
         public uint AppBarState { get; private set; } = 7;
         public int WorkAreaWriteCount { get; private set; }
+        public int TaskbarVisibilityWriteCount { get; private set; }
         public bool SetWorkAreaSucceeds { get; set; } = true;
         public bool HideSucceeds { get; set; } = true;
         public TaskbarController.NativeRect WorkArea { get; private set; } = new()
@@ -194,6 +229,7 @@ public sealed class TaskbarControllerStateTests
 
         public bool SetTaskbarVisible(IntPtr taskbar, bool visible)
         {
+            TaskbarVisibilityWriteCount++;
             if (!visible && !HideSucceeds)
                 return false;
             Visible = visible;
