@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -280,6 +281,48 @@ public sealed class SystemStatusService : ISystemStatusService
     public bool OpenWidgets() => TrySendWindowsShortcut(WindowsShellAction.Widgets);
 
     public bool OpenRunDialog() => TrySendWindowsShortcut(WindowsShellAction.RunDialog);
+
+    public bool OpenManagementTool(SystemManagementTool tool)
+    {
+        SystemLaunchRequest request = SystemManagementToolCatalog.Get(tool);
+        try
+        {
+            return StartManagementRequest(request.FileName, request) != null;
+        }
+        catch (Win32Exception ex) when (
+            ex.NativeErrorCode is 2 or 3
+            && !string.IsNullOrWhiteSpace(request.FallbackFileName))
+        {
+            try
+            {
+                return StartManagementRequest(request.FallbackFileName, request) != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static Process? StartManagementRequest(
+        string fileName,
+        SystemLaunchRequest request)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = fileName,
+            UseShellExecute = true
+        };
+        if (!string.IsNullOrWhiteSpace(request.Arguments))
+            startInfo.Arguments = request.Arguments;
+        if (!string.IsNullOrWhiteSpace(request.Verb))
+            startInfo.Verb = request.Verb;
+        return Process.Start(startInfo);
+    }
 
     public void OpenPowerSettings() => OpenSystemUri("ms-settings:powersleep");
 

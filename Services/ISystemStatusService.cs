@@ -23,6 +23,7 @@ public interface ISystemStatusService : IDisposable
     bool OpenWindowsSearch();
     bool OpenWidgets();
     bool OpenRunDialog();
+    bool OpenManagementTool(SystemManagementTool tool);
     void OpenPowerSettings();
     void ShowDesktop();
     void Lock();

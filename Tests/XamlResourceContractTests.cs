@@ -216,6 +216,15 @@ public sealed class XamlResourceContractTests
         Assert.Contains("OpenTaskViewCommand", mainWindow);
         Assert.Contains("OpenWidgetsCommand", mainWindow);
         Assert.Contains("OpenRunDialogCommand", mainWindow);
+        Assert.Contains("SystemManagementTool.InstalledApps", mainWindow);
+        Assert.Contains("SystemManagementTool.PowerOptions", mainWindow);
+        Assert.Contains("SystemManagementTool.EventViewer", mainWindow);
+        Assert.Contains("SystemManagementTool.DeviceManager", mainWindow);
+        Assert.Contains("SystemManagementTool.NetworkConnections", mainWindow);
+        Assert.Contains("SystemManagementTool.DiskManagement", mainWindow);
+        Assert.Contains("SystemManagementTool.ComputerManagement", mainWindow);
+        Assert.Contains("SystemManagementTool.TerminalAdministrator", mainWindow);
+        Assert.Contains("SystemManagementTool.TaskManager", mainWindow);
         Assert.Contains("TaskbarApp_Click", mainWindow);
         Assert.Contains("PopulateTaskbarAppContextMenu", codeBehind);
         Assert.Contains("CloseWindowCommand", codeBehind);
@@ -293,7 +302,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void TaskbarCompatibilityMode_KeepsExplorerHostAndAvoidsWorkAreaFight()
+    public void TaskbarExclusiveMode_HidesOnceAndGuardRemainsReadOnly()
     {
         string root = FindRepositoryRoot();
         string controller = File.ReadAllText(
@@ -303,14 +312,14 @@ public sealed class XamlResourceContractTests
 
         Assert.Contains("AbsAutoHide", controller);
         Assert.Contains("UsesNativeAutoHide = true", controller);
-        Assert.Contains("SetTaskbarVisible(taskbar, true)", controller);
+        Assert.Contains("SetTaskbarVisible(taskbar, false)", controller);
+        Assert.Contains("ValidateReplacement()", controller);
         Assert.DoesNotContain(
             "_native.SetWorkArea(_state.PrimaryBounds)",
             controller);
-        Assert.DoesNotContain(
-            "_native.SetTaskbarVisible(taskbar, false)",
-            controller);
-        Assert.Contains("Windows 官方自动隐藏状态", onboarding);
+        Assert.DoesNotContain("ApplyReplacement();", controller[
+            controller.IndexOf("private void GuardReplacementSafely", StringComparison.Ordinal)..]);
+        Assert.Contains("守护器只验证状态，不反复改写工作区", onboarding);
     }
 
     [Fact]

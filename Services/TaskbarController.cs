@@ -255,10 +255,10 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        // Keep Shell_TrayWnd alive because Windows quick settings, notification
-        // center, input switching and tray overflow are hosted by Explorer.
-        // Let Explorer own work-area negotiation through its documented
-        // auto-hide state instead of fighting it with SPI_SETWORKAREA.
+        // Ask Explorer to release the work area through its documented AppBar
+        // state first. Hide Shell_TrayWnd exactly once after that; the guard is
+        // read-only and never fights Explorer with repeated visibility or
+        // SPI_SETWORKAREA writes.
         uint desiredState = _state.OriginalAppBarState | AbsAutoHide;
         if (_native.GetAppBarState(taskbar) != desiredState)
             _native.SetAppBarState(taskbar, desiredState);
@@ -269,11 +269,11 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if (!_native.IsWindowVisible(taskbar)
-            && (!_native.SetTaskbarVisible(taskbar, true)
-                || !_native.IsWindowVisible(taskbar)))
+        if (_native.IsWindowVisible(taskbar)
+            && (!_native.SetTaskbarVisible(taskbar, false)
+                || _native.IsWindowVisible(taskbar)))
         {
-            _lastApplyError = "无法恢复系统功能所需的 Shell_TrayWnd";
+            _lastApplyError = "Windows 拒绝隐藏原生任务栏窗口";
             return false;
         }
 
@@ -337,10 +337,10 @@ public sealed class TaskbarController : ITaskbarController
                 return;
             }
 
-            bool applied;
+            bool valid;
             try
             {
-                applied = ApplyReplacement();
+                valid = ValidateReplacement();
             }
             catch (TimeoutException)
             {
@@ -352,10 +352,10 @@ public sealed class TaskbarController : ITaskbarController
             catch (Exception ex)
             {
                 _lastApplyError = $"任务栏守护检测异常：{ex.Message}";
-                applied = false;
+                valid = false;
             }
 
-            if (!applied)
+            if (!valid)
             {
                 StopReplacementFromGuard(
                     $"{_lastApplyError ?? "任务栏替代状态失效"}，已恢复 Windows 任务栏。");
@@ -365,6 +365,32 @@ public sealed class TaskbarController : ITaskbarController
         {
             Interlocked.Exchange(ref _guardRunning, 0);
         }
+    }
+
+    private bool ValidateReplacement()
+    {
+        using var mutation = AcquireMutationMutex();
+        IntPtr taskbar = _native.FindPrimaryTaskbar();
+        if (taskbar == IntPtr.Zero)
+        {
+            _lastApplyError = "Explorer 任务栏宿主已重新创建或暂时不可用";
+            return false;
+        }
+
+        if (_native.IsWindowVisible(taskbar))
+        {
+            _lastApplyError = "Windows 已重新显示原生任务栏";
+            return false;
+        }
+
+        if ((_native.GetAppBarState(taskbar) & AbsAutoHide) == 0)
+        {
+            _lastApplyError = "Windows 已取消任务栏自动隐藏状态";
+            return false;
+        }
+
+        _lastApplyError = null;
+        return true;
     }
 
     private void StopReplacementFromGuard(string error)

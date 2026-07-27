@@ -158,8 +158,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool firstRunAccepted = ReadBooleanConfig(FirstRunAcceptedKey);
         IsReplacementEnabled = ReadBooleanConfig(ReplacementEnabledKey);
         ReplacementStatus = IsReplacementEnabled
-            ? "侧边任务栏运行中 · Windows 原生任务栏兼容自动隐藏"
-            : "兼容模式未启用，Windows 任务栏保持原设置";
+            ? "侧边任务栏运行中 · Windows 任务栏已完整隐藏"
+            : "替代模式未启用，Windows 任务栏保持原设置";
         ThemeMode = ReadStringConfig(ThemeModeKey, "System");
         DisableHotZoneInFullscreen = ReadBooleanConfig(FullscreenHotZoneKey, true);
         ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles;
@@ -433,7 +433,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OpenNotificationOverflow()
         => SetSystemActionResult(
             _systemStatus.OpenNotificationOverflow(),
-            "无法打开系统托盘浮层；可将鼠标移到 Windows 原任务栏边缘后重试。");
+            "完整替代模式下无法可靠复制 Explorer 的第三方托盘溢出内容。可从对应应用或 FocusPanel 托盘菜单进入。");
 
     [RelayCommand]
     private void OpenNotifications()
@@ -476,6 +476,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         => SetSystemActionResult(
             _systemStatus.OpenRunDialog(),
             "无法唤起运行对话框，请使用 Win+R。");
+
+    [RelayCommand]
+    private void OpenManagementTool(SystemManagementTool tool)
+        => SetSystemActionResult(
+            _systemStatus.OpenManagementTool(tool),
+            "无法打开所选 Windows 管理工具。当前账户权限或系统版本可能不支持该入口。");
 
     [RelayCommand]
     private void OpenPowerSettings() => _systemStatus.OpenPowerSettings();
@@ -531,8 +537,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsReplacementEnabled = enabled;
         IsOnboardingVisible = false;
         ReplacementStatus = enabled
-            ? "侧边任务栏运行中 · 原生任务栏兼容自动隐藏"
-            : "兼容模式未启用，Windows 任务栏保持原设置";
+            ? "侧边任务栏运行中 · Windows 任务栏已完整隐藏"
+            : "替代模式未启用，Windows 任务栏保持原设置";
         ReplacementError = error ?? string.Empty;
         SaveBooleanConfig(FirstRunAcceptedKey, true);
         SaveBooleanConfig(ReplacementEnabledKey, enabled);

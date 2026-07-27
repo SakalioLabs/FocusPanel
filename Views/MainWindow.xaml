@@ -6,6 +6,7 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:FocusPanel.Views"
         xmlns:vm="clr-namespace:FocusPanel.ViewModels"
+        xmlns:services="clr-namespace:FocusPanel.Services"
         mc:Ignorable="d"
         Title="FocusPanel"
         Width="76"
@@ -424,7 +425,7 @@
                                        Foreground="{DynamicResource FocusMutedTextBrush}"/>
                              <Border Style="{StaticResource FocusCard}" Margin="0,0,0,12">
                                  <StackPanel>
-                                     <TextBlock Text="侧边任务栏兼容模式" FontWeight="SemiBold"/>
+                                     <TextBlock Text="侧边任务栏完整替代" FontWeight="SemiBold"/>
                                     <TextBlock Margin="0,4,0,10"
                                                Text="{Binding ReplacementStatus}"
                                                Foreground="{DynamicResource FocusMutedTextBrush}"/>
@@ -658,24 +659,77 @@
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
                             <Button Style="{StaticResource FocusIconButton}"
-                                    Click="OpenButtonContextMenu"
-                                    ToolTip="Windows 系统功能">
+                                    Command="{Binding OpenStartMenuCommand}"
+                                    ToolTip="开始 · 右键打开系统管理菜单">
                                 <Button.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="开始菜单"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenStartMenuCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="Windows 搜索"
+                                        <MenuItem Header="安装的应用"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.InstalledApps}"/>
+                                        <MenuItem Header="电源选项"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.PowerOptions}"/>
+                                        <MenuItem Header="事件查看器"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.EventViewer}"/>
+                                        <MenuItem Header="系统"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.SystemAbout}"/>
+                                        <MenuItem Header="设备管理器"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.DeviceManager}"/>
+                                        <MenuItem Header="网络连接"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.NetworkConnections}"/>
+                                        <MenuItem Header="磁盘管理"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.DiskManagement}"/>
+                                        <MenuItem Header="计算机管理"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.ComputerManagement}"/>
+                                        <MenuItem Header="终端"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.Terminal}"/>
+                                        <MenuItem Header="终端（管理员）"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.TerminalAdministrator}"/>
+                                        <MenuItem Header="任务管理器"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.TaskManager}"/>
+                                        <Separator/>
+                                        <MenuItem Header="设置"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.Settings}"/>
+                                        <MenuItem Header="文件资源管理器"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.FileExplorer}"/>
+                                        <MenuItem Header="搜索"
                                                   Command="{Binding PlacementTarget.DataContext.OpenWindowsSearchCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="任务视图"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenTaskViewCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                         <MenuItem Header="小组件"
                                                   Command="{Binding PlacementTarget.DataContext.OpenWidgetsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <Separator/>
                                         <MenuItem Header="运行…"
                                                   Command="{Binding PlacementTarget.DataContext.OpenRunDialogCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <Separator/>
+                                        <MenuItem Header="关机或注销">
+                                            <MenuItem Header="锁定"
+                                                      Command="{Binding PlacementTarget.DataContext.LockComputerCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <MenuItem Header="睡眠"
+                                                      Command="{Binding PlacementTarget.DataContext.SleepComputerCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <MenuItem Header="重启…"
+                                                      Command="{Binding PlacementTarget.DataContext.RestartComputerCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <MenuItem Header="关机…"
+                                                      Command="{Binding PlacementTarget.DataContext.ShutdownComputerCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        </MenuItem>
+                                        <MenuItem Header="桌面"
+                                                  Command="{Binding PlacementTarget.DataContext.ShowDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE7C5;"/>
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE782;"/>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding OpenTaskViewCommand}"
+                                    ToolTip="任务视图">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE7C4;"/>
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
                                     Command="{Binding OpenNotificationOverflowCommand}"
@@ -790,7 +844,7 @@
                                        FontSize="14"
                                        LineHeight="23"
                                        Foreground="{DynamicResource FocusMutedTextBrush}"
-                                       Text="FocusPanel 使用 Windows 官方自动隐藏状态保留原生任务栏宿主，不再隐藏 Shell_TrayWnd 或反复改写工作区。快捷设置、通知、输入法和托盘仍由 Explorer 提供；把鼠标移到原任务栏边缘仍可临时唤出。多显示器遵循 Windows 的统一自动隐藏设置。"/>
+                                       Text="FocusPanel 先通过 Windows AppBar 自动隐藏释放工作区，再隐藏主屏原生任务栏。守护器只验证状态，不反复改写工作区；异常、退出或紧急快捷键会恢复原设置。Win+A、Win+N、Win+Space 等系统入口仍可使用。"/>
                             <CheckBox Content="随 Windows 启动 FocusPanel"
                                       Margin="0,20,0,0"
                                       IsChecked="{Binding StartWithWindows}"/>
