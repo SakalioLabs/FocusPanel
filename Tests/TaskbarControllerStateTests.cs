@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using FocusPanel.Services;
 using Xunit;
 
@@ -173,6 +175,114 @@ public sealed class TaskbarControllerStateTests
         }
     }
 
+    [Fact]
+    public void GuardLockTimeout_IsContainedAndDoesNotTerminateReplacement()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(directory, "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            native.ThrowTimeoutOnWorkAreaRead = true;
+
+            Exception? exception = Record.Exception(controller.RunGuardOnceForTests);
+
+            Assert.Null(exception);
+            Assert.True(controller.IsReplacementEnabled);
+            Assert.False(native.Visible);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public async Task ConcurrentGuardTick_IsSkippedInsteadOfOverlapping()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(directory, "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            native.BlockNextWorkAreaRead = true;
+            Task firstGuard = Task.Run(controller.RunGuardOnceForTests);
+            Assert.True(native.WorkAreaReadEntered.Wait(TimeSpan.FromSeconds(2)));
+            int readsWhileBlocked = native.WorkAreaReadCount;
+
+            controller.RunGuardOnceForTests();
+
+            Assert.Equal(readsWhileBlocked, native.WorkAreaReadCount);
+            native.ReleaseWorkAreaRead.Set();
+            await firstGuard;
+            Assert.True(controller.IsReplacementEnabled);
+        }
+        finally
+        {
+            native.ReleaseWorkAreaRead.Set();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void GuardFailure_RestoresTaskbarAndReportsReplacementStopped()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(directory, "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+            string? stoppedReason = null;
+            controller.ReplacementStopped += reason => stoppedReason = reason;
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            native.Visible = true;
+            native.HideSucceeds = false;
+
+            controller.RunGuardOnceForTests();
+
+            Assert.False(controller.IsReplacementEnabled);
+            Assert.True(native.Visible);
+            Assert.False(string.IsNullOrWhiteSpace(stoppedReason));
+            Assert.False(File.Exists(sessionFile));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
     private sealed class FakeWatchdogLauncher : ITaskbarWatchdogLauncher
     {
         public int StartCount { get; private set; }
@@ -193,6 +303,11 @@ public sealed class TaskbarControllerStateTests
         public int TaskbarVisibilityWriteCount { get; private set; }
         public bool SetWorkAreaSucceeds { get; set; } = true;
         public bool HideSucceeds { get; set; } = true;
+        public bool ThrowTimeoutOnWorkAreaRead { get; set; }
+        public bool BlockNextWorkAreaRead { get; set; }
+        public int WorkAreaReadCount { get; private set; }
+        public ManualResetEventSlim WorkAreaReadEntered { get; } = new(false);
+        public ManualResetEventSlim ReleaseWorkAreaRead { get; } = new(false);
         public TaskbarController.NativeRect WorkArea { get; private set; } = new()
         {
             Left = 0,
@@ -219,6 +334,20 @@ public sealed class TaskbarControllerStateTests
 
         public bool TryGetWorkArea(out TaskbarController.NativeRect workArea)
         {
+            WorkAreaReadCount++;
+            if (ThrowTimeoutOnWorkAreaRead)
+            {
+                ThrowTimeoutOnWorkAreaRead = false;
+                throw new TimeoutException("模拟任务栏状态锁超时。");
+            }
+
+            if (BlockNextWorkAreaRead)
+            {
+                BlockNextWorkAreaRead = false;
+                WorkAreaReadEntered.Set();
+                ReleaseWorkAreaRead.Wait(TimeSpan.FromSeconds(5));
+            }
+
             workArea = WorkArea;
             return true;
         }

@@ -35,6 +35,9 @@ public sealed class TaskbarController : ITaskbarController
     private TaskbarSessionState? _state;
     private string? _lastApplyError;
     private int _restoring;
+    private int _guardRunning;
+
+    public event Action<string?>? ReplacementStopped;
 
     public TaskbarController()
         : this(
@@ -104,7 +107,18 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if (!ApplyReplacement())
+        bool replacementApplied;
+        try
+        {
+            replacementApplied = ApplyReplacement();
+        }
+        catch (Exception ex)
+        {
+            _lastApplyError = $"无法取得任务栏状态锁：{ex.Message}";
+            replacementApplied = false;
+        }
+
+        if (!replacementApplied)
         {
             error = $"{_lastApplyError ?? "Windows 拒绝了任务栏替代操作"}，已立即恢复系统任务栏。";
             Restore();
@@ -112,7 +126,11 @@ public sealed class TaskbarController : ITaskbarController
         }
 
         IsReplacementEnabled = true;
-        _guardTimer = new Timer(_ => GuardReplacement(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+        _guardTimer = new Timer(
+            static state => ((TaskbarController)state!).GuardReplacementSafely(),
+            this,
+            TimeSpan.FromSeconds(2),
+            TimeSpan.FromSeconds(2));
         return true;
     }
 
@@ -149,7 +167,26 @@ public sealed class TaskbarController : ITaskbarController
 
     internal static void RestoreSessionFile(string sessionFile, ITaskbarNativeApi native)
     {
-        using var mutation = AcquireMutationMutex();
+        IDisposable? mutation = null;
+        try
+        {
+            mutation = AcquireMutationMutex();
+        }
+        catch
+        {
+            // A concurrent controller or watchdog owns the mutation. Keep the
+            // session file so the watchdog can retry instead of crashing here.
+            return;
+        }
+
+        using (mutation)
+        {
+            RestoreSessionFileCore(sessionFile, native);
+        }
+    }
+
+    private static void RestoreSessionFileCore(string sessionFile, ITaskbarNativeApi native)
+    {
         TaskbarSessionState? state = null;
         try
         {
@@ -287,22 +324,67 @@ public sealed class TaskbarController : ITaskbarController
         }
     }
 
-    private void GuardReplacement()
+    private void GuardReplacementSafely()
     {
-        if (!IsReplacementEnabled)
-            return;
-
-        if (File.Exists(_disabledFile))
+        if (!IsReplacementEnabled
+            || Interlocked.CompareExchange(ref _guardRunning, 1, 0) != 0)
         {
-            Restore();
             return;
         }
 
-        if (!ApplyReplacement())
-            Restore();
+        try
+        {
+            if (File.Exists(_disabledFile))
+            {
+                StopReplacementFromGuard("任务栏替代模式已通过紧急快捷键关闭。");
+                return;
+            }
+
+            bool applied;
+            try
+            {
+                applied = ApplyReplacement();
+            }
+            catch (TimeoutException)
+            {
+                // Another recovery operation owns the cross-process lock.
+                // Skipping one guard tick is safe; throwing here used to
+                // terminate the entire application from the timer thread.
+                return;
+            }
+            catch (Exception ex)
+            {
+                _lastApplyError = $"任务栏守护检测异常：{ex.Message}";
+                applied = false;
+            }
+
+            if (!applied)
+            {
+                StopReplacementFromGuard(
+                    $"{_lastApplyError ?? "任务栏替代状态失效"}，已恢复 Windows 任务栏。");
+            }
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _guardRunning, 0);
+        }
     }
 
-    internal void RunGuardOnceForTests() => GuardReplacement();
+    private void StopReplacementFromGuard(string error)
+    {
+        Restore();
+        try
+        {
+            ReplacementStopped?.Invoke(error);
+        }
+        catch
+        {
+            // A status subscriber must never turn the fail-safe path into
+            // another unhandled timer-thread exception.
+        }
+    }
+
+    internal void RunGuardOnceForTests() => GuardReplacementSafely();
 
     public void Dispose() => Restore();
 

@@ -69,6 +69,7 @@ public partial class MainWindow : Window
         _viewModel.RequestDisableReplacement += DisableTaskbarReplacement;
         _viewModel.RequestApplyUpdate += ApplyDownloadedUpdate;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
+        _coordinator.Taskbar.ReplacementStopped += Taskbar_ReplacementStopped;
 
         _autoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
         _autoHideTimer.Tick += (_, _) =>
@@ -499,6 +500,27 @@ public partial class MainWindow : Window
         _viewModel.MarkReplacementEnabled(false);
     }
 
+    private void Taskbar_ReplacementStopped(string? error)
+    {
+        if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
+            return;
+
+        try
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (_isExit)
+                    return;
+
+                _viewModel.MarkReplacementEnabled(false, error);
+            });
+        }
+        catch (InvalidOperationException)
+        {
+            // The window is already shutting down.
+        }
+    }
+
     private void ApplyDownloadedUpdate()
     {
         _hotZoneMonitor?.Stop();
@@ -551,6 +573,7 @@ public partial class MainWindow : Window
         _hotZoneMonitor = null;
         _edgeIndicator?.Close();
         _edgeIndicator = null;
+        _coordinator.Taskbar.ReplacementStopped -= Taskbar_ReplacementStopped;
         _viewModel.Dispose();
         _coordinator.Dispose();
     }

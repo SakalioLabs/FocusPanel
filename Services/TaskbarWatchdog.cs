@@ -77,7 +77,7 @@ public static class TaskbarWatchdog
             }
             catch
             {
-                TaskbarController.RestoreSessionFile(sessionFile);
+                RestoreWithRetry(sessionFile);
                 return 0;
             }
 
@@ -96,20 +96,30 @@ public static class TaskbarWatchdog
                             // The taskbar restoration below remains the primary safety action.
                         }
 
-                        TaskbarController.RestoreSessionFile(sessionFile);
+                        RestoreWithRetry(sessionFile);
                     }
                 }
 
                 Thread.Sleep(100);
             }
 
-            TaskbarController.RestoreSessionFile(sessionFile);
+            RestoreWithRetry(sessionFile);
             return 0;
         }
         finally
         {
             NativeMethods.UnregisterHotKey(IntPtr.Zero, HotKeyId);
             try { File.Delete(sessionFile + ".ready"); } catch { }
+        }
+    }
+
+    private static void RestoreWithRetry(string sessionFile)
+    {
+        for (int attempt = 0; attempt < 20 && File.Exists(sessionFile); attempt++)
+        {
+            TaskbarController.RestoreSessionFile(sessionFile);
+            if (File.Exists(sessionFile))
+                Thread.Sleep(150);
         }
     }
 
