@@ -108,6 +108,37 @@ public sealed class TaskbarControllerStateTests
         }
     }
 
+    [Fact]
+    public void TaskbarHideFailure_RollsBackAndReportsFailure()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(directory, "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi { HideSucceeds = false };
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+
+            Assert.False(controller.TryEnableReplacement(out string? error));
+            Assert.False(string.IsNullOrWhiteSpace(error));
+            Assert.False(controller.IsReplacementEnabled);
+            Assert.True(native.Visible);
+            Assert.Equal(1040, native.WorkArea.Bottom);
+            Assert.False(File.Exists(sessionFile));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
     private sealed class FakeWatchdogLauncher : ITaskbarWatchdogLauncher
     {
         public int StartCount { get; private set; }
@@ -126,6 +157,7 @@ public sealed class TaskbarControllerStateTests
         public uint AppBarState { get; private set; } = 7;
         public int WorkAreaWriteCount { get; private set; }
         public bool SetWorkAreaSucceeds { get; set; } = true;
+        public bool HideSucceeds { get; set; } = true;
         public TaskbarController.NativeRect WorkArea { get; private set; } = new()
         {
             Left = 0,
@@ -160,7 +192,13 @@ public sealed class TaskbarControllerStateTests
 
         public void SetAppBarState(IntPtr taskbar, uint state) => AppBarState = state;
 
-        public void SetTaskbarVisible(IntPtr taskbar, bool visible) => Visible = visible;
+        public bool SetTaskbarVisible(IntPtr taskbar, bool visible)
+        {
+            if (!visible && !HideSucceeds)
+                return false;
+            Visible = visible;
+            return true;
+        }
 
         public bool SetWorkArea(TaskbarController.NativeRect workArea)
         {

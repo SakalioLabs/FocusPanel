@@ -223,6 +223,186 @@
                         </Grid>
                     </Border>
 
+                    <!-- Direct system controls -->
+                    <Border Grid.RowSpan="2"
+                            Panel.ZIndex="11"
+                            Width="390"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,14,8"
+                            Padding="22"
+                            CornerRadius="{StaticResource FocusCardCornerRadius}"
+                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                            BorderBrush="{DynamicResource FocusStrokeBrush}"
+                            BorderThickness="1"
+                            Visibility="{Binding IsQuickSettingsOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,18">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="系统控制" FontSize="19" FontWeight="SemiBold"/>
+                                    <TextBlock Text="直接控制当前设备，不跳转设置"
+                                               Margin="0,4,0,0"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                </StackPanel>
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource FocusIconButton}"
+                                        Command="{Binding ToggleQuickSettingsCommand}"
+                                        ToolTip="关闭">
+                                    <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE711;"/>
+                                </Button>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="44"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Style="{StaticResource FocusIconText}"
+                                           Text="&#xE701;"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding NetworkDisplayName}"
+                                               FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding NetworkDetail}"
+                                               Margin="0,3,0,0"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                </StackPanel>
+                                <Button Grid.Column="2"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="选择网络"
+                                        Command="{Binding OpenQuickSettingsCommand}"
+                                        ToolTip="唤起 Windows 原生 Win+A 网络列表"/>
+                            </Grid>
+
+                            <Border Height="1" Background="{DynamicResource FocusStrokeBrush}" Margin="0,0,0,16"/>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="44"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="52"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0"
+                                        Style="{StaticResource FocusIconButton}"
+                                        Command="{Binding ToggleMuteCommand}"
+                                        ToolTip="静音或恢复声音">
+                                    <TextBlock>
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
+                                                <Setter Property="Text" Value="&#xE767;"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                        <Setter Property="Text" Value="&#xE74F;"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource FocusDangerBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Button>
+                                <Slider Grid.Column="1"
+                                        Margin="8,0,14,0"
+                                        Minimum="0"
+                                        Maximum="1"
+                                        TickFrequency="0.02"
+                                        IsMoveToPointEnabled="True"
+                                        Value="{Binding MasterVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding MasterVolume, StringFormat={}{0:P0}}"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Grid Visibility="{Binding HasBattery, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                  Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="44"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource FocusIconText}"
+                                           Text="&#xE850;"
+                                           VerticalAlignment="Center"/>
+                                <ProgressBar Grid.Column="1"
+                                             Height="6"
+                                             Margin="8,0,14,0"
+                                             Minimum="0"
+                                             Maximum="100"
+                                             Value="{Binding BatteryPercent}"
+                                             VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding BatteryPercent, StringFormat={}{0}%}"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <TextBlock Text="{Binding SystemActionMessage}"
+                                       Margin="0,0,0,12"
+                                       Foreground="{DynamicResource FocusDangerBrush}"
+                                       TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="Text" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <UniformGrid Columns="4">
+                                <Button Style="{StaticResource FocusSecondaryButton}" Content="输入法" Command="{Binding OpenInputSwitcherCommand}"/>
+                                <Button Style="{StaticResource FocusSecondaryButton}" Content="通知" Command="{Binding OpenNotificationsCommand}"/>
+                                <Button Style="{StaticResource FocusSecondaryButton}" Content="锁定" Command="{Binding LockComputerCommand}"/>
+                                <Button Style="{StaticResource FocusSecondaryButton}" Content="睡眠" Command="{Binding SleepComputerCommand}"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Clock and daily overview -->
+                    <Border Grid.RowSpan="2"
+                            Panel.ZIndex="11"
+                            Width="360"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,14,8"
+                            Padding="22"
+                            CornerRadius="{StaticResource FocusCardCornerRadius}"
+                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                            BorderBrush="{DynamicResource FocusStrokeBrush}"
+                            BorderThickness="1"
+                            Visibility="{Binding IsCalendarOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm:ss}}"
+                                       FontSize="42"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:yyyy年M月d日 dddd}}"
+                                       Margin="1,2,0,18"
+                                       Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                            <Border Height="1" Background="{DynamicResource FocusStrokeBrush}" Margin="0,0,0,18"/>
+                            <TextBlock Text="今日概览" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding OpenTaskCount, StringFormat=还有 {0} 项任务待完成}"
+                                       Margin="0,6,0,16"
+                                       Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                            <UniformGrid Columns="3">
+                                <Button Style="{StaticResource FocusPrimaryButton}" Content="查看任务" Command="{Binding NavigateCommand}" CommandParameter="Tasks"/>
+                                <Button Style="{StaticResource FocusSecondaryButton}" Content="通知中心" Command="{Binding OpenNotificationsCommand}"/>
+                                <Button Style="{StaticResource FocusSecondaryButton}" Content="显示桌面" Command="{Binding ShowDesktopCommand}"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Settings overlay -->
                     <Border Grid.RowSpan="2"
                             Panel.ZIndex="12"
@@ -245,8 +425,23 @@
                                  <StackPanel>
                                      <TextBlock Text="任务栏替代模式" FontWeight="SemiBold"/>
                                     <TextBlock Margin="0,4,0,10"
-                                               Text="只隐藏主屏任务栏，不会关闭 Explorer。"
+                                               Text="{Binding ReplacementStatus}"
                                                Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    <TextBlock Margin="0,0,0,10"
+                                               Text="{Binding ReplacementError}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource FocusDangerBrush}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="Text" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                     <StackPanel Orientation="Horizontal">
                                         <Button Style="{StaticResource FocusPrimaryButton}"
                                                 Content="启用"
@@ -488,8 +683,8 @@
                         <StackPanel Grid.Row="3">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
                             <Button Style="{StaticResource FocusIconButton}"
-                                    Command="{Binding OpenQuickSettingsCommand}"
-                                    ToolTip="{Binding NetworkDisplayName, StringFormat=网络：{0} · 点击打开 Windows 快捷设置}">
+                                    Click="QuickControlsButton_Click"
+                                    ToolTip="{Binding NetworkDisplayName, StringFormat=网络：{0} · 点击直接控制}">
                                 <TextBlock>
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
@@ -505,7 +700,7 @@
                                 </TextBlock>
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
-                                    Command="{Binding OpenQuickSettingsCommand}"
+                                    Click="QuickControlsButton_Click"
                                     ToolTip="{Binding MasterVolume, StringFormat=系统音量：{0:P0}}">
                                 <StackPanel>
                                     <TextBlock Style="{StaticResource FocusIconText}"
@@ -518,8 +713,8 @@
                                 </StackPanel>
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
-                                    Command="{Binding OpenNotificationsCommand}"
-                                    ToolTip="打开 Windows 通知与日历">
+                                    Click="CalendarPanelButton_Click"
+                                    ToolTip="时间与今日任务">
                                 <StackPanel>
                                     <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm}}"
                                                HorizontalAlignment="Center"
@@ -542,7 +737,7 @@
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE775;"/>
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
-                                    Command="{Binding OpenPowerSettingsCommand}"
+                                    Click="QuickControlsButton_Click"
                                     ToolTip="{Binding BatteryPercent, StringFormat=电池：{0}%}">
                                 <Button.Visibility>
                                     <Binding Path="HasBattery" Converter="{StaticResource BooleanToVisibilityConverter}"/>

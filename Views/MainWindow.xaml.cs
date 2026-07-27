@@ -382,6 +382,18 @@ public partial class MainWindow : Window
     }
 
     private void CalendarButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
+    private void QuickControlsButton_Click(object sender, RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        _viewModel.ToggleQuickSettingsCommand.Execute(null);
+    }
+
+    private void CalendarPanelButton_Click(object sender, RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        _viewModel.ToggleCalendarCommand.Execute(null);
+    }
+
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
     private void PowerButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
     private void SystemButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
@@ -462,7 +474,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _viewModel.MarkReplacementEnabled(false);
+        _viewModel.MarkReplacementEnabled(false, error);
         MessageBox.Show(
             error ?? "无法启用任务栏替代模式。",
             "已保留 Windows 任务栏",

@@ -8,11 +8,13 @@ public interface ISystemStatusService : IDisposable
     bool IsMuted { get; set; }
     bool IsNetworkAvailable { get; }
     string NetworkDisplayName { get; }
+    string NetworkDetail { get; }
     bool HasBattery { get; }
     int BatteryPercent { get; }
-    void OpenQuickSettings();
-    void OpenNotifications();
-    void OpenInputSwitcher();
+    bool IsCharging { get; }
+    bool OpenQuickSettings();
+    bool OpenNotifications();
+    bool OpenInputSwitcher();
     void OpenPowerSettings();
     void ShowDesktop();
     void Lock();

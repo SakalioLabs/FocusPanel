@@ -71,6 +71,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isReplacementEnabled;
 
     [ObservableProperty]
+    private string replacementStatus = "Windows 任务栏保持显示";
+
+    [ObservableProperty]
+    private string replacementError = string.Empty;
+
+    [ObservableProperty]
     private bool startWithWindows;
 
     [ObservableProperty]
@@ -92,10 +98,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string networkDisplayName = "未连接";
 
     [ObservableProperty]
+    private string networkDetail = "当前没有可用连接";
+
+    [ObservableProperty]
     private bool hasBattery;
 
     [ObservableProperty]
     private int batteryPercent;
+
+    [ObservableProperty]
+    private bool isCharging;
+
+    [ObservableProperty]
+    private string systemActionMessage = string.Empty;
 
     [ObservableProperty]
     private int openTaskCount;
@@ -135,11 +150,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StartWithWindows = AutoStartupService.IsStartupEnabled();
         bool firstRunAccepted = ReadBooleanConfig(FirstRunAcceptedKey);
         IsReplacementEnabled = ReadBooleanConfig(ReplacementEnabledKey);
+        ReplacementStatus = IsReplacementEnabled
+            ? "正在接管主屏任务栏"
+            : "未接管，Windows 任务栏保持显示";
         ThemeMode = ReadStringConfig(ThemeModeKey, "System");
         DisableHotZoneInFullscreen = ReadBooleanConfig(FullscreenHotZoneKey, true);
         ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles;
         ThemeService.SetMode(ThemeMode);
-        IsOnboardingVisible = !firstRunAccepted;
+        // Replacement is the product's primary mode. Never hide the taskbar without
+        // a click, but keep the activation screen discoverable until it is enabled.
+        IsOnboardingVisible = !firstRunAccepted || !IsReplacementEnabled;
 
         _fileOrganizerViewModel = new FileOrganizerViewModel();
         CurrentViewModel = _fileOrganizerViewModel;
@@ -309,10 +329,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ToggleCalendar() => IsCalendarOpen = !IsCalendarOpen;
+    private void ToggleCalendar()
+    {
+        bool open = !IsCalendarOpen;
+        CloseTransientPanels();
+        IsCalendarOpen = open;
+    }
 
     [RelayCommand]
-    private void ToggleQuickSettings() => IsQuickSettingsOpen = !IsQuickSettingsOpen;
+    private void ToggleQuickSettings()
+    {
+        bool open = !IsQuickSettingsOpen;
+        CloseTransientPanels();
+        IsQuickSettingsOpen = open;
+    }
 
     [RelayCommand]
     private void ToggleSettings()
@@ -328,13 +358,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void ToggleMute() => IsMuted = !IsMuted;
 
     [RelayCommand]
-    private void OpenQuickSettings() => _systemStatus.OpenQuickSettings();
+    private void OpenQuickSettings()
+        => SetSystemActionResult(
+            _systemStatus.OpenQuickSettings(),
+            "无法唤起 Windows 快捷设置，请使用 Win+A。");
 
     [RelayCommand]
-    private void OpenNotifications() => _systemStatus.OpenNotifications();
+    private void OpenNotifications()
+        => SetSystemActionResult(
+            _systemStatus.OpenNotifications(),
+            "无法唤起 Windows 通知中心，请使用 Win+N。");
 
     [RelayCommand]
-    private void OpenInputSwitcher() => _systemStatus.OpenInputSwitcher();
+    private void OpenInputSwitcher()
+        => SetSystemActionResult(
+            _systemStatus.OpenInputSwitcher(),
+            "无法唤起输入法切换器，请使用 Win+Space。");
 
     [RelayCommand]
     private void OpenPowerSettings() => _systemStatus.OpenPowerSettings();
@@ -383,9 +422,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     public void MarkReplacementEnabled(bool enabled)
+        => MarkReplacementEnabled(enabled, null);
+
+    public void MarkReplacementEnabled(bool enabled, string? error)
     {
         IsReplacementEnabled = enabled;
         IsOnboardingVisible = false;
+        ReplacementStatus = enabled
+            ? "已接管主屏任务栏 · 紧急恢复 Ctrl+Alt+Shift+F10"
+            : "未接管，Windows 任务栏保持显示";
+        ReplacementError = error ?? string.Empty;
         SaveBooleanConfig(FirstRunAcceptedKey, true);
         SaveBooleanConfig(ReplacementEnabledKey, enabled);
         AutoStartupService.SetStartup(enabled && StartWithWindows);
@@ -537,8 +583,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         IsNetworkAvailable = _systemStatus.IsNetworkAvailable;
         NetworkDisplayName = _systemStatus.NetworkDisplayName;
+        NetworkDetail = _systemStatus.NetworkDetail;
         HasBattery = _systemStatus.HasBattery;
         BatteryPercent = _systemStatus.BatteryPercent;
+        IsCharging = _systemStatus.IsCharging;
 
         try
         {
@@ -550,6 +598,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
             OpenTaskCount = 0;
         }
     }
+
+    private void CloseTransientPanels()
+    {
+        IsSearchOpen = false;
+        IsCalendarOpen = false;
+        IsQuickSettingsOpen = false;
+        IsSettingsOpen = false;
+        IsPowerMenuOpen = false;
+    }
+
+    private void SetSystemActionResult(bool succeeded, string error)
+        => SystemActionMessage = succeeded ? string.Empty : error;
 
     private static void ReplaceCollection<T>(ObservableCollection<T> destination, System.Collections.Generic.IEnumerable<T> source)
     {

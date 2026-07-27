@@ -11,6 +11,11 @@ public sealed class TaskbarController : ITaskbarController
 {
     private const int SwHide = 0;
     private const int SwShow = 5;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoActivate = 0x0010;
+    private const uint SwpShowWindow = 0x0040;
+    private const uint SwpHideWindow = 0x0080;
     private const uint SpiGetWorkArea = 0x0030;
     private const uint SpiSetWorkArea = 0x002F;
     private const uint SpifSendChange = 0x0002;
@@ -27,6 +32,7 @@ public sealed class TaskbarController : ITaskbarController
     private readonly ITaskbarWatchdogLauncher _watchdogLauncher;
     private Timer? _guardTimer;
     private TaskbarSessionState? _state;
+    private string? _lastApplyError;
     private int _restoring;
 
     public TaskbarController()
@@ -99,7 +105,7 @@ public sealed class TaskbarController : ITaskbarController
 
         if (!ApplyReplacement())
         {
-            error = "Windows 工作区没有成功切换，已立即恢复系统任务栏。";
+            error = $"{_lastApplyError ?? "Windows 拒绝了任务栏替代操作"}，已立即恢复系统任务栏。";
             Restore();
             return false;
         }
@@ -180,14 +186,33 @@ public sealed class TaskbarController : ITaskbarController
     private bool ApplyReplacement()
     {
         if (_state == null)
+        {
+            _lastApplyError = "任务栏恢复会话尚未建立";
             return false;
+        }
 
         IntPtr taskbar = _native.FindPrimaryTaskbar();
         if (taskbar == IntPtr.Zero)
+        {
+            _lastApplyError = "没有找到主屏 Shell_TrayWnd";
             return false;
+        }
 
-        _native.SetTaskbarVisible(taskbar, false);
-        return _native.SetWorkArea(_state.PrimaryBounds);
+        if (!_native.SetWorkArea(_state.PrimaryBounds))
+        {
+            _lastApplyError = "Windows 拒绝释放主屏工作区";
+            return false;
+        }
+
+        if (!_native.SetTaskbarVisible(taskbar, false)
+            || _native.IsWindowVisible(taskbar))
+        {
+            _lastApplyError = "Windows 任务栏窗口仍然可见";
+            return false;
+        }
+
+        _lastApplyError = null;
+        return true;
     }
 
     private void GuardReplacement()
@@ -301,8 +326,22 @@ public sealed class TaskbarController : ITaskbarController
             NativeMethods.SHAppBarMessage(AbmSetState, ref data);
         }
 
-        public void SetTaskbarVisible(IntPtr taskbar, bool visible)
-            => NativeMethods.ShowWindow(taskbar, visible ? SwShow : SwHide);
+        public bool SetTaskbarVisible(IntPtr taskbar, bool visible)
+        {
+            NativeMethods.ShowWindow(taskbar, visible ? SwShow : SwHide);
+            NativeMethods.SetWindowPos(
+                taskbar,
+                visible ? new IntPtr(-1) : new IntPtr(1),
+                0,
+                0,
+                0,
+                0,
+                SwpNoMove
+                | SwpNoSize
+                | SwpNoActivate
+                | (visible ? SwpShowWindow : SwpHideWindow));
+            return NativeMethods.IsWindowVisible(taskbar) == visible;
+        }
 
         public bool SetWorkArea(NativeRect workArea)
             => NativeMethods.SetSystemParametersInfo(
@@ -324,6 +363,17 @@ public sealed class TaskbarController : ITaskbarController
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetWindowPos(
+            IntPtr hWnd,
+            IntPtr hWndInsertAfter,
+            int x,
+            int y,
+            int cx,
+            int cy,
+            uint flags);
 
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

@@ -10,7 +10,7 @@ internal interface ITaskbarNativeApi
     bool TryGetWorkArea(out TaskbarController.NativeRect workArea);
     uint GetAppBarState(IntPtr taskbar);
     void SetAppBarState(IntPtr taskbar, uint state);
-    void SetTaskbarVisible(IntPtr taskbar, bool visible);
+    bool SetTaskbarVisible(IntPtr taskbar, bool visible);
     bool SetWorkArea(TaskbarController.NativeRect workArea);
 }
 

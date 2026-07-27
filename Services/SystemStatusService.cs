@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -9,21 +10,17 @@ namespace FocusPanel.Services;
 
 public sealed class SystemStatusService : ISystemStatusService
 {
-    private readonly IAudioEndpointVolume? _audioEndpoint;
+    private readonly IMMDeviceEnumerator? _deviceEnumerator;
 
     public SystemStatusService()
     {
         try
         {
-            var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumeratorComObject();
-            enumerator.GetDefaultAudioEndpoint(EDataFlow.Render, ERole.Multimedia, out IMMDevice device);
-            Guid endpointVolumeId = typeof(IAudioEndpointVolume).GUID;
-            device.Activate(ref endpointVolumeId, Clsctx.All, IntPtr.Zero, out object endpoint);
-            _audioEndpoint = (IAudioEndpointVolume)endpoint;
+            _deviceEnumerator = (IMMDeviceEnumerator)new MMDeviceEnumeratorComObject();
         }
         catch
         {
-            _audioEndpoint = null;
+            _deviceEnumerator = null;
         }
     }
 
@@ -31,30 +28,42 @@ public sealed class SystemStatusService : ISystemStatusService
     {
         get
         {
-            if (_audioEndpoint == null)
-                return 0;
+            IAudioEndpointVolume? endpoint = null;
             try
             {
-                _audioEndpoint.GetMasterVolumeLevelScalar(out float volume);
+                endpoint = GetDefaultAudioEndpoint();
+                if (endpoint == null)
+                    return 0;
+                endpoint.GetMasterVolumeLevelScalar(out float volume);
                 return volume;
             }
             catch
             {
                 return 0;
             }
+            finally
+            {
+                ReleaseComObject(endpoint);
+            }
         }
         set
         {
-            if (_audioEndpoint == null)
-                return;
+            IAudioEndpointVolume? endpoint = null;
             try
             {
+                endpoint = GetDefaultAudioEndpoint();
+                if (endpoint == null)
+                    return;
                 Guid context = Guid.Empty;
-                _audioEndpoint.SetMasterVolumeLevelScalar(Math.Clamp(value, 0f, 1f), ref context);
+                endpoint.SetMasterVolumeLevelScalar(Math.Clamp(value, 0f, 1f), ref context);
             }
             catch
             {
                 // The default endpoint can disappear during device switching.
+            }
+            finally
+            {
+                ReleaseComObject(endpoint);
             }
         }
     }
@@ -63,17 +72,43 @@ public sealed class SystemStatusService : ISystemStatusService
     {
         get
         {
-            if (_audioEndpoint == null)
+            IAudioEndpointVolume? endpoint = null;
+            try
+            {
+                endpoint = GetDefaultAudioEndpoint();
+                if (endpoint == null)
+                    return false;
+                endpoint.GetMute(out bool muted);
+                return muted;
+            }
+            catch
+            {
                 return false;
-            _audioEndpoint.GetMute(out bool muted);
-            return muted;
+            }
+            finally
+            {
+                ReleaseComObject(endpoint);
+            }
         }
         set
         {
-            if (_audioEndpoint == null)
-                return;
-            Guid context = Guid.Empty;
-            _audioEndpoint.SetMute(value, ref context);
+            IAudioEndpointVolume? endpoint = null;
+            try
+            {
+                endpoint = GetDefaultAudioEndpoint();
+                if (endpoint == null)
+                    return;
+                Guid context = Guid.Empty;
+                endpoint.SetMute(value, ref context);
+            }
+            catch
+            {
+                // The default endpoint can disappear during device switching.
+            }
+            finally
+            {
+                ReleaseComObject(endpoint);
+            }
         }
     }
 
@@ -102,6 +137,33 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
+    public string NetworkDetail
+    {
+        get
+        {
+            try
+            {
+                NetworkInterface? active = GetActiveNetworkInterface();
+                if (active == null)
+                    return "当前没有可用连接";
+
+                string? ipv4 = active.GetIPProperties().UnicastAddresses
+                    .FirstOrDefault(address => address.Address.AddressFamily == AddressFamily.InterNetwork)
+                    ?.Address.ToString();
+                string kind = active.NetworkInterfaceType == NetworkInterfaceType.Wireless80211
+                    ? "Wi‑Fi"
+                    : active.NetworkInterfaceType == NetworkInterfaceType.Ethernet
+                        ? "以太网"
+                        : active.NetworkInterfaceType.ToString();
+                return string.IsNullOrWhiteSpace(ipv4) ? kind : $"{kind} · {ipv4}";
+            }
+            catch
+            {
+                return IsNetworkAvailable ? "网络已连接" : "当前没有可用连接";
+            }
+        }
+    }
+
     public bool HasBattery => SystemInformation.PowerStatus.BatteryChargeStatus
         != BatteryChargeStatus.NoSystemBattery;
 
@@ -109,23 +171,14 @@ public sealed class SystemStatusService : ISystemStatusService
         ? (int)Math.Round(SystemInformation.PowerStatus.BatteryLifePercent * 100)
         : 0;
 
-    public void OpenQuickSettings()
-    {
-        if (!TrySendWindowsShortcut(0x41))
-            OpenSystemUri("ms-settings:network-status");
-    }
+    public bool IsCharging => HasBattery
+        && (SystemInformation.PowerStatus.BatteryChargeStatus & BatteryChargeStatus.Charging) != 0;
 
-    public void OpenNotifications()
-    {
-        if (!TrySendWindowsShortcut(0x4E))
-            OpenSystemUri("ms-settings:notifications");
-    }
+    public bool OpenQuickSettings() => TrySendWindowsShortcut(0x41);
 
-    public void OpenInputSwitcher()
-    {
-        if (!TrySendWindowsShortcut(0x20))
-            OpenSystemUri("ms-settings:typing");
-    }
+    public bool OpenNotifications() => TrySendWindowsShortcut(0x4E);
+
+    public bool OpenInputSwitcher() => TrySendWindowsShortcut(0x20);
 
     public void OpenPowerSettings() => OpenSystemUri("ms-settings:powersleep");
 
@@ -138,6 +191,37 @@ public sealed class SystemStatusService : ISystemStatusService
     public void Sleep() => NativeMethods.SetSuspendState(false, false, false);
     public void Restart() => StartShutdown("/r /t 0");
     public void Shutdown() => StartShutdown("/s /t 0");
+
+    private IAudioEndpointVolume? GetDefaultAudioEndpoint()
+    {
+        if (_deviceEnumerator == null)
+            return null;
+
+        _deviceEnumerator.GetDefaultAudioEndpoint(
+            EDataFlow.Render,
+            ERole.Multimedia,
+            out IMMDevice device);
+        try
+        {
+            Guid endpointVolumeId = typeof(IAudioEndpointVolume).GUID;
+            device.Activate(ref endpointVolumeId, Clsctx.All, IntPtr.Zero, out object endpoint);
+            return (IAudioEndpointVolume)endpoint;
+        }
+        finally
+        {
+            ReleaseComObject(device);
+        }
+    }
+
+    private static NetworkInterface? GetActiveNetworkInterface()
+        => NetworkInterface.GetAllNetworkInterfaces()
+            .Where(item =>
+                item.OperationalStatus == OperationalStatus.Up
+                && item.NetworkInterfaceType != NetworkInterfaceType.Loopback
+                && item.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+            .OrderByDescending(item =>
+                item.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
+            .FirstOrDefault();
 
     private static void StartShutdown(string arguments)
     {
@@ -176,8 +260,13 @@ public sealed class SystemStatusService : ISystemStatusService
 
     public void Dispose()
     {
-        if (_audioEndpoint != null && Marshal.IsComObject(_audioEndpoint))
-            Marshal.FinalReleaseComObject(_audioEndpoint);
+        ReleaseComObject(_deviceEnumerator);
+    }
+
+    private static void ReleaseComObject(object? value)
+    {
+        if (value != null && Marshal.IsComObject(value))
+            Marshal.FinalReleaseComObject(value);
     }
 
     private enum EDataFlow

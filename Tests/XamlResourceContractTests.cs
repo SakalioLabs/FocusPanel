@@ -150,7 +150,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_UsesDirectWindowsSystemCommands()
+    public void CompactDock_UsesDirectSystemControlsInsteadOfSettingsShortcuts()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
@@ -158,10 +158,20 @@ public sealed class XamlResourceContractTests
         Assert.Contains("OpenQuickSettingsCommand", mainWindow);
         Assert.Contains("OpenNotificationsCommand", mainWindow);
         Assert.Contains("OpenInputSwitcherCommand", mainWindow);
-        Assert.Contains("OpenPowerSettingsCommand", mainWindow);
+        Assert.Contains("Value=\"{Binding MasterVolume, Mode=TwoWay", mainWindow);
+        Assert.Contains("ToggleMuteCommand", mainWindow);
+        Assert.Contains("NetworkDetail", mainWindow);
+        Assert.Contains("LockComputerCommand", mainWindow);
+        Assert.Contains("SleepComputerCommand", mainWindow);
         Assert.Contains("ShowDesktopCommand", mainWindow);
-        Assert.DoesNotContain("Visibility=\"{Binding IsCalendarOpen", mainWindow);
-        Assert.DoesNotContain("Visibility=\"{Binding IsQuickSettingsOpen", mainWindow);
+        Assert.Contains("Visibility=\"{Binding IsCalendarOpen", mainWindow);
+        Assert.Contains("Visibility=\"{Binding IsQuickSettingsOpen", mainWindow);
+
+        string systemStatus = File.ReadAllText(
+            Path.Combine(root, "Services", "SystemStatusService.cs"));
+        Assert.DoesNotContain("ms-settings:network-status", systemStatus);
+        Assert.DoesNotContain("ms-settings:notifications", systemStatus);
+        Assert.DoesNotContain("ms-settings:typing", systemStatus);
     }
 
     private static HashSet<string> ReadDefinedKeys(params string[] paths)
