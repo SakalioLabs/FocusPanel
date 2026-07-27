@@ -5,19 +5,11 @@ namespace FocusPanel.Tests;
 
 public sealed class TaskbarSafetyPolicyTests
 {
-    [Theory]
-    [InlineData(false, true, true)]
-    [InlineData(true, false, true)]
-    [InlineData(true, true, false)]
-    public void MissingPrerequisite_PreventsReplacement(
-        bool taskbarFound,
-        bool primaryFound,
-        bool workAreaRead)
+    [Fact]
+    public void MissingTaskbar_PreventsReplacement()
     {
         bool allowed = TaskbarSafetyPolicy.TryValidatePrerequisites(
-            taskbarFound,
-            primaryFound,
-            workAreaRead,
+            false,
             out string? error);
 
         Assert.False(allowed);
@@ -28,8 +20,6 @@ public sealed class TaskbarSafetyPolicyTests
     public void CompletePrerequisites_AllowReplacement()
     {
         bool allowed = TaskbarSafetyPolicy.TryValidatePrerequisites(
-            true,
-            true,
             true,
             out string? error);
 

@@ -157,8 +157,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool firstRunAccepted = ReadBooleanConfig(FirstRunAcceptedKey);
         IsReplacementEnabled = ReadBooleanConfig(ReplacementEnabledKey);
         ReplacementStatus = IsReplacementEnabled
-            ? "正在接管主屏任务栏"
-            : "未接管，Windows 任务栏保持显示";
+            ? "侧边任务栏运行中 · Windows 原生任务栏兼容自动隐藏"
+            : "兼容模式未启用，Windows 任务栏保持原设置";
         ThemeMode = ReadStringConfig(ThemeModeKey, "System");
         DisableHotZoneInFullscreen = ReadBooleanConfig(FullscreenHotZoneKey, true);
         ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles;
@@ -378,7 +378,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OpenNotificationOverflow()
         => SetSystemActionResult(
             _systemStatus.OpenNotificationOverflow(),
-            "无法打开系统托盘浮层；请先恢复 Windows 任务栏后重试。");
+            "无法打开系统托盘浮层；可将鼠标移到 Windows 原任务栏边缘后重试。");
 
     [RelayCommand]
     private void OpenNotifications()
@@ -446,8 +446,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsReplacementEnabled = enabled;
         IsOnboardingVisible = false;
         ReplacementStatus = enabled
-            ? "已接管主屏任务栏 · 紧急恢复 Ctrl+Alt+Shift+F10"
-            : "未接管，Windows 任务栏保持显示";
+            ? "侧边任务栏运行中 · 原生任务栏兼容自动隐藏"
+            : "兼容模式未启用，Windows 任务栏保持原设置";
         ReplacementError = error ?? string.Empty;
         SaveBooleanConfig(FirstRunAcceptedKey, true);
         SaveBooleanConfig(ReplacementEnabledKey, enabled);

@@ -46,7 +46,7 @@ public static class TaskbarWatchdog
                 Thread.Sleep(40);
             }
 
-            error = "恢复守护进程没有完成初始化，已取消隐藏系统任务栏。";
+            error = "恢复守护进程没有完成初始化，已取消更改系统任务栏设置。";
             return false;
         }
         catch (Exception ex)

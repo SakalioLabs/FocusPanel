@@ -27,8 +27,9 @@ public sealed class TaskbarControllerStateTests
             Assert.True(controller.TryEnableReplacement(out string? error));
             Assert.Null(error);
             Assert.True(controller.IsReplacementEnabled);
-            Assert.False(native.Visible);
-            Assert.Equal(1080, native.WorkArea.Bottom);
+            Assert.True(native.Visible);
+            Assert.Equal(1040, native.WorkArea.Bottom);
+            Assert.Equal((uint)3, native.AppBarState);
             Assert.True(File.Exists(sessionFile));
 
             controller.Restore();
@@ -38,7 +39,7 @@ public sealed class TaskbarControllerStateTests
             Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
             Assert.Equal(1040, native.WorkArea.Bottom);
-            Assert.Equal((uint)7, native.AppBarState);
+            Assert.Equal((uint)2, native.AppBarState);
             Assert.Equal(workAreaWritesAfterFirstRestore, native.WorkAreaWriteCount);
             Assert.False(File.Exists(sessionFile));
             Assert.Equal(1, watchdog.StartCount);
@@ -80,14 +81,14 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void WorkAreaFailure_RollsBackInsteadOfEnteringPartialReplacement()
+    public void AutoHideFailure_RollsBackInsteadOfEnteringPartialReplacement()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
             "FocusPanel.Tests",
             Guid.NewGuid().ToString("N"));
         string sessionFile = Path.Combine(directory, "taskbar-session.json");
-        var native = new FakeTaskbarNativeApi { SetWorkAreaSucceeds = false };
+        var native = new FakeTaskbarNativeApi { SetAppBarStateSucceeds = false };
 
         try
         {
@@ -111,14 +112,18 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void TaskbarHideFailure_RollsBackAndReportsFailure()
+    public void HiddenTaskbarShowFailure_RollsBackAndReportsFailure()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
             "FocusPanel.Tests",
             Guid.NewGuid().ToString("N"));
         string sessionFile = Path.Combine(directory, "taskbar-session.json");
-        var native = new FakeTaskbarNativeApi { HideSucceeds = false };
+        var native = new FakeTaskbarNativeApi
+        {
+            Visible = false,
+            ShowSucceeds = false
+        };
 
         try
         {
@@ -130,7 +135,7 @@ public sealed class TaskbarControllerStateTests
             Assert.False(controller.TryEnableReplacement(out string? error));
             Assert.False(string.IsNullOrWhiteSpace(error));
             Assert.False(controller.IsReplacementEnabled);
-            Assert.True(native.Visible);
+            Assert.False(native.Visible);
             Assert.Equal(1040, native.WorkArea.Bottom);
             Assert.False(File.Exists(sessionFile));
         }
@@ -161,12 +166,47 @@ public sealed class TaskbarControllerStateTests
             Assert.True(controller.TryEnableReplacement(out _));
             int workAreaWrites = native.WorkAreaWriteCount;
             int visibilityWrites = native.TaskbarVisibilityWriteCount;
+            int appBarWrites = native.AppBarStateWriteCount;
 
             controller.RunGuardOnceForTests();
             controller.RunGuardOnceForTests();
 
             Assert.Equal(workAreaWrites, native.WorkAreaWriteCount);
             Assert.Equal(visibilityWrites, native.TaskbarVisibilityWriteCount);
+            Assert.Equal(appBarWrites, native.AppBarStateWriteCount);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void RestoreVerificationFailure_KeepsSessionForWatchdogRetry()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(directory, "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            native.Visible = false;
+            native.VisibilityWritesSucceed = false;
+
+            controller.Restore();
+
+            Assert.True(File.Exists(sessionFile));
+            Assert.False(native.Visible);
         }
         finally
         {
@@ -193,13 +233,13 @@ public sealed class TaskbarControllerStateTests
                 sessionFile);
 
             Assert.True(controller.TryEnableReplacement(out _));
-            native.ThrowTimeoutOnWorkAreaRead = true;
+            native.ThrowTimeoutOnAppBarRead = true;
 
             Exception? exception = Record.Exception(controller.RunGuardOnceForTests);
 
             Assert.Null(exception);
             Assert.True(controller.IsReplacementEnabled);
-            Assert.False(native.Visible);
+            Assert.True(native.Visible);
         }
         finally
         {
@@ -226,21 +266,21 @@ public sealed class TaskbarControllerStateTests
                 sessionFile);
 
             Assert.True(controller.TryEnableReplacement(out _));
-            native.BlockNextWorkAreaRead = true;
+            native.BlockNextAppBarRead = true;
             Task firstGuard = Task.Run(controller.RunGuardOnceForTests);
-            Assert.True(native.WorkAreaReadEntered.Wait(TimeSpan.FromSeconds(2)));
-            int readsWhileBlocked = native.WorkAreaReadCount;
+            Assert.True(native.AppBarReadEntered.Wait(TimeSpan.FromSeconds(2)));
+            int readsWhileBlocked = native.AppBarStateReadCount;
 
             controller.RunGuardOnceForTests();
 
-            Assert.Equal(readsWhileBlocked, native.WorkAreaReadCount);
-            native.ReleaseWorkAreaRead.Set();
+            Assert.Equal(readsWhileBlocked, native.AppBarStateReadCount);
+            native.ReleaseAppBarRead.Set();
             await firstGuard;
             Assert.True(controller.IsReplacementEnabled);
         }
         finally
         {
-            native.ReleaseWorkAreaRead.Set();
+            native.ReleaseAppBarRead.Set();
             if (Directory.Exists(directory))
                 Directory.Delete(directory, true);
         }
@@ -266,8 +306,8 @@ public sealed class TaskbarControllerStateTests
             controller.ReplacementStopped += reason => stoppedReason = reason;
 
             Assert.True(controller.TryEnableReplacement(out _));
-            native.Visible = true;
-            native.HideSucceeds = false;
+            native.AppBarState = 2;
+            native.SetAppBarStateSucceeds = false;
 
             controller.RunGuardOnceForTests();
 
@@ -298,16 +338,19 @@ public sealed class TaskbarControllerStateTests
     private sealed class FakeTaskbarNativeApi : ITaskbarNativeApi
     {
         public bool Visible { get; set; } = true;
-        public uint AppBarState { get; private set; } = 7;
+        public uint AppBarState { get; set; } = 2;
         public int WorkAreaWriteCount { get; private set; }
         public int TaskbarVisibilityWriteCount { get; private set; }
+        public int AppBarStateWriteCount { get; private set; }
+        public int AppBarStateReadCount { get; private set; }
         public bool SetWorkAreaSucceeds { get; set; } = true;
-        public bool HideSucceeds { get; set; } = true;
-        public bool ThrowTimeoutOnWorkAreaRead { get; set; }
-        public bool BlockNextWorkAreaRead { get; set; }
-        public int WorkAreaReadCount { get; private set; }
-        public ManualResetEventSlim WorkAreaReadEntered { get; } = new(false);
-        public ManualResetEventSlim ReleaseWorkAreaRead { get; } = new(false);
+        public bool SetAppBarStateSucceeds { get; set; } = true;
+        public bool ShowSucceeds { get; set; } = true;
+        public bool VisibilityWritesSucceed { get; set; } = true;
+        public bool ThrowTimeoutOnAppBarRead { get; set; }
+        public bool BlockNextAppBarRead { get; set; }
+        public ManualResetEventSlim AppBarReadEntered { get; } = new(false);
+        public ManualResetEventSlim ReleaseAppBarRead { get; } = new(false);
         public TaskbarController.NativeRect WorkArea { get; private set; } = new()
         {
             Left = 0,
@@ -320,46 +363,38 @@ public sealed class TaskbarControllerStateTests
 
         public bool IsWindowVisible(IntPtr taskbar) => Visible;
 
-        public bool TryGetPrimaryBounds(out TaskbarController.NativeRect bounds)
+        public uint GetAppBarState(IntPtr taskbar)
         {
-            bounds = new TaskbarController.NativeRect
+            AppBarStateReadCount++;
+            if (ThrowTimeoutOnAppBarRead)
             {
-                Left = 0,
-                Top = 0,
-                Right = 1920,
-                Bottom = 1080
-            };
-            return true;
-        }
-
-        public bool TryGetWorkArea(out TaskbarController.NativeRect workArea)
-        {
-            WorkAreaReadCount++;
-            if (ThrowTimeoutOnWorkAreaRead)
-            {
-                ThrowTimeoutOnWorkAreaRead = false;
+                ThrowTimeoutOnAppBarRead = false;
                 throw new TimeoutException("模拟任务栏状态锁超时。");
             }
 
-            if (BlockNextWorkAreaRead)
+            if (BlockNextAppBarRead)
             {
-                BlockNextWorkAreaRead = false;
-                WorkAreaReadEntered.Set();
-                ReleaseWorkAreaRead.Wait(TimeSpan.FromSeconds(5));
+                BlockNextAppBarRead = false;
+                AppBarReadEntered.Set();
+                ReleaseAppBarRead.Wait(TimeSpan.FromSeconds(5));
             }
 
-            workArea = WorkArea;
-            return true;
+            return AppBarState;
         }
 
-        public uint GetAppBarState(IntPtr taskbar) => AppBarState;
-
-        public void SetAppBarState(IntPtr taskbar, uint state) => AppBarState = state;
+        public void SetAppBarState(IntPtr taskbar, uint state)
+        {
+            AppBarStateWriteCount++;
+            if (SetAppBarStateSucceeds)
+                AppBarState = state;
+        }
 
         public bool SetTaskbarVisible(IntPtr taskbar, bool visible)
         {
             TaskbarVisibilityWriteCount++;
-            if (!visible && !HideSucceeds)
+            if (!VisibilityWritesSucceed)
+                return false;
+            if (visible && !ShowSucceeds)
                 return false;
             Visible = visible;
             return true;

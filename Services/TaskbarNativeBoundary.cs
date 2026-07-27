@@ -6,8 +6,6 @@ internal interface ITaskbarNativeApi
 {
     IntPtr FindPrimaryTaskbar();
     bool IsWindowVisible(IntPtr taskbar);
-    bool TryGetPrimaryBounds(out TaskbarController.NativeRect bounds);
-    bool TryGetWorkArea(out TaskbarController.NativeRect workArea);
     uint GetAppBarState(IntPtr taskbar);
     void SetAppBarState(IntPtr taskbar, uint state);
     bool SetTaskbarVisible(IntPtr taskbar, bool visible);

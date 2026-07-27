@@ -14,10 +14,10 @@ namespace FocusPanel.Views;
 
 public partial class FileOrganizerView : UserControl
 {
-    // Auto-scroll Timer
-    private DispatcherTimer _autoScrollTimer;
-    private double _scrollSpeed = 0;
-    private ScrollViewer _scrollViewer;
+    private readonly DispatcherTimer _autoScrollTimer;
+    private double _scrollSpeed;
+    private ScrollViewer? _scrollViewer;
+    private bool _isDragOverOrganizer;
 
     public FileOrganizerView()
     {
@@ -27,12 +27,15 @@ public partial class FileOrganizerView : UserControl
         _autoScrollTimer.Tick += AutoScrollTimer_Tick;
     }
 
-    private void AutoScrollTimer_Tick(object sender, EventArgs e)
+    private void AutoScrollTimer_Tick(object? sender, EventArgs e)
     {
-        if (_scrollViewer != null && _scrollSpeed != 0)
+        if (!_isDragOverOrganizer || _scrollViewer == null || _scrollSpeed == 0)
         {
-            _scrollViewer.ScrollToVerticalOffset(_scrollViewer.VerticalOffset + _scrollSpeed);
+            StopAutoScroll();
+            return;
         }
+
+        _scrollViewer.ScrollToVerticalOffset(_scrollViewer.VerticalOffset + _scrollSpeed);
     }
 
     private void FileCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -73,6 +76,7 @@ public partial class FileOrganizerView : UserControl
                 }
                 finally
                 {
+                    StopAutoScroll();
                     shell?.EndDesktopFileDrag();
                 }
             }
@@ -81,6 +85,7 @@ public partial class FileOrganizerView : UserControl
 
     private void Partition_DragOver(object sender, DragEventArgs e)
     {
+        _isDragOverOrganizer = true;
         // ... (Existing logic) ...
         
         // Auto-scroll logic
@@ -140,19 +145,17 @@ public partial class FileOrganizerView : UserControl
     }
     
     // Helper to find ScrollViewer
-    private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
     {
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
         {
             DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-            if (child != null && child is T)
-                return (T)child;
-            else
-            {
-                T childOfChild = FindVisualChild<T>(child);
-                if (childOfChild != null)
-                    return childOfChild;
-            }
+            if (child is T typedChild)
+                return typedChild;
+
+            T? childOfChild = FindVisualChild<T>(child);
+            if (childOfChild != null)
+                return childOfChild;
         }
         return null;
     }
@@ -180,13 +183,17 @@ public partial class FileOrganizerView : UserControl
     
     private void UserControl_DragLeave(object sender, DragEventArgs e)
     {
-         // Stop auto-scroll when leaving the entire control
-         _scrollSpeed = 0;
-         _autoScrollTimer.Stop();
+        StopAutoScroll();
+    }
+
+    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+        StopAutoScroll();
     }
 
     private async void Partition_Drop(object sender, DragEventArgs e)
     {
+        StopAutoScroll();
         if (sender is Border border)
         {
             e.Handled = true;
@@ -280,6 +287,7 @@ public partial class FileOrganizerView : UserControl
 
     private void PartitionHeader_Drop(object sender, DragEventArgs e)
     {
+        StopAutoScroll();
         if (sender is FrameworkElement element && element.DataContext is PartitionViewModel targetPartition &&
             DataContext is FileOrganizerViewModel vm &&
             e.Data.GetData(typeof(PartitionViewModel)) is PartitionViewModel sourcePartition)
@@ -303,6 +311,7 @@ public partial class FileOrganizerView : UserControl
 
     private void Column_Drop(object sender, DragEventArgs e)
     {
+        StopAutoScroll();
         if (sender is Border border && border.Tag is string colStr && int.TryParse(colStr, out int targetColumn) &&
             DataContext is FileOrganizerViewModel vm &&
             e.Data.GetData(typeof(PartitionViewModel)) is PartitionViewModel sourcePartition)
@@ -311,5 +320,12 @@ public partial class FileOrganizerView : UserControl
             // Move to end of target column
             vm.MovePartitionToColumn(sourcePartition, targetColumn);
         }
+    }
+
+    private void StopAutoScroll()
+    {
+        _isDragOverOrganizer = false;
+        _scrollSpeed = 0;
+        _autoScrollTimer.Stop();
     }
 }

@@ -236,6 +236,45 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("ToggleDesktopCommand", organizer);
     }
 
+    [Fact]
+    public void TaskbarCompatibilityMode_KeepsExplorerHostAndAvoidsWorkAreaFight()
+    {
+        string root = FindRepositoryRoot();
+        string controller = File.ReadAllText(
+            Path.Combine(root, "Services", "TaskbarController.cs"));
+        string onboarding = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+
+        Assert.Contains("AbsAutoHide", controller);
+        Assert.Contains("UsesNativeAutoHide = true", controller);
+        Assert.Contains("SetTaskbarVisible(taskbar, true)", controller);
+        Assert.DoesNotContain(
+            "_native.SetWorkArea(_state.PrimaryBounds)",
+            controller);
+        Assert.DoesNotContain(
+            "_native.SetTaskbarVisible(taskbar, false)",
+            controller);
+        Assert.Contains("Windows 官方自动隐藏状态", onboarding);
+    }
+
+    [Fact]
+    public void OrganizerAutoScroll_StopsOnDropLeaveAndUnload()
+    {
+        string root = FindRepositoryRoot();
+        string organizer = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml.cs"));
+
+        Assert.Contains("DragLeave=\"UserControl_DragLeave\"", organizer);
+        Assert.Contains("Unloaded=\"UserControl_Unloaded\"", organizer);
+        Assert.Contains("private void StopAutoScroll()", codeBehind);
+        Assert.Contains("private async void Partition_Drop", codeBehind);
+        Assert.Contains("private void Column_Drop", codeBehind);
+        Assert.True(
+            codeBehind.Split("StopAutoScroll();", StringSplitOptions.None).Length >= 7);
+    }
+
     private static HashSet<string> ReadDefinedKeys(params string[] paths)
     {
         var keys = new HashSet<string>(StringComparer.Ordinal);

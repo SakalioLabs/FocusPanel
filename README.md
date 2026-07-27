@@ -14,19 +14,19 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 固定应用与运行应用集中显示；运行应用支持激活、最小化、多窗口列表和正常关闭。
 - 日期入口打开月历与今日任务，系统区提供音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
 
-## 任务栏替代模式与安全恢复
+## 侧边任务栏兼容模式与安全恢复
 
-任务栏替代模式只隐藏主显示器的 `Shell_TrayWnd`，不会结束 Explorer，也不会处理副屏的 `Shell_SecondaryTrayWnd`。主屏工作区只在当前会话临时释放，退出时恢复原值。
+兼容模式不再通过 `ShowWindow` 隐藏 `Shell_TrayWnd`，也不再用 `SPI_SETWORKAREA` 与 Explorer 争夺工作区。FocusPanel 使用微软公开的 `ABM_SETSTATE + ABS_AUTOHIDE` 让 Windows 管理原生任务栏自动隐藏，因此快捷设置、通知中心、输入法和托盘溢出继续保留 Explorer 宿主。把鼠标移到原任务栏边缘仍可临时唤出原生任务栏；多显示器遵循 Windows 的统一自动隐藏设置。
 
-首次启用前会显示安全说明。只有在侧边壳层、热区以及独立恢复守护进程都就绪后，FocusPanel 才会隐藏原任务栏；紧急快捷键注册失败时不会进入替代模式。
+首次启用前会显示安全说明。只有在侧边壳层、热区以及独立恢复守护进程都就绪后，FocusPanel 才会切换原生自动隐藏状态；紧急快捷键注册失败时不会改变任务栏设置。
 
 - 紧急恢复：`Ctrl+Alt+Shift+F10`
-- 正常退出、未处理异常、数据库恢复重启：均先恢复任务栏和工作区
+- 正常退出、未处理异常、数据库恢复重启：均恢复原任务栏自动隐藏设置
 - 父进程异常退出：`--taskbar-watchdog` 守护模式负责恢复
-- Explorer 重启或显示设置改变：重新识别主任务栏并按当前模式处理
+- Explorer 重启或任务栏状态改变：重新识别原生任务栏并按当前模式处理
 - 恢复会话：`%LOCALAPPDATA%\FocusPanel\taskbar-session.json`
 
-遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会通过结束 Explorer 来实现任务栏替代。
+遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序不会结束 Explorer、隐藏 `Shell_TrayWnd` 或持续覆盖 Windows 工作区。
 
 ## 桌面收纳与效率模块
 
@@ -99,7 +99,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.19 `
+  -Version 0.9.20 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -108,11 +108,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.19-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.20-full.nupkg`：完整更新包。
 - `releases.win.json`、`assets.win.json` 和 `RELEASES`：更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
-安装版和 Velopack 便携版会在“设置与恢复 → 软件更新”中显示当前版本。点击“一键检查并安装更新”后，FocusPanel 会从项目的 GitHub Releases 检查版本，显示更新说明，下载更新包，备份数据库，恢复 Windows 任务栏，然后重启安装。
+安装版和 Velopack 便携版会在“设置与恢复 → 软件更新”中显示当前版本。点击“一键检查并安装更新”后，FocusPanel 会从项目的 GitHub Releases 检查版本，显示更新说明，下载更新包，备份数据库，恢复原任务栏设置，然后重启安装。
 
 源码直接运行的开发版不会原地覆盖自身，设置页会提示先安装 `Setup.exe`。
 
@@ -121,7 +121,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.19 `
+  -Version 0.9.20 `
   -Dotnet8Path dotnet
 ```
 

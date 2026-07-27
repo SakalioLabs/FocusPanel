@@ -16,11 +16,11 @@ public sealed class TaskbarController : ITaskbarController
     private const uint SwpNoActivate = 0x0010;
     private const uint SwpShowWindow = 0x0040;
     private const uint SwpHideWindow = 0x0080;
-    private const uint SpiGetWorkArea = 0x0030;
     private const uint SpiSetWorkArea = 0x002F;
     private const uint SpifSendChange = 0x0002;
     private const uint AbmGetState = 0x00000004;
     private const uint AbmSetState = 0x0000000A;
+    private const uint AbsAutoHide = 0x00000001;
     private const string MutationMutexName = @"Local\FocusPanel.TaskbarMutation";
     private static readonly JsonSerializerOptions SessionJsonOptions = new()
     {
@@ -69,12 +69,8 @@ public sealed class TaskbarController : ITaskbarController
             return true;
 
         IntPtr taskbar = _native.FindPrimaryTaskbar();
-        bool primaryScreenRead = _native.TryGetPrimaryBounds(out NativeRect primaryBounds);
-        bool workAreaRead = _native.TryGetWorkArea(out NativeRect workArea);
         if (!TaskbarSafetyPolicy.TryValidatePrerequisites(
                 taskbar != IntPtr.Zero,
-                primaryScreenRead,
-                workAreaRead,
                 out error))
         {
             return false;
@@ -84,9 +80,8 @@ public sealed class TaskbarController : ITaskbarController
         _state = new TaskbarSessionState
         {
             TaskbarWasVisible = _native.IsWindowVisible(taskbar),
-            OriginalWorkArea = workArea,
             OriginalAppBarState = appBarState,
-            PrimaryBounds = primaryBounds,
+            UsesNativeAutoHide = true,
             CreatedAt = DateTimeOffset.Now
         };
 
@@ -200,25 +195,32 @@ public sealed class TaskbarController : ITaskbarController
             // A missing or damaged state file must not prevent the fail-safe from showing the taskbar.
         }
 
+        bool workAreaRestored = true;
         IntPtr taskbar = native.FindPrimaryTaskbar();
-        if (state != null)
-            native.SetWorkArea(state.OriginalWorkArea);
+        if (state != null && !state.UsesNativeAutoHide)
+            workAreaRestored = native.SetWorkArea(state.OriginalWorkArea);
 
+        bool visibilityRestored = taskbar != IntPtr.Zero;
         if (taskbar != IntPtr.Zero)
         {
             if (state != null)
                 native.SetAppBarState(taskbar, state.OriginalAppBarState);
 
             bool shouldBeVisible = state == null || state.TaskbarWasVisible;
+            visibilityRestored = false;
             for (int attempt = 0; attempt < 3; attempt++)
             {
                 if (native.SetTaskbarVisible(taskbar, shouldBeVisible)
                     && native.IsWindowVisible(taskbar) == shouldBeVisible)
                 {
+                    visibilityRestored = true;
                     break;
                 }
             }
         }
+
+        if (!workAreaRestored || !visibilityRestored)
+            return;
 
         try
         {
@@ -253,36 +255,31 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if (!_native.TryGetWorkArea(out NativeRect currentWorkArea))
+        // Keep Shell_TrayWnd alive because Windows quick settings, notification
+        // center, input switching and tray overflow are hosted by Explorer.
+        // Let Explorer own work-area negotiation through its documented
+        // auto-hide state instead of fighting it with SPI_SETWORKAREA.
+        uint desiredState = _state.OriginalAppBarState | AbsAutoHide;
+        if (_native.GetAppBarState(taskbar) != desiredState)
+            _native.SetAppBarState(taskbar, desiredState);
+
+        if ((_native.GetAppBarState(taskbar) & AbsAutoHide) == 0)
         {
-            _lastApplyError = "无法读取当前 Windows 工作区";
+            _lastApplyError = "Windows 拒绝启用原生任务栏自动隐藏";
             return false;
         }
 
-        if (!RectsEqual(currentWorkArea, _state.PrimaryBounds)
-            && !_native.SetWorkArea(_state.PrimaryBounds))
+        if (!_native.IsWindowVisible(taskbar)
+            && (!_native.SetTaskbarVisible(taskbar, true)
+                || !_native.IsWindowVisible(taskbar)))
         {
-            _lastApplyError = "Windows 拒绝释放主屏工作区";
-            return false;
-        }
-
-        if (_native.IsWindowVisible(taskbar)
-            && (!_native.SetTaskbarVisible(taskbar, false)
-                || _native.IsWindowVisible(taskbar)))
-        {
-            _lastApplyError = "Windows 任务栏窗口仍然可见";
+            _lastApplyError = "无法恢复系统功能所需的 Shell_TrayWnd";
             return false;
         }
 
         _lastApplyError = null;
         return true;
     }
-
-    private static bool RectsEqual(NativeRect left, NativeRect right)
-        => left.Left == right.Left
-            && left.Top == right.Top
-            && left.Right == right.Right
-            && left.Bottom == right.Bottom;
 
     private static IDisposable AcquireMutationMutex()
     {
@@ -401,14 +398,6 @@ public sealed class TaskbarController : ITaskbarController
         public int Top;
         public int Right;
         public int Bottom;
-
-        public static NativeRect FromRectangle(System.Drawing.Rectangle rectangle) => new()
-        {
-            Left = rectangle.Left,
-            Top = rectangle.Top,
-            Right = rectangle.Right,
-            Bottom = rectangle.Bottom
-        };
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -434,6 +423,7 @@ public sealed class TaskbarController : ITaskbarController
         public NativeRect OriginalWorkArea { get; set; }
         public uint OriginalAppBarState { get; set; }
         public NativeRect PrimaryBounds { get; set; }
+        public bool UsesNativeAutoHide { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
     }
 
@@ -448,26 +438,6 @@ public sealed class TaskbarController : ITaskbarController
         public IntPtr FindPrimaryTaskbar() => NativeMethods.FindWindow("Shell_TrayWnd", null);
 
         public bool IsWindowVisible(IntPtr taskbar) => NativeMethods.IsWindowVisible(taskbar);
-
-        public bool TryGetPrimaryBounds(out NativeRect bounds)
-        {
-            System.Windows.Forms.Screen? primary = System.Windows.Forms.Screen.PrimaryScreen;
-            if (primary == null)
-            {
-                bounds = default;
-                return false;
-            }
-
-            bounds = NativeRect.FromRectangle(primary.Bounds);
-            return true;
-        }
-
-        public bool TryGetWorkArea(out NativeRect workArea)
-            => NativeMethods.GetSystemParametersInfo(
-                SpiGetWorkArea,
-                0,
-                out workArea,
-                0);
 
         public uint GetAppBarState(IntPtr taskbar)
         {
@@ -530,10 +500,6 @@ public sealed class TaskbarController : ITaskbarController
             int cx,
             int cy,
             uint flags);
-
-        [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool GetSystemParametersInfo(uint uiAction, uint uiParam, out NativeRect pvParam, uint fWinIni);
 
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

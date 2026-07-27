@@ -7,6 +7,8 @@
              xmlns:vm="clr-namespace:FocusPanel.ViewModels"
              xmlns:converters="clr-namespace:FocusPanel.Converters"
              mc:Ignorable="d"
+             DragLeave="UserControl_DragLeave"
+             Unloaded="UserControl_Unloaded"
              d:DataContext="{d:DesignInstance Type=vm:FileOrganizerViewModel}"
              d:DesignHeight="700"
              d:DesignWidth="1000">
