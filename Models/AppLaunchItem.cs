@@ -10,6 +10,7 @@ public partial class AppLaunchItem : ObservableObject
     public string LaunchTarget { get; init; } = string.Empty;
     public string? Arguments { get; init; }
     public string? IconKey { get; init; }
+    public string IdentityKey { get; set; } = string.Empty;
     [ObservableProperty]
     private ImageSource? icon;
 

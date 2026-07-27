@@ -426,31 +426,50 @@ public partial class MainWindow : Window
     private void ButtonContextMenu_Closed(object sender, RoutedEventArgs e)
         => ScheduleAutoHide();
 
-    private void RunningApp_Click(object sender, RoutedEventArgs e)
+    private void TaskbarApp_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { DataContext: WindowTaskItem task } button)
+        if (sender is not Button { DataContext: TaskbarAppItem task } button)
             return;
 
         if (task.WindowCount <= 1)
         {
-            _viewModel.ActivateTaskCommand.Execute(task);
+            _viewModel.ActivateTaskbarAppCommand.Execute(task);
             return;
         }
 
-        PopulateRunningAppContextMenu(button, task);
+        PopulateTaskbarAppContextMenu(button, task);
         OpenContextMenu(button);
     }
 
-    private void RunningApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    private void TaskbarApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        if (sender is Button { DataContext: WindowTaskItem task } button)
-            PopulateRunningAppContextMenu(button, task);
+        if (sender is Button { DataContext: TaskbarAppItem task } button)
+            PopulateTaskbarAppContextMenu(button, task);
     }
 
-    private void PopulateRunningAppContextMenu(Button button, WindowTaskItem task)
+    private void PopulateTaskbarAppContextMenu(Button button, TaskbarAppItem task)
     {
         ContextMenu menu = button.ContextMenu ?? new ContextMenu();
         menu.Items.Clear();
+
+        if (task.CreateLaunchItem() != null)
+        {
+            menu.Items.Add(new MenuItem
+            {
+                Header = task.IsRunning ? "启动新实例" : "启动",
+                Command = _viewModel.LaunchNewTaskbarAppCommand,
+                CommandParameter = task
+            });
+        }
+        menu.Items.Add(new MenuItem
+        {
+            Header = task.IsPinned ? "取消固定" : "固定到任务栏",
+            IsEnabled = task.IsPinned || task.CanPin,
+            Command = _viewModel.ToggleTaskbarPinCommand,
+            CommandParameter = task
+        });
+        if (task.Windows.Count > 0)
+            menu.Items.Add(new Separator());
 
         foreach (WindowReference window in task.Windows)
         {
@@ -474,13 +493,15 @@ public partial class MainWindow : Window
         }
 
         if (task.Windows.Count > 0)
-            menu.Items.Add(new Separator());
-        menu.Items.Add(new MenuItem
         {
-            Header = task.WindowCount > 1 ? "关闭所有窗口" : "关闭窗口",
-            Command = _viewModel.CloseTaskCommand,
-            CommandParameter = task
-        });
+            menu.Items.Add(new Separator());
+            menu.Items.Add(new MenuItem
+            {
+                Header = task.WindowCount > 1 ? "关闭所有窗口" : "关闭窗口",
+                Command = _viewModel.CloseTaskCommand,
+                CommandParameter = task
+            });
+        }
 
         button.ContextMenu = menu;
     }
@@ -764,15 +785,16 @@ public partial class MainWindow : Window
         ScheduleAutoHide();
     }
 
-    private void PinnedApp_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void TaskbarApp_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         _pinnedDragStart = e.GetPosition(this);
     }
 
-    private void PinnedApp_PreviewMouseMove(object sender, MouseEventArgs e)
+    private void TaskbarApp_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed
-            || sender is not FrameworkElement { DataContext: AppLaunchItem app })
+            || sender is not FrameworkElement { DataContext: TaskbarAppItem app }
+            || !app.CanPin)
         {
             return;
         }
@@ -786,24 +808,24 @@ public partial class MainWindow : Window
 
         DragDrop.DoDragDrop(
             (DependencyObject)sender,
-            new DataObject(typeof(AppLaunchItem), app),
+            new DataObject(typeof(TaskbarAppItem), app),
             DragDropEffects.Move);
     }
 
-    private void PinnedApp_DragOver(object sender, DragEventArgs e)
+    private void TaskbarApp_DragOver(object sender, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(typeof(AppLaunchItem))
+        e.Effects = e.Data.GetDataPresent(typeof(TaskbarAppItem))
             ? DragDropEffects.Move
             : DragDropEffects.None;
         e.Handled = true;
     }
 
-    private void PinnedApp_Drop(object sender, DragEventArgs e)
+    private void TaskbarApp_Drop(object sender, DragEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: AppLaunchItem target }
-            && e.Data.GetData(typeof(AppLaunchItem)) is AppLaunchItem source)
+        if (sender is FrameworkElement { DataContext: TaskbarAppItem target }
+            && e.Data.GetData(typeof(TaskbarAppItem)) is TaskbarAppItem source)
         {
-            _viewModel.MovePinned(source, target);
+            _viewModel.MoveTaskbarApp(source, target);
         }
 
         e.Handled = true;

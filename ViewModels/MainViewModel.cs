@@ -26,6 +26,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ISystemStatusService _systemStatus;
     private readonly IAppUpdateService _updateService;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
+    private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly DispatcherTimer _clockTimer;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
@@ -170,9 +171,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _fileOrganizerViewModel = new FileOrganizerViewModel();
         CurrentViewModel = _fileOrganizerViewModel;
 
-        RefreshPinnedApps();
+        RefreshTaskbarApps();
         RefreshSearchResults();
-        RefreshRunningApps();
         RefreshStatus();
 
         _windowTracker.SnapshotChanged += OnWindowSnapshotChanged;
@@ -186,9 +186,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _clockTimer.Start();
     }
 
-    public ObservableCollection<AppLaunchItem> PinnedApps { get; } = new();
     public ObservableCollection<AppLaunchItem> SearchResults { get; } = new();
-    public ObservableCollection<WindowTaskItem> RunningApps { get; } = new();
+    public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
 
     public event Action? RequestClose;
     public event Action? RequestEnableReplacement;
@@ -291,25 +290,71 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
 
         _appCatalog.SetPinned(app, !app.IsPinned);
-        RefreshPinnedApps();
+        RefreshTaskbarApps();
         RefreshSearchResults();
     }
 
-    public void MovePinned(AppLaunchItem source, AppLaunchItem target)
+    public void MoveTaskbarApp(TaskbarAppItem source, TaskbarAppItem target)
     {
-        int targetIndex = PinnedApps.IndexOf(target);
-        if (targetIndex < 0 || ReferenceEquals(source, target))
+        if (ReferenceEquals(source, target))
             return;
 
-        _appCatalog.MovePinned(source, targetIndex);
-        RefreshPinnedApps();
+        AppLaunchItem? launch = source.CreateLaunchItem();
+        if (launch == null)
+            return;
+        if (!source.IsPinned)
+            _appCatalog.SetPinned(launch, true);
+
+        int targetIndex = TaskbarApps
+            .TakeWhile(item => !ReferenceEquals(item, target))
+            .Count(item => item.IsPinned);
+        if (!target.IsPinned)
+            targetIndex = TaskbarApps.Count(item => item.IsPinned) - 1;
+        _appCatalog.MovePinned(launch, Math.Max(0, targetIndex));
+        RefreshTaskbarApps();
     }
 
     [RelayCommand]
-    private void ActivateTask(WindowTaskItem? task)
+    private void ActivateTaskbarApp(TaskbarAppItem? task)
     {
-        if (task != null)
-            _windowTracker.ActivateOrMinimize(task);
+        if (task?.RunningTask != null)
+        {
+            _windowTracker.ActivateOrMinimize(task.RunningTask);
+            return;
+        }
+        AppLaunchItem? launch = task?.CreateLaunchItem();
+        if (launch != null)
+            _appCatalog.Launch(launch);
+    }
+
+    [RelayCommand]
+    private void LaunchNewTaskbarApp(TaskbarAppItem? task)
+    {
+        AppLaunchItem? launch = task?.CreateLaunchItem();
+        if (launch != null)
+            _appCatalog.Launch(launch);
+    }
+
+    [RelayCommand]
+    private void ToggleTaskbarPin(TaskbarAppItem? task)
+    {
+        if (task == null)
+            return;
+
+        if (task.IsPinned)
+        {
+            foreach (AppLaunchItem launch in task.PinnedLaunches)
+                _appCatalog.SetPinned(launch, false);
+        }
+        else
+        {
+            AppLaunchItem? launch = task.CreateLaunchItem();
+            if (launch == null)
+                return;
+            _appCatalog.SetPinned(launch, true);
+        }
+        RefreshTaskbarApps();
+        RefreshSearchResults();
     }
 
     [RelayCommand]
@@ -327,7 +372,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void CloseTask(WindowTaskItem? task)
+    private void CloseTask(TaskbarAppItem? task)
     {
         if (task == null)
             return;
@@ -609,25 +654,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void RefreshPinnedApps()
-    {
-        ReplaceCollection(PinnedApps, _appCatalog.GetPinned());
-    }
+    private void RefreshTaskbarApps() => ReplaceCollection(
+        TaskbarApps,
+        _taskbarComposer.Compose(_appCatalog.GetPinned(), _windowTracker.GetSnapshot()));
 
     private void RefreshSearchResults()
     {
         ReplaceCollection(SearchResults, _appCatalog.Search(SearchQuery));
     }
 
-    private void RefreshRunningApps()
-    {
-        ReplaceCollection(RunningApps, _windowTracker.GetSnapshot());
-    }
-
-    private void OnWindowSnapshotChanged(object? sender, EventArgs e) => RefreshRunningApps();
+    private void OnWindowSnapshotChanged(object? sender, EventArgs e) => RefreshTaskbarApps();
     private void OnCatalogChanged(object? sender, EventArgs e)
     {
-        RefreshPinnedApps();
+        RefreshTaskbarApps();
         RefreshSearchResults();
     }
 

@@ -16,10 +16,16 @@ public sealed class AppCatalogService : IAppCatalogService
 {
     private readonly List<AppLaunchItem> _catalog = new();
     private readonly object _catalogLock = new();
+    private readonly IAppIdentityResolver _identityResolver;
     private Thread? _shellIndexThread;
 
-    public AppCatalogService()
+    public AppCatalogService() : this(new AppIdentityResolver())
     {
+    }
+
+    internal AppCatalogService(IAppIdentityResolver identityResolver)
+    {
+        _identityResolver = identityResolver;
         Refresh();
         StartShellAppsIndex();
     }
@@ -56,6 +62,9 @@ public sealed class AppCatalogService : IAppCatalogService
         var pinnedKeys = LoadPinnedEntities()
             .Select(BuildKey)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (AppLaunchItem app in candidates.Values)
+            EnsureIdentity(app);
 
         lock (_catalogLock)
         {
@@ -109,7 +118,9 @@ public sealed class AppCatalogService : IAppCatalogService
                 }
                 if (catalogItem != null)
                     EnsureIcon(catalogItem);
-                return catalogItem ?? ToLaunchItem(entity);
+                AppLaunchItem result = catalogItem ?? ToLaunchItem(entity);
+                EnsureIdentity(result);
+                return result;
             })
             .ToList();
     }
@@ -128,6 +139,7 @@ public sealed class AppCatalogService : IAppCatalogService
 
     public void SetPinned(AppLaunchItem app, bool pinned)
     {
+        EnsureIdentity(app);
         using var context = new AppDbContext();
         string key = BuildKey(app);
         var existing = context.PinnedApps.AsEnumerable()
@@ -279,6 +291,12 @@ public sealed class AppCatalogService : IAppCatalogService
             item.Icon = IconHelper.GetIcon(item.IconKey ?? item.LaunchTarget);
     }
 
+    private void EnsureIdentity(AppLaunchItem item)
+    {
+        if (string.IsNullOrWhiteSpace(item.IdentityKey))
+            item.IdentityKey = _identityResolver.ResolveLaunch(item).Key;
+    }
+
     private void StartShellAppsIndex()
     {
         _shellIndexThread = new Thread(() =>
@@ -287,6 +305,8 @@ public sealed class AppCatalogService : IAppCatalogService
             try
             {
                 shellApps = EnumerateShellApps().ToList();
+                foreach (AppLaunchItem app in shellApps)
+                    EnsureIdentity(app);
             }
             catch
             {

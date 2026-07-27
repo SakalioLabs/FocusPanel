@@ -584,38 +584,23 @@
                                       VerticalScrollBarVisibility="Hidden"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
-                                <ItemsControl ItemsSource="{Binding PinnedApps}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                             <Button Style="{StaticResource FocusIconButton}"
-                                                    AllowDrop="True"
-                                                    PreviewMouseLeftButtonDown="PinnedApp_PreviewMouseLeftButtonDown"
-                                                    PreviewMouseMove="PinnedApp_PreviewMouseMove"
-                                                    DragOver="PinnedApp_DragOver"
-                                                    Drop="PinnedApp_Drop"
-                                                     Command="{Binding DataContext.LaunchAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"
-                                                    ToolTip="{Binding DisplayName}">
-                                                <Image Source="{Binding Icon}" Width="30" Height="30"/>
-                                            </Button>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
-
-                                <ItemsControl ItemsSource="{Binding RunningApps}">
+                                <ItemsControl ItemsSource="{Binding TaskbarApps}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Grid>
                                                 <Button Style="{StaticResource FocusIconButton}"
                                                         Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        Click="RunningApp_Click"
-                                                        ContextMenuOpening="RunningApp_ContextMenuOpening">
+                                                        AllowDrop="True"
+                                                        PreviewMouseLeftButtonDown="TaskbarApp_PreviewMouseLeftButtonDown"
+                                                        PreviewMouseMove="TaskbarApp_PreviewMouseMove"
+                                                        DragOver="TaskbarApp_DragOver"
+                                                        Drop="TaskbarApp_Drop"
+                                                        Click="TaskbarApp_Click"
+                                                        ContextMenuOpening="TaskbarApp_ContextMenuOpening">
                                                     <Button.ToolTip>
                                                         <StackPanel>
                                                             <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
-                                                            <TextBlock Text="{Binding WindowCount, StringFormat={}{0} 个窗口}" Opacity="0.65"/>
+                                                            <TextBlock Text="{Binding WindowSummary}" Opacity="0.65"/>
                                                         </StackPanel>
                                                     </Button.ToolTip>
                                                     <Button.ContextMenu>
@@ -628,7 +613,8 @@
                                                          Fill="{DynamicResource FocusAccentBrightBrush}"
                                                          HorizontalAlignment="Left"
                                                          VerticalAlignment="Center"
-                                                         Margin="-1,0,0,0">
+                                                         Margin="-1,0,0,0"
+                                                         Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <Ellipse.Style>
                                                         <Style TargetType="Ellipse">
                                                             <Setter Property="Opacity" Value="0.42"/>

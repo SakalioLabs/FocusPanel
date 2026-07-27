@@ -216,13 +216,44 @@ public sealed class XamlResourceContractTests
         Assert.Contains("OpenTaskViewCommand", mainWindow);
         Assert.Contains("OpenWidgetsCommand", mainWindow);
         Assert.Contains("OpenRunDialogCommand", mainWindow);
-        Assert.Contains("RunningApp_Click", mainWindow);
-        Assert.Contains("PopulateRunningAppContextMenu", codeBehind);
+        Assert.Contains("TaskbarApp_Click", mainWindow);
+        Assert.Contains("PopulateTaskbarAppContextMenu", codeBehind);
         Assert.Contains("CloseWindowCommand", codeBehind);
         Assert.Contains("CloseTaskCommand", codeBehind);
         Assert.Contains("VolumeButton_PreviewMouseWheel", mainWindow);
         Assert.Contains("VolumeButton_MouseRightButtonUp", mainWindow);
         Assert.Contains("foreach (WindowReference window in task.Windows)", viewModel);
+    }
+
+    [Fact]
+    public void CompactDock_UsesOneUnifiedApplicationCollection()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.True(
+            Regex.Matches(mainWindow, "ItemsSource=\"\\{Binding TaskbarApps\\}\"").Count == 1);
+        Assert.DoesNotContain("ItemsSource=\"{Binding PinnedApps}\"", mainWindow);
+        Assert.DoesNotContain("ItemsSource=\"{Binding RunningApps}\"", mainWindow);
+        Assert.Contains("ObservableCollection<TaskbarAppItem> TaskbarApps", viewModel);
+        Assert.DoesNotContain("ObservableCollection<AppLaunchItem> PinnedApps", viewModel);
+        Assert.DoesNotContain("ObservableCollection<WindowTaskItem> RunningApps", viewModel);
+        Assert.Contains("_appCatalog.SetPinned(launch, true)", viewModel);
+        Assert.Contains("_appCatalog.MovePinned(launch", viewModel);
+    }
+
+    [Fact]
+    public void WindowClosing_UsesWmCloseWithoutProcessTermination()
+    {
+        string root = FindRepositoryRoot();
+        string windowTracker = File.ReadAllText(
+            Path.Combine(root, "Services", "WindowTracker.cs"));
+
+        Assert.Contains("PostMessage(handle, WmClose", windowTracker);
+        Assert.DoesNotContain(".Kill(", windowTracker);
     }
 
     [Fact]

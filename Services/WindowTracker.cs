@@ -34,10 +34,16 @@ public sealed class WindowTracker : IWindowTracker
     private readonly DispatcherTimer _refreshDebounce;
     private readonly NativeMethods.WinEventDelegate _callback;
     private readonly List<IntPtr> _hooks = new();
+    private readonly IAppIdentityResolver _identityResolver;
     private IReadOnlyList<WindowTaskItem> _snapshot = Array.Empty<WindowTaskItem>();
 
-    public WindowTracker()
+    public WindowTracker() : this(new AppIdentityResolver())
     {
+    }
+
+    internal WindowTracker(IAppIdentityResolver identityResolver)
+    {
+        _identityResolver = identityResolver;
         _callback = OnWinEvent;
         _refreshDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(140) };
         _refreshDebounce.Tick += (_, _) =>
@@ -137,22 +143,39 @@ public sealed class WindowTracker : IWindowTracker
                 // Protected processes still remain usable through their window handle.
             }
 
-            string appKey = executablePath ?? $"pid:{processId}";
-            windows.Add(new WindowEntry(hwnd, title, processName, executablePath, appKey, hwnd == foreground));
+            ResolvedAppIdentity identity = _identityResolver.ResolveWindow(
+                hwnd,
+                processId,
+                executablePath);
+            windows.Add(new WindowEntry(
+                hwnd,
+                title,
+                processName,
+                identity.ExecutablePath ?? executablePath,
+                identity.Key,
+                identity.ApplicationUserModelId,
+                hwnd == foreground));
             return true;
         }, IntPtr.Zero);
 
         _snapshot = windows
-            .GroupBy(item => item.AppKey, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(item => item.IdentityKey, StringComparer.OrdinalIgnoreCase)
             .Select(group =>
             {
                 WindowEntry first = group.First();
+                string? resolvedExecutable = group
+                    .Select(item => item.ExecutablePath)
+                    .FirstOrDefault(value => value != null);
                 return new WindowTaskItem
                 {
                     AppKey = group.Key,
+                    IdentityKey = group.Key,
+                    ApplicationUserModelId = group
+                        .Select(item => item.ApplicationUserModelId)
+                        .FirstOrDefault(value => value != null),
                     DisplayName = first.ProcessName,
-                    ExecutablePath = first.ExecutablePath,
-                    Icon = first.ExecutablePath == null ? null : IconHelper.GetIcon(first.ExecutablePath),
+                    ExecutablePath = resolvedExecutable,
+                    Icon = resolvedExecutable == null ? null : IconHelper.GetIcon(resolvedExecutable),
                     Windows = group.Select(item => new WindowReference(item.Handle, item.Title)).ToList(),
                     IsActive = group.Any(item => item.IsActive)
                 };
@@ -240,7 +263,8 @@ public sealed class WindowTracker : IWindowTracker
         string Title,
         string ProcessName,
         string? ExecutablePath,
-        string AppKey,
+        string IdentityKey,
+        string? ApplicationUserModelId,
         bool IsActive);
 
     [StructLayout(LayoutKind.Sequential)]

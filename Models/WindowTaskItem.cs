@@ -8,6 +8,8 @@ namespace FocusPanel.Models;
 public partial class WindowTaskItem : ObservableObject
 {
     public string AppKey { get; init; } = string.Empty;
+    public string IdentityKey { get; init; } = string.Empty;
+    public string? ApplicationUserModelId { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string? ExecutablePath { get; init; }
     public ImageSource? Icon { get; init; }
