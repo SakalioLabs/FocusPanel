@@ -560,8 +560,11 @@ public partial class FileOrganizerViewModel : ObservableObject
             if (p != null)
             {
                 context.DesktopPartitions.Remove(p);
-                var prefs = context.DesktopFilePreferences.Where(fp => fp.PartitionName == partition.Name);
-                context.DesktopFilePreferences.RemoveRange(prefs);
+                var prefs = context.DesktopFilePreferences
+                    .Where(fp => fp.PartitionName == partition.Name)
+                    .ToList();
+                foreach (var pref in prefs)
+                    pref.PartitionName = "";
                 context.SaveChanges();
             }
         }
@@ -752,7 +755,13 @@ public partial class FileOrganizerViewModel : ObservableObject
             
             if (string.IsNullOrEmpty(partitionName))
             {
-                if (pref != null) context.DesktopFilePreferences.Remove(pref);
+                if (pref != null)
+                {
+                    if (pref.IsHiddenFromDesktop)
+                        pref.PartitionName = "";
+                    else
+                        context.DesktopFilePreferences.Remove(pref);
+                }
             }
             else
             {
@@ -782,8 +791,19 @@ public partial class FileOrganizerViewModel : ObservableObject
         string fileName = SelectedFile.Name;
         string targetPartition = partitionName ?? "Unsorted";
 
-        await _fileService.HideFileFromDesktop(fileName, targetPartition);
-        BuildPartitions();
+        try
+        {
+            await _fileService.HideFileFromDesktop(fileName, targetPartition);
+            BuildPartitions();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                $"收纳失败，文件未被移动：{ex.Message}",
+                "FocusPanel",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+        }
     }
 
     [RelayCommand]
@@ -791,85 +811,123 @@ public partial class FileOrganizerViewModel : ObservableObject
     {
         if (SelectedFile == null) return;
 
-        string fileName = SelectedFile.Name;
-        await _fileService.RestoreFileToDesktop(fileName);
-        BuildPartitions();
+        await RestoreDraggedFileToDesktop(SelectedFile);
     }
 
-    public void ImportFiles(string[] filePaths, string targetPartitionName)
+    public async Task RestoreDraggedFileToDesktop(DesktopFile file)
     {
-        if (filePaths == null || filePaths.Length == 0 || string.IsNullOrEmpty(targetPartitionName)) return;
+        if (file == null || !file.IsHidden)
+            return;
 
-        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        bool filesMoved = false;
-
-        using (var context = new AppDbContext())
+        string fileName = file.Name;
+        try
         {
-            foreach (var path in filePaths)
-            {
-                if (!System.IO.File.Exists(path) && !System.IO.Directory.Exists(path)) continue;
-
-                string fileName = System.IO.Path.GetFileName(path);
-                string targetPath = System.IO.Path.Combine(desktopPath, fileName);
-
-                string srcDir = System.IO.Path.GetDirectoryName(path)?.TrimEnd(System.IO.Path.DirectorySeparatorChar);
-                string destDir = desktopPath.TrimEnd(System.IO.Path.DirectorySeparatorChar);
-
-                if (!string.Equals(srcDir, destDir, StringComparison.OrdinalIgnoreCase))
-                {
-                    try
-                    {
-                        if (System.IO.File.Exists(targetPath) || System.IO.Directory.Exists(targetPath))
-                        {
-                            string nameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fileName);
-                            string ext = System.IO.Path.GetExtension(fileName);
-                            fileName = $"{nameWithoutExt}_{DateTime.Now.Ticks}{ext}";
-                            targetPath = System.IO.Path.Combine(desktopPath, fileName);
-                        }
-
-                        if (System.IO.File.Exists(path))
-                        {
-                            System.IO.File.Move(path, targetPath);
-                        }
-                        else if (System.IO.Directory.Exists(path))
-                        {
-                            System.IO.Directory.Move(path, targetPath);
-                        }
-                        filesMoved = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Failed to move file {path}: {ex.Message}");
-                        continue;
-                    }
-                }
-
-                var pref = context.DesktopFilePreferences.FirstOrDefault(fp => fp.FilePath == fileName);
-                if (pref == null)
-                {
-                    pref = new DesktopFilePreference { FilePath = fileName, PartitionName = "" };
-                    context.DesktopFilePreferences.Add(pref);
-                }
-                pref.PartitionName = targetPartitionName;
-            }
-
-            if (!context.DesktopPartitions.Any(dp => dp.Name == targetPartitionName))
-            {
-                 int maxOrder = context.DesktopPartitions.Any() ? context.DesktopPartitions.Max(dp => dp.OrderIndex) : -1;
-                 context.DesktopPartitions.Add(new DesktopPartition { Name = targetPartitionName, OrderIndex = maxOrder + 1 });
-            }
-
-            context.SaveChanges();
-        }
-
-        if (filesMoved)
-        {
-            _ = Refresh();
-        }
-        else
-        {
+            await _fileService.RestoreFileToDesktop(fileName);
             BuildPartitions();
         }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                $"恢复失败，FocusPanel 已保留恢复记录：{ex.Message}",
+                "FocusPanel",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+        }
     }
 
+    public async Task<DesktopImportResult> ImportFiles(
+        string[] filePaths,
+        string targetPartitionName)
+    {
+        if (filePaths == null
+            || filePaths.Length == 0
+            || string.IsNullOrEmpty(targetPartitionName))
+            return new DesktopImportResult();
+
+        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        string commonDesktopPath = Environment.GetFolderPath(
+            Environment.SpecialFolder.CommonDesktopDirectory);
+        int collected = 0;
+        int outsideDesktop = 0;
+        int failed = 0;
+        int authorizationCanceled = 0;
+        bool? commonDesktopApproved = null;
+
+        foreach (string path in filePaths)
+        {
+            if (!System.IO.File.Exists(path) && !System.IO.Directory.Exists(path))
+            {
+                failed++;
+                continue;
+            }
+
+            string fullPath = System.IO.Path.GetFullPath(path);
+            DesktopDropLocation location = DesktopDropPolicy.Classify(
+                fullPath,
+                desktopPath,
+                commonDesktopPath);
+            if (location == DesktopDropLocation.OutsideDesktop)
+            {
+                outsideDesktop++;
+                continue;
+            }
+
+            try
+            {
+                bool allowElevation = false;
+                if (location == DesktopDropLocation.CommonDesktop)
+                {
+                    if (!commonDesktopApproved.HasValue)
+                    {
+                        commonDesktopApproved = System.Windows.MessageBox.Show(
+                            "该项目位于 Windows 公共桌面。收纳或恢复它会影响本机所有账户，并需要管理员授权。\n\n是否继续？",
+                            "收纳公共桌面项目",
+                            System.Windows.MessageBoxButton.YesNo,
+                            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+                    }
+
+                    if (commonDesktopApproved != true)
+                    {
+                        authorizationCanceled++;
+                        continue;
+                    }
+                    allowElevation = true;
+                }
+
+                await _fileService.HideFileFromDesktopPath(
+                    fullPath,
+                    targetPartitionName,
+                    allowElevation);
+                collected++;
+            }
+            catch (OperationCanceledException)
+            {
+                authorizationCanceled++;
+            }
+            catch (Exception ex)
+            {
+                failed++;
+                System.Diagnostics.Debug.WriteLine(
+                    $"Collect dropped desktop item failed: {ex.Message}");
+            }
+        }
+
+        await _fileService.RefreshFiles();
+        BuildPartitions();
+        return new DesktopImportResult(
+            collected,
+            outsideDesktop,
+            failed,
+            authorizationCanceled);
+    }
+
+}
+
+public sealed record DesktopImportResult(
+    int Collected = 0,
+    int OutsideDesktop = 0,
+    int Failed = 0,
+    int AuthorizationCanceled = 0)
+{
+    public bool HasIssues => OutsideDesktop + Failed + AuthorizationCanceled > 0;
 }

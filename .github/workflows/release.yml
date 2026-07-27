@@ -1,0 +1,97 @@
+name: 构建并发布 Windows 安装包
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "发布版本，例如 0.9.0"
+        required: true
+        default: "0.9.0"
+      publish:
+        description: "立即发布；关闭时仅创建草稿"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 安装 .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            7.0.x
+            8.0.x
+
+      - name: 确定版本
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "${{ inputs.version }}"
+          } else {
+            $version = "${{ github.ref_name }}".TrimStart("v")
+          }
+          "FOCUSPANEL_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: 构建与测试
+        shell: pwsh
+        run: |
+          dotnet build FocusPanel.csproj --configuration Release
+          dotnet test Tests\FocusPanel.Tests.csproj --configuration Release
+
+      - name: 恢复 Velopack 工具
+        run: dotnet tool restore
+
+      - name: 下载上一版本以生成差分包
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          dotnet tool run vpk -- download github `
+            --outputDir artifacts\release\packages `
+            --channel win `
+            --repoUrl https://github.com/SakalioLabs/FocusPanel `
+            --token "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: 生成 Windows 安装包
+        shell: pwsh
+        run: |
+          .\scripts\package-release.ps1 `
+            -Version $env:FOCUSPANEL_VERSION `
+            -Dotnet8Path dotnet `
+            -PublishDotnetPath dotnet
+
+      - name: 保存安装包
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocusPanel-${{ env.FOCUSPANEL_VERSION }}-win-x64
+          path: artifacts/release/packages/*
+
+      - name: 上传 GitHub Release
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $publish = "${{ github.event_name }}" -eq "push" -or "${{ inputs.publish }}" -eq "true"
+          if ($publish) {
+            .\scripts\publish-github-release.ps1 `
+              -Version $env:FOCUSPANEL_VERSION `
+              -Dotnet8Path dotnet `
+              -Publish
+          } else {
+            .\scripts\publish-github-release.ps1 `
+              -Version $env:FOCUSPANEL_VERSION `
+              -Dotnet8Path dotnet
+          }

@@ -3,253 +3,621 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:FocusPanel.Views"
         xmlns:vm="clr-namespace:FocusPanel.ViewModels"
         mc:Ignorable="d"
-        TextElement.Foreground="#1D1D1F"
-        TextElement.FontWeight="Regular"
-        TextElement.FontSize="13"
-        TextOptions.TextFormattingMode="Ideal"
-        TextOptions.TextRenderingMode="Auto"
-        Background="Transparent"
-        AllowsTransparency="True"
+        Title="FocusPanel"
+        Width="76"
+        Height="800"
         WindowStyle="None"
+        ResizeMode="NoResize"
         ShowInTaskbar="False"
         ShowActivated="False"
-        ResizeMode="NoResize"
-        FontFamily="{DynamicResource MaterialDesignFont}"
-        Title="{Binding Title}"
-        Height="800"
-        Visibility="Hidden">
+        Topmost="True"
+        AllowsTransparency="False"
+        Background="Transparent"
+        FontFamily="Segoe UI Variable Text"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="ClearType"
+        PreviewKeyDown="Window_PreviewKeyDown">
 
     <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary>
-                    <DataTemplate DataType="{x:Type vm:TasksViewModel}">
-                        <local:TasksView />
-                    </DataTemplate>
-                    <DataTemplate DataType="{x:Type vm:PomodoroViewModel}">
-                        <local:PomodoroView />
-                    </DataTemplate>
-                    <DataTemplate DataType="{x:Type vm:FileOrganizerViewModel}">
-                        <local:FileOrganizerView />
-                    </DataTemplate>
-                    <DataTemplate DataType="{x:Type vm:OkrViewModel}">
-                        <local:OkrView />
-                    </DataTemplate>
-                    <DataTemplate DataType="{x:Type vm:AIAssistantViewModel}">
-                        <local:AIAssistantView />
-                    </DataTemplate>
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
-            <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFF4F6F8"/>
-            <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FFFFFFFF"/>
-            <SolidColorBrush x:Key="RailBackgroundBrush" Color="#FFEDEFF3"/>
-            <SolidColorBrush x:Key="PanelStrokeBrush" Color="#FFD8DCE3"/>
-            <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FF1D1D1F"/>
-            <SolidColorBrush x:Key="AppleBlueBrush" Color="#FF007AFF"/>
-            <DropShadowEffect x:Key="PanelShadow" Color="#33000000" BlurRadius="18" ShadowDepth="0" Opacity="0.22"/>
-            <DropShadowEffect x:Key="SoftShadow" Color="#18000000" BlurRadius="10" ShadowDepth="0" Opacity="0.18"/>
-        </ResourceDictionary>
+        <DataTemplate DataType="{x:Type vm:TasksViewModel}">
+            <local:TasksView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PomodoroViewModel}">
+            <local:PomodoroView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FileOrganizerViewModel}">
+            <local:FileOrganizerView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OkrViewModel}">
+            <local:OkrView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AIAssistantViewModel}">
+            <local:AIAssistantView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
         <tb:TaskbarIcon x:Name="MyNotifyIcon"
-                        ToolTipText="FocusPanel"
+                        ToolTipText="FocusPanel · Ctrl+Alt+Shift+F10 恢复系统任务栏"
                         MenuActivation="LeftOrRightClick"
                         DoubleClickCommand="{Binding ShowWindowCommand}">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="&#x663E;&#x793A; FocusPanel" Command="{Binding ShowWindowCommand}" />
-                    <MenuItem Header="&#x9000;&#x51FA;" Command="{Binding CloseAppCommand}" />
+                    <MenuItem Header="显示 FocusPanel" Command="{Binding ShowWindowCommand}"/>
+                    <MenuItem Header="恢复 Windows 任务栏" Command="{Binding DisableReplacementCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="退出" Command="{Binding CloseAppCommand}"/>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
 
-        <Grid>
-            <Grid VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,100,0,0">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm}}"
-                               FontSize="96"
-                               FontWeight="Light"
-                               Foreground="White"
-                               HorizontalAlignment="Center">
-                        <TextBlock.Effect>
-                            <DropShadowEffect Color="#99000000" BlurRadius="12" ShadowDepth="1" Opacity="0.35"/>
-                        </TextBlock.Effect>
-                    </TextBlock>
-                    <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:D}}"
-                               FontSize="24"
-                               Foreground="White"
-                               Opacity="0.82"
-                               HorizontalAlignment="Center"
-                               Margin="0,-10,0,0">
-                        <TextBlock.Effect>
-                            <DropShadowEffect Color="#99000000" BlurRadius="8" ShadowDepth="1" Opacity="0.25"/>
-                        </TextBlock.Effect>
-                    </TextBlock>
-                </StackPanel>
-            </Grid>
+        <Border x:Name="ShellBorder"
+                Margin="0"
+                CornerRadius="0"
+                Background="{DynamicResource FocusSurfaceBrush}"
+                BorderThickness="0"
+                MouseEnter="Shell_MouseEnter"
+                MouseLeave="Shell_MouseLeave"
+                LostKeyboardFocus="Shell_LostKeyboardFocus"
+                AllowDrop="True"
+                DragEnter="Sidebar_DragEnter"
+                DragLeave="Sidebar_DragLeave">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="76"/>
+                </Grid.ColumnDefinitions>
 
-            <Border x:Name="SidebarBorder"
-                    Width="80"
-                    HorizontalAlignment="Right"
-                    Background="{StaticResource PanelBackgroundBrush}"
-                    Margin="0,10,0,10"
-                    CornerRadius="18,0,0,18"
-                    BorderBrush="{StaticResource PanelStrokeBrush}"
-                    BorderThickness="1,1,0,1"
-                    ClipToBounds="True"
-                    AllowDrop="True"
-                    MouseEnter="Sidebar_MouseEnter"
-                    MouseLeave="Sidebar_MouseLeave"
-                    DragEnter="Sidebar_DragEnter"
-                    DragLeave="Sidebar_DragLeave">
-
-                <Grid Width="800" HorizontalAlignment="Left">
+                <!-- Expandable FocusPanel workspace -->
+                <Grid x:Name="WorkspaceHost"
+                      Grid.Column="0"
+                      Visibility="Collapsed"
+                      Margin="12,12,2,12">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="48"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Grid x:Name="HeaderGrid" Grid.Row="0" Margin="18,14,14,8" Opacity="0">
+                    <Grid Grid.Row="0" Margin="10,0,12,8">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CurrentSectionTitle}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Click="CollapseSidebar_Click"
+                                    ToolTip="收回工作区">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE72B;"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
 
-                        <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                Click="CollapseSidebar_Click"
-                                ToolTip="&#x6298;&#x53E0;&#x4FA7;&#x8FB9;&#x680F;"
-                                Height="32"
-                                Width="32"
-                                Margin="0,0,10,0">
-                            <materialDesign:PackIcon Kind="ChevronRight" Width="22" Height="22"/>
+                    <Border x:Name="WorkspaceSurface"
+                            Grid.Row="1"
+                            Padding="0"
+                            CornerRadius="0"
+                            Background="Transparent"
+                            BorderThickness="0">
+                        <ContentControl Content="{Binding CurrentViewModel}"/>
+                    </Border>
+
+                    <!-- Search overlay -->
+                    <Border Grid.RowSpan="2"
+                            Panel.ZIndex="10"
+                            Margin="8,56,14,8"
+                            Padding="18"
+                            CornerRadius="{StaticResource FocusCardCornerRadius}"
+                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                            BorderBrush="{DynamicResource FocusStrokeBrush}"
+                            BorderThickness="1"
+                            Visibility="{Binding IsSearchOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="启动应用" FontSize="18" FontWeight="SemiBold"/>
+                            <Grid Grid.Row="1" Margin="0,14,0,12">
+                                <TextBox x:Name="SearchBox"
+                                         Style="{StaticResource FocusSearchBox}"
+                                         Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="搜索开始菜单应用"/>
+                                <TextBlock Text="输入应用名称"
+                                           Margin="16,0"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource FocusMutedTextBrush}"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                            <ListBox Grid.Row="2"
+                                     ItemsSource="{Binding SearchResults}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0,3"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="ItemChrome"
+                                                            Background="{TemplateBinding Background}"
+                                                            CornerRadius="{StaticResource FocusControlCornerRadius}">
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="ItemChrome" Property="Background" Value="{DynamicResource FocusHoverBrush}"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Height="54" Margin="10,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="48"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.ColumnSpan="2"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Command="{Binding DataContext.LaunchAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="36"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Image Source="{Binding Icon}" Width="30" Height="30"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding DisplayName}"
+                                                               Margin="10,0"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </Grid>
+                                            </Button>
+                                            <Button Grid.Column="2"
+                                                    Style="{StaticResource FocusIconButton}"
+                                                    Width="40"
+                                                    Height="40"
+                                                    ToolTip="固定或取消固定"
+                                                    Command="{Binding DataContext.TogglePinCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}">
+                                                <TextBlock Style="{StaticResource FocusIconText}" FontSize="16" Text="&#xE840;"/>
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- Settings overlay -->
+                    <Border Grid.RowSpan="2"
+                            Panel.ZIndex="12"
+                            Width="420"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,14,8"
+                            Padding="20"
+                            CornerRadius="{StaticResource FocusCardCornerRadius}"
+                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                            BorderBrush="{DynamicResource FocusStrokeBrush}"
+                            BorderThickness="1"
+                            Visibility="{Binding IsSettingsOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="系统与恢复" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="紧急恢复：Ctrl + Alt + Shift + F10"
+                                       Margin="0,6,0,16"
+                                       Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                             <Border Style="{StaticResource FocusCard}" Margin="0,0,0,12">
+                                 <StackPanel>
+                                     <TextBlock Text="任务栏替代模式" FontWeight="SemiBold"/>
+                                    <TextBlock Margin="0,4,0,10"
+                                               Text="只隐藏主屏任务栏，不会关闭 Explorer。"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource FocusPrimaryButton}"
+                                                Content="启用"
+                                                Command="{Binding EnableReplacementCommand}"/>
+                                        <Button Style="{StaticResource FocusSecondaryButton}"
+                                                Margin="8,3,0,3"
+                                                Content="恢复系统任务栏"
+                                                Command="{Binding DisableReplacementCommand}"/>
+                                    </StackPanel>
+                                 </StackPanel>
+                             </Border>
+                            <Border Style="{StaticResource FocusCard}" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock Text="外观与交互" FontWeight="SemiBold"/>
+                                    <TextBlock Text="主题"
+                                               Margin="0,10,0,5"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    <ComboBox SelectedValuePath="Tag"
+                                              SelectedValue="{Binding ThemeMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <ComboBoxItem Content="跟随系统" Tag="System"/>
+                                        <ComboBoxItem Content="浅色" Tag="Light"/>
+                                        <ComboBoxItem Content="深色" Tag="Dark"/>
+                                    </ComboBox>
+                                    <CheckBox Margin="0,12,0,0"
+                                              Content="全屏应用前台时停用鼠标热区"
+                                              IsChecked="{Binding DisableHotZoneInFullscreen}"/>
+                                    <CheckBox Margin="0,8,0,0"
+                                              Content="随 Windows 启动 FocusPanel"
+                                              IsChecked="{Binding StartWithWindows}"/>
+                                    <TextBlock Margin="0,10,0,0"
+                                               Text="主动唤出：Ctrl + Alt + Space"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    <Border Margin="0,12,0,0"
+                                            Padding="10"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="#33FFB020"
+                                            Visibility="{Binding ShowsProtectedSystemFiles, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource FocusTextBrush}"
+                                                   Text="当前 Explorer 已启用“显示受保护的系统文件”。收纳项目仍会保留在原路径，因此无法保证桌面图标不可见；关闭该系统选项后会立即按收纳状态隐藏。"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource FocusCard}" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="软件更新" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding CurrentAppVersion, StringFormat=v{0}}"
+                                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    </Grid>
+                                    <TextBlock Margin="0,6,0,10"
+                                               Text="{Binding UpdateStatus}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    <ProgressBar Height="5"
+                                                 Margin="0,0,0,10"
+                                                 Minimum="0"
+                                                 Maximum="100"
+                                                 Value="{Binding UpdateProgress}"
+                                                 Visibility="{Binding IsUpdateBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    <Button Command="{Binding CheckAndInstallUpdateCommand}"
+                                            Content="一键检查并安装更新">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource FocusPrimaryButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsUpdateBusy}" Value="True">
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                        <Setter Property="Content" Value="正在更新…"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                            <Button Style="{StaticResource FocusSecondaryButton}"
+                                    HorizontalContentAlignment="Left"
+                                    Content="从最新备份恢复数据库"
+                                    Command="{Binding RestoreDatabaseCommand}"/>
+                            <Button Style="{StaticResource FocusSecondaryButton}"
+                                    HorizontalContentAlignment="Left"
+                                    Foreground="{DynamicResource FocusDangerBrush}"
+                                    Content="退出 FocusPanel"
+                                    Command="{Binding CloseAppCommand}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Power overlay -->
+                    <Border Grid.RowSpan="2"
+                            Panel.ZIndex="13"
+                            Width="320"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,14,8"
+                            Padding="18"
+                            CornerRadius="{StaticResource FocusCardCornerRadius}"
+                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                            BorderBrush="{DynamicResource FocusStrokeBrush}"
+                            BorderThickness="1"
+                            Visibility="{Binding IsPowerMenuOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="电源" FontSize="18" FontWeight="SemiBold" Margin="4,0,0,10"/>
+                            <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="锁定" Command="{Binding LockComputerCommand}"/>
+                            <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="睡眠" Command="{Binding SleepComputerCommand}"/>
+                            <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="重启…" Command="{Binding RestartComputerCommand}"/>
+                            <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Foreground="{DynamicResource FocusDangerBrush}" Content="关机…" Command="{Binding ShutdownComputerCommand}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Compact app dock -->
+                <Border Grid.Column="1"
+                        Margin="10,12,10,12"
+                        CornerRadius="0"
+                        Background="Transparent"
+                        BorderThickness="0">
+                    <Grid Margin="0,3">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Button x:Name="SearchButton"
+                                Grid.Row="0"
+                                Style="{StaticResource FocusIconButton}"
+                                Click="SearchButton_Click"
+                                Command="{Binding ToggleSearchCommand}"
+                                ToolTip="启动应用">
+                            <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE721;"/>
                         </Button>
 
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="FolderStarOutline"
-                                                     Width="23"
-                                                     Height="23"
-                                                     VerticalAlignment="Center"
-                                                     Margin="0,0,10,0"
-                                                     Foreground="{StaticResource AppleBlueBrush}"/>
-                            <TextBlock Text="&#x684C;&#x9762;&#x6536;&#x7EB3;"
-                                       FontWeight="SemiBold"
-                                       FontSize="16"
-                                       VerticalAlignment="Center"
-                                       Foreground="{StaticResource PrimaryTextBrush}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Orientation="Horizontal">
-                            <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                    Command="{Binding MinimizeAppCommand}"
-                                    ToolTip="&#x6298;&#x53E0;"
-                                    Height="32"
-                                    Width="32">
-                                <materialDesign:PackIcon Kind="WindowMinimize" Width="18" Height="18"/>
-                            </Button>
-                            <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                    Command="{Binding CloseAppCommand}"
-                                    ToolTip="&#x9000;&#x51FA;"
-                                    Height="32"
-                                    Width="32"
-                                    Margin="4,0,0,0">
-                                <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-
-                    <Grid Grid.Row="1" Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Border Grid.Column="0"
-                                Margin="14,0,0,14"
-                                Background="{StaticResource RailBackgroundBrush}"
-                                CornerRadius="16"
-                                Padding="6"
-                                VerticalAlignment="Center"
-                                BorderBrush="{StaticResource PanelStrokeBrush}"
-                                BorderThickness="1">
+                        <ScrollViewer Grid.Row="1"
+                                      VerticalScrollBarVisibility="Hidden"
+                                      HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="Files" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="&#x684C;&#x9762;&#x6536;&#x7EB3;" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
-                                    <materialDesign:PackIcon Kind="Folder" Width="23" Height="23"/>
-                                </Button>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="Tasks" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="&#x4EFB;&#x52A1;" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
-                                    <materialDesign:PackIcon Kind="CheckboxMarked" Width="23" Height="23"/>
-                                </Button>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="Pomodoro" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="&#x756A;&#x8304;&#x949F;" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
-                                    <materialDesign:PackIcon Kind="Timer" Width="23" Height="23"/>
-                                </Button>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="OKR" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="OKR" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
-                                    <materialDesign:PackIcon Kind="Target" Width="23" Height="23"/>
-                                </Button>
-                                <Button Command="{Binding NavigateCommand}" CommandParameter="AI" Style="{StaticResource MaterialDesignFlatButton}" ToolTip="AI &#x52A9;&#x624B;" Padding="10" Margin="0,3" Height="Auto" materialDesign:ButtonAssist.CornerRadius="12">
-                                    <materialDesign:PackIcon Kind="Robot" Width="23" Height="23"/>
-                                </Button>
+                                <ItemsControl ItemsSource="{Binding PinnedApps}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                             <Button Style="{StaticResource FocusIconButton}"
+                                                    AllowDrop="True"
+                                                    PreviewMouseLeftButtonDown="PinnedApp_PreviewMouseLeftButtonDown"
+                                                    PreviewMouseMove="PinnedApp_PreviewMouseMove"
+                                                    DragOver="PinnedApp_DragOver"
+                                                    Drop="PinnedApp_Drop"
+                                                     Command="{Binding DataContext.LaunchAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="{Binding DisplayName}">
+                                                <Image Source="{Binding Icon}" Width="30" Height="30"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
-                                <Separator Background="{StaticResource PanelStrokeBrush}" Margin="5,8"/>
+                                <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
 
-                                <Grid>
-                                    <ToggleButton x:Name="SettingsToggle"
-                                                  Style="{StaticResource MaterialDesignFlatButton}"
-                                                  ToolTip="&#x6570;&#x636E;&#x4E0E;&#x8BBE;&#x7F6E;"
-                                                  Padding="10"
-                                                  Margin="0,3"
-                                                  Height="Auto"
-                                                  materialDesign:ButtonAssist.CornerRadius="12">
-                                        <materialDesign:PackIcon Kind="DatabaseSettings" Width="23" Height="23"/>
-                                    </ToggleButton>
-                                    <Popup IsOpen="{Binding IsChecked, ElementName=SettingsToggle, Mode=TwoWay}"
-                                           StaysOpen="False"
-                                           PlacementTarget="{Binding ElementName=SettingsToggle}"
-                                           Placement="Right"
-                                           AllowsTransparency="True"
-                                           PopupAnimation="Fade">
-                                        <Border Margin="8,0,0,0"
-                                                Padding="12"
-                                                CornerRadius="12"
-                                                Background="{StaticResource ContentBackgroundBrush}"
-                                                BorderBrush="{StaticResource PanelStrokeBrush}"
-                                                BorderThickness="1"
-                                                Effect="{StaticResource SoftShadow}">
-                                            <StackPanel>
-                                                <TextBlock Text="&#x6570;&#x636E;&#x7BA1;&#x7406;" Style="{StaticResource MaterialDesignCaptionTextBlock}" Opacity="0.65" Margin="8,4,8,8"/>
-                                                <Button Command="{Binding RestoreDatabaseCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Padding="8,4">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="BackupRestore" Margin="0,0,12,0" Foreground="Orange" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="&#x6062;&#x590D;&#x6570;&#x636E;&#x5E93;" VerticalAlignment="Center"/>
-                                                    </StackPanel>
+                                <ItemsControl ItemsSource="{Binding RunningApps}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Button Style="{StaticResource FocusIconButton}"
+                                                        Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        Command="{Binding DataContext.ActivateTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.ToolTip>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                                                            <TextBlock Text="{Binding WindowCount, StringFormat={}{0} 个窗口}" Opacity="0.65"/>
+                                                        </StackPanel>
+                                                    </Button.ToolTip>
+                                                    <Button.ContextMenu>
+                                                        <ContextMenu ItemsSource="{Binding Windows}">
+                                                            <ContextMenu.ItemContainerStyle>
+                                                                <Style TargetType="MenuItem">
+                                                                    <Setter Property="Header" Value="{Binding Title}"/>
+                                                                    <Setter Property="Command"
+                                                                            Value="{Binding PlacementTarget.Tag.ActivateWindowCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                                    <Setter Property="CommandParameter" Value="{Binding}"/>
+                                                                </Style>
+                                                            </ContextMenu.ItemContainerStyle>
+                                                        </ContextMenu>
+                                                    </Button.ContextMenu>
+                                                    <Image Source="{Binding Icon}" Width="30" Height="30"/>
                                                 </Button>
-                                            </StackPanel>
-                                        </Border>
-                                    </Popup>
-                                </Grid>
+                                                <Ellipse Width="6"
+                                                         Height="6"
+                                                         Fill="{DynamicResource FocusAccentBrightBrush}"
+                                                         HorizontalAlignment="Left"
+                                                         VerticalAlignment="Center"
+                                                         Margin="-1,0,0,0">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Setter Property="Opacity" Value="0.42"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                    <Setter Property="Opacity" Value="1"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
-                        </Border>
+                        </ScrollViewer>
 
-                        <Border x:Name="ContentArea"
-                                Grid.Column="1"
-                                Margin="14,0,14,14"
-                                Background="{StaticResource ContentBackgroundBrush}"
-                                CornerRadius="16"
-                                Padding="12"
-                                Opacity="0"
-                                BorderBrush="{StaticResource PanelStrokeBrush}"
-                                BorderThickness="1">
-                            <ContentControl Content="{Binding CurrentViewModel}"/>
-                        </Border>
+                        <StackPanel Grid.Row="2">
+                            <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
+                            <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Files" ToolTip="桌面收纳">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE8B7;"/>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Tasks" ToolTip="任务">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE9D5;"/>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Pomodoro" ToolTip="番茄钟">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE916;"/>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Click="OpenButtonContextMenu"
+                                    ToolTip="更多工作区">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="OKR" Tag="OKR" Click="WorkspaceMenuItem_Click"/>
+                                        <MenuItem Header="AI 助手" Tag="AI" Click="WorkspaceMenuItem_Click"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE712;"/>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3">
+                            <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding OpenQuickSettingsCommand}"
+                                    ToolTip="{Binding NetworkDisplayName, StringFormat=网络：{0} · 点击打开 Windows 快捷设置}">
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
+                                            <Setter Property="Text" Value="&#xE701;"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsNetworkAvailable}" Value="False">
+                                                    <Setter Property="Text" Value="&#xE704;"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource FocusDangerBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding OpenQuickSettingsCommand}"
+                                    ToolTip="{Binding MasterVolume, StringFormat=系统音量：{0:P0}}">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               FontSize="15"
+                                               Text="&#xE767;"/>
+                                    <TextBlock Text="{Binding MasterVolume, StringFormat={}{0:P0}}"
+                                               HorizontalAlignment="Center"
+                                               FontSize="8"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding OpenNotificationsCommand}"
+                                    ToolTip="打开 Windows 通知与日历">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm}}"
+                                               HorizontalAlignment="Center"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:M/d}}"
+                                               HorizontalAlignment="Center"
+                                               FontSize="9"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding OpenNotificationsCommand}"
+                                    ToolTip="打开 Windows 通知中心">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xEA8F;"/>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding OpenInputSwitcherCommand}"
+                                    ToolTip="切换输入法">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE775;"/>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding OpenPowerSettingsCommand}"
+                                    ToolTip="{Binding BatteryPercent, StringFormat=电池：{0}%}">
+                                <Button.Visibility>
+                                    <Binding Path="HasBattery" Converter="{StaticResource BooleanToVisibilityConverter}"/>
+                                </Button.Visibility>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource FocusIconText}" FontSize="14" Text="&#xE850;"/>
+                                    <TextBlock Text="{Binding BatteryPercent, StringFormat={}{0}%}"
+                                               HorizontalAlignment="Center"
+                                               FontSize="8"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}" Command="{Binding ShowDesktopCommand}" ToolTip="显示桌面">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE7C4;"/>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Click="OpenButtonContextMenu"
+                                    ToolTip="通知、设置与电源">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="通知中心" Command="{Binding PlacementTarget.DataContext.OpenNotificationsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <Separator/>
+                                        <MenuItem Header="FocusPanel 设置" Click="SettingsMenuItem_Click"/>
+                                        <MenuItem Header="电源菜单" Click="PowerMenuItem_Click"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE713;"/>
+                            </Button>
+                        </StackPanel>
                     </Grid>
-                </Grid>
-            </Border>
-        </Grid>
+                </Border>
+
+                <!-- First-run safety onboarding -->
+                <Border Grid.ColumnSpan="2"
+                        Panel.ZIndex="50"
+                        Margin="0"
+                        Padding="28"
+                        CornerRadius="0"
+                        Background="{DynamicResource FocusSurfaceStrongBrush}"
+                        BorderThickness="0"
+                        Visibility="{Binding IsOnboardingVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel VerticalAlignment="Center" MaxWidth="500">
+                            <Border Width="64" Height="64" CornerRadius="{StaticResource FocusCardCornerRadius}" Background="{DynamicResource FocusAccentBrush}" HorizontalAlignment="Left">
+                                <TextBlock Style="{StaticResource FocusIconText}" FontSize="28" Text="&#xE7F8;"/>
+                            </Border>
+                            <TextBlock Text="让 FocusPanel 接管主屏任务栏"
+                                       Margin="0,22,0,10"
+                                       FontSize="28"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock TextWrapping="Wrap"
+                                       FontSize="14"
+                                       LineHeight="23"
+                                       Foreground="{DynamicResource FocusMutedTextBrush}"
+                                       Text="FocusPanel 只会隐藏主显示器上的 Windows 任务栏，不会关闭 Explorer。副屏任务栏保持不变。你可以随时在设置中恢复，或按 Ctrl + Alt + Shift + F10 使用独立守护进程紧急恢复。"/>
+                            <CheckBox Content="随 Windows 启动 FocusPanel"
+                                      Margin="0,20,0,0"
+                                      IsChecked="{Binding StartWithWindows}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource FocusSecondaryButton}"
+                                    Content="暂不启用"
+                                    Command="{Binding SkipOnboardingCommand}"/>
+                            <Button Style="{StaticResource FocusPrimaryButton}"
+                                    Margin="10,3,0,3"
+                                    Content="启用新侧边任务栏"
+                                    Command="{Binding EnableReplacementCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

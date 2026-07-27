@@ -11,14 +11,26 @@ using FocusPanel.Data;
 
 namespace FocusPanel.Services;
 
+public sealed class CommonDesktopElevationRequiredException : InvalidOperationException
+{
+    public CommonDesktopElevationRequiredException(string path)
+        : base("公共桌面项目需要管理员授权。")
+    {
+        Path = path;
+    }
+
+    public string Path { get; }
+}
+
 public class FileOrganizerService
 {
-    public static event Action? OverlayRefreshRequested;
-
     private readonly string _desktopPath;
-    /// <summary>Storage folder ON desktop: Desktop\.FocusPanel\ — same disk = instant move</summary>
+    private readonly string _commonDesktopPath;
+    /// <summary>旧版本仓库，仅用于兼容已经被移动的项目。</summary>
     private readonly string _storageRoot;
+    private readonly IDesktopItemVisibilityService _visibility;
     private FileSystemWatcher _desktopWatcher;
+    private FileSystemWatcher? _commonDesktopWatcher;
     private FileSystemWatcher _storageWatcher;
 
     /// <summary>All files: desktop visible + stored in .FocusPanel</summary>
@@ -33,13 +45,35 @@ public class FileOrganizerService
     private const int DebounceInterval = 500;
 
     public FileOrganizerService()
+        : this(
+            Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory),
+            new WindowsDesktopItemVisibilityService())
     {
-        _desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+    }
+
+    internal FileOrganizerService(
+        string desktopPath,
+        IDesktopItemVisibilityService visibility)
+        : this(desktopPath, "", visibility)
+    {
+    }
+
+    internal FileOrganizerService(
+        string desktopPath,
+        string commonDesktopPath,
+        IDesktopItemVisibilityService visibility)
+    {
+        _desktopPath = desktopPath;
+        _commonDesktopPath = commonDesktopPath;
         _storageRoot = Path.Combine(_desktopPath, ".FocusPanel");
+        _visibility = visibility;
 
         InitializeWatchers();
         RefreshFilesDebounced();
     }
+
+    public bool ShowsProtectedSystemFiles => _visibility.ShowsProtectedSystemFiles;
 
     private void InitializeWatchers()
     {
@@ -53,9 +87,36 @@ public class FileOrganizerService
         _desktopWatcher.Renamed += OnRenamed;
         _desktopWatcher.EnableRaisingEvents = true;
 
+        if (!string.IsNullOrWhiteSpace(_commonDesktopPath)
+            && Directory.Exists(_commonDesktopPath)
+            && !string.Equals(_desktopPath, _commonDesktopPath, StringComparison.OrdinalIgnoreCase))
+        {
+            _commonDesktopWatcher = new FileSystemWatcher(_commonDesktopPath)
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+            };
+            _commonDesktopWatcher.Created += OnChanged;
+            _commonDesktopWatcher.Deleted += OnChanged;
+            _commonDesktopWatcher.Renamed += OnRenamed;
+            _commonDesktopWatcher.EnableRaisingEvents = true;
+        }
+
         // Watch storage folder for internal changes (moves between partitions, etc.)
         if (Directory.Exists(_storageRoot))
         {
+            try
+            {
+                FileAttributes attributes = _visibility.GetAttributes(_storageRoot);
+                FileAttributes collected = DesktopItemAttributePolicy.Collect(attributes);
+                if (attributes != collected)
+                    _visibility.SetAttributes(_storageRoot, collected);
+                _visibility.NotifyAttributesChanged(_storageRoot);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Hide legacy storage container error: {ex.Message}");
+            }
+
             _storageWatcher = new FileSystemWatcher(_storageRoot)
             {
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite,
@@ -78,6 +139,25 @@ public class FileOrganizerService
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
         if (e.FullPath.StartsWith(_storageRoot, StringComparison.OrdinalIgnoreCase)) return;
+        try
+        {
+            using var context = new AppDbContext();
+            context.EnsureSchema();
+            string oldName = Path.GetFileName(e.OldFullPath);
+            var pref = context.DesktopFilePreferences.FirstOrDefault(
+                p => p.FilePath == oldName && p.IsHiddenFromDesktop);
+            if (pref != null)
+            {
+                pref.FilePath = Path.GetFileName(e.FullPath);
+                pref.ManagedPath = e.FullPath;
+                pref.FileIdentity = _visibility.TryGetIdentity(e.FullPath) ?? pref.FileIdentity;
+                context.SaveChanges();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Track collected rename error: {ex.Message}");
+        }
         RefreshFilesDebounced();
     }
 
@@ -109,7 +189,18 @@ public class FileOrganizerService
         catch { }
     }
 
-    private sealed record DesktopPreferenceSnapshot(string PartitionName, bool IsHidden, double? X, double? Y);
+    private sealed record DesktopPreferenceSnapshot(
+        int Id,
+        string FileName,
+        string PartitionName,
+        bool IsHidden,
+        double? X,
+        double? Y,
+        string? ManagedPath,
+        long? OriginalAttributes,
+        string? FileIdentity,
+        DesktopCollectionMode CollectionMode,
+        DesktopVisibilityOperation OperationState);
 
     private Dictionary<string, DesktopPreferenceSnapshot> LoadDesktopPreferences()
     {
@@ -120,10 +211,17 @@ public class FileOrganizerService
             context.EnsureSchema();
             foreach (var pref in context.DesktopFilePreferences)
                 map[pref.FilePath] = new DesktopPreferenceSnapshot(
+                    pref.Id,
+                    pref.FilePath,
                     pref.PartitionName ?? "",
                     pref.IsHiddenFromDesktop,
                     pref.DesktopX,
-                    pref.DesktopY);
+                    pref.DesktopY,
+                    pref.ManagedPath,
+                    pref.OriginalAttributes,
+                    pref.FileIdentity,
+                    pref.CollectionMode,
+                    pref.OperationState);
         }
         catch (Exception ex)
         {
@@ -136,6 +234,7 @@ public class FileOrganizerService
     {
         try
         {
+            await Task.Run(ReconcileVisibilityState);
             var preferences = await Task.Run(() => LoadDesktopPreferences());
 
             var files = await Task.Run(() =>
@@ -143,13 +242,13 @@ public class FileOrganizerService
                 var fileList = new List<DesktopFile>();
                 var desktopRootFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                // 1. Scan desktop root — all files here are visible
-                if (Directory.Exists(_desktopPath))
+                // 1. Windows merges the per-user and public desktop roots into one view.
+                foreach (string desktopRoot in GetDesktopRoots())
                 {
-                    foreach (var file in new DirectoryInfo(_desktopPath).GetFiles())
+                    foreach (var file in new DirectoryInfo(desktopRoot).GetFiles())
                     {
                         if (file.Name.Equals("desktop.ini", StringComparison.OrdinalIgnoreCase)) continue;
-                        preferences.TryGetValue(file.Name, out var pref);
+                        var pref = ResolvePreference(file.Name, file.FullName, file.Attributes, preferences);
                         bool isCollected = pref?.IsHidden ?? false;
                         if (!isCollected && IsSystemHidden(file.Attributes)) continue;
                         desktopRootFiles.Add(file.Name);
@@ -160,11 +259,11 @@ public class FileOrganizerService
                         fileList.Add(df);
                     }
 
-                    foreach (var dir in new DirectoryInfo(_desktopPath).GetDirectories())
+                    foreach (var dir in new DirectoryInfo(desktopRoot).GetDirectories())
                     {
                         // Skip our storage folder
                         if (dir.Name.Equals(".FocusPanel", StringComparison.OrdinalIgnoreCase)) continue;
-                        preferences.TryGetValue(dir.Name, out var pref);
+                        var pref = ResolvePreference(dir.Name, dir.FullName, dir.Attributes, preferences);
                         bool isCollected = pref?.IsHidden ?? false;
                         if (!isCollected && IsSystemHidden(dir.Attributes)) continue;
                         desktopRootFiles.Add(dir.Name);
@@ -210,8 +309,28 @@ public class FileOrganizerService
                     }
                 }
 
-                // 3. Clean up DB: remove records for files no longer in storage
-                CleanStalePreferences(preferences, fileList);
+                // 保留无法定位项目的恢复入口，绝不静默删除数据库记录。
+                foreach (var pref in preferences.Values.Where(
+                    p => p.IsHidden
+                        && p.OperationState == DesktopVisibilityOperation.RecoveryRequired
+                        && !fileList.Any(f => string.Equals(
+                            f.Name,
+                            p.FileName,
+                            StringComparison.OrdinalIgnoreCase))))
+                {
+                    fileList.Add(new DesktopFile
+                    {
+                        Name = pref.FileName,
+                        FullPath = pref.ManagedPath ?? Path.Combine(_desktopPath, pref.FileName),
+                        Extension = Path.GetExtension(pref.FileName),
+                        FileType = "Recovery",
+                        CreatedAt = DateTime.Now,
+                        IsHidden = true,
+                        NeedsRecovery = true,
+                        DesktopX = pref.X ?? 16,
+                        DesktopY = pref.Y ?? 16
+                    });
+                }
 
                 return fileList.OrderByDescending(f => f.FileType == "Folder").ThenBy(f => f.Name).ToList();
             });
@@ -219,7 +338,6 @@ public class FileOrganizerService
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 UpdateFilesIncremental(files);
-                ApplyCollectedIconState();
                 FilesChanged?.Invoke();
             });
         }
@@ -229,33 +347,145 @@ public class FileOrganizerService
         }
     }
 
-    private void CleanStalePreferences(Dictionary<string, DesktopPreferenceSnapshot> preferences, List<DesktopFile> currentFiles)
+    private IEnumerable<string> GetDesktopRoots()
     {
-        var currentNames = new HashSet<string>(
-            currentFiles.Where(f => f.IsHidden).Select(f => f.Name),
-            StringComparer.OrdinalIgnoreCase);
+        yield return _desktopPath;
+        if (!string.IsNullOrWhiteSpace(_commonDesktopPath)
+            && Directory.Exists(_commonDesktopPath)
+            && !string.Equals(_desktopPath, _commonDesktopPath, StringComparison.OrdinalIgnoreCase))
+        {
+            yield return _commonDesktopPath;
+        }
+    }
 
-        var stale = preferences.Where(p => p.Value.IsHidden && !currentNames.Contains(p.Key)).Select(p => p.Key).ToList();
-        if (stale.Count == 0) return;
+    private DesktopPreferenceSnapshot? ResolvePreference(
+        string fileName,
+        string fullPath,
+        FileAttributes attributes,
+        Dictionary<string, DesktopPreferenceSnapshot> preferences)
+    {
+        if (preferences.TryGetValue(fileName, out var direct))
+            return direct;
+        if (!IsSystemHidden(attributes))
+            return null;
 
         try
         {
+            string? identity = _visibility.TryGetIdentity(fullPath);
+            if (string.IsNullOrWhiteSpace(identity))
+                return null;
+
+            DesktopPreferenceSnapshot? matched = preferences.Values.FirstOrDefault(
+                p => p.IsHidden
+                    && p.CollectionMode == DesktopCollectionMode.Attribute
+                    && string.Equals(p.FileIdentity, identity, StringComparison.OrdinalIgnoreCase));
+            if (matched == null)
+                return null;
+
             using var context = new AppDbContext();
-            foreach (var name in stale)
+            var pref = context.DesktopFilePreferences.Find(matched.Id);
+            if (pref != null)
             {
-                var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == name);
-                if (pref != null)
-                {
-                    pref.IsHiddenFromDesktop = false;
-                }
+                pref.FilePath = fileName;
+                pref.ManagedPath = fullPath;
+                context.SaveChanges();
             }
-            context.SaveChanges();
+            return matched with { FileName = fileName, ManagedPath = fullPath };
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"CleanStalePreferences error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Resolve collected identity error: {ex.Message}");
+            return null;
         }
     }
+
+    private void ReconcileVisibilityState()
+    {
+        using var context = new AppDbContext();
+        context.EnsureSchema();
+        var collected = context.DesktopFilePreferences.Where(p => p.IsHiddenFromDesktop).ToList();
+
+        foreach (var pref in collected)
+        {
+            try
+            {
+                string desktopPath = Path.Combine(_desktopPath, pref.FilePath);
+                string legacyPath = GetLegacyPath(pref);
+
+                if (pref.CollectionMode == DesktopCollectionMode.None)
+                {
+                    if (_visibility.Exists(desktopPath))
+                    {
+                        FileAttributes original = _visibility.GetAttributes(desktopPath);
+                        pref.ManagedPath = desktopPath;
+                        pref.OriginalAttributes = (long)original;
+                        pref.FileIdentity = _visibility.TryGetIdentity(desktopPath);
+                        pref.CollectionMode = DesktopCollectionMode.Attribute;
+                        pref.OperationState = DesktopVisibilityOperation.Collecting;
+                    }
+                    else if (_visibility.Exists(legacyPath))
+                    {
+                        pref.ManagedPath = legacyPath;
+                        pref.CollectionMode = DesktopCollectionMode.LegacyStorage;
+                        pref.OperationState = DesktopVisibilityOperation.Stable;
+                        continue;
+                    }
+                }
+
+                if (pref.CollectionMode == DesktopCollectionMode.LegacyStorage)
+                {
+                    if (string.IsNullOrWhiteSpace(pref.ManagedPath) && _visibility.Exists(legacyPath))
+                        pref.ManagedPath = legacyPath;
+                    if (!_visibility.Exists(pref.ManagedPath ?? legacyPath))
+                        pref.OperationState = DesktopVisibilityOperation.RecoveryRequired;
+                    continue;
+                }
+
+                string managedPath = pref.ManagedPath ?? desktopPath;
+                if (!_visibility.Exists(managedPath))
+                {
+                    pref.OperationState = DesktopVisibilityOperation.RecoveryRequired;
+                    continue;
+                }
+
+                if (pref.OperationState == DesktopVisibilityOperation.Restoring)
+                {
+                    long original = pref.OriginalAttributes
+                        ?? (long)(_visibility.GetAttributes(managedPath)
+                            & ~FileAttributes.Hidden
+                            & ~FileAttributes.System);
+                    _visibility.SetAttributes(managedPath, DesktopItemAttributePolicy.Restore(original));
+                    _visibility.NotifyAttributesChanged(managedPath);
+                    pref.IsHiddenFromDesktop = false;
+                    pref.OperationState = DesktopVisibilityOperation.Stable;
+                    pref.CollectionMode = DesktopCollectionMode.None;
+                    pref.OriginalAttributes = null;
+                    continue;
+                }
+
+                FileAttributes current = _visibility.GetAttributes(managedPath);
+                FileAttributes collectedAttributes = DesktopItemAttributePolicy.Collect(current);
+                if (current != collectedAttributes)
+                    _visibility.SetAttributes(managedPath, collectedAttributes);
+                _visibility.NotifyAttributesChanged(managedPath);
+                pref.FileIdentity = _visibility.TryGetIdentity(managedPath) ?? pref.FileIdentity;
+                pref.OperationState = DesktopVisibilityOperation.Stable;
+            }
+            catch (Exception ex)
+            {
+                pref.OperationState = DesktopVisibilityOperation.RecoveryRequired;
+                System.Diagnostics.Debug.WriteLine($"Reconcile collected item error: {ex.Message}");
+            }
+        }
+
+        context.SaveChanges();
+    }
+
+    private string GetLegacyPath(DesktopFilePreference pref)
+        => Path.Combine(
+            _storageRoot,
+            string.IsNullOrEmpty(pref.PartitionName) ? "Unsorted" : pref.PartitionName,
+            pref.FilePath);
 
     private static DesktopFile BuildDesktopFile(string fullPath, string name, string ext,
         long size, DateTime created, string fileType, bool isHidden, double? desktopX, double? desktopY, int index)
@@ -317,10 +547,53 @@ public class FileOrganizerService
     }
 
     // ============================================================
-    // 收纳：桌面根目录 → .FocusPanel/{partition}/  (同磁盘瞬移)
+    // 收纳：实体文件留在桌面，仅追加 Hidden + System 属性
     // ============================================================
     public async Task HideFileFromDesktop(string fileName, string partitionName)
     {
+        DesktopFile? existingFile = AllFiles.FirstOrDefault(
+            f => string.Equals(f.Name, fileName, StringComparison.OrdinalIgnoreCase));
+        if (existingFile?.IsHidden == true)
+        {
+            await MoveToPartition(fileName, partitionName);
+            return;
+        }
+
+        string fullPath = existingFile?.FullPath
+            ?? Path.Combine(_desktopPath, fileName);
+        await HideFileFromDesktopPath(fullPath, partitionName);
+    }
+
+    public async Task HideFileFromDesktopPath(
+        string fullPath,
+        string partitionName,
+        bool allowCommonDesktopElevation = false)
+    {
+        fullPath = Path.GetFullPath(fullPath);
+        DesktopDropLocation location = DesktopDropPolicy.Classify(
+            fullPath,
+            _desktopPath,
+            _commonDesktopPath);
+        if (location == DesktopDropLocation.OutsideDesktop)
+            throw new InvalidOperationException("该项目不在用户桌面或公共桌面根目录。");
+        if (location == DesktopDropLocation.CommonDesktop && !allowCommonDesktopElevation)
+            throw new CommonDesktopElevationRequiredException(fullPath);
+
+        string fileName = Path.GetFileName(fullPath);
+        DesktopFile? existingFile = AllFiles.FirstOrDefault(
+            f => string.Equals(f.FullPath, fullPath, StringComparison.OrdinalIgnoreCase));
+        if (existingFile?.IsHidden == true)
+        {
+            await MoveToPartition(fileName, partitionName);
+            return;
+        }
+
+        if (!_visibility.Exists(fullPath))
+            throw new FileNotFoundException("找不到要收纳的桌面项目。", fullPath);
+
+        FileAttributes originalAttributes = _visibility.GetAttributes(fullPath);
+        int preferenceId = 0;
+
         await Task.Run(() =>
         {
             using var context = new AppDbContext();
@@ -334,6 +607,11 @@ public class FileOrganizerService
             }
             pref.PartitionName = partitionName;
             pref.IsHiddenFromDesktop = true;
+            pref.ManagedPath = fullPath;
+            pref.OriginalAttributes ??= (long)originalAttributes;
+            pref.FileIdentity = _visibility.TryGetIdentity(fullPath);
+            pref.CollectionMode = DesktopCollectionMode.Attribute;
+            pref.OperationState = DesktopVisibilityOperation.Collecting;
 
             if (!string.IsNullOrEmpty(partitionName) && !context.DesktopPartitions.Any(dp => dp.Name == partitionName))
             {
@@ -341,13 +619,67 @@ public class FileOrganizerService
                 context.DesktopPartitions.Add(new DesktopPartition { Name = partitionName, OrderIndex = maxOrder + 1 });
             }
             context.SaveChanges();
+            preferenceId = pref.Id;
         });
+
+        try
+        {
+            FileAttributes collectedAttributes = DesktopItemAttributePolicy.Collect(originalAttributes);
+            if (location == DesktopDropLocation.CommonDesktop)
+                DesktopVisibilityElevatedHelper.SetAttributes(fullPath, collectedAttributes);
+            else
+            {
+                _visibility.SetAttributes(fullPath, collectedAttributes);
+                _visibility.NotifyAttributesChanged(fullPath);
+            }
+
+            await Task.Run(() =>
+            {
+                using var context = new AppDbContext();
+                var pref = context.DesktopFilePreferences.Find(preferenceId);
+                if (pref != null)
+                {
+                    pref.OperationState = DesktopVisibilityOperation.Stable;
+                    context.SaveChanges();
+                }
+            });
+        }
+        catch
+        {
+            bool attributesRestored = false;
+            try
+            {
+                _visibility.SetAttributes(fullPath, originalAttributes);
+                _visibility.NotifyAttributesChanged(fullPath);
+                attributesRestored = true;
+            }
+            catch { }
+            await Task.Run(() =>
+            {
+                using var context = new AppDbContext();
+                var pref = context.DesktopFilePreferences.Find(preferenceId);
+                if (pref != null)
+                {
+                    pref.IsHiddenFromDesktop = !attributesRestored;
+                    pref.CollectionMode = attributesRestored
+                        ? DesktopCollectionMode.None
+                        : DesktopCollectionMode.Attribute;
+                    pref.OperationState = attributesRestored
+                        ? DesktopVisibilityOperation.Stable
+                        : DesktopVisibilityOperation.RecoveryRequired;
+                    if (attributesRestored)
+                        pref.OriginalAttributes = null;
+                    context.SaveChanges();
+                }
+            });
+            throw;
+        }
 
         // Update memory
         if (AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile file)
         {
             file.IsHidden = true;
-            file.FullPath = Path.Combine(_desktopPath, fileName);
+            file.FullPath = fullPath;
         }
 
         await Application.Current.Dispatcher.InvokeAsync(() =>
@@ -358,16 +690,14 @@ public class FileOrganizerService
         });
 
         IconHelper.ClearCache(fileName);
-        DesktopHelper.HideDesktopItem(fileName);
-        OverlayRefreshRequested?.Invoke();
     }
 
     // ============================================================
-    // 取消收纳：.FocusPanel/{partition}/ → 桌面根目录
+    // 取消收纳：属性模式恢复原属性；旧仓库模式恢复到桌面
     // ============================================================
     public async Task RestoreFileToDesktop(string fileName, double? desktopX = null, double? desktopY = null)
     {
-        string partitionName = "";
+        string restoredPath = Path.Combine(_desktopPath, fileName);
 
         await Task.Run(() =>
         {
@@ -375,43 +705,83 @@ public class FileOrganizerService
             context.EnsureSchema();
 
             var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == fileName);
-            if (pref != null)
+            if (pref == null)
+                return;
+
+            if (pref.CollectionMode == DesktopCollectionMode.LegacyStorage)
             {
-                partitionName = pref.PartitionName ?? "";
+                string srcPath = pref.ManagedPath ?? GetLegacyPath(pref);
+                string destPath = Path.Combine(_desktopPath, fileName);
+
+                if (_visibility.Exists(srcPath) && _visibility.Exists(destPath))
+                {
+                    string name = Path.GetFileNameWithoutExtension(fileName);
+                    string ext = Path.GetExtension(fileName);
+                    int count = 1;
+                    while (_visibility.Exists(destPath))
+                        destPath = Path.Combine(_desktopPath, $"{name} ({count++}){ext}");
+                }
+
+                if (File.Exists(srcPath))
+                    File.Move(srcPath, destPath);
+                else if (Directory.Exists(srcPath))
+                    Directory.Move(srcPath, destPath);
+                else
+                    throw new FileNotFoundException("找不到旧版收纳项目。", srcPath);
+
+                restoredPath = destPath;
             }
-
-            string srcDir = Path.Combine(_storageRoot, string.IsNullOrEmpty(partitionName) ? "Unsorted" : partitionName);
-            string srcPath = Path.Combine(srcDir, fileName);
-            string destPath = Path.Combine(_desktopPath, fileName);
-
-            if ((File.Exists(srcPath) || Directory.Exists(srcPath)) && (File.Exists(destPath) || Directory.Exists(destPath)))
+            else
             {
-                string name = Path.GetFileNameWithoutExtension(fileName);
-                string ext = Path.GetExtension(fileName);
-                int count = 1;
-                while (File.Exists(destPath) || Directory.Exists(destPath))
-                    destPath = Path.Combine(_desktopPath, $"{name} ({count++}){ext}");
-            }
+                string managedPath = pref.ManagedPath ?? restoredPath;
+                if (!_visibility.Exists(managedPath))
+                {
+                    pref.OperationState = DesktopVisibilityOperation.RecoveryRequired;
+                    context.SaveChanges();
+                    throw new FileNotFoundException("找不到要恢复的桌面项目。", managedPath);
+                }
 
-            if (File.Exists(srcPath))
-                File.Move(srcPath, destPath);
-            else if (Directory.Exists(srcPath))
-                Directory.Move(srcPath, destPath);
-
-            if (pref != null)
-            {
-                pref.IsHiddenFromDesktop = false;
-                if (desktopX.HasValue) pref.DesktopX = desktopX.Value;
-                if (desktopY.HasValue) pref.DesktopY = desktopY.Value;
+                pref.OperationState = DesktopVisibilityOperation.Restoring;
                 context.SaveChanges();
+
+                long original = pref.OriginalAttributes
+                    ?? (long)(_visibility.GetAttributes(managedPath)
+                        & ~FileAttributes.Hidden
+                        & ~FileAttributes.System);
+                FileAttributes restoredAttributes = DesktopItemAttributePolicy.Restore(original);
+                if (DesktopDropPolicy.Classify(
+                        managedPath,
+                        _desktopPath,
+                        _commonDesktopPath) == DesktopDropLocation.CommonDesktop)
+                {
+                    DesktopVisibilityElevatedHelper.SetAttributes(managedPath, restoredAttributes);
+                }
+                else
+                {
+                    _visibility.SetAttributes(managedPath, restoredAttributes);
+                    _visibility.NotifyAttributesChanged(managedPath);
+                }
+                restoredPath = managedPath;
             }
+
+            pref.FilePath = Path.GetFileName(restoredPath);
+            pref.ManagedPath = restoredPath;
+            pref.PartitionName = string.Empty;
+            pref.IsHiddenFromDesktop = false;
+            pref.CollectionMode = DesktopCollectionMode.None;
+            pref.OperationState = DesktopVisibilityOperation.Stable;
+            pref.OriginalAttributes = null;
+            if (desktopX.HasValue) pref.DesktopX = desktopX.Value;
+            if (desktopY.HasValue) pref.DesktopY = desktopY.Value;
+            context.SaveChanges();
         });
 
         // Update memory
         if (AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile file)
         {
             file.IsHidden = false;
-            file.FullPath = Path.Combine(_desktopPath, fileName);
+            file.Name = Path.GetFileName(restoredPath);
+            file.FullPath = restoredPath;
             if (desktopX.HasValue) file.DesktopX = desktopX.Value;
             if (desktopY.HasValue) file.DesktopY = desktopY.Value;
         }
@@ -422,11 +792,6 @@ public class FileOrganizerService
                 Files.Add(df);
             FilesChanged?.Invoke();
         });
-
-        DesktopHelper.ShowDesktopItem(fileName);
-        await Task.Delay(200);
-        ApplyCollectedIconState();
-        OverlayRefreshRequested?.Invoke();
     }
 
     public async Task SaveDesktopPosition(string fileName, double desktopX, double desktopY)
@@ -461,19 +826,15 @@ public class FileOrganizerService
         }
     }
 
-    // 跨分区移动（存储目录内）
+    // 分区只属于 FocusPanel 元数据，不移动实体文件。
     public async Task MoveToPartition(string fileName, string newPartitionName)
     {
-        string oldPartition = "";
-
         await Task.Run(() =>
         {
             using var context = new AppDbContext();
             context.EnsureSchema();
 
             var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == fileName);
-            bool isStored = pref?.IsHiddenFromDesktop ?? false;
-            oldPartition = pref?.PartitionName ?? "";
 
             if (pref == null)
             {
@@ -488,30 +849,9 @@ public class FileOrganizerService
                 context.DesktopPartitions.Add(new DesktopPartition { Name = newPartitionName, OrderIndex = maxOrder + 1 });
             }
             context.SaveChanges();
-
-            // Legacy stored files may still live under .FocusPanel. New collected files
-            // stay in Desktop root and only update their partition metadata.
-            if (isStored && !string.IsNullOrEmpty(oldPartition))
-            {
-                string srcDir = Path.Combine(_storageRoot, oldPartition);
-                string srcPath = Path.Combine(srcDir, fileName);
-                if (File.Exists(srcPath) || Directory.Exists(srcPath))
-                {
-                    string destDir = Path.Combine(_storageRoot, string.IsNullOrEmpty(newPartitionName) ? "Unsorted" : newPartitionName);
-                    if (!Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
-                    string destPath = Path.Combine(destDir, fileName);
-
-                    if (File.Exists(srcPath))
-                        File.Move(srcPath, destPath);
-                    else if (Directory.Exists(srcPath))
-                        Directory.Move(srcPath, destPath);
-                }
-            }
         });
 
-        DesktopHelper.HideDesktopItem(fileName);
         FilesChanged?.Invoke();
-        OverlayRefreshRequested?.Invoke();
     }
 
     // ============================================================
@@ -546,15 +886,6 @@ public class FileOrganizerService
     {
         return attributes.HasFlag(FileAttributes.System)
             || attributes.HasFlag(FileAttributes.Hidden);
-    }
-
-    private void ApplyCollectedIconState()
-    {
-        foreach (var file in AllFiles.Where(f => f.IsHidden).ToList())
-        {
-            try { DesktopHelper.HideDesktopItem(file.Name); }
-            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"HideDesktopItem error: {ex.Message}"); }
-        }
     }
 
     public void ToggleDesktopIcons(bool show)

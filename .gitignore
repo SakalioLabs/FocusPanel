@@ -74,3 +74,7 @@ $RECYCLE.BIN/
 # Rider
 .idea/
 *.sln.iml
+
+# Local agent worktrees and generated release artifacts
+.claude/
+artifacts/

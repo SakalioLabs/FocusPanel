@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using FocusPanel.Helpers;
 using FocusPanel.Models;
 using FocusPanel.ViewModels;
 
@@ -49,7 +51,7 @@ public partial class FileOrganizerView : UserControl
         }
     }
 
-    private void FileCard_MouseMove(object sender, MouseEventArgs e)
+    private async void FileCard_MouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement card && card.DataContext is DesktopFile file)
         {
@@ -58,7 +60,21 @@ public partial class FileOrganizerView : UserControl
                 vm.SelectedFile = file;
                 var data = new DataObject();
                 data.SetData(typeof(DesktopFile), file);
-                DragDrop.DoDragDrop(card, data, DragDropEffects.Move);
+                var shell = Window.GetWindow(this) as MainWindow;
+                shell?.BeginDesktopFileDrag();
+                try
+                {
+                    DragDrop.DoDragDrop(card, data, DragDropEffects.Move);
+
+                    if (file.IsHidden && DesktopHelper.IsCursorOverDesktop())
+                    {
+                        await vm.RestoreDraggedFileToDesktop(file);
+                    }
+                }
+                finally
+                {
+                    shell?.EndDesktopFileDrag();
+                }
             }
         }
     }
@@ -146,7 +162,7 @@ public partial class FileOrganizerView : UserControl
         if (sender is Border border)
         {
             border.BorderBrush = (Brush)FindResource("PrimaryHueMidBrush");
-            border.Background = (Brush)FindResource("OrganizerCardBrush");
+            border.Background = (Brush)FindResource("FocusSurfaceSoftBrush");
             // Keep thickness same to avoid jitter
         }
     }
@@ -169,10 +185,11 @@ public partial class FileOrganizerView : UserControl
          _autoScrollTimer.Stop();
     }
 
-    private void Partition_Drop(object sender, DragEventArgs e)
+    private async void Partition_Drop(object sender, DragEventArgs e)
     {
         if (sender is Border border)
         {
+            e.Handled = true;
             // Capture drop position BEFORE clearing style
             Point p = e.GetPosition(border);
             bool isBottom = p.Y > (border.ActualHeight / 2);
@@ -198,7 +215,22 @@ public partial class FileOrganizerView : UserControl
                 {
                     if (e.Data.GetData(DataFormats.FileDrop) is string[] files)
                     {
-                        vm.ImportFiles(files, partition.Name);
+                        var result = await vm.ImportFiles(files, partition.Name);
+                        if (result.HasIssues)
+                        {
+                            var details = new List<string>();
+                            if (result.OutsideDesktop > 0)
+                                details.Add($"{result.OutsideDesktop} 个项目不在桌面根目录");
+                            if (result.AuthorizationCanceled > 0)
+                                details.Add($"{result.AuthorizationCanceled} 个公共桌面项目未获得管理员授权");
+                            if (result.Failed > 0)
+                                details.Add($"{result.Failed} 个项目写入属性失败");
+                            MessageBox.Show(
+                                $"已收纳 {result.Collected} 个桌面项目。\n{string.Join("；", details)}。\nFocusPanel 没有移动任何文件。",
+                                "FocusPanel",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+                        }
                     }
                 }
                 // Case 3: Partition Reordering (Dropped ONTO another partition)
@@ -216,9 +248,9 @@ public partial class FileOrganizerView : UserControl
 
     private void RestorePartitionChrome(Border border)
     {
-        border.BorderBrush = (Brush)FindResource("OrganizerCardBorderBrush");
+        border.BorderBrush = (Brush)FindResource("FocusStrokeBrush");
         border.BorderThickness = new Thickness(1);
-        border.Background = (Brush)FindResource("OrganizerCardBrush");
+        border.Background = (Brush)FindResource("FocusSurfaceStrongBrush");
     }
 
     // Partition Reordering

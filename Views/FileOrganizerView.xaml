@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:materialDesign="clr-namespace:FocusPanel.Controls"
              xmlns:vm="clr-namespace:FocusPanel.ViewModels"
              xmlns:converters="clr-namespace:FocusPanel.Converters"
              mc:Ignorable="d"
@@ -16,21 +16,13 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:BindingProxy x:Key="VmProxy" Data="{Binding}"/>
 
-        <SolidColorBrush x:Key="OrganizerPageBrush" Color="#FFF5F6F8"/>
-        <SolidColorBrush x:Key="OrganizerCardBrush" Color="#FFFFFFFF"/>
-        <SolidColorBrush x:Key="OrganizerCardHeaderBrush" Color="#FFF8F9FB"/>
-        <SolidColorBrush x:Key="OrganizerCardBorderBrush" Color="#FFDDE1E7"/>
-        <SolidColorBrush x:Key="OrganizerHoverBrush" Color="#FFF1F4F8"/>
         <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#22007AFF"/>
-        <SolidColorBrush x:Key="OrganizerTextBrush" Color="#FF1D1D1F"/>
-        <SolidColorBrush x:Key="OrganizerSubtleTextBrush" Color="#99000000"/>
-        <SolidColorBrush x:Key="OrganizerAccentBrush" Color="#FF6F4BD8"/>
         <DropShadowEffect x:Key="OrganizerCardShadow" Color="#16000000" BlurRadius="8" ShadowDepth="1" Opacity="0.24"/>
 
         <Style x:Key="OrganizerIconStyle" TargetType="materialDesign:PackIcon">
             <Setter Property="Width" Value="20"/>
             <Setter Property="Height" Value="20"/>
-            <Setter Property="Foreground" Value="{StaticResource OrganizerAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FocusAccentBrush}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
@@ -45,8 +37,8 @@
         </Style>
 
         <Style x:Key="PopupPanelStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource OrganizerCardBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OrganizerCardBorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource FocusSurfaceStrongBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Padding" Value="14"/>
@@ -54,8 +46,8 @@
         </Style>
 
         <Style x:Key="PartitionCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource OrganizerCardBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OrganizerCardBorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource FocusSurfaceStrongBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Margin" Value="0,0,0,14"/>
@@ -77,8 +69,8 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource OrganizerHoverBrush}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource OrganizerCardBorderBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource FocusHoverBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
                 </Trigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter Property="Background" Value="{StaticResource OrganizerSelectedBrush}"/>
@@ -99,7 +91,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource OrganizerHoverBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource FocusHoverBrush}"/>
                 </Trigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter Property="Background" Value="{StaticResource OrganizerSelectedBrush}"/>
@@ -161,10 +153,18 @@
                            VerticalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            SnapsToDevicePixels="True"/>
+                    <Border HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Padding="5,2"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            Background="{DynamicResource FocusDangerBrush}"
+                            Visibility="{Binding NeedsRecovery, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="需恢复" FontSize="10" Foreground="White"/>
+                    </Border>
                     <TextBlock Grid.Row="1"
                                Text="{Binding DisplayName}"
                                FontSize="12"
-                               Foreground="{StaticResource OrganizerTextBrush}"
+                               Foreground="{DynamicResource FocusTextBrush}"
                                TextAlignment="Center"
                                TextTrimming="CharacterEllipsis"
                                TextWrapping="NoWrap"
@@ -200,10 +200,17 @@
                     <TextBlock Grid.Column="1"
                                Text="{Binding DisplayName}"
                                FontSize="13"
-                               Foreground="{StaticResource OrganizerTextBrush}"
+                               Foreground="{DynamicResource FocusTextBrush}"
                                TextTrimming="CharacterEllipsis"
                                VerticalAlignment="Center"
                                Margin="8,0,0,0"/>
+                    <TextBlock Grid.Column="1"
+                               Text="需要恢复"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource FocusDangerBrush}"
+                               FontSize="11"
+                               Visibility="{Binding NeedsRecovery, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 </Grid>
             </Border>
         </DataTemplate>
@@ -222,9 +229,9 @@
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0"
-                            Background="{StaticResource OrganizerCardHeaderBrush}"
-                            CornerRadius="10,10,0,0"
-                            BorderBrush="{StaticResource OrganizerCardBorderBrush}"
+                            Background="{DynamicResource FocusSurfaceSoftBrush}"
+                            CornerRadius="16,16,0,0"
+                            BorderBrush="{DynamicResource FocusStrokeBrush}"
                             BorderThickness="0,0,0,1"
                             AllowDrop="True"
                             PreviewMouseLeftButtonDown="PartitionHeader_PreviewMouseLeftButtonDown"
@@ -244,7 +251,7 @@
                                           Height="28"
                                           Padding="0"
                                           ToolTip="&#x5C55;&#x5F00;&#x6216;&#x6298;&#x53E0;">
-                                <materialDesign:PackIcon Width="17" Height="17" Foreground="{StaticResource OrganizerAccentBrush}">
+                                <materialDesign:PackIcon Width="17" Height="17" Foreground="{DynamicResource FocusAccentBrush}">
                                     <materialDesign:PackIcon.Style>
                                         <Style TargetType="materialDesign:PackIcon">
                                             <Setter Property="Kind" Value="ChevronDown"/>
@@ -265,10 +272,10 @@
                                 <TextBlock Text="{Binding Name}"
                                            FontSize="14"
                                            FontWeight="SemiBold"
-                                           Foreground="{StaticResource OrganizerTextBrush}"
+                                           Foreground="{DynamicResource FocusTextBrush}"
                                            VerticalAlignment="Center"/>
                                 <Border Background="#14007AFF"
-                                        CornerRadius="9"
+                                        CornerRadius="{StaticResource FocusControlCornerRadius}"
                                         Padding="7,1"
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center">
@@ -279,7 +286,7 @@
                             </StackPanel>
 
                             <materialDesign:PopupBox Grid.Column="2"
-                                                     PlacementMode="BottomAndAlignRightEdges"
+                                                     PlacementMode="Bottom"
                                                      Padding="0"
                                                      Height="28"
                                                      Width="28">
@@ -287,7 +294,7 @@
                                     <materialDesign:PackIcon Kind="DotsVertical"
                                                              Width="18"
                                                              Height="18"
-                                                             Foreground="{StaticResource OrganizerSubtleTextBrush}"/>
+                                                             Foreground="{DynamicResource FocusMutedTextBrush}"/>
                                 </materialDesign:PopupBox.ToggleContent>
                                 <Border Style="{StaticResource PopupPanelStyle}">
                                     <StackPanel Width="160">
@@ -357,15 +364,15 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource OrganizerPageBrush}">
+    <Grid Background="{DynamicResource FocusSurfaceBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="{StaticResource OrganizerCardBrush}"
-                BorderBrush="{StaticResource OrganizerCardBorderBrush}"
+                Background="{DynamicResource FocusSurfaceStrongBrush}"
+                BorderBrush="{DynamicResource FocusStrokeBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="12,8">
             <Grid>
@@ -381,7 +388,7 @@
                     <TextBlock Text="&#x6536;&#x7EB3;&#x76D2;"
                                FontSize="14"
                                FontWeight="SemiBold"
-                               Foreground="{StaticResource OrganizerTextBrush}"
+                               Foreground="{DynamicResource FocusTextBrush}"
                                VerticalAlignment="Center"
                                Margin="8,0,0,0"/>
                 </StackPanel>
@@ -568,7 +575,7 @@
                        FontSize="14"
                        Opacity="0.45"
                        TextAlignment="Center"
-                       Foreground="{StaticResource OrganizerTextBrush}">
+                       Foreground="{DynamicResource FocusTextBrush}">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>

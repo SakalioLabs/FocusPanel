@@ -2,481 +2,743 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using FocusPanel.Helpers;
-using FocusPanel.ViewModels;
+using FocusPanel.Models;
 using FocusPanel.Services;
+using FocusPanel.ViewModels;
 using Microsoft.Win32;
+using Forms = System.Windows.Forms;
 
-namespace FocusPanel.Views
+namespace FocusPanel.Views;
+
+public partial class MainWindow : Window
 {
-    public partial class MainWindow : Window
+    private const double CompactWidth = 76;
+    private const double ExpandedWidth = 720;
+    private const double ScreenMargin = 12;
+    private const int DwmaUseImmersiveDarkMode = 20;
+    private const int DwmaWindowCornerPreference = 33;
+    private const int DwmaBorderColor = 34;
+    private const int DwmaSystemBackdropType = 38;
+    private const int DwmcpRound = 2;
+    private const int DwmsbtNone = 1;
+    private const int DwmsbtTransientWindow = 3;
+    private const int SwShowNoActivate = 4;
+    private const int WmHotkey = 0x0312;
+    private const int SummonHotkeyId = 0x4650;
+    private const uint ModAlt = 0x0001;
+    private const uint ModControl = 0x0002;
+    private const uint VkSpace = 0x20;
+
+    private readonly ShellCoordinator _coordinator;
+    private readonly MainViewModel _viewModel;
+    private readonly DispatcherTimer _autoHideTimer;
+    private EdgeHotZoneMonitor? _hotZoneMonitor;
+    private EdgeIndicatorWindow? _edgeIndicator;
+    private HwndSource? _windowSource;
+    private bool _summonHotkeyRegistered;
+    private bool _isExit;
+    private bool _hiddenToTray;
+    private bool _isDesktopFileDragging;
+    private bool _isHotZoneAvailable;
+    private bool _autoHideIgnoresKeyboardFocus;
+    private System.Windows.Point _pinnedDragStart;
+
+    public MainWindow()
     {
-        private bool _isExit = false;
-        private Screen _currentScreen = null!;
+        _coordinator = new ShellCoordinator();
+        _viewModel = new MainViewModel(
+            _coordinator.Apps,
+            _coordinator.Windows,
+            _coordinator.SystemStatus,
+            _coordinator.Updates);
 
-        // The panel is a right-edge drawer; keep the host window square and let XAML round only the exposed left edge.
-        [DllImport("dwmapi.dll", PreserveSig = true)]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+        InitializeComponent();
+        DataContext = _viewModel;
+        MyNotifyIcon.Icon = SystemIcons.Application;
 
-        private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-        private const int DWMWCP_DONOTROUND = 1;
+        _viewModel.RequestClose += ForceClose;
+        _viewModel.RequestEnableReplacement += EnableTaskbarReplacement;
+        _viewModel.RequestDisableReplacement += DisableTaskbarReplacement;
+        _viewModel.RequestApplyUpdate += ApplyDownloadedUpdate;
+        _viewModel.WorkspaceRequested += _ => ExpandSidebar();
 
-        // Foreground window detection
-        [DllImport("user32.dll")]
-        private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc,
-            WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
-
-        [DllImport("user32.dll")]
-        private static extern bool UnhookWinEvent(IntPtr hWinEventHook);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
-
-        private delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd,
-            int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
-
-        private const uint EVENT_SYSTEM_FOREGROUND = 3;
-        private const uint WINEVENT_OUTOFCONTEXT = 0;
-
-        private IntPtr _winEventHook;
-        private WinEventDelegate _winEventDelegate;
-        private bool _hiddenToTray;
-        private DesktopOverlayWindow? _desktopOverlay;
-        private bool _isDesktopFileDragging;
-        private readonly DispatcherTimer _foregroundGuardTimer;
-        private bool _foregroundMonitorStarted;
-
-        public MainWindow()
+        _autoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        _autoHideTimer.Tick += (_, _) =>
         {
-            InitializeComponent();
-            var viewModel = new MainViewModel();
-            viewModel.RequestClose += () => this.ForceClose();
-            DataContext = viewModel;
-
-            MyNotifyIcon.Icon = SystemIcons.Application;
-
-            WindowStartupLocation = WindowStartupLocation.Manual;
-            WindowState = WindowState.Normal;
-
-            // Initial size based on mouse-position screen (refined in Loaded)
-            var initScreen = GetScreenFromMouse();
-            Height = initScreen.WorkingArea.Height * 0.85;
-            Width = 80;
-            PositionAtRightEdge(initScreen);
-
-            ShowInTaskbar = false;
-
-            Loaded += MainWindow_Loaded;
-            StateChanged += MainWindow_StateChanged;
-            Closing += MainWindow_Closing;
-            Deactivated += MainWindow_Deactivated;
-            LocationChanged += MainWindow_LocationChanged;
-            _foregroundGuardTimer = new DispatcherTimer
+            _autoHideTimer.Stop();
+            bool shouldHide = ShellAutoHidePolicy.ShouldHide(
+                _isDesktopFileDragging,
+                IsCursorInsideShell(),
+                ShellBorder.IsKeyboardFocusWithin,
+                _autoHideIgnoresKeyboardFocus);
+            if (!shouldHide)
             {
-                Interval = TimeSpan.FromMilliseconds(250)
-            };
-            _foregroundGuardTimer.Tick += (_, _) => UpdateVisibilityForForeground();
-            StartForegroundMonitor();
-            Dispatcher.BeginInvoke(() =>
-            {
-                EnsureDesktopOverlay();
-                UpdateVisibilityForForeground();
-            }, DispatcherPriority.ApplicationIdle);
-
-            SystemEvents.DisplaySettingsChanged += (s, e) =>
-            {
-                _currentScreen = null!;
-                RefreshScreenAndReposition();
-                _desktopOverlay?.RefreshOverlay();
-            };
-        }
-
-        private Screen GetScreenFromMouse()
-        {
-            var mousePos = System.Windows.Forms.Control.MousePosition;
-            foreach (var screen in Screen.AllScreens)
-            {
-                if (screen.Bounds.Contains(mousePos.X, mousePos.Y))
-                    return screen;
-            }
-            return Screen.PrimaryScreen!;
-        }
-
-        private Screen GetCurrentScreen()
-        {
-            if (_currentScreen != null)
-                return _currentScreen;
-
-            var hwnd = GetWindowHandle();
-            if (hwnd != IntPtr.Zero)
-            {
-                _currentScreen = Screen.FromHandle(hwnd);
-                return _currentScreen;
-            }
-
-            return GetScreenFromMouse();
-        }
-
-        private IntPtr GetWindowHandle()
-        {
-            try { return new System.Windows.Interop.WindowInteropHelper(this).Handle; }
-            catch { return IntPtr.Zero; }
-        }
-
-        private void RefreshScreenAndReposition()
-        {
-            var hwnd = GetWindowHandle();
-            if (hwnd != IntPtr.Zero)
-                _currentScreen = Screen.FromHandle(hwnd);
-            else
-                _currentScreen = GetScreenFromMouse();
-            PositionAtRightEdge(_currentScreen);
-        }
-
-        private void PositionAtRightEdge(Screen screen)
-        {
-            Left = screen.WorkingArea.Right - Width;
-            Top = screen.WorkingArea.Top + (screen.WorkingArea.Height - Height) / 2;
-        }
-
-        private double GetRightEdgeTarget()
-        {
-            var screen = GetCurrentScreen();
-            return screen.WorkingArea.Right;
-        }
-
-        private void MainWindow_LocationChanged(object? sender, EventArgs e)
-        {
-            double expectedLeft = GetRightEdgeTarget() - ActualWidth;
-            if (Math.Abs(Left - expectedLeft) > 10)
-            {
-                Left = expectedLeft;
-            }
-        }
-
-        private void MainWindow_Deactivated(object? sender, EventArgs e)
-        {
-        }
-
-        private async void MainWindow_StateChanged(object? sender, EventArgs e)
-        {
-            if (WindowState != WindowState.Minimized) return;
-
-            await Task.Delay(350);
-            if (WindowState == WindowState.Minimized && IsDesktopSceneForeground())
-                ShowOnDesktop();
-        }
-
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            // Get accurate screen from window handle and reposition
-            var hwnd = GetWindowHandle();
-            if (hwnd != IntPtr.Zero)
-            {
-                _currentScreen = Screen.FromHandle(hwnd);
-                PositionAtRightEdge(_currentScreen);
-
-                int cornerPref = DWMWCP_DONOTROUND;
-                DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPref, sizeof(int));
-            }
-
-            Visibility = Visibility.Collapsed;
-            Topmost = false;
-        }
-
-        private void StartForegroundMonitor()
-        {
-            if (_foregroundMonitorStarted) return;
-
-            _winEventDelegate = new WinEventDelegate(WinEventProc);
-            _winEventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
-                IntPtr.Zero, _winEventDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
-
-            _foregroundGuardTimer.Start();
-            _foregroundMonitorStarted = true;
-        }
-
-        private void MainWindow_Closing(object sender, CancelEventArgs e)
-        {
-            if (_winEventHook != IntPtr.Zero)
-            {
-                UnhookWinEvent(_winEventHook);
-                _winEventHook = IntPtr.Zero;
-            }
-
-            _foregroundGuardTimer.Stop();
-
-            if (_isExit)
-            {
-                FileOrganizerService.OverlayRefreshRequested -= RefreshDesktopOverlay;
-                _desktopOverlay?.Close();
-                _desktopOverlay = null;
-            }
-
-            if (!_isExit)
-            {
-                e.Cancel = true;
-                _hiddenToTray = true;
-                _desktopOverlay?.HideFromApps();
-                DesktopHelper.ToggleDesktopIcons(true);
-                this.Hide();
-            }
-        }
-
-        public void ShowFromTray()
-        {
-            _hiddenToTray = false;
-            Show();
-            WindowState = WindowState.Normal;
-            UpdateVisibilityForForeground();
-        }
-
-        public void ForceClose()
-        {
-            _isExit = true;
-            if (MyNotifyIcon != null) MyNotifyIcon.Dispose();
-            Close();
-            System.Windows.Application.Current.Shutdown();
-        }
-
-        private void EnsureDesktopOverlay()
-        {
-            if (_desktopOverlay != null) return;
-
-            _desktopOverlay = new DesktopOverlayWindow();
-            FileOrganizerService.OverlayRefreshRequested += RefreshDesktopOverlay;
-        }
-
-        private void RefreshDesktopOverlay()
-        {
-            Dispatcher.BeginInvoke(() => _desktopOverlay?.RefreshOverlay());
-        }
-
-        private void Sidebar_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            double rightEdge = GetRightEdgeTarget();
-
-            SidebarBorder.Width = 800;
-            Width = 800;
-            Left = rightEdge - 800;
-            HeaderGrid.Opacity = 1;
-            ContentArea.Opacity = 1;
-        }
-
-        private void Sidebar_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            if (SidebarBorder.IsKeyboardFocusWithin) return;
-            CollapseSidebar();
-        }
-
-        private void CollapseSidebar_Click(object sender, RoutedEventArgs e)
-        {
-            CollapseSidebar();
-        }
-
-        public void CollapseSidebar()
-        {
-            if (_isDesktopFileDragging) return;
-
-            double rightEdge = GetRightEdgeTarget();
-
-            SidebarBorder.Width = 80;
-            Width = 80;
-            Left = rightEdge - 80;
-            HeaderGrid.Opacity = 0;
-            ContentArea.Opacity = 0;
-        }
-
-        private void Sidebar_DragEnter(object sender, System.Windows.DragEventArgs e)
-        {
-            Sidebar_MouseEnter(sender, null!);
-        }
-
-        private void Sidebar_DragLeave(object sender, System.Windows.DragEventArgs e)
-        {
-            if (_isDesktopFileDragging) return;
-
-            var pos = e.GetPosition(SidebarBorder);
-            if (pos.X < 0 || pos.X >= SidebarBorder.ActualWidth || pos.Y < 0 || pos.Y >= SidebarBorder.ActualHeight)
-            {
-                CollapseSidebar();
-            }
-        }
-
-        // --- Desktop-only visibility ---
-
-        private int _pendingUpdates;
-
-        private void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd,
-            int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
-        {
-            if (Interlocked.Increment(ref _pendingUpdates) > 1)
-            {
-                Interlocked.Decrement(ref _pendingUpdates);
+                _autoHideTimer.Start();
                 return;
             }
 
-            Dispatcher.BeginInvoke(() =>
-            {
-                Interlocked.Exchange(ref _pendingUpdates, 0);
-                UpdateVisibilityForForeground();
-            }, System.Windows.Threading.DispatcherPriority.Background);
-        }
+            HideShell();
+        };
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        Width = CompactWidth;
+        ShowInTaskbar = false;
 
-        [DllImport("user32.dll")]
-        private static extern bool IsIconic(IntPtr hWnd);
+        Loaded += MainWindow_Loaded;
+        SourceInitialized += MainWindow_SourceInitialized;
+        Closing += MainWindow_Closing;
+        Deactivated += (_, _) => ScheduleAutoHide(220, ignoreKeyboardFocus: true);
+        SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+        SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
+    }
 
-        [DllImport("user32.dll")]
-        private static extern bool IsWindowVisible(IntPtr hWnd);
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        PositionAtPrimaryRightEdge();
+        EnsureEdgeIndicator();
+        EnsureHotZoneMonitor();
+        _hotZoneMonitor?.Start();
 
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        [DllImport("user32.dll")]
-        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
-
-        private static readonly IntPtr HwndTopmost = new(-1);
-        private static readonly IntPtr HwndNotTopmost = new(-2);
-        private const int SW_SHOWNOACTIVATE = 4;
-        private const uint SWP_NOMOVE = 0x0002;
-        private const uint SWP_NOSIZE = 0x0001;
-        private const uint SWP_NOACTIVATE = 0x0010;
-        private const uint SWP_SHOWWINDOW = 0x0040;
-
-        private void UpdateVisibilityForForeground()
+        if (_viewModel.IsOnboardingVisible)
         {
-            if (IsDesktopSceneForeground())
-            {
-                ShowOnDesktop();
-            }
-            else
-            {
-                HideFromApps();
-            }
-        }
-
-        private bool IsDesktopSceneForeground()
-        {
-            IntPtr fg = GetForegroundWindow();
-            if (fg == IntPtr.Zero)
-                return true;
-
-            if (fg == GetWindowHandle())
-                return true;
-
-            GetWindowThreadProcessId(fg, out uint foregroundProcessId);
-            if (foregroundProcessId == Environment.ProcessId)
-                return true;
-
-            var sb = new StringBuilder(256);
-            GetClassName(fg, sb, 256);
-            string cls = sb.ToString();
-
-            return cls == "Progman"
-                || cls == "WorkerW"
-                || cls == "Shell_TrayWnd"
-                || cls == "Shell_SecondaryTrayWnd";
-        }
-
-        private void ShowOnDesktop()
-        {
-            if (_hiddenToTray)
-            {
-                _desktopOverlay?.HideFromApps();
-                DesktopHelper.ToggleDesktopIcons(true);
-                return;
-            }
-
-            _desktopOverlay?.ShowOnDesktop();
-
-            if (!IsVisible)
-                Show();
-
-            Visibility = Visibility.Visible;
-            ShowWithoutActivating();
-            CollapseSidebar();
-            VerifyDesktopSceneStillActive();
-        }
-
-        private void ShowWithoutActivating()
-        {
-            DemoteFromTopmost();
-            var hwnd = GetWindowHandle();
-            if (hwnd != IntPtr.Zero)
-            {
-                ShowWindow(hwnd, SW_SHOWNOACTIVATE);
-                SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-                SetWindowPos(hwnd, HwndNotTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-            }
-        }
-
-        private async void VerifyDesktopSceneStillActive()
-        {
-            await Task.Delay(120);
-            if (!IsDesktopSceneForeground())
-                HideFromApps();
-        }
-
-        private void DemoteFromTopmost()
-        {
-            Topmost = false;
-            var hwnd = GetWindowHandle();
-            if (hwnd != IntPtr.Zero)
-                SetWindowPos(hwnd, HwndNotTopmost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-        }
-
-        private void HideFromApps()
-        {
-            _desktopOverlay?.HideFromApps();
-            DesktopHelper.ToggleDesktopIcons(true);
-            DemoteFromTopmost();
-
-            if (Visibility != Visibility.Visible) return;
-
-            Visibility = Visibility.Collapsed;
-        }
-
-        public void BeginDesktopFileDrag()
-        {
-            _isDesktopFileDragging = true;
-            if (DataContext is MainViewModel vm && vm.NavigateCommand.CanExecute("Files"))
-                vm.NavigateCommand.Execute("Files");
-
-            _hiddenToTray = false;
-            Visibility = Visibility.Visible;
-            Show();
-            Topmost = false;
             ExpandSidebar();
+            Activate();
         }
-
-        public void EndDesktopFileDrag()
+        else
         {
-            _isDesktopFileDragging = false;
-            UpdateVisibilityForForeground();
+            HideShell();
+            if (_viewModel.IsReplacementEnabled)
+                Dispatcher.BeginInvoke(EnableTaskbarReplacement, DispatcherPriority.ApplicationIdle);
         }
+    }
 
-        private void ExpandSidebar()
+    private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+    {
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        _windowSource = HwndSource.FromHwnd(hwnd);
+        _windowSource?.AddHook(WindowMessageHook);
+        _summonHotkeyRegistered = NativeMethods.RegisterHotKey(
+            hwnd,
+            SummonHotkeyId,
+            ModControl | ModAlt,
+            VkSpace);
+        ApplyDwmBackdrop();
+    }
+
+    private void ApplyDwmBackdrop()
+    {
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero)
+            return;
+
+        // DWM owns both the single outer silhouette and the acrylic backdrop.
+        // No WPF or GDI region is layered on top of this outline.
+        int cornerPreference = DwmcpRound;
+        NativeMethods.DwmSetWindowAttribute(
+            hwnd,
+            DwmaWindowCornerPreference,
+            ref cornerPreference,
+            sizeof(int));
+
+        int borderColor = unchecked((int)0xFFFFFFFE);
+        NativeMethods.DwmSetWindowAttribute(
+            hwnd,
+            DwmaBorderColor,
+            ref borderColor,
+            sizeof(int));
+
+        bool useDark = ThemeService.IsDarkTheme;
+        int darkMode = useDark ? 1 : 0;
+        NativeMethods.DwmSetWindowAttribute(
+            hwnd,
+            DwmaUseImmersiveDarkMode,
+            ref darkMode,
+            sizeof(int));
+
+        int backdrop = ThemeService.CanUseTransparency
+            ? DwmsbtTransientWindow
+            : DwmsbtNone;
+        if (backdrop == DwmsbtTransientWindow)
         {
-            double rightEdge = GetRightEdgeTarget();
-
-            SidebarBorder.Width = 800;
-            Width = 800;
-            Left = rightEdge - 800;
-            HeaderGrid.Opacity = 1;
-            ContentArea.Opacity = 1;
+            var margins = new NativeMethods.Margins(-1, -1, -1, -1);
+            NativeMethods.DwmExtendFrameIntoClientArea(hwnd, ref margins);
         }
+        NativeMethods.DwmSetWindowAttribute(
+            hwnd,
+            DwmaSystemBackdropType,
+            ref backdrop,
+            sizeof(int));
+
+        if (HwndSource.FromHwnd(hwnd) is HwndSource source)
+            source.CompositionTarget.BackgroundColor = Colors.Transparent;
+    }
+
+    private void EnsureHotZoneMonitor()
+    {
+        if (_hotZoneMonitor != null)
+            return;
+
+        _hotZoneMonitor = new EdgeHotZoneMonitor(
+            _coordinator.Windows,
+            () => _viewModel.DisableHotZoneInFullscreen);
+        _hotZoneMonitor.OpenRequested += (_, _) => OpenCompactDock();
+        _hotZoneMonitor.AvailabilityChanged += isAvailable =>
+        {
+            _isHotZoneAvailable = isAvailable;
+            UpdateEdgeIndicatorVisibility();
+        };
+    }
+
+    private void EnsureEdgeIndicator()
+    {
+        _edgeIndicator ??= new EdgeIndicatorWindow();
+    }
+
+    private void PositionAtPrimaryRightEdge()
+    {
+        Forms.Screen? primary = Forms.Screen.PrimaryScreen;
+        if (primary == null)
+            return;
+
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        uint dpi = hwnd == IntPtr.Zero ? 96u : NativeMethods.GetDpiForWindow(hwnd);
+        double scale = dpi == 0 ? 1.0 : dpi / 96.0;
+        Left = primary.Bounds.Right / scale - Width - ScreenMargin;
+        Top = primary.Bounds.Top / scale + ScreenMargin;
+        Height = Math.Max(320, primary.Bounds.Height / scale - ScreenMargin * 2);
+    }
+
+    private void OpenCompactDock()
+    {
+        if (_hiddenToTray || IsVisible)
+            return;
+
+        _autoHideTimer.Stop();
+        SetShellWidth(CompactWidth, false, false);
+        ShowWithoutActivating();
+        ScheduleAutoHide(900);
+    }
+
+    public void ExpandSidebar()
+    {
+        _hiddenToTray = false;
+        _autoHideTimer.Stop();
+        WorkspaceHost.Visibility = Visibility.Visible;
+        ShowWithoutActivating();
+        SetShellWidth(ExpandedWidth, true, true);
+        ScheduleAutoHide(1200);
+    }
+
+    public void CollapseSidebar()
+    {
+        if (_isDesktopFileDragging)
+            return;
+
+        CloseOverlayPanels();
+        SetShellWidth(CompactWidth, false, true);
+    }
+
+    private void SetShellWidth(double targetWidth, bool workspaceVisible, bool animate)
+    {
+        Forms.Screen? primary = Forms.Screen.PrimaryScreen;
+        if (primary == null)
+            return;
+
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        uint dpi = hwnd == IntPtr.Zero ? 96u : NativeMethods.GetDpiForWindow(hwnd);
+        double scale = dpi == 0 ? 1.0 : dpi / 96.0;
+        double targetLeft = primary.Bounds.Right / scale - targetWidth - ScreenMargin;
+        double currentWidth = ActualWidth > 0 ? ActualWidth : Width;
+        double currentLeft = Left;
+        bool reduceMotion = !SystemParameters.ClientAreaAnimation
+            || SystemParameters.HighContrast;
+
+        BeginAnimation(WidthProperty, null);
+        BeginAnimation(LeftProperty, null);
+        Width = targetWidth;
+        Left = targetLeft;
+
+        if (!animate || reduceMotion || Math.Abs(currentWidth - targetWidth) < 0.5)
+        {
+            WorkspaceHost.Visibility = workspaceVisible
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            return;
+        }
+
+        if (workspaceVisible)
+            WorkspaceHost.Visibility = Visibility.Visible;
+
+        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var duration = new Duration(TimeSpan.FromMilliseconds(180));
+        var widthAnimation = new DoubleAnimation(currentWidth, targetWidth, duration)
+        {
+            EasingFunction = easing
+        };
+        var leftAnimation = new DoubleAnimation(currentLeft, targetLeft, duration)
+        {
+            EasingFunction = easing
+        };
+        widthAnimation.Completed += (_, _) =>
+        {
+            BeginAnimation(WidthProperty, null);
+            BeginAnimation(LeftProperty, null);
+            Width = targetWidth;
+            Left = targetLeft;
+            if (!workspaceVisible)
+                WorkspaceHost.Visibility = Visibility.Collapsed;
+        };
+
+        BeginAnimation(WidthProperty, widthAnimation, HandoffBehavior.SnapshotAndReplace);
+        BeginAnimation(LeftProperty, leftAnimation, HandoffBehavior.SnapshotAndReplace);
+    }
+
+    private void HideShell()
+    {
+        CloseOverlayPanels();
+        Visibility = Visibility.Hidden;
+        UpdateEdgeIndicatorVisibility();
+    }
+
+    private void ShowWithoutActivating()
+    {
+        _edgeIndicator?.HideIndicator();
+        if (!IsVisible)
+            Show();
+        Visibility = Visibility.Visible;
+        Topmost = true;
+
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd != IntPtr.Zero)
+        {
+            ApplyDwmBackdrop();
+            NativeMethods.ShowWindow(hwnd, SwShowNoActivate);
+        }
+    }
+
+    private void ScheduleAutoHide(
+        int delayMilliseconds = 350,
+        bool ignoreKeyboardFocus = false)
+    {
+        if (_isDesktopFileDragging)
+            return;
+
+        _autoHideTimer.Stop();
+        _autoHideIgnoresKeyboardFocus = ignoreKeyboardFocus;
+        _autoHideTimer.Interval = TimeSpan.FromMilliseconds(delayMilliseconds);
+        _autoHideTimer.Start();
+    }
+
+    private void Shell_MouseEnter(object sender, MouseEventArgs e)
+    {
+        _autoHideTimer.Stop();
+        _autoHideIgnoresKeyboardFocus = false;
+    }
+
+    private void Shell_MouseLeave(object sender, MouseEventArgs e)
+    {
+        ScheduleAutoHide();
+    }
+
+    private void Shell_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (!ShellBorder.IsKeyboardFocusWithin)
+            ScheduleAutoHide();
+    }
+
+    private bool IsCursorInsideShell()
+    {
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        return hwnd != IntPtr.Zero
+            && NativeMethods.GetCursorPos(out NativeMethods.Point cursor)
+            && NativeMethods.GetWindowRect(hwnd, out NativeMethods.Rect rect)
+            && cursor.X >= rect.Left
+            && cursor.X < rect.Right
+            && cursor.Y >= rect.Top
+            && cursor.Y < rect.Bottom;
+    }
+
+    private void CollapseSidebar_Click(object sender, RoutedEventArgs e)
+    {
+        CollapseSidebar();
+    }
+
+    private void SearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (_viewModel.IsSearchOpen)
+                SearchBox.Focus();
+        }, DispatcherPriority.Input);
+    }
+
+    private void CalendarButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
+    private void SettingsButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
+    private void PowerButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
+    private void SystemButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
+    private void NotificationsButton_Click(object sender, RoutedEventArgs e) => ScheduleAutoHide();
+
+    private void OpenButtonContextMenu(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.ContextMenu == null)
+            return;
+
+        _autoHideTimer.Stop();
+        button.ContextMenu.Closed -= ButtonContextMenu_Closed;
+        button.ContextMenu.Closed += ButtonContextMenu_Closed;
+        button.ContextMenu.PlacementTarget = button;
+        button.ContextMenu.IsOpen = true;
+    }
+
+    private void ButtonContextMenu_Closed(object sender, RoutedEventArgs e)
+        => ScheduleAutoHide();
+
+    private void WorkspaceMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { Tag: string destination })
+            _viewModel.NavigateCommand.Execute(destination);
+    }
+
+    private void SettingsMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        _viewModel.ToggleSettingsCommand.Execute(null);
+    }
+
+    private void PowerMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        _viewModel.TogglePowerMenuCommand.Execute(null);
+    }
+
+    private void CloseOverlayPanels()
+    {
+        _viewModel.IsSearchOpen = false;
+        _viewModel.IsCalendarOpen = false;
+        _viewModel.IsQuickSettingsOpen = false;
+        _viewModel.IsSettingsOpen = false;
+        _viewModel.IsPowerMenuOpen = false;
+    }
+
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape)
+            return;
+
+        if (_viewModel.IsSearchOpen
+            || _viewModel.IsCalendarOpen
+            || _viewModel.IsQuickSettingsOpen
+            || _viewModel.IsSettingsOpen
+            || _viewModel.IsPowerMenuOpen)
+        {
+            CloseOverlayPanels();
+        }
+        else if (WorkspaceHost.Visibility == Visibility.Visible)
+        {
+            CollapseSidebar();
+        }
+        else
+        {
+            HideShell();
+        }
+
+        e.Handled = true;
+    }
+
+    private void EnableTaskbarReplacement()
+    {
+        if (_coordinator.TryEnableTaskbarReplacement(out string? error))
+        {
+            _viewModel.MarkReplacementEnabled(true);
+            return;
+        }
+
+        _viewModel.MarkReplacementEnabled(false);
+        MessageBox.Show(
+            error ?? "无法启用任务栏替代模式。",
+            "已保留 Windows 任务栏",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+    }
+
+    private void DisableTaskbarReplacement()
+    {
+        _coordinator.RestoreTaskbar();
+        _viewModel.MarkReplacementEnabled(false);
+    }
+
+    private void ApplyDownloadedUpdate()
+    {
+        _hotZoneMonitor?.Stop();
+
+        try
+        {
+            new DatabaseBackupService().PerformStartupBackup();
+            _coordinator.RestoreTaskbar();
+            DesktopHelper.ToggleDesktopIcons(true);
+            _coordinator.Updates.ApplyAndRestart();
+        }
+        catch (Exception ex)
+        {
+            if (!_hiddenToTray)
+                _hotZoneMonitor?.Start();
+
+            MessageBox.Show(
+                $"更新包已下载，但无法启动安装：{ex.Message}\n"
+                + "Windows 任务栏已经恢复，可稍后重新尝试。",
+                "无法安装更新",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        if (!_isExit)
+        {
+            e.Cancel = true;
+            _hiddenToTray = true;
+            _hotZoneMonitor?.Stop();
+            HideShell();
+            DesktopHelper.ToggleDesktopIcons(true);
+            return;
+        }
+
+        _autoHideTimer.Stop();
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        if (_summonHotkeyRegistered && hwnd != IntPtr.Zero)
+        {
+            NativeMethods.UnregisterHotKey(hwnd, SummonHotkeyId);
+            _summonHotkeyRegistered = false;
+        }
+        _windowSource?.RemoveHook(WindowMessageHook);
+        _windowSource = null;
+        SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
+        SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
+        _hotZoneMonitor?.Dispose();
+        _hotZoneMonitor = null;
+        _edgeIndicator?.Close();
+        _edgeIndicator = null;
+        _viewModel.Dispose();
+        _coordinator.Dispose();
+    }
+
+    public void ShowFromTray()
+    {
+        _hiddenToTray = false;
+        EnsureHotZoneMonitor();
+        _hotZoneMonitor?.Start();
+        ExpandSidebar();
+        Activate();
+    }
+
+    public void ForceClose()
+    {
+        _isExit = true;
+        _coordinator.RestoreTaskbar();
+        MyNotifyIcon.Dispose();
+        Close();
+        Application.Current.Shutdown();
+    }
+
+    private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            PositionAtPrimaryRightEdge();
+            _hotZoneMonitor?.RefreshDisplayBounds();
+            _edgeIndicator?.Reposition();
+        });
+    }
+
+    private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            ThemeService.ApplyCurrentTheme();
+            ApplyDwmBackdrop();
+        });
+    }
+
+    private IntPtr WindowMessageHook(
+        IntPtr hwnd,
+        int message,
+        IntPtr wParam,
+        IntPtr lParam,
+        ref bool handled)
+    {
+        if (message == ShellMessages.ShowMainWindow)
+        {
+            ShowFromTray();
+            handled = true;
+        }
+        else if (message == WmHotkey && wParam.ToInt32() == SummonHotkeyId)
+        {
+            _hiddenToTray = false;
+            ExpandSidebar();
+            Activate();
+            handled = true;
+        }
+
+        return IntPtr.Zero;
+    }
+
+    private void UpdateEdgeIndicatorVisibility()
+    {
+        if (_hiddenToTray || IsVisible || !_isHotZoneAvailable)
+        {
+            _edgeIndicator?.HideIndicator();
+            return;
+        }
+
+        EnsureEdgeIndicator();
+        _edgeIndicator?.ShowIndicator();
+    }
+
+    private void Sidebar_DragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(DesktopFile))
+            || e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            BeginDesktopFileDrag();
+        }
+    }
+
+    private void Sidebar_DragLeave(object sender, DragEventArgs e)
+    {
+        if (!_isDesktopFileDragging)
+            ScheduleAutoHide();
+    }
+
+    public void BeginDesktopFileDrag()
+    {
+        _isDesktopFileDragging = true;
+        _viewModel.NavigateCommand.Execute("Files");
+        ExpandSidebar();
+    }
+
+    public void EndDesktopFileDrag()
+    {
+        _isDesktopFileDragging = false;
+        ScheduleAutoHide();
+    }
+
+    private void PinnedApp_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _pinnedDragStart = e.GetPosition(this);
+    }
+
+    private void PinnedApp_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed
+            || sender is not FrameworkElement { DataContext: AppLaunchItem app })
+        {
+            return;
+        }
+
+        System.Windows.Point current = e.GetPosition(this);
+        if (Math.Abs(current.X - _pinnedDragStart.X) < SystemParameters.MinimumHorizontalDragDistance
+            && Math.Abs(current.Y - _pinnedDragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        DragDrop.DoDragDrop(
+            (DependencyObject)sender,
+            new DataObject(typeof(AppLaunchItem), app),
+            DragDropEffects.Move);
+    }
+
+    private void PinnedApp_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(typeof(AppLaunchItem))
+            ? DragDropEffects.Move
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void PinnedApp_Drop(object sender, DragEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: AppLaunchItem target }
+            && e.Data.GetData(typeof(AppLaunchItem)) is AppLaunchItem source)
+        {
+            _viewModel.MovePinned(source, target);
+        }
+
+        e.Handled = true;
+    }
+
+    private static class NativeMethods
+    {
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Margins
+        {
+            internal int Left;
+            internal int Right;
+            internal int Top;
+            internal int Bottom;
+
+            internal Margins(int left, int right, int top, int bottom)
+            {
+                Left = left;
+                Right = right;
+                Top = top;
+                Bottom = bottom;
+            }
+        }
+
+        [DllImport("dwmapi.dll", PreserveSig = true)]
+        internal static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+        [DllImport("dwmapi.dll", PreserveSig = true)]
+        internal static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref Margins margins);
+
+        [DllImport("user32.dll")]
+        internal static extern uint GetDpiForWindow(IntPtr hwnd);
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Point
+        {
+            internal int X;
+            internal int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Rect
+        {
+            internal int Left;
+            internal int Top;
+            internal int Right;
+            internal int Bottom;
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool GetCursorPos(out Point point);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool GetWindowRect(IntPtr hwnd, out Rect rect);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool ShowWindow(IntPtr hwnd, int command);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers, uint virtualKey);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool UnregisterHotKey(IntPtr hwnd, int id);
     }
 }

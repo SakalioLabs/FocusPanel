@@ -5,6 +5,7 @@ using System.Windows;
 using FocusPanel.Data;
 using FocusPanel.Helpers;
 using FocusPanel.Services;
+using FocusPanel.Views;
 using Microsoft.EntityFrameworkCore;
 
 namespace FocusPanel;
@@ -20,7 +21,21 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        if (e.Args.Length >= 3
+            && string.Equals(e.Args[0], "--taskbar-watchdog", StringComparison.OrdinalIgnoreCase)
+            && int.TryParse(e.Args[1], out int parentProcessId))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            int exitCode = TaskbarWatchdog.Run(parentProcessId, e.Args[2]);
+            Shutdown(exitCode);
+            return;
+        }
+
+        // Always repair a stale replacement session before normal startup.
+        TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
+        ThemeService.ApplyCurrentTheme();
 
         // Set working directory to the application's base directory
         System.IO.Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
@@ -111,10 +126,15 @@ public partial class App : Application
                  LogException(ex);
              }
         }
+
+        var mainWindow = new MainWindow();
+        MainWindow = mainWindow;
+        mainWindow.Show();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
         base.OnExit(e);
     }
@@ -122,6 +142,7 @@ public partial class App : Application
     private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         LogException(e.Exception);
+        TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
         
         // Specific handling for SQLite "no such table" error which might bubble up
@@ -146,6 +167,7 @@ public partial class App : Application
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
+        TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
         if (e.ExceptionObject is Exception ex)
         {
@@ -159,7 +181,7 @@ public partial class App : Application
         try
         {
             string logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash.log");
-            string message = $"[{DateTime.Now}] {ex.Message}\n{ex.StackTrace}\n\n";
+            string message = $"[{DateTime.Now}] {ex}\n\n";
             File.AppendAllText(logFile, message);
         }
         catch { }

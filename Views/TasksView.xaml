@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:materialDesign="clr-namespace:FocusPanel.Controls"
              xmlns:vm="clr-namespace:FocusPanel.ViewModels"
              xmlns:markdig="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
              mc:Ignorable="d" 
@@ -232,7 +232,7 @@
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <materialDesign:Card Width="200" Height="200" UniformCornerRadius="8" materialDesign:ShadowAssist.ShadowDepth="Depth1">
+                                    <materialDesign:Card Width="200" Height="200" UniformCornerRadius="16" materialDesign:ShadowAssist.ShadowDepth="Depth1">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="*"/>
@@ -240,7 +240,7 @@
                                             </Grid.RowDefinitions>
                                             
                                             <!-- Cover Image Placeholder (TODO: Bind to actual image) -->
-                                            <Border Grid.Row="0" Background="{DynamicResource MaterialDesignDivider}" CornerRadius="8,8,0,0" ClipToBounds="True">
+                                            <Border Grid.Row="0" Background="{DynamicResource MaterialDesignDivider}" CornerRadius="16,16,0,0" ClipToBounds="True">
                                                 <Grid>
                                                     <materialDesign:PackIcon Kind="ImageOutline" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.2"/>
                                                     <Image Source="{Binding CoverImage}" Stretch="UniformToFill" 
@@ -272,7 +272,7 @@
                                             </Grid>
                                             
                                             <!-- Completed Overlay -->
-                                            <Border Grid.RowSpan="2" Background="#80FFFFFF" Visibility="{Binding IsCompleted, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="8">
+                                            <Border Grid.RowSpan="2" Background="#80FFFFFF" Visibility="{Binding IsCompleted, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="{StaticResource FocusCardCornerRadius}">
                                                 <materialDesign:PackIcon Kind="CheckCircle" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Green"/>
                                             </Border>
                                         </Grid>
@@ -319,7 +319,7 @@
                                     </StackPanel>
                                     
                                     <!-- Context Indicator -->
-                                    <Border Grid.Column="1" CornerRadius="4" Padding="8,4" Background="{DynamicResource PrimaryHueLightBrush}" Visibility="Collapsed">
+                                    <Border Grid.Column="1" CornerRadius="{StaticResource FocusControlCornerRadius}" Padding="8,4" Background="{DynamicResource PrimaryHueLightBrush}" Visibility="Collapsed">
                                         <TextBlock Text="{Binding CurrentParentItem.Title, TargetNullValue='Global'}" 
                                                    FontSize="12" FontWeight="Bold"/>
                                     </Border>

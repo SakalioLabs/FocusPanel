@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     public DbSet<DesktopPartition> DesktopPartitions { get; set; }
     public DbSet<DesktopFilePreference> DesktopFilePreferences { get; set; }
     public DbSet<AppConfig> AppConfigs { get; set; }
+    public DbSet<PinnedApp> PinnedApps { get; set; }
     public DbSet<OkrObjective> OkrObjectives { get; set; }
     public DbSet<OkrKeyResult> OkrKeyResults { get; set; }
     public DbSet<OkrSyncLog> OkrSyncLogs { get; set; }
@@ -91,13 +92,31 @@ public class AppDbContext : DbContext
                     PartitionName TEXT,
                     IsHiddenFromDesktop INTEGER DEFAULT 0,
                     DesktopX REAL,
-                    DesktopY REAL
+                    DesktopY REAL,
+                    ManagedPath TEXT,
+                    OriginalAttributes INTEGER,
+                    FileIdentity TEXT,
+                    CollectionMode INTEGER NOT NULL DEFAULT 0,
+                    OperationState INTEGER NOT NULL DEFAULT 0
                 );
                 
                 CREATE TABLE IF NOT EXISTS AppConfigs (
                     Key TEXT PRIMARY KEY,
                     Value TEXT
                 );
+
+                CREATE TABLE IF NOT EXISTS PinnedApps (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    DisplayName TEXT NOT NULL,
+                    LaunchKind INTEGER NOT NULL,
+                    LaunchTarget TEXT NOT NULL,
+                    Arguments TEXT,
+                    IconKey TEXT,
+                    OrderIndex INTEGER NOT NULL,
+                    CreatedAt TEXT NOT NULL
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS IX_PinnedApps_Target
+                    ON PinnedApps (LaunchKind, LaunchTarget, IFNULL(Arguments, ''));
 
                 CREATE TABLE IF NOT EXISTS OkrObjectives (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -168,7 +187,36 @@ public class AppDbContext : DbContext
             }
             catch { }
 
-            //
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN ManagedPath TEXT;");
+            }
+            catch { }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN OriginalAttributes INTEGER;");
+            }
+            catch { }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN FileIdentity TEXT;");
+            }
+            catch { }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN CollectionMode INTEGER NOT NULL DEFAULT 0;");
+            }
+            catch { }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN OperationState INTEGER NOT NULL DEFAULT 0;");
+            }
+            catch { }
+
             try 
             {
                 Database.ExecuteSqlRaw("ALTER TABLE DesktopPartitions ADD COLUMN ColumnIndex INTEGER DEFAULT 0;");

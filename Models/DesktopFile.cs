@@ -7,6 +7,7 @@ namespace FocusPanel.Models;
 public partial class DesktopFile : ObservableObject
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayName))]
     private string name;
 
     public string DisplayName => Extension?.ToLower() == ".lnk" 
@@ -40,6 +41,9 @@ public partial class DesktopFile : ObservableObject
 
     [ObservableProperty]
     private bool isHidden; // 是否已收纳（桌面隐藏）
+
+    [ObservableProperty]
+    private bool needsRecovery;
 
     [ObservableProperty]
     private double desktopX;
