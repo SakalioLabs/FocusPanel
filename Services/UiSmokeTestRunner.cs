@@ -11,6 +11,7 @@ internal static class UiSmokeTestRunner
     private static readonly string[] CriticalGlobalResources =
     {
         "BooleanToVisibilityConverter",
+        "FocusShellTintBrush",
         "FocusSurfaceBrush",
         "FocusSurfaceSoftBrush",
         "FocusSurfaceStrongBrush",

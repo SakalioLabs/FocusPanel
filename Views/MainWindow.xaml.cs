@@ -166,19 +166,30 @@ public partial class MainWindow : Window
         int backdrop = ThemeService.CanUseTransparency
             ? DwmsbtTransientWindow
             : DwmsbtNone;
+        bool backdropActive = false;
         if (backdrop == DwmsbtTransientWindow)
         {
             var margins = new NativeMethods.Margins(-1, -1, -1, -1);
-            NativeMethods.DwmExtendFrameIntoClientArea(hwnd, ref margins);
+            int frameResult = NativeMethods.DwmExtendFrameIntoClientArea(hwnd, ref margins);
+            int backdropResult = NativeMethods.DwmSetWindowAttribute(
+                hwnd,
+                DwmaSystemBackdropType,
+                ref backdrop,
+                sizeof(int));
+            backdropActive = frameResult == 0 && backdropResult == 0;
         }
-        NativeMethods.DwmSetWindowAttribute(
-            hwnd,
-            DwmaSystemBackdropType,
-            ref backdrop,
-            sizeof(int));
+        else
+        {
+            NativeMethods.DwmSetWindowAttribute(
+                hwnd,
+                DwmaSystemBackdropType,
+                ref backdrop,
+                sizeof(int));
+        }
 
         if (HwndSource.FromHwnd(hwnd) is HwndSource source)
             source.CompositionTarget.BackgroundColor = Colors.Transparent;
+        ThemeService.SetNativeBackdropActive(backdropActive);
     }
 
     private void EnsureHotZoneMonitor()

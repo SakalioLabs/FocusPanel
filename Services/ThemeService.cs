@@ -10,6 +10,7 @@ public static class ThemeService
 {
     private const int SmRemoteSession = 0x1000;
     private static string _currentMode = "System";
+    private static bool _nativeBackdropActive;
 
     public static string CurrentMode => _currentMode;
 
@@ -68,6 +69,15 @@ public static class ThemeService
         ApplyCurrentTheme();
     }
 
+    public static void SetNativeBackdropActive(bool active)
+    {
+        if (_nativeBackdropActive == active)
+            return;
+
+        _nativeBackdropActive = active;
+        ApplyCurrentTheme();
+    }
+
     public static void ApplyCurrentTheme()
     {
         if (Application.Current == null)
@@ -75,24 +85,36 @@ public static class ThemeService
 
         bool dark = IsDarkTheme;
         bool translucent = CanUseTransparency;
+        Color accent = SystemParameters.WindowGlassColor;
+        if (accent.A == 0)
+            accent = Color.FromRgb(0x00, 0x6F, 0xC4);
+        accent.A = 0xFF;
+        Color accentBright = Color.FromRgb(
+            (byte)Math.Min(255, accent.R + 48),
+            (byte)Math.Min(255, accent.G + 48),
+            (byte)Math.Min(255, accent.B + 48));
+
         SetBrush("FocusTextBrush", dark ? "#FFF5F7FF" : "#FF1D2433");
         SetBrush("FocusMutedTextBrush", dark ? "#FFAEB5C8" : "#FF667085");
+        SetBrush("FocusShellTintBrush", _nativeBackdropActive && translucent
+            ? (dark ? "#10191C24" : "#14FFFFFF")
+            : (dark ? "#FF191C24" : "#FFF6F8FC"));
         SetBrush("FocusSurfaceBrush", translucent
-            ? (dark ? "#40191C24" : "#55FFFFFF")
+            ? (dark ? "#521E222B" : "#66FFFFFF")
             : (dark ? "#FF191C24" : "#FFF6F8FC"));
         SetBrush("FocusSurfaceStrongBrush", translucent
-            ? (dark ? "#7A222630" : "#8AFFFFFF")
+            ? (dark ? "#D020242C" : "#E6FFFFFF")
             : (dark ? "#FF222630" : "#FFFFFFFF"));
         SetBrush("FocusSurfaceSoftBrush", translucent
-            ? (dark ? "#382C313D" : "#45FFFFFF")
+            ? (dark ? "#302C313D" : "#38FFFFFF")
             : (dark ? "#FF2C313D" : "#FFE9EDF5"));
-        SetBrush("FocusStrokeBrush", dark ? "#24FFFFFF" : "#1F0B1220");
-        SetBrush("FocusHoverBrush", dark ? "#24FFFFFF" : "#160B1220");
-        SetBrush("FocusAccentBrush", "#FF7C8CFF");
-        SetBrush("FocusAccentBrightBrush", dark ? "#FFA9B4FF" : "#FF5868E8");
+        SetBrush("FocusStrokeBrush", dark ? "#1CFFFFFF" : "#180B1220");
+        SetBrush("FocusHoverBrush", dark ? "#18FFFFFF" : "#120B1220");
+        SetBrush("FocusAccentBrush", accent);
+        SetBrush("FocusAccentBrightBrush", accentBright);
         SetBrush("FocusDangerBrush", dark ? "#FFFF6B7A" : "#FFD92D4B");
-        SetBrush("PrimaryHueMidBrush", "#FF7C8CFF");
-        SetBrush("PrimaryHueLightBrush", dark ? "#FFA9B4FF" : "#FF5868E8");
+        SetBrush("PrimaryHueMidBrush", accent);
+        SetBrush("PrimaryHueLightBrush", accentBright);
         SetBrush("MaterialDesignBody", dark ? "#FFF5F7FF" : "#FF1D2433");
         SetBrush("MaterialDesignBodyLight", dark ? "#FFAEB5C8" : "#FF667085");
         SetBrush("MaterialDesignPaper", dark ? "#F0222630" : "#F2FFFFFF");
@@ -103,6 +125,14 @@ public static class ThemeService
     private static void SetBrush(string key, string colorText)
     {
         Color color = (Color)ColorConverter.ConvertFromString(colorText);
+        if (Application.Current.Resources[key] is SolidColorBrush brush && !brush.IsFrozen)
+            brush.Color = color;
+        else
+            Application.Current.Resources[key] = new SolidColorBrush(color);
+    }
+
+    private static void SetBrush(string key, Color color)
+    {
         if (Application.Current.Resources[key] is SolidColorBrush brush && !brush.IsFrozen)
             brush.Color = color;
         else

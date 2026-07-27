@@ -200,6 +200,42 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Grid.ColumnSpan=\"2\"", onboarding);
     }
 
+    [Fact]
+    public void Shell_UsesVerifiedNativeAcrylicWithoutOpaqueRootCover()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string theme = File.ReadAllText(
+            Path.Combine(root, "Themes", "FocusTheme.xaml"));
+
+        Assert.Contains(
+            "Background=\"{DynamicResource FocusShellTintBrush}\"",
+            mainWindow);
+        Assert.Contains("DwmsbtTransientWindow", codeBehind);
+        Assert.Contains("backdropResult == 0", codeBehind);
+        Assert.Contains(
+            "ThemeService.SetNativeBackdropActive(backdropActive)",
+            codeBehind);
+        Assert.Contains("FocusShellTintBrush", theme);
+    }
+
+    [Fact]
+    public void Organizer_UsesOneSurfaceHierarchyAndExposesAutoOrganize()
+    {
+        string root = FindRepositoryRoot();
+        string organizer = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml"));
+
+        Assert.Contains("<Grid Background=\"Transparent\">", organizer);
+        Assert.Contains("IsAutoOrganizeEnabled", organizer);
+        Assert.DoesNotContain("DropShadowEffect", organizer);
+        Assert.DoesNotContain("OrganizerCardShadow", organizer);
+        Assert.DoesNotContain("ToggleDesktopCommand", organizer);
+    }
+
     private static HashSet<string> ReadDefinedKeys(params string[] paths)
     {
         var keys = new HashSet<string>(StringComparer.Ordinal);

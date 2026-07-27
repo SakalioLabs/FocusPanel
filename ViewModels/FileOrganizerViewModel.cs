@@ -59,6 +59,9 @@ public partial class FileOrganizerViewModel : ObservableObject
     private bool isListView = false;
 
     [ObservableProperty]
+    private bool isAutoOrganizeEnabled;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CardWidth))]
     [NotifyPropertyChangedFor(nameof(CardHeight))]
     [NotifyPropertyChangedFor(nameof(IconImageSize))]
@@ -94,6 +97,33 @@ public partial class FileOrganizerViewModel : ObservableObject
         _settingsService.CurrentSettings.IsPersonalizedView = value;
         _settingsService.SaveSettings();
         SaveLayoutSettings();
+    }
+
+    partial void OnIsAutoOrganizeEnabledChanged(bool value)
+    {
+        try
+        {
+            using var context = new AppDbContext();
+            var config = context.AppConfigs.Find("FileOrganizer_AutoOrganize");
+            if (config == null)
+            {
+                context.AppConfigs.Add(new AppConfig
+                {
+                    Key = "FileOrganizer_AutoOrganize",
+                    Value = value.ToString()
+                });
+            }
+            else
+            {
+                config.Value = value.ToString();
+            }
+            context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"Save auto organize setting failed: {ex.Message}");
+        }
     }
     
     private void SaveLayoutSettings()
@@ -180,6 +210,11 @@ public partial class FileOrganizerViewModel : ObservableObject
                 {
                     IsPersonalizedView = _settingsService.CurrentSettings.IsPersonalizedView;
                 }
+
+                var autoConfig = context.AppConfigs.Find("FileOrganizer_AutoOrganize");
+                IsAutoOrganizeEnabled = autoConfig != null
+                    && bool.TryParse(autoConfig.Value, out bool autoOrganize)
+                    && autoOrganize;
             }
         }
         catch 
@@ -399,20 +434,55 @@ public partial class FileOrganizerViewModel : ObservableObject
     {
         if (_fileService.Files.Count == 0)
         {
-            System.Windows.MessageBox.Show("No unorganized files on desktop.", "Organize All", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(
+                "桌面上没有需要整理的可见项目。",
+                "自动整理",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
             return;
         }
 
         var result = System.Windows.MessageBox.Show(
-            $"This will organize all {_fileService.Files.Count} visible desktop files into partitions by type (Images, Documents, etc.)\n\nContinue?",
-            "Organize All Files",
+            $"将 {_fileService.Files.Count} 个可见桌面项目按类型收纳到面板。\n\n"
+            + "文件不会移动或改名，只会写入分类并从原生桌面隐藏。是否继续？",
+            "自动整理桌面",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Question);
 
         if (result == System.Windows.MessageBoxResult.Yes)
         {
-            await _fileService.OrganizeAllFiles();
+            DesktopOrganizeResult organizeResult =
+                await _fileService.OrganizeAllFiles();
+            int collected = organizeResult.Collected;
+
+            if (organizeResult.AuthorizationRequired > 0)
+            {
+                var authorize = System.Windows.MessageBox.Show(
+                    $"另有 {organizeResult.AuthorizationRequired} 个公共桌面项目需要管理员授权。"
+                    + "\n\n是否继续收纳这些项目？",
+                    "公共桌面授权",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Warning);
+                if (authorize == System.Windows.MessageBoxResult.Yes)
+                {
+                    DesktopOrganizeResult elevatedResult =
+                        await _fileService.OrganizeAllFiles(true);
+                    collected += elevatedResult.Collected;
+                }
+            }
+
+            await _fileService.RefreshFiles();
             BuildPartitions();
+            int remaining = _fileService.Files.Count;
+            System.Windows.MessageBox.Show(
+                remaining == 0
+                    ? $"已收纳 {collected} 个桌面项目。"
+                    : $"已收纳 {collected} 个桌面项目；仍有 {remaining} 个项目因权限或文件状态未能收纳。",
+                "自动整理完成",
+                System.Windows.MessageBoxButton.OK,
+                remaining == 0
+                    ? System.Windows.MessageBoxImage.Information
+                    : System.Windows.MessageBoxImage.Warning);
         }
     }
 

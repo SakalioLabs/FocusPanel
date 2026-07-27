@@ -16,8 +16,7 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:BindingProxy x:Key="VmProxy" Data="{Binding}"/>
 
-        <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#22007AFF"/>
-        <DropShadowEffect x:Key="OrganizerCardShadow" Color="#16000000" BlurRadius="8" ShadowDepth="1" Opacity="0.24"/>
+        <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#26006FC4"/>
 
         <Style x:Key="OrganizerIconStyle" TargetType="materialDesign:PackIcon">
             <Setter Property="Width" Value="20"/>
@@ -28,8 +27,8 @@
         </Style>
 
         <Style x:Key="ToolbarButtonStyle" TargetType="ButtonBase" BasedOn="{StaticResource MaterialDesignIconButton}">
-            <Setter Property="Width" Value="36"/>
-            <Setter Property="Height" Value="36"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Margin" Value="2,0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -40,18 +39,16 @@
             <Setter Property="Background" Value="{DynamicResource FocusSurfaceStrongBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="CornerRadius" Value="{StaticResource FocusCardCornerRadius}"/>
             <Setter Property="Padding" Value="14"/>
-            <Setter Property="Effect" Value="{StaticResource OrganizerCardShadow}"/>
         </Style>
 
         <Style x:Key="PartitionCardStyle" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource FocusSurfaceStrongBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Margin" Value="0,0,0,14"/>
-            <Setter Property="Effect" Value="{StaticResource OrganizerCardShadow}"/>
+            <Setter Property="CornerRadius" Value="{StaticResource FocusCardCornerRadius}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
             <Setter Property="VerticalAlignment" Value="Top"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
         </Style>
@@ -63,7 +60,7 @@
             <Setter Property="Height" Value="{Binding DataContext.CardHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="Margin" Value="5"/>
             <Setter Property="Padding" Value="6"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{StaticResource FocusControlCornerRadius}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -85,7 +82,7 @@
             <Setter Property="Height" Value="34"/>
             <Setter Property="Margin" Value="6,2"/>
             <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="CornerRadius" Value="{StaticResource FocusControlCornerRadius}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -229,8 +226,8 @@
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0"
-                            Background="{DynamicResource FocusSurfaceSoftBrush}"
-                            CornerRadius="16,16,0,0"
+                            Background="Transparent"
+                            CornerRadius="0"
                             BorderBrush="{DynamicResource FocusStrokeBrush}"
                             BorderThickness="0,0,0,1"
                             AllowDrop="True"
@@ -274,14 +271,14 @@
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource FocusTextBrush}"
                                            VerticalAlignment="Center"/>
-                                <Border Background="#14007AFF"
+                                <Border Background="{DynamicResource FocusHoverBrush}"
                                         CornerRadius="{StaticResource FocusControlCornerRadius}"
                                         Padding="7,1"
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Files.Count}"
                                                FontSize="11"
-                                               Foreground="#FF007AFF"/>
+                                               Foreground="{DynamicResource FocusAccentBrush}"/>
                                 </Border>
                             </StackPanel>
 
@@ -364,14 +361,14 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Background="{DynamicResource FocusSurfaceBrush}">
+    <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="{DynamicResource FocusSurfaceStrongBrush}"
+                Background="Transparent"
                 BorderBrush="{DynamicResource FocusStrokeBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="12,8">
@@ -382,9 +379,10 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="FolderStarOutline"
-                                             Style="{StaticResource OrganizerIconStyle}"
-                                             Foreground="#FF007AFF"/>
+                    <TextBlock Style="{StaticResource FocusIconText}"
+                               Text="&#xE8B7;"
+                               FontSize="18"
+                               Foreground="{DynamicResource FocusAccentBrush}"/>
                     <TextBlock Text="&#x6536;&#x7EB3;&#x76D2;"
                                FontSize="14"
                                FontWeight="SemiBold"
@@ -398,7 +396,7 @@
                         <ToggleButton x:Name="ViewToggle"
                                       Style="{StaticResource ToolbarButtonStyle}"
                                       ToolTip="&#x89C6;&#x56FE;&#x9009;&#x9879;">
-                            <materialDesign:PackIcon Kind="ViewModule" Style="{StaticResource OrganizerIconStyle}"/>
+                            <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE80A;" FontSize="18"/>
                         </ToggleButton>
                         <Popup IsOpen="{Binding IsChecked, ElementName=ViewToggle, Mode=TwoWay}"
                                PlacementTarget="{Binding ElementName=ViewToggle}"
@@ -450,6 +448,13 @@
                                                  Command="{Binding ToggleViewCommand}"
                                                  Content="&#x65F6;&#x95F4;&#x7EBF;"
                                                  Margin="0,3"/>
+                                    <Border Height="1"
+                                            Margin="0,12,0,10"
+                                            Background="{DynamicResource FocusStrokeBrush}"/>
+                                    <CheckBox IsChecked="{Binding IsAutoOrganizeEnabled}"
+                                              Content="新增桌面项目自动按类型收纳"
+                                              ToolTip="监听到新增项目后自动分类；不会移动或改名"
+                                              Padding="2,5"/>
                                 </StackPanel>
                             </Border>
                         </Popup>
@@ -459,7 +464,7 @@
                         <ToggleButton x:Name="AddPartitionToggle"
                                       Style="{StaticResource ToolbarButtonStyle}"
                                       ToolTip="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;">
-                            <materialDesign:PackIcon Kind="PlusBoxOutline" Style="{StaticResource OrganizerIconStyle}"/>
+                            <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE710;" FontSize="18"/>
                         </ToggleButton>
                         <Popup IsOpen="{Binding IsChecked, ElementName=AddPartitionToggle, Mode=TwoWay}"
                                PlacementTarget="{Binding ElementName=AddPartitionToggle}"
@@ -485,20 +490,17 @@
                     </Grid>
 
                     <Button Command="{Binding OrganizeAllCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="&#x81EA;&#x52A8;&#x6574;&#x7406;">
-                        <materialDesign:PackIcon Kind="AutoFix" Style="{StaticResource OrganizerIconStyle}"/>
+                        <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE9D2;" FontSize="18"/>
                     </Button>
                     <Button Command="{Binding RefreshCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="&#x5237;&#x65B0;">
-                        <materialDesign:PackIcon Kind="Refresh" Style="{StaticResource OrganizerIconStyle}"/>
-                    </Button>
-                    <Button Command="{Binding ToggleDesktopCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="{Binding OrganizeButtonText}">
-                        <materialDesign:PackIcon Kind="{Binding OrganizeButtonIcon}" Style="{StaticResource OrganizerIconStyle}"/>
+                        <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE72C;" FontSize="18"/>
                     </Button>
 
                     <Grid>
                         <ToggleButton x:Name="RescueToggle"
                                       Style="{StaticResource ToolbarButtonStyle}"
                                       ToolTip="&#x4FEE;&#x590D;&#x5DE5;&#x5177;">
-                            <materialDesign:PackIcon Kind="ToolboxOutline" Style="{StaticResource OrganizerIconStyle}"/>
+                            <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE90F;" FontSize="18"/>
                         </ToggleButton>
                         <Popup IsOpen="{Binding IsChecked, ElementName=RescueToggle, Mode=TwoWay}"
                                PlacementTarget="{Binding ElementName=RescueToggle}"

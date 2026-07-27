@@ -60,7 +60,7 @@
         <Border x:Name="ShellBorder"
                 Margin="0"
                 CornerRadius="0"
-                Background="{DynamicResource FocusSurfaceBrush}"
+                Background="{DynamicResource FocusShellTintBrush}"
                 BorderThickness="0"
                 MouseEnter="Shell_MouseEnter"
                 MouseLeave="Shell_MouseLeave"

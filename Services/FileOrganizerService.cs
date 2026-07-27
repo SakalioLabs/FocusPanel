@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using FocusPanel.Helpers;
@@ -42,6 +43,7 @@ public class FileOrganizerService
     public event Action FilesChanged;
 
     private System.Threading.Timer _debounceTimer;
+    private readonly SemaphoreSlim _organizeGate = new(1, 1);
     private const int DebounceInterval = 500;
 
     public FileOrganizerService()
@@ -182,8 +184,13 @@ public class FileOrganizerService
             var config = context.AppConfigs.Find("FileOrganizer_AutoOrganize");
             if (config != null && bool.TryParse(config.Value, out var enable) && enable && Files.Count > 0)
             {
-                await OrganizeAllFiles();
-                FilesChanged?.Invoke();
+                DesktopOrganizeResult result = await OrganizeAllFiles();
+                if (result.Failed > 0 || result.AuthorizationRequired > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"Auto organize incomplete: {result.Failed} failed, "
+                        + $"{result.AuthorizationRequired} require authorization.");
+                }
             }
         }
         catch { }
@@ -936,30 +943,49 @@ public class FileOrganizerService
     // ============================================================
     // One-click organize
     // ============================================================
-    private static readonly Dictionary<string, string> TypeToPartitionMap = new()
+    public async Task<DesktopOrganizeResult> OrganizeAllFiles(
+        bool allowCommonDesktopElevation = false)
     {
-        { "Image", "图片" },
-        { "Document", "文档" },
-        { "Video", "视频" },
-        { "Audio", "音频" },
-        { "Archive", "压缩包" },
-        { "Application", "应用程序" },
-        { "Folder", "文件夹" },
-        { "File", "其他" },
-    };
-
-    public async Task OrganizeAllFiles()
-    {
-        var visibleFiles = Files.ToList();
-        if (visibleFiles.Count == 0) return;
-
-        foreach (var group in visibleFiles.GroupBy(f => f.FileType))
+        await _organizeGate.WaitAsync();
+        try
         {
-            string partitionName = TypeToPartitionMap.TryGetValue(group.Key, out var name) ? name : "其他";
-            foreach (var file in group)
-                await HideFileFromDesktop(file.Name, partitionName);
-        }
+            var visibleFiles = Files
+                .Where(file => !file.IsHidden && !file.NeedsRecovery)
+                .ToList();
+            var items = visibleFiles
+                .Select(file => new DesktopAutoOrganizeItem(
+                    file.Name,
+                    file.FullPath,
+                    file.FileType))
+                .ToList();
 
-        RefreshFilesDebounced();
+            DesktopOrganizeResult result =
+                await DesktopAutoOrganizePolicy.ExecuteAsync(
+                    items,
+                    allowCommonDesktopElevation,
+                    async (item, partition, allowElevation) =>
+                    {
+                        try
+                        {
+                            await HideFileFromDesktopPath(
+                                item.FullPath,
+                                partition,
+                                allowElevation);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine(
+                                $"Auto organize {item.Name} failed: {ex.Message}");
+                            throw;
+                        }
+                    });
+
+            await RefreshFiles();
+            return result;
+        }
+        finally
+        {
+            _organizeGate.Release();
+        }
     }
 }
