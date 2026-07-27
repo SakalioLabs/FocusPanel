@@ -327,6 +327,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void CloseTask(WindowTaskItem? task)
+    {
+        if (task == null)
+            return;
+
+        foreach (WindowReference window in task.Windows)
+            _windowTracker.Close(window.Handle);
+    }
+
+    [RelayCommand]
     private void ToggleSearch()
     {
         IsSearchOpen = !IsSearchOpen;
@@ -391,6 +401,36 @@ public partial class MainViewModel : ObservableObject, IDisposable
         => SetSystemActionResult(
             _systemStatus.OpenInputSwitcher(),
             "无法唤起输入法切换器，请使用 Win+Space。");
+
+    [RelayCommand]
+    private void OpenStartMenu()
+        => SetSystemActionResult(
+            _systemStatus.OpenStartMenu(),
+            "无法唤起开始菜单，请按 Windows 键。");
+
+    [RelayCommand]
+    private void OpenTaskView()
+        => SetSystemActionResult(
+            _systemStatus.OpenTaskView(),
+            "无法唤起任务视图，请使用 Win+Tab。");
+
+    [RelayCommand]
+    private void OpenWindowsSearch()
+        => SetSystemActionResult(
+            _systemStatus.OpenWindowsSearch(),
+            "无法唤起 Windows 搜索，请使用 Win+S。");
+
+    [RelayCommand]
+    private void OpenWidgets()
+        => SetSystemActionResult(
+            _systemStatus.OpenWidgets(),
+            "无法唤起 Windows 小组件，请使用 Win+W。");
+
+    [RelayCommand]
+    private void OpenRunDialog()
+        => SetSystemActionResult(
+            _systemStatus.OpenRunDialog(),
+            "无法唤起运行对话框，请使用 Win+R。");
 
     [RelayCommand]
     private void OpenPowerSettings() => _systemStatus.OpenPowerSettings();

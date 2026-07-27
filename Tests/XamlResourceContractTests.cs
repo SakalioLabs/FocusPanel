@@ -201,6 +201,31 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void CompactDock_ExposesNativeWindowsAndMultiWindowActions()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.Contains("OpenStartMenuCommand", mainWindow);
+        Assert.Contains("OpenWindowsSearchCommand", mainWindow);
+        Assert.Contains("OpenTaskViewCommand", mainWindow);
+        Assert.Contains("OpenWidgetsCommand", mainWindow);
+        Assert.Contains("OpenRunDialogCommand", mainWindow);
+        Assert.Contains("RunningApp_Click", mainWindow);
+        Assert.Contains("PopulateRunningAppContextMenu", codeBehind);
+        Assert.Contains("CloseWindowCommand", codeBehind);
+        Assert.Contains("CloseTaskCommand", codeBehind);
+        Assert.Contains("VolumeButton_PreviewMouseWheel", mainWindow);
+        Assert.Contains("VolumeButton_MouseRightButtonUp", mainWindow);
+        Assert.Contains("foreach (WindowReference window in task.Windows)", viewModel);
+    }
+
+    [Fact]
     public void Shell_UsesVerifiedNativeAcrylicWithoutOpaqueRootCover()
     {
         string root = FindRepositoryRoot();

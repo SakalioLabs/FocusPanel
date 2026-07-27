@@ -11,8 +11,9 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 离开约 `300ms` 自动收起；搜索框或编辑控件持有焦点时保持展开，`Esc` 可关闭。
 - 独占或无边框全屏应用前台时默认停用鼠标热区。
 - 全局主动唤出：`Ctrl+Alt+Space`。
-- 固定应用与运行应用集中显示；运行应用支持激活、最小化、多窗口列表和正常关闭。
-- 日期入口打开月历与今日任务，系统区提供音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
+- 固定应用与运行应用集中显示；单窗口应用支持激活/最小化，多窗口应用左键展开窗口列表，并可逐个切换、正常关闭或关闭全部窗口。
+- 日期入口打开月历与今日任务，系统区提供音量、静音、网络、电池、通知、输入法、显示桌面和电源操作；音量图标支持滚轮调节和右键静音。
+- Windows 系统功能菜单直接唤起开始菜单、Windows 搜索、任务视图、小组件和运行对话框，不跳转到普通设置页。
 
 ## 侧边任务栏兼容模式与安全恢复
 
@@ -99,7 +100,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.20 `
+  -Version 0.9.21 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -108,7 +109,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.20-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.21-full.nupkg`：完整更新包。
 - `releases.win.json`、`assets.win.json` 和 `RELEASES`：更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -121,7 +122,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.20 `
+  -Version 0.9.21 `
   -Dotnet8Path dotnet
 ```
 

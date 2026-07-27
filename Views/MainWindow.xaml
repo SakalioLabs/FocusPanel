@@ -610,8 +610,8 @@
                                             <Grid>
                                                 <Button Style="{StaticResource FocusIconButton}"
                                                         Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        Command="{Binding DataContext.ActivateTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}">
+                                                        Click="RunningApp_Click"
+                                                        ContextMenuOpening="RunningApp_ContextMenuOpening">
                                                     <Button.ToolTip>
                                                         <StackPanel>
                                                             <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
@@ -619,16 +619,7 @@
                                                         </StackPanel>
                                                     </Button.ToolTip>
                                                     <Button.ContextMenu>
-                                                        <ContextMenu ItemsSource="{Binding Windows}">
-                                                            <ContextMenu.ItemContainerStyle>
-                                                                <Style TargetType="MenuItem">
-                                                                    <Setter Property="Header" Value="{Binding Title}"/>
-                                                                    <Setter Property="Command"
-                                                                            Value="{Binding PlacementTarget.Tag.ActivateWindowCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                                                    <Setter Property="CommandParameter" Value="{Binding}"/>
-                                                                </Style>
-                                                            </ContextMenu.ItemContainerStyle>
-                                                        </ContextMenu>
+                                                        <ContextMenu/>
                                                     </Button.ContextMenu>
                                                     <Image Source="{Binding Icon}" Width="30" Height="30"/>
                                                 </Button>
@@ -681,6 +672,26 @@
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
                             <Button Style="{StaticResource FocusIconButton}"
+                                    Click="OpenButtonContextMenu"
+                                    ToolTip="Windows 系统功能">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="开始菜单"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenStartMenuCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="Windows 搜索"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenWindowsSearchCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="任务视图"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenTaskViewCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="小组件"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenWidgetsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <Separator/>
+                                        <MenuItem Header="运行…"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenRunDialogCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE7C5;"/>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
                                     Command="{Binding OpenNotificationOverflowCommand}"
                                     ToolTip="显示隐藏的托盘图标">
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE70D;"/>
@@ -719,6 +730,8 @@
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
                                     Click="QuickControlsButton_Click"
+                                    PreviewMouseWheel="VolumeButton_PreviewMouseWheel"
+                                    MouseRightButtonUp="VolumeButton_MouseRightButtonUp"
                                     ToolTip="音量与静音">
                                 <TextBlock>
                                     <TextBlock.Style>

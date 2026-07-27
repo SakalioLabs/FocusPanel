@@ -426,6 +426,92 @@ public partial class MainWindow : Window
     private void ButtonContextMenu_Closed(object sender, RoutedEventArgs e)
         => ScheduleAutoHide();
 
+    private void RunningApp_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: WindowTaskItem task } button)
+            return;
+
+        if (task.WindowCount <= 1)
+        {
+            _viewModel.ActivateTaskCommand.Execute(task);
+            return;
+        }
+
+        PopulateRunningAppContextMenu(button, task);
+        OpenContextMenu(button);
+    }
+
+    private void RunningApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (sender is Button { DataContext: WindowTaskItem task } button)
+            PopulateRunningAppContextMenu(button, task);
+    }
+
+    private void PopulateRunningAppContextMenu(Button button, WindowTaskItem task)
+    {
+        ContextMenu menu = button.ContextMenu ?? new ContextMenu();
+        menu.Items.Clear();
+
+        foreach (WindowReference window in task.Windows)
+        {
+            var windowMenu = new MenuItem
+            {
+                Header = string.IsNullOrWhiteSpace(window.Title) ? task.DisplayName : window.Title
+            };
+            windowMenu.Items.Add(new MenuItem
+            {
+                Header = "切换到此窗口",
+                Command = _viewModel.ActivateWindowCommand,
+                CommandParameter = window
+            });
+            windowMenu.Items.Add(new MenuItem
+            {
+                Header = "关闭窗口",
+                Command = _viewModel.CloseWindowCommand,
+                CommandParameter = window
+            });
+            menu.Items.Add(windowMenu);
+        }
+
+        if (task.Windows.Count > 0)
+            menu.Items.Add(new Separator());
+        menu.Items.Add(new MenuItem
+        {
+            Header = task.WindowCount > 1 ? "关闭所有窗口" : "关闭窗口",
+            Command = _viewModel.CloseTaskCommand,
+            CommandParameter = task
+        });
+
+        button.ContextMenu = menu;
+    }
+
+    private void OpenContextMenu(Button button)
+    {
+        if (button.ContextMenu == null)
+            return;
+
+        _autoHideTimer.Stop();
+        button.ContextMenu.Closed -= ButtonContextMenu_Closed;
+        button.ContextMenu.Closed += ButtonContextMenu_Closed;
+        button.ContextMenu.PlacementTarget = button;
+        button.ContextMenu.IsOpen = true;
+    }
+
+    private void VolumeButton_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        float step = e.Delta > 0 ? 0.05f : -0.05f;
+        _viewModel.MasterVolume = Math.Clamp(_viewModel.MasterVolume + step, 0f, 1f);
+        if (_viewModel.MasterVolume > 0 && _viewModel.IsMuted)
+            _viewModel.IsMuted = false;
+        e.Handled = true;
+    }
+
+    private void VolumeButton_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        _viewModel.ToggleMuteCommand.Execute(null);
+        e.Handled = true;
+    }
+
     private void WorkspaceMenuItem_Click(object sender, RoutedEventArgs e)
     {
         if (sender is MenuItem { Tag: string destination })

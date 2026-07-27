@@ -18,6 +18,11 @@ public interface ISystemStatusService : IDisposable
     bool OpenNotificationOverflow();
     bool OpenNotifications();
     bool OpenInputSwitcher();
+    bool OpenStartMenu();
+    bool OpenTaskView();
+    bool OpenWindowsSearch();
+    bool OpenWidgets();
+    bool OpenRunDialog();
     void OpenPowerSettings();
     void ShowDesktop();
     void Lock();

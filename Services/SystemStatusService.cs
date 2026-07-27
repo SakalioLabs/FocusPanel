@@ -217,7 +217,7 @@ public sealed class SystemStatusService : ISystemStatusService
     public bool IsCharging => HasBattery
         && (SystemInformation.PowerStatus.BatteryChargeStatus & BatteryChargeStatus.Charging) != 0;
 
-    public bool OpenQuickSettings() => TrySendWindowsShortcut(0x41);
+    public bool OpenQuickSettings() => TrySendWindowsShortcut(WindowsShellAction.QuickSettings);
 
     public bool OpenNotificationOverflow()
     {
@@ -267,15 +267,25 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    public bool OpenNotifications() => TrySendWindowsShortcut(0x4E);
+    public bool OpenNotifications() => TrySendWindowsShortcut(WindowsShellAction.Notifications);
 
-    public bool OpenInputSwitcher() => TrySendWindowsShortcut(0x20);
+    public bool OpenInputSwitcher() => TrySendWindowsShortcut(WindowsShellAction.InputSwitcher);
+
+    public bool OpenStartMenu() => TrySendWindowsShortcut(WindowsShellAction.StartMenu);
+
+    public bool OpenTaskView() => TrySendWindowsShortcut(WindowsShellAction.TaskView);
+
+    public bool OpenWindowsSearch() => TrySendWindowsShortcut(WindowsShellAction.Search);
+
+    public bool OpenWidgets() => TrySendWindowsShortcut(WindowsShellAction.Widgets);
+
+    public bool OpenRunDialog() => TrySendWindowsShortcut(WindowsShellAction.RunDialog);
 
     public void OpenPowerSettings() => OpenSystemUri("ms-settings:powersleep");
 
     public void ShowDesktop()
     {
-        if (!TrySendWindowsShortcut(0x44))
+        if (!TrySendWindowsShortcut(WindowsShellAction.ShowDesktop))
             NativeMethods.ShowDesktopFallback();
     }
     public void Lock() => NativeMethods.LockWorkStation();
@@ -360,14 +370,31 @@ public sealed class SystemStatusService : ISystemStatusService
         });
     }
 
-    private static bool TrySendWindowsShortcut(ushort key)
+    private static bool TrySendWindowsShortcut(WindowsShellAction action)
     {
+        WindowsShellShortcut shortcut = WindowsShellShortcutMap.Get(action);
+        if (!shortcut.UsesWindowsKey)
+            return TrySendKey(shortcut.Key);
+
         var inputs = new[]
         {
             KeyboardInput.KeyDown(0x5B),
-            KeyboardInput.KeyDown(key),
-            KeyboardInput.KeyUp(key),
+            KeyboardInput.KeyDown(shortcut.Key),
+            KeyboardInput.KeyUp(shortcut.Key),
             KeyboardInput.KeyUp(0x5B)
+        };
+        return NativeMethods.SendInput(
+            (uint)inputs.Length,
+            inputs,
+            Marshal.SizeOf<Input>()) == (uint)inputs.Length;
+    }
+
+    private static bool TrySendKey(ushort key)
+    {
+        var inputs = new[]
+        {
+            KeyboardInput.KeyDown(key),
+            KeyboardInput.KeyUp(key)
         };
         return NativeMethods.SendInput(
             (uint)inputs.Length,
