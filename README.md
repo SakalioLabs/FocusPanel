@@ -2,7 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![Windows 11 侧边任务栏](artifacts/shell-redesign-onboarding.png)
+![FocusPanel 0.9.24 总览](docs/images/readme-overview.svg)
+
+> 上图及下方模块图为 0.9.24 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -19,6 +21,16 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 开始按钮左键打开 Windows 开始菜单，右键提供 Win+X 风格系统管理菜单，包括安装的应用、电源选项、事件查看器、系统、设备管理器、网络连接、磁盘管理、计算机管理、终端、管理员终端、任务管理器、设置和文件资源管理器。
 - 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
 
+![六入口紧凑任务栏](docs/images/six-entry-taskbar.svg)
+
+### 两个中心
+
+Focus 中心只放 FocusPanel 的业务模块；状态中心只放设备状态、Windows 公开入口与任务栏恢复信息。两个中心与搜索、日历、设置、电源弹层互斥，按 `Esc` 可关闭。
+
+![Focus 中心](docs/images/focus-center.svg)
+
+![状态中心](docs/images/status-center.svg)
+
 ## 侧边任务栏完整替代与安全恢复
 
 完整替代模式先使用微软公开的 `ABM_SETSTATE + ABS_AUTOHIDE` 让 Explorer 释放工作区，再一次性隐藏主屏 `Shell_TrayWnd`。守护器只读取并验证状态，不会周期性执行 `ShowWindow` 或 `SPI_SETWORKAREA`，因此不会与 Explorer 在“占用/释放工作区”之间来回争抢。Windows 若主动恢复任务栏或 Explorer 宿主失效，FocusPanel 会退出替代模式并恢复原设置，而不是反复隐藏造成闪烁。状态中心和设置页会显示停止原因；确认环境正常后，由用户点击“重新接管任务栏”手动启用。
@@ -33,6 +45,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。完整替代后，Win+A、Win+N、Win+Space 等公开系统快捷入口继续可用；Explorer 的第三方托盘溢出内容属于私有壳层，FocusPanel 不读取其进程内存，也不能保证在原任务栏隐藏时完整复制。
 
+![任务栏安全状态机](docs/images/taskbar-safety-flow.svg)
+
 ## 桌面收纳与效率模块
 
 - 新收纳文件始终保留在原桌面路径，不改名、不移动；FocusPanel 保存原始文件属性并追加 `Hidden + System`，取消收纳时精确恢复原属性。
@@ -45,6 +59,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 保留任务的项目/子任务、列表/看板和自定义字段语义。
 - 保留番茄钟会话、飞书 OKR 双向同步、AI 入口、数据库备份与恢复。
 - 新增固定应用持久化；`PinnedApps` 表由现有 `EnsureSchema()` 机制创建，不改动原业务表内容。
+
+![桌面收纳流程](docs/images/desktop-organizer-flow.svg)
 
 ## 兼容性与视觉
 
@@ -118,6 +134,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
 安装版和 Velopack 便携版会在“设置与恢复 → 软件更新”中显示当前版本。点击“一键检查并安装更新”后，FocusPanel 会从项目的 GitHub Releases 检查版本，显示更新说明，下载更新包，备份数据库，恢复原任务栏设置，然后重启安装。
+
+![一键更新流程](docs/images/one-click-update.svg)
 
 源码直接运行的开发版不会原地覆盖自身，设置页会提示先安装 `Setup.exe`。
 

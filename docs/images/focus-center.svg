@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#111827"/><stop offset="1" stop-color="#1e293b"/></linearGradient></defs>
+  <rect width="1200" height="520" rx="28" fill="url(#g)"/>
+  <text x="60" y="72" fill="#f8fafc" font-size="32" font-family="Segoe UI, Microsoft YaHei" font-weight="700">Focus 中心</text>
+  <text x="60" y="108" fill="#94a3b8" font-size="17" font-family="Segoe UI, Microsoft YaHei">业务能力不再挤进 76px 栏，集中在一个互斥、可滚动的单表面弹层。</text>
+  <rect x="60" y="145" width="1080" height="310" rx="26" fill="#ffffff" fill-opacity=".07" stroke="#94a3b8" stroke-opacity=".24"/>
+  <rect x="92" y="178" width="1016" height="54" rx="14" fill="#4f46e5" fill-opacity=".32"/><text x="120" y="212" fill="#e0e7ff" font-size="18" font-family="Segoe UI, Microsoft YaHei">最近使用 · 桌面收纳</text>
+  <g font-family="Segoe UI, Microsoft YaHei" font-size="18" fill="#f8fafc">
+    <rect x="92" y="252" width="310" height="72" rx="16" fill="#ffffff" fill-opacity=".09"/><text x="122" y="296">▤  桌面收纳</text>
+    <rect x="445" y="252" width="310" height="72" rx="16" fill="#ffffff" fill-opacity=".09"/><text x="475" y="296">✓  任务</text>
+    <rect x="798" y="252" width="310" height="72" rx="16" fill="#ffffff" fill-opacity=".09"/><text x="828" y="296">◷  番茄钟</text>
+    <rect x="92" y="344" width="310" height="72" rx="16" fill="#ffffff" fill-opacity=".09"/><text x="122" y="388">◎  OKR</text>
+    <rect x="445" y="344" width="310" height="72" rx="16" fill="#ffffff" fill-opacity=".09"/><text x="475" y="388">✦  AI 助手</text>
+    <rect x="798" y="344" width="310" height="72" rx="16" fill="#ffffff" fill-opacity=".09"/><text x="828" y="388">⚙  设置与更新</text>
+  </g>
+  <text x="600" y="490" text-anchor="middle" fill="#64748b" font-size="14" font-family="Segoe UI, Microsoft YaHei">点击模块后关闭中心并展开对应工作区 · Esc 关闭</text>
+</svg>

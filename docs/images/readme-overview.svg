@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1220"/><stop offset="1" stop-color="#18243a"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#dbeafe" stop-opacity=".22"/><stop offset="1" stop-color="#93c5fd" stop-opacity=".08"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="20" flood-opacity=".32"/></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1050" cy="90" r="260" fill="#2563eb" opacity=".18"/><circle cx="180" cy="580" r="280" fill="#14b8a6" opacity=".10"/>
+  <text x="72" y="92" fill="#f8fafc" font-size="46" font-family="Segoe UI, Microsoft YaHei" font-weight="700">FocusPanel 0.9.24</text>
+  <text x="72" y="136" fill="#a5b4fc" font-size="22" font-family="Segoe UI, Microsoft YaHei">Windows 11 右侧任务栏与桌面效率中心</text>
+  <rect x="72" y="190" width="690" height="360" rx="28" fill="url(#glass)" stroke="#bfdbfe" stroke-opacity=".22" filter="url(#shadow)"/>
+  <text x="110" y="240" fill="#e2e8f0" font-size="18" font-family="Segoe UI, Microsoft YaHei">工作区</text>
+  <rect x="108" y="270" width="286" height="110" rx="18" fill="#ffffff" fill-opacity=".09"/><text x="132" y="315" fill="#f8fafc" font-size="22" font-family="Segoe UI, Microsoft YaHei">桌面收纳</text><text x="132" y="348" fill="#94a3b8" font-size="16" font-family="Segoe UI, Microsoft YaHei">文件留在原路径 · 属性可恢复</text>
+  <rect x="414" y="270" width="310" height="110" rx="18" fill="#ffffff" fill-opacity=".09"/><text x="438" y="315" fill="#f8fafc" font-size="22" font-family="Segoe UI, Microsoft YaHei">任务与专注</text><text x="438" y="348" fill="#94a3b8" font-size="16" font-family="Segoe UI, Microsoft YaHei">任务 · 番茄钟 · OKR · AI</text>
+  <rect x="108" y="402" width="616" height="112" rx="18" fill="#4f46e5" fill-opacity=".28" stroke="#818cf8" stroke-opacity=".42"/><text x="132" y="447" fill="#f8fafc" font-size="22" font-family="Segoe UI, Microsoft YaHei">统一应用任务栏</text><text x="132" y="481" fill="#c7d2fe" font-size="16" font-family="Segoe UI, Microsoft YaHei">固定与运行应用合并 · 多窗口切换 · 稳定排序</text>
+  <rect x="798" y="58" width="330" height="520" rx="34" fill="#e2e8f0" fill-opacity=".14" stroke="#f8fafc" stroke-opacity=".32" filter="url(#shadow)"/>
+  <text x="840" y="108" fill="#f8fafc" font-size="18" font-family="Segoe UI, Microsoft YaHei">76px 紧凑栏</text>
+  <g fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei" font-size="16">
+    <rect x="836" y="134" width="254" height="54" rx="14" fill="#ffffff" fill-opacity=".10"/><text x="862" y="168">⊞  开始</text>
+    <rect x="836" y="198" width="254" height="54" rx="14" fill="#ffffff" fill-opacity=".10"/><text x="862" y="232">⌕  搜索</text>
+    <rect x="836" y="262" width="254" height="92" rx="14" fill="#6366f1" fill-opacity=".25"/><text x="862" y="300">●  应用列表</text><text x="862" y="330" fill="#cbd5e1" font-size="14">固定 / 运行 / 活动状态</text>
+    <rect x="836" y="364" width="254" height="54" rx="14" fill="#ffffff" fill-opacity=".10"/><text x="862" y="398">▣  任务视图</text>
+    <rect x="836" y="428" width="254" height="54" rx="14" fill="#ffffff" fill-opacity=".10"/><text x="862" y="462">◎  Focus / 状态中心</text>
+    <rect x="836" y="492" width="254" height="54" rx="14" fill="#ffffff" fill-opacity=".10"/><text x="862" y="526">00:53  时间</text>
+  </g>
+  <text x="72" y="600" fill="#64748b" font-size="14" font-family="Segoe UI, Microsoft YaHei">界面结构示意 · 实际透明效果由 Windows DWM 和系统设置决定</text>
+</svg>

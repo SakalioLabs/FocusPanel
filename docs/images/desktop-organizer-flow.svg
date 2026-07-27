@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430">
+  <rect width="1200" height="430" rx="28" fill="#0f172a"/>
+  <text x="60" y="70" fill="#f8fafc" font-size="30" font-family="Segoe UI, Microsoft YaHei" font-weight="700">桌面收纳：文件不移动，属性可精确恢复</text>
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <rect x="60" y="130" width="255" height="180" rx="24" fill="#1e293b"/><text x="90" y="176" fill="#93c5fd" font-size="20">① 拖入收纳分区</text><text x="90" y="214" fill="#cbd5e1" font-size="15">仅接受桌面根目录项目</text><text x="90" y="244" fill="#64748b" font-size="14">文件 / 文件夹 / 快捷方式</text>
+    <text x="340" y="225" fill="#64748b" font-size="30">→</text>
+    <rect x="380" y="130" width="255" height="180" rx="24" fill="#312e81"/><text x="410" y="176" fill="#c7d2fe" font-size="20">② 保存原始属性</text><text x="410" y="214" fill="#e0e7ff" font-size="15">记录路径、文件标识与状态</text><text x="410" y="244" fill="#a5b4fc" font-size="14">追加 Hidden + System</text>
+    <text x="660" y="225" fill="#64748b" font-size="30">→</text>
+    <rect x="700" y="130" width="200" height="180" rx="24" fill="#134e4a"/><text x="730" y="176" fill="#99f6e4" font-size="20">③ 面板管理</text><text x="730" y="214" fill="#ccfbf1" font-size="15">实体仍在原路径</text><text x="730" y="244" fill="#5eead4" font-size="14">分区只改元数据</text>
+    <text x="925" y="225" fill="#64748b" font-size="30">→</text>
+    <rect x="965" y="130" width="175" height="180" rx="24" fill="#14532d"/><text x="992" y="176" fill="#bbf7d0" font-size="20">④ 取消收纳</text><text x="992" y="214" fill="#dcfce7" font-size="15">逐位恢复属性</text><text x="992" y="244" fill="#86efac" font-size="14">图标重新出现</text>
+  </g>
+  <text x="60" y="370" fill="#fbbf24" font-size="15" font-family="Segoe UI, Microsoft YaHei">若 Explorer 同时启用“显示受保护的系统文件”，Windows 无法保证图标不可见，设置页会明确提示。</text>
+</svg>
