@@ -20,6 +20,6 @@ public sealed class VelopackUpdateServiceTests
     {
         using var service = new VelopackUpdateService();
 
-        Assert.StartsWith("0.9.16", service.CurrentVersion);
+        Assert.StartsWith("0.9.17", service.CurrentVersion);
     }
 }

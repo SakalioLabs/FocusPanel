@@ -101,6 +101,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string networkDetail = "当前没有可用连接";
 
     [ObservableProperty]
+    private string inputLanguageDisplay = "—";
+
+    [ObservableProperty]
+    private string inputMethodDisplay = "—";
+
+    [ObservableProperty]
     private bool hasBattery;
 
     [ObservableProperty]
@@ -369,6 +375,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             "无法唤起 Windows 快捷设置，请使用 Win+A。");
 
     [RelayCommand]
+    private void OpenNotificationOverflow()
+        => SetSystemActionResult(
+            _systemStatus.OpenNotificationOverflow(),
+            "无法打开系统托盘浮层；请先恢复 Windows 任务栏后重试。");
+
+    [RelayCommand]
     private void OpenNotifications()
         => SetSystemActionResult(
             _systemStatus.OpenNotifications(),
@@ -589,6 +601,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsNetworkAvailable = _systemStatus.IsNetworkAvailable;
         NetworkDisplayName = _systemStatus.NetworkDisplayName;
         NetworkDetail = _systemStatus.NetworkDetail;
+        InputLanguageDisplay = _systemStatus.InputLanguageDisplay;
+        InputMethodDisplay = _systemStatus.InputMethodDisplay;
         HasBattery = _systemStatus.HasBattery;
         BatteryPercent = _systemStatus.BatteryPercent;
         IsCharging = _systemStatus.IsCharging;

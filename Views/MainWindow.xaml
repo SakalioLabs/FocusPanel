@@ -569,7 +569,6 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <Button x:Name="SearchButton"
@@ -654,38 +653,56 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+
+                                <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
+                                <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Files" ToolTip="桌面收纳">
+                                    <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE8B7;"/>
+                                </Button>
+                                <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Tasks" ToolTip="任务">
+                                    <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE9D5;"/>
+                                </Button>
+                                <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Pomodoro" ToolTip="番茄钟">
+                                    <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE916;"/>
+                                </Button>
+                                <Button Style="{StaticResource FocusIconButton}"
+                                        Click="OpenButtonContextMenu"
+                                        ToolTip="更多工作区">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="OKR" Tag="OKR" Click="WorkspaceMenuItem_Click"/>
+                                            <MenuItem Header="AI 助手" Tag="AI" Click="WorkspaceMenuItem_Click"/>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                    <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE712;"/>
+                                </Button>
                             </StackPanel>
                         </ScrollViewer>
 
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
-                            <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Files" ToolTip="桌面收纳">
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE8B7;"/>
-                            </Button>
-                            <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Tasks" ToolTip="任务">
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE9D5;"/>
-                            </Button>
-                            <Button Style="{StaticResource FocusIconButton}" Command="{Binding NavigateCommand}" CommandParameter="Pomodoro" ToolTip="番茄钟">
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE916;"/>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding OpenNotificationOverflowCommand}"
+                                    ToolTip="显示隐藏的托盘图标">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE70D;"/>
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
-                                    Click="OpenButtonContextMenu"
-                                    ToolTip="更多工作区">
-                                <Button.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Header="OKR" Tag="OKR" Click="WorkspaceMenuItem_Click"/>
-                                        <MenuItem Header="AI 助手" Tag="AI" Click="WorkspaceMenuItem_Click"/>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE712;"/>
+                                    Command="{Binding OpenInputSwitcherCommand}"
+                                    ToolTip="切换输入语言与输入法">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding InputLanguageDisplay}"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock Text="·"
+                                               Margin="2,0"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    <TextBlock Text="{Binding InputMethodDisplay}"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"/>
+                                </StackPanel>
                             </Button>
-                        </StackPanel>
-
-                        <StackPanel Grid.Row="3">
-                            <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
                             <Button Style="{StaticResource FocusIconButton}"
                                     Click="QuickControlsButton_Click"
-                                    ToolTip="网络、音量、电池与输入法">
+                                    ToolTip="{Binding NetworkDetail}">
                                 <TextBlock>
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
@@ -694,6 +711,22 @@
                                                 <DataTrigger Binding="{Binding IsNetworkAvailable}" Value="False">
                                                     <Setter Property="Text" Value="&#xE704;"/>
                                                     <Setter Property="Foreground" Value="{DynamicResource FocusDangerBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button>
+                            <Button Style="{StaticResource FocusIconButton}"
+                                    Click="QuickControlsButton_Click"
+                                    ToolTip="音量与静音">
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
+                                            <Setter Property="Text" Value="&#xE767;"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                    <Setter Property="Text" Value="&#xE74F;"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>

@@ -189,7 +189,10 @@ public sealed class XamlResourceContractTests
         Assert.Contains("Click=\"SettingsButton_Click\"", compactDock);
         Assert.Contains("Command=\"{Binding ToggleSettingsCommand}\"", compactDock);
         Assert.Contains("Click=\"QuickControlsButton_Click\"", compactDock);
-        Assert.DoesNotContain("OpenInputSwitcherCommand", compactDock);
+        Assert.Contains("OpenNotificationOverflowCommand", compactDock);
+        Assert.Contains("OpenInputSwitcherCommand", compactDock);
+        Assert.Contains("InputLanguageDisplay", compactDock);
+        Assert.Contains("InputMethodDisplay", compactDock);
         Assert.DoesNotContain("BatteryPercent", compactDock);
 
         string onboarding = mainWindow[onboardingStart..];

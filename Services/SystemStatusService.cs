@@ -1,9 +1,12 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows.Automation;
 using System.Windows.Forms;
 
 namespace FocusPanel.Services;
@@ -164,6 +167,46 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
+    public string InputLanguageDisplay
+    {
+        get
+        {
+            CultureInfo? culture = GetForegroundInputCulture();
+            return culture == null ? "—" : GetShortLanguageName(culture);
+        }
+    }
+
+    public string InputMethodDisplay
+    {
+        get
+        {
+            IntPtr layout = GetForegroundKeyboardLayout();
+            CultureInfo? culture = GetInputCulture(layout);
+            if (culture?.TwoLetterISOLanguageName != "zh")
+                return culture == null ? "—" : GetShortLanguageName(culture);
+
+            var description = new StringBuilder(128);
+            _ = NativeMethods.ImmGetDescription(layout, description, (uint)description.Capacity);
+            string name = description.ToString();
+            if (name.Contains("拼音", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Pinyin", StringComparison.OrdinalIgnoreCase))
+            {
+                return "拼";
+            }
+            if (name.Contains("五笔", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Wubi", StringComparison.OrdinalIgnoreCase))
+            {
+                return "五";
+            }
+            if (name.Contains("注音", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Bopomofo", StringComparison.OrdinalIgnoreCase))
+            {
+                return "注";
+            }
+            return "中";
+        }
+    }
+
     public bool HasBattery => SystemInformation.PowerStatus.BatteryChargeStatus
         != BatteryChargeStatus.NoSystemBattery;
 
@@ -175,6 +218,54 @@ public sealed class SystemStatusService : ISystemStatusService
         && (SystemInformation.PowerStatus.BatteryChargeStatus & BatteryChargeStatus.Charging) != 0;
 
     public bool OpenQuickSettings() => TrySendWindowsShortcut(0x41);
+
+    public bool OpenNotificationOverflow()
+    {
+        try
+        {
+            IntPtr taskbar = NativeMethods.FindWindow("Shell_TrayWnd", null);
+            if (taskbar == IntPtr.Zero)
+                return false;
+
+            AutomationElement root = AutomationElement.FromHandle(taskbar);
+            AutomationElementCollection elements = root.FindAll(
+                TreeScope.Descendants,
+                Condition.TrueCondition);
+            var nodes = new TrayAutomationNode[elements.Count];
+            for (int index = 0; index < elements.Count; index++)
+            {
+                AutomationElement element = elements[index];
+                nodes[index] = new TrayAutomationNode(
+                    element.Current.Name ?? string.Empty,
+                    element.Current.AutomationId ?? string.Empty,
+                    element.Current.ClassName ?? string.Empty,
+                    element.TryGetCurrentPattern(InvokePattern.Pattern, out _));
+            }
+
+            int targetIndex = TrayOverflowTargetSelector.FindBestCandidate(nodes);
+            if (targetIndex < 0
+                || !elements[targetIndex].TryGetCurrentPattern(InvokePattern.Pattern, out object? pattern)
+                || pattern is not InvokePattern invokePattern)
+            {
+                return false;
+            }
+
+            invokePattern.Invoke();
+            return true;
+        }
+        catch (ElementNotAvailableException)
+        {
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+        catch (COMException)
+        {
+            return false;
+        }
+    }
 
     public bool OpenNotifications() => TrySendWindowsShortcut(0x4E);
 
@@ -222,6 +313,41 @@ public sealed class SystemStatusService : ISystemStatusService
             .OrderByDescending(item =>
                 item.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
             .FirstOrDefault();
+
+    private static IntPtr GetForegroundKeyboardLayout()
+    {
+        IntPtr foreground = NativeMethods.GetForegroundWindow();
+        uint threadId = foreground == IntPtr.Zero
+            ? 0
+            : NativeMethods.GetWindowThreadProcessId(foreground, out _);
+        return NativeMethods.GetKeyboardLayout(threadId);
+    }
+
+    private static CultureInfo? GetForegroundInputCulture() =>
+        GetInputCulture(GetForegroundKeyboardLayout());
+
+    private static CultureInfo? GetInputCulture(IntPtr layout)
+    {
+        try
+        {
+            int languageId = unchecked((ushort)(long)layout);
+            return languageId == 0 ? null : CultureInfo.GetCultureInfo(languageId);
+        }
+        catch (CultureNotFoundException)
+        {
+            return null;
+        }
+    }
+
+    private static string GetShortLanguageName(CultureInfo culture) =>
+        culture.TwoLetterISOLanguageName switch
+        {
+            "zh" => "中",
+            "ja" => "日",
+            "ko" => "한",
+            "en" => "EN",
+            string language => language.ToUpperInvariant()
+        };
 
     private static void StartShutdown(string arguments)
     {
@@ -374,6 +500,24 @@ public sealed class SystemStatusService : ISystemStatusService
 
     private static class NativeMethods
     {
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern IntPtr FindWindow(string className, string? windowName);
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        internal static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetKeyboardLayout(uint threadId);
+
+        [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
+        internal static extern uint ImmGetDescription(
+            IntPtr keyboardLayout,
+            StringBuilder description,
+            uint bufferLength);
+
         [DllImport("user32.dll")]
         internal static extern uint SendInput(uint inputCount, Input[] inputs, int inputSize);
 

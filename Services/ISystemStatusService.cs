@@ -9,10 +9,13 @@ public interface ISystemStatusService : IDisposable
     bool IsNetworkAvailable { get; }
     string NetworkDisplayName { get; }
     string NetworkDetail { get; }
+    string InputLanguageDisplay { get; }
+    string InputMethodDisplay { get; }
     bool HasBattery { get; }
     int BatteryPercent { get; }
     bool IsCharging { get; }
     bool OpenQuickSettings();
+    bool OpenNotificationOverflow();
     bool OpenNotifications();
     bool OpenInputSwitcher();
     void OpenPowerSettings();
