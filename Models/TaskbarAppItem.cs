@@ -25,6 +25,22 @@ public sealed class TaskbarAppItem
     public string? ApplicationUserModelId => RunningTask?.ApplicationUserModelId;
     public string? ExecutablePath => RunningTask?.ExecutablePath;
     public string WindowSummary => WindowCount == 0 ? "未运行" : $"{WindowCount} 个窗口";
+    public string StatusSummary =>
+        IsActive
+            ? $"正在使用 · {WindowCount} 个窗口"
+            : IsRunning
+                ? $"正在运行 · {WindowCount} 个窗口"
+                : IsPinned
+                    ? "已固定 · 未运行"
+                    : "未运行";
+    public string AccessibleName =>
+        $"{DisplayName}，{StatusSummary}";
+    public string InteractionHint =>
+        WindowCount > 1
+            ? "左键打开窗口列表，右键管理应用"
+            : IsRunning
+                ? "左键切换或最小化，右键管理应用"
+                : "左键启动，右键管理应用";
 
     public AppLaunchItem? CreateLaunchItem()
     {

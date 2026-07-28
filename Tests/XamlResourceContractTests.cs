@@ -515,10 +515,10 @@ public sealed class XamlResourceContractTests
             "KeyboardNavigation.DirectionalNavigation=\"Cycle\"",
             mainWindow);
         Assert.Contains(
-            "AutomationProperties.Name=\"{Binding DisplayName}\"",
+            "AutomationProperties.Name=\"{Binding AccessibleName}\"",
             mainWindow);
         Assert.Contains(
-            "AutomationProperties.HelpText=\"{Binding WindowSummary}\"",
+            "AutomationProperties.HelpText=\"{Binding InteractionHint}\"",
             mainWindow);
         Assert.Contains(
             "AutomationProperties.Name=\"开始\"",
@@ -529,6 +529,56 @@ public sealed class XamlResourceContractTests
                 "FocusCompactDock();",
                 StringSplitOptions.None).Length - 1 >= 2);
         Assert.Contains("SearchButton.Focus();", codeBehind);
+    }
+
+    [Fact]
+    public void TaskbarApps_ShowDistinctRunningAndActiveStates()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string model = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Models",
+                "TaskbarAppItem.cs"));
+
+        Assert.Contains(
+            "Text=\"{Binding StatusSummary}\"",
+            mainWindow);
+        Assert.Contains(
+            "Binding=\"{Binding IsActive}\"",
+            mainWindow);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusSurfaceSoftBrush}\"",
+            mainWindow);
+        Assert.Contains(
+            "IsHitTestVisible=\"False\"",
+            mainWindow);
+        Assert.Contains(
+            "<Setter Property=\"Height\" Value=\"12\"/>",
+            mainWindow);
+        Assert.Contains(
+            "<Setter Property=\"Height\" Value=\"24\"/>",
+            mainWindow);
+        Assert.Contains(
+            "CornerRadius=\"2\"",
+            mainWindow);
+        Assert.DoesNotContain(
+            "<Ellipse Width=\"6\"",
+            mainWindow);
+        Assert.Contains(
+            "public string StatusSummary",
+            model);
+        Assert.Contains(
+            "public string AccessibleName",
+            model);
+        Assert.Contains(
+            "public string InteractionHint",
+            model);
     }
 
     [Fact]
