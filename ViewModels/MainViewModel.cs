@@ -152,6 +152,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isUpdateBusy;
 
     [ObservableProperty]
+    private bool isUpdateAvailable;
+
+    [ObservableProperty]
+    private string availableUpdateVersion = string.Empty;
+
+    [ObservableProperty]
     private bool showsProtectedSystemFiles;
 
     public MainViewModel(
@@ -670,10 +676,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             AppUpdateInfo? update = await _updateService.CheckForUpdateAsync();
             if (update == null)
             {
+                ApplyUpdateAvailability(null);
                 UpdateStatus = $"已是最新版本 v{CurrentAppVersion}";
                 return;
             }
 
+            ApplyUpdateAvailability(update);
             UpdateStatus = $"GitHub 已发布 v{update.Version}，点击下方按钮安装";
             if (!string.Equals(
                     _lastNotifiedUpdateVersion,
@@ -714,10 +722,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             AppUpdateInfo? update = await _updateService.CheckForUpdateAsync();
             if (update == null)
             {
+                ApplyUpdateAvailability(null);
                 UpdateStatus = $"已是最新版本 v{CurrentAppVersion}";
                 return;
             }
 
+            ApplyUpdateAvailability(update);
             string sizeText = update.DownloadSize > 0
                 ? $"{update.DownloadSize / 1024d / 1024d:F1} MB"
                 : "未知大小";
@@ -764,6 +774,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             IsUpdateBusy = false;
         }
+    }
+
+    private void ApplyUpdateAvailability(AppUpdateInfo? update)
+    {
+        UpdateAvailabilityState state =
+            UpdateAvailabilityPolicy.FromUpdate(update);
+        IsUpdateAvailable = state.IsAvailable;
+        AvailableUpdateVersion = state.Version;
     }
 
     private void RefreshTaskbarApps()

@@ -197,6 +197,27 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void UpdateAvailability_IsVisibleFromCompactAndFocusCenters()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.True(
+            mainWindow.Split(
+                "Visibility=\"{Binding IsUpdateAvailable",
+                StringSplitOptions.None).Length - 1 >= 2);
+        Assert.Contains(
+            "Text=\"{Binding AvailableUpdateVersion, StringFormat=可更新到 v{0}}\"",
+            mainWindow);
+        Assert.Contains("打开设置一键安装", mainWindow);
+        Assert.Contains("ApplyUpdateAvailability(update)", viewModel);
+        Assert.Contains("ApplyUpdateAvailability(null)", viewModel);
+    }
+
+    [Fact]
     public void CompactDock_HasExactlySixFixedEntriesAndOneApplicationList()
     {
         string root = FindRepositoryRoot();
