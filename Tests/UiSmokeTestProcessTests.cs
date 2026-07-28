@@ -40,6 +40,9 @@ public sealed class UiSmokeTestProcessTests
             Assert.Contains(
                 "PASS Fluent 菜单叶项、勾选、分隔线与子菜单",
                 report);
+            Assert.Contains(
+                "PASS Fluent 工具提示圆角与动态主题",
+                report);
             Assert.Contains("RESULT PASS", report);
         }
         finally

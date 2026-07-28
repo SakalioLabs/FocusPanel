@@ -437,12 +437,42 @@
     <Style TargetType="Separator"
            BasedOn="{StaticResource FocusMenuSeparator}"/>
 
-    <Style TargetType="ToolTip">
-        <Setter Property="Background" Value="#F02A2E38"/>
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+    <Style x:Key="FocusToolTip"
+           TargetType="ToolTip">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="HasDropShadow" Value="False"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusSurfaceStrongBrush}"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource FocusStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="10,6"/>
         <Setter Property="FontSize" Value="12"/>
+        <Setter Property="MaxWidth" Value="360"/>
+        <Setter Property="HorizontalContentAlignment"
+                Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border x:Name="ToolTipSurface"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          RecognizesAccessKey="True"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
+    <Style TargetType="ToolTip"
+           BasedOn="{StaticResource FocusToolTip}"/>
 </ResourceDictionary>

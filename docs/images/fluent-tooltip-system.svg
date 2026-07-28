@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="420" viewBox="0 0 1120 420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151d2e"/>
+      <stop offset="1" stop-color="#0b101b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4ca6e8"/>
+      <stop offset="1" stop-color="#8b7cf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="420" rx="28" fill="url(#bg)"/>
+  <text x="56" y="64" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="600">统一 Fluent 工具提示</text>
+  <text x="56" y="98" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="16">一个圆角表面 · 动态主题 · 无黑色投影</text>
+
+  <g transform="translate(56 138)">
+    <rect width="470" height="216" rx="22" fill="#20242c" stroke="#405068"/>
+    <circle cx="56" cy="58" r="26" fill="url(#accent)"/>
+    <text x="56" y="65" text-anchor="middle" fill="white" font-family="Segoe UI" font-size="20" font-weight="700">A</text>
+    <rect x="108" y="26" width="318" height="122" rx="12" fill="#d020242c" stroke="#4d5b72"/>
+    <text x="128" y="58" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">编辑器</text>
+    <text x="128" y="88" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="15">正在使用 · 2 个窗口</text>
+    <text x="128" y="118" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="14">Shift+左键或中键启动新实例</text>
+    <text x="28" y="188" fill="#c9d2e2" font-family="Segoe UI, Microsoft YaHei" font-size="15">内容可多行换行，但外层始终只有一个圆角轮廓</text>
+  </g>
+
+  <g transform="translate(582 138)">
+    <rect width="482" height="216" rx="22" fill="#f6f8fc" stroke="#d5dbe7"/>
+    <rect x="28" y="26" width="426" height="74" rx="12" fill="#ffffff" stroke="#d9dee8"/>
+    <text x="50" y="56" fill="#1d2433" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="600">浅色主题</text>
+    <text x="50" y="82" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="14">表面、文字和描边同步切换，不保留深色硬编码</text>
+    <rect x="28" y="118" width="426" height="70" rx="12" fill="#222630" stroke="#454d5f"/>
+    <text x="50" y="147" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="600">深色主题</text>
+    <text x="50" y="173" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="14">不使用系统默认矩形背景，也不叠加黑色阴影</text>
+  </g>
+</svg>

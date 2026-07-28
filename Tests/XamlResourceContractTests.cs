@@ -1044,6 +1044,45 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void ToolTips_UseOneRoundedDynamicTheme()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+
+        Assert.Contains(
+            "x:Key=\"FocusToolTip\"",
+            theme);
+        Assert.Contains(
+            "<Style TargetType=\"ToolTip\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusToolTip}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"ToolTipSurface\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusSurfaceStrongBrush}\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusTextBrush}\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusStrokeBrush}\"",
+            theme);
+        Assert.Contains(
+            "Property=\"HasDropShadow\" Value=\"False\"",
+            theme);
+        Assert.DoesNotContain(
+            "<Setter Property=\"Background\" Value=\"#F02A2E38\"",
+            theme);
+    }
+
+    [Fact]
     public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
     {
         string root = FindRepositoryRoot();

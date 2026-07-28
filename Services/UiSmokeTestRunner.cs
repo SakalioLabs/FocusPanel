@@ -28,7 +28,8 @@ internal static class UiSmokeTestRunner
         "FocusKeyboardFocusBrush",
         "FocusContextMenu",
         "FocusMenuItem",
-        "FocusMenuSeparator"
+        "FocusMenuSeparator",
+        "FocusToolTip"
     };
 
     public static int Run(
@@ -71,6 +72,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentContextMenu(
+                results,
+                failures);
+            CheckFluentToolTip(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -376,6 +380,85 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"分区滚动稳定性验证失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentToolTip(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var toolTip = new ToolTip
+            {
+                Content = new StackPanel
+                {
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "编辑器",
+                            FontWeight =
+                                FontWeights.SemiBold
+                        },
+                        new TextBlock
+                        {
+                            Text =
+                                "Shift+左键或中键启动新实例"
+                        }
+                    }
+                }
+            };
+
+            toolTip.Measure(
+                new Size(
+                    360,
+                    160));
+            toolTip.Arrange(
+                new Rect(
+                    0,
+                    0,
+                    Math.Max(
+                        120,
+                        toolTip.DesiredSize.Width),
+                    Math.Max(
+                        44,
+                        toolTip.DesiredSize.Height)));
+            toolTip.UpdateLayout();
+            toolTip.ApplyTemplate();
+
+            if (toolTip.Template.FindName(
+                    "ToolTipSurface",
+                    toolTip) is not Border surface
+                || surface.CornerRadius.TopLeft <= 0)
+            {
+                failures.Add(
+                    "Fluent 工具提示缺少单层圆角表面");
+                return;
+            }
+
+            if (toolTip.HasDropShadow
+                || !ReferenceEquals(
+                    toolTip.Background,
+                    Application.Current.FindResource(
+                        "FocusSurfaceStrongBrush"))
+                || !ReferenceEquals(
+                    toolTip.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush")))
+            {
+                failures.Add(
+                    "Fluent 工具提示未跟随动态主题或仍带系统阴影");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 工具提示圆角与动态主题");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 工具提示加载失败：{ex}");
         }
     }
 
