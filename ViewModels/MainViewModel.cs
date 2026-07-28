@@ -20,8 +20,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private const string ReplacementEnabledKey = "Shell.ReplacementEnabled";
     private const string ThemeModeKey = "Shell.Theme";
     private const string FullscreenHotZoneKey = "Shell.DisableHotZoneInFullscreen";
-    private const string UpdateSourceModeKey = "Update.SourceMode";
-    private const string UpdateLanLocationKey = "Update.LanLocation";
 
     private readonly IAppCatalogService _appCatalog;
     private readonly IWindowTracker _windowTracker;
@@ -30,12 +28,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly DispatcherTimer _clockTimer;
+    private readonly DispatcherTimer _updateCheckTimer;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
     private FileOrganizerViewModel? _fileOrganizerViewModel;
     private OkrViewModel? _okrViewModel;
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
+    private string? _lastNotifiedUpdateVersion;
 
     [ObservableProperty]
     private string title = "FocusPanel";
@@ -149,15 +149,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isUpdateBusy;
 
     [ObservableProperty]
-    private string updateSourceMode = "GitHub";
-
-    [ObservableProperty]
-    private string lanUpdateSource = string.Empty;
-
-    [ObservableProperty]
-    private string updateSourceDescription = "GitHub Releases";
-
-    [ObservableProperty]
     private bool showsProtectedSystemFiles;
 
     public MainViewModel(
@@ -173,14 +164,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _desktopVisibility = new WindowsDesktopItemVisibilityService();
 
         CurrentTime = DateTime.Now;
-        UpdateSourceMode = ReadStringConfig(UpdateSourceModeKey, "GitHub") == "Lan"
-            ? "Lan"
-            : "GitHub";
-        LanUpdateSource = ReadStringConfig(UpdateLanLocationKey, string.Empty);
-        TryApplyUpdateSource(persist: false, out _);
         CurrentAppVersion = _updateService.CurrentVersion;
         UpdateStatus = _updateService.CanUpdate
-            ? $"点击按钮检查{UpdateSourceDescription}"
+            ? "将自动从 GitHub Releases 检查更新"
             : "当前为开发运行版；安装发布包后可一键更新";
         StartWithWindows = AutoStartupService.IsStartupEnabled();
         bool firstRunAccepted = ReadBooleanConfig(FirstRunAcceptedKey);
@@ -212,6 +198,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RefreshStatus();
         };
         _clockTimer.Start();
+
+        _updateCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
+        _updateCheckTimer.Tick += async (_, _) => await CheckForUpdatesInBackgroundAsync();
+        _updateCheckTimer.Start();
     }
 
     public ObservableCollection<AppLaunchItem> SearchResults { get; } = new();
@@ -221,6 +211,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action? RequestEnableReplacement;
     public event Action? RequestDisableReplacement;
     public event Action? RequestApplyUpdate;
+    public event Action<AppUpdateInfo>? UpdateAvailable;
     public event Action<string>? WorkspaceRequested;
 
     partial void OnSearchQueryChanged(string value)
@@ -638,16 +629,41 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand]
-    private void SaveUpdateSource()
+    public async Task CheckForUpdatesInBackgroundAsync()
     {
-        if (!TryApplyUpdateSource(persist: true, out string? error))
-        {
-            UpdateStatus = $"更新来源无效：{error}";
+        if (!_updateService.CanUpdate || IsUpdateBusy)
             return;
-        }
 
-        UpdateStatus = $"已保存更新来源：{UpdateSourceDescription}";
+        IsUpdateBusy = true;
+        UpdateProgress = 0;
+        try
+        {
+            UpdateStatus = "正在从 GitHub Releases 自动检查更新…";
+            AppUpdateInfo? update = await _updateService.CheckForUpdateAsync();
+            if (update == null)
+            {
+                UpdateStatus = $"已是最新版本 v{CurrentAppVersion}";
+                return;
+            }
+
+            UpdateStatus = $"GitHub 已发布 v{update.Version}，点击下方按钮安装";
+            if (!string.Equals(
+                    _lastNotifiedUpdateVersion,
+                    update.Version,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                _lastNotifiedUpdateVersion = update.Version;
+                UpdateAvailable?.Invoke(update);
+            }
+        }
+        catch
+        {
+            UpdateStatus = "GitHub 自动检查暂时失败，可稍后手动重试";
+        }
+        finally
+        {
+            IsUpdateBusy = false;
+        }
     }
 
     [RelayCommand]
@@ -655,12 +671,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (IsUpdateBusy)
             return;
-
-        if (!TryApplyUpdateSource(persist: true, out string? sourceError))
-        {
-            UpdateStatus = $"更新来源无效：{sourceError}";
-            return;
-        }
 
         if (!_updateService.CanUpdate)
         {
@@ -726,38 +736,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             IsUpdateBusy = false;
         }
-    }
-
-    private bool TryApplyUpdateSource(bool persist, out string? error)
-    {
-        var configuration = new AppUpdateSourceConfiguration(
-            UpdateSourceMode == "Lan" ? AppUpdateSourceKind.Lan : AppUpdateSourceKind.GitHub,
-            LanUpdateSource);
-
-        if (!_updateService.TryConfigure(configuration, out error))
-            return false;
-
-        AppUpdateSourceConfiguration normalized = _updateService.SourceConfiguration;
-        UpdateSourceMode = normalized.Kind == AppUpdateSourceKind.Lan ? "Lan" : "GitHub";
-        if (normalized.Kind == AppUpdateSourceKind.Lan)
-            LanUpdateSource = normalized.Location;
-        UpdateSourceDescription = _updateService.SourceDescription;
-
-        if (persist)
-        {
-            try
-            {
-                SaveStringConfig(UpdateSourceModeKey, UpdateSourceMode);
-                SaveStringConfig(UpdateLanLocationKey, LanUpdateSource);
-            }
-            catch (Exception ex)
-            {
-                error = $"无法保存更新来源：{ex.Message}";
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private void RefreshTaskbarApps() => ReplaceCollection(
@@ -871,6 +849,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _clockTimer.Stop();
+        _updateCheckTimer.Stop();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
     }

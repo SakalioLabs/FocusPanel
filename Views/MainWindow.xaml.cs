@@ -68,6 +68,7 @@ public partial class MainWindow : Window
         _viewModel.RequestEnableReplacement += EnableTaskbarReplacement;
         _viewModel.RequestDisableReplacement += DisableTaskbarReplacement;
         _viewModel.RequestApplyUpdate += ApplyDownloadedUpdate;
+        _viewModel.UpdateAvailable += ViewModel_UpdateAvailable;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
         _coordinator.Taskbar.ReplacementStopped += Taskbar_ReplacementStopped;
 
@@ -119,6 +120,18 @@ public partial class MainWindow : Window
             if (_viewModel.IsReplacementEnabled)
                 Dispatcher.BeginInvoke(EnableTaskbarReplacement, DispatcherPriority.ApplicationIdle);
         }
+
+        Dispatcher.BeginInvoke(
+            new Action(() => _ = _viewModel.CheckForUpdatesInBackgroundAsync()),
+            DispatcherPriority.ContextIdle);
+    }
+
+    private void ViewModel_UpdateAvailable(AppUpdateInfo update)
+    {
+        MyNotifyIcon.ShowBalloonTip(
+            "FocusPanel 更新可用",
+            $"GitHub 已发布 v{update.Version}，打开设置即可一键安装。",
+            Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
     }
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -691,6 +704,7 @@ public partial class MainWindow : Window
         _edgeIndicator?.Close();
         _edgeIndicator = null;
         _coordinator.Taskbar.ReplacementStopped -= Taskbar_ReplacementStopped;
+        _viewModel.UpdateAvailable -= ViewModel_UpdateAvailable;
         _viewModel.Dispose();
         _coordinator.Dispose();
     }

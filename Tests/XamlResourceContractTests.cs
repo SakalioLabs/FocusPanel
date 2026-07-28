@@ -178,19 +178,22 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void Settings_ExposesGitHubAndLanOneClickUpdateSources()
+    public void Settings_UsesZeroConfigurationGitHubUpdates()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
         string viewModel = File.ReadAllText(Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+        string windowCode = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml.cs"));
 
-        Assert.Contains("Tag=\"GitHub\"", mainWindow);
-        Assert.Contains("Tag=\"Lan\"", mainWindow);
-        Assert.Contains("LanUpdateSource", mainWindow);
-        Assert.Contains("SaveUpdateSourceCommand", mainWindow);
+        Assert.Contains("GitHub Releases · 自动检查", mainWindow);
         Assert.Contains("CheckAndInstallUpdateCommand", mainWindow);
-        Assert.Contains("Update.SourceMode", viewModel);
-        Assert.Contains("Update.LanLocation", viewModel);
+        Assert.DoesNotContain("LanUpdateSource", mainWindow);
+        Assert.DoesNotContain("SaveUpdateSourceCommand", mainWindow);
+        Assert.DoesNotContain("Update.SourceMode", viewModel);
+        Assert.DoesNotContain("Update.LanLocation", viewModel);
+        Assert.Contains("TimeSpan.FromHours(6)", viewModel);
+        Assert.Contains("CheckForUpdatesInBackgroundAsync", windowCode);
+        Assert.Contains("ShowBalloonTip", windowCode);
     }
 
     [Fact]
