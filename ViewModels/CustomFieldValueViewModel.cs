@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
+using FocusPanel.Services;
 
 namespace FocusPanel.ViewModels;
 
@@ -100,7 +102,11 @@ public partial class CustomFieldValueViewModel : ObservableObject
         catch (Exception ex)
         {
             // Handle or log error
-            System.Windows.MessageBox.Show($"Could not open image: {ex.Message}");
+            FocusDialogService.Show(
+                $"无法打开图片：{ex.Message}",
+                "打开图片失败",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
     }
 

@@ -33,6 +33,7 @@ public sealed class UiSmokeTestProcessTests
                 : "未生成 UI 冒烟测试报告。";
             Assert.True(process.ExitCode == 0, report);
             Assert.Contains("PASS 界面 TaskDetailWindow", report);
+            Assert.Contains("PASS 界面 FocusDialogWindow", report);
             Assert.Contains("PASS 界面 FileOrganizerView", report);
             Assert.Contains(
                 "PASS 1000 项仅生成",
@@ -54,6 +55,9 @@ public sealed class UiSmokeTestProcessTests
                 report);
             Assert.Contains(
                 "PASS Fluent 行按钮与危险操作动态状态",
+                report);
+            Assert.Contains(
+                "PASS Fluent 模态对话框主题、危险确认与按钮语义",
                 report);
             Assert.Contains(
                 "PASS Fluent 勾选框点击区、圆角与选中状态",

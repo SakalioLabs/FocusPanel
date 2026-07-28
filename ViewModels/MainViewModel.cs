@@ -928,7 +928,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void RestartComputer()
     {
-        if (MessageBox.Show("确定要立即重启电脑吗？", "重启电脑", MessageBoxButton.YesNo, MessageBoxImage.Warning)
+        if (FocusDialogService.Show("确定要立即重启电脑吗？", "重启电脑", MessageBoxButton.YesNo, MessageBoxImage.Warning)
             == MessageBoxResult.Yes)
         {
             CompleteSystemAction(
@@ -940,7 +940,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ShutdownComputer()
     {
-        if (MessageBox.Show("确定要立即关闭电脑吗？", "关闭电脑", MessageBoxButton.YesNo, MessageBoxImage.Warning)
+        if (FocusDialogService.Show("确定要立即关闭电脑吗？", "关闭电脑", MessageBoxButton.YesNo, MessageBoxImage.Warning)
             == MessageBoxResult.Yes)
         {
             CompleteSystemAction(
@@ -1013,7 +1013,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void RestoreDatabase()
     {
-        var result = MessageBox.Show(
+        var result = FocusDialogService.Show(
             "确定要从最新备份恢复数据库吗？\n任务、番茄钟、桌面收纳和 OKR 数据都会回到备份时的状态，应用将立即重启。",
             "恢复数据库",
             MessageBoxButton.YesNo,
@@ -1042,7 +1042,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"无法重启应用：{ex.Message}", "恢复失败", MessageBoxButton.OK, MessageBoxImage.Error);
+            FocusDialogService.Show($"无法重启应用：{ex.Message}", "恢复失败", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1120,7 +1120,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             if (notes.Length > 600)
                 notes = notes[..600] + "…";
 
-            MessageBoxResult result = MessageBox.Show(
+            MessageBoxResult result = FocusDialogService.Show(
                 $"发现 FocusPanel v{update.Version}（{sizeText}）。\n\n{notes}\n\n"
                 + "下载完成后应用会恢复系统任务栏、自动重启并安装更新。是否继续？",
                 "安装 FocusPanel 更新",
@@ -1148,7 +1148,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             string message = UpdateFailureMessage.Describe(ex);
             UpdateStatus = $"更新失败：{message}";
-            MessageBox.Show(
+            FocusDialogService.Show(
                 $"无法完成更新：{message}\n\n系统任务栏和现有数据不会被修改。",
                 "FocusPanel 更新失败",
                 MessageBoxButton.OK,

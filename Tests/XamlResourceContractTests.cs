@@ -280,6 +280,87 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void RuntimeDialogs_UseFocusPanelFluentSurface()
+    {
+        string root = FindRepositoryRoot();
+        var nativeDialogCalls = new List<string>();
+        foreach (string directory in new[]
+                 {
+                     "ViewModels",
+                     "Views"
+                 })
+        {
+            foreach (string path in Directory.GetFiles(
+                         Path.Combine(root, directory),
+                         "*.cs",
+                         SearchOption.TopDirectoryOnly))
+            {
+                string source = File.ReadAllText(path);
+                if (source.Contains(
+                        "MessageBox.Show(",
+                        StringComparison.Ordinal))
+                {
+                    nativeDialogCalls.Add(
+                        Path.GetFileName(path));
+                }
+            }
+        }
+
+        Assert.True(
+            nativeDialogCalls.Count == 0,
+            "运行期仍直接调用系统 MessageBox："
+            + string.Join(", ", nativeDialogCalls));
+
+        string dialog = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FocusDialogWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FocusDialogWindow.xaml.cs"));
+        string service = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FocusDialogService.cs"));
+        string organizer = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+        string tasks = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "TasksViewModel.cs"));
+
+        Assert.Contains(
+            "FocusShellTintBrush",
+            dialog);
+        Assert.Contains(
+            "FocusDangerButton",
+            codeBehind);
+        Assert.Contains(
+            "WindowBackdropService.Apply(this)",
+            codeBehind);
+        Assert.Contains(
+            "CenterOwner",
+            service);
+        Assert.Contains(
+            "Dispatcher.CheckAccess()",
+            service);
+        Assert.DoesNotContain(
+            "Rescue Desktop",
+            organizer);
+        Assert.DoesNotContain(
+            "Failed to insert image",
+            tasks);
+    }
+
+    [Fact]
     public void MainShell_HasOnlyOneTopLevelRoundedOutline()
     {
         string root = FindRepositoryRoot();

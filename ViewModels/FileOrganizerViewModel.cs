@@ -433,9 +433,10 @@ public partial class FileOrganizerViewModel :
     [RelayCommand]
     private async Task Rescue()
     {
-        var result = System.Windows.MessageBox.Show(
-            "This will move all loose files on your desktop into a single 'FocusPanel_Recovered' folder.\n\nNo categorization will be applied. Shortcuts and folders will be skipped.\n\nContinue?", 
-            "Rescue Desktop", 
+        var result = FocusDialogService.Show(
+            "这会把桌面上未分类的普通文件移动到“FocusPanel_Recovered”文件夹。\n\n"
+            + "不会应用分类，快捷方式和文件夹会被跳过。是否继续？",
+            "救援桌面",
             System.Windows.MessageBoxButton.YesNo, 
             System.Windows.MessageBoxImage.Warning);
             
@@ -450,7 +451,7 @@ public partial class FileOrganizerViewModel :
     {
         if (_fileService.Files.Count == 0)
         {
-            System.Windows.MessageBox.Show(
+            FocusDialogService.Show(
                 "桌面上没有需要整理的可见项目。",
                 "自动整理",
                 System.Windows.MessageBoxButton.OK,
@@ -458,7 +459,7 @@ public partial class FileOrganizerViewModel :
             return;
         }
 
-        var result = System.Windows.MessageBox.Show(
+        var result = FocusDialogService.Show(
             $"将 {_fileService.Files.Count} 个可见桌面项目按类型收纳到面板。\n\n"
             + "文件不会移动或改名，只会写入分类并从原生桌面隐藏。是否继续？",
             "自动整理桌面",
@@ -473,7 +474,7 @@ public partial class FileOrganizerViewModel :
 
             if (organizeResult.AuthorizationRequired > 0)
             {
-                var authorize = System.Windows.MessageBox.Show(
+                var authorize = FocusDialogService.Show(
                     $"另有 {organizeResult.AuthorizationRequired} 个公共桌面项目需要管理员授权。"
                     + "\n\n是否继续收纳这些项目？",
                     "公共桌面授权",
@@ -490,7 +491,7 @@ public partial class FileOrganizerViewModel :
             await _fileService.RefreshFiles();
             BuildPartitions();
             int remaining = _fileService.Files.Count;
-            System.Windows.MessageBox.Show(
+            FocusDialogService.Show(
                 remaining == 0
                     ? $"已收纳 {collected} 个桌面项目。"
                     : $"已收纳 {collected} 个桌面项目；仍有 {remaining} 个项目因权限或文件状态未能收纳。",
@@ -600,7 +601,7 @@ public partial class FileOrganizerViewModel :
     {
         if (partition == null) return;
 
-        var result = System.Windows.MessageBox.Show(
+        var result = FocusDialogService.Show(
             $"确定删除分区“{partition.Name}”吗？\n分区内文件会变为未分类，但仍保留在桌面。",
             "删除分区",
             System.Windows.MessageBoxButton.YesNo,
@@ -852,7 +853,7 @@ public partial class FileOrganizerViewModel :
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(
+            FocusDialogService.Show(
                 $"收纳失败，文件未被移动：{ex.Message}",
                 "FocusPanel",
                 System.Windows.MessageBoxButton.OK,
@@ -881,7 +882,7 @@ public partial class FileOrganizerViewModel :
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(
+            FocusDialogService.Show(
                 $"恢复失败，FocusPanel 已保留恢复记录：{ex.Message}",
                 "FocusPanel",
                 System.Windows.MessageBoxButton.OK,
@@ -933,7 +934,7 @@ public partial class FileOrganizerViewModel :
                 {
                     if (!commonDesktopApproved.HasValue)
                     {
-                        commonDesktopApproved = System.Windows.MessageBox.Show(
+                        commonDesktopApproved = FocusDialogService.Show(
                             "该项目位于 Windows 公共桌面。收纳或恢复它会影响本机所有账户，并需要管理员授权。\n\n是否继续？",
                             "收纳公共桌面项目",
                             System.Windows.MessageBoxButton.YesNo,

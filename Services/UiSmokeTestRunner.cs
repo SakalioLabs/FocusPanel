@@ -68,7 +68,8 @@ internal static class UiSmokeTestRunner
     public static int Run(
         string? reportPath,
         string? dashboardSnapshotPath = null,
-        string? calendarSnapshotPath = null)
+        string? calendarSnapshotPath = null,
+        string? dialogSnapshotPath = null)
     {
         var results = new List<string>();
         var failures = new List<string>();
@@ -93,6 +94,7 @@ internal static class UiSmokeTestRunner
             CheckSurface("OkrView", () => new OkrView(), results, failures);
             CheckSurface("AIAssistantView", () => new AIAssistantView(), results, failures);
             CheckSurface("TaskDetailWindow", () => new TaskDetailWindow(), results, failures);
+            CheckSurface("FocusDialogWindow", () => new FocusDialogWindow(), results, failures);
             CheckSurface("PomodoroFloatingWindow", () => new PomodoroFloatingWindow(), results, failures);
             CheckSurface("EdgeIndicatorWindow", () => new EdgeIndicatorWindow(), results, failures);
             CheckSurface("CalendarPanelView", () => new CalendarPanelView(), results, failures);
@@ -120,6 +122,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentActionButtons(
+                results,
+                failures);
+            CheckFluentDialogs(
                 results,
                 failures);
             CheckFluentCheckBox(
@@ -166,6 +171,14 @@ internal static class UiSmokeTestRunner
                     calendarSnapshotPath);
                 results.Add(
                     "PASS CalendarPanelView 视觉快照");
+            }
+            if (!string.IsNullOrWhiteSpace(
+                    dialogSnapshotPath))
+            {
+                RenderDialogSnapshot(
+                    dialogSnapshotPath);
+                results.Add(
+                    "PASS FocusDialogWindow 视觉快照");
             }
         }
         catch (Exception ex)
@@ -1159,6 +1172,100 @@ internal static class UiSmokeTestRunner
         }
     }
 
+    private static void CheckFluentDialogs(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var warning = new FocusDialogWindow();
+            warning.Configure(
+                "确定删除目标及其全部关键结果吗？",
+                "确认删除目标",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            warning.Measure(new Size(520, 700));
+            warning.Arrange(
+                new Rect(
+                    0,
+                    0,
+                    520,
+                    Math.Max(
+                        260,
+                        warning.DesiredSize.Height)));
+            warning.UpdateLayout();
+
+            var yes = (Button)warning.FindName(
+                "YesButton");
+            var no = (Button)warning.FindName(
+                "NoButton");
+            var ok = (Button)warning.FindName(
+                "OkButton");
+            var cancel = (Button)warning.FindName(
+                "CancelButton");
+            var title = (TextBlock)warning.FindName(
+                "TitleText");
+            var message = (TextBlock)warning.FindName(
+                "MessageText");
+            if (yes.Visibility != Visibility.Visible
+                || no.Visibility != Visibility.Visible
+                || ok.Visibility != Visibility.Collapsed
+                || cancel.Visibility != Visibility.Collapsed
+                || !ReferenceEquals(
+                    yes.Style,
+                    Application.Current.FindResource(
+                        "FocusDangerButton"))
+                || !ReferenceEquals(
+                    no.Style,
+                    Application.Current.FindResource(
+                        "FocusSecondaryButton"))
+                || yes.IsDefault
+                || !no.IsDefault
+                || title.Text != "确认删除目标"
+                || message.Text
+                    != "确定删除目标及其全部关键结果吗？")
+            {
+                failures.Add(
+                    "Fluent 模态对话框未正确表达危险确认、标题或按钮语义");
+                return;
+            }
+
+            var information = new FocusDialogWindow();
+            information.Configure(
+                "操作已经完成。",
+                "FocusPanel",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            var informationOk =
+                (Button)information.FindName(
+                    "OkButton");
+            var informationYes =
+                (Button)information.FindName(
+                    "YesButton");
+            if (informationOk.Visibility
+                    != Visibility.Visible
+                || informationYes.Visibility
+                    != Visibility.Collapsed
+                || !ReferenceEquals(
+                    informationOk.Style,
+                    Application.Current.FindResource(
+                        "FocusPrimaryButton")))
+            {
+                failures.Add(
+                    "Fluent 信息对话框未使用单一主操作");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 模态对话框主题、危险确认与按钮语义");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 模态对话框加载失败：{ex}");
+        }
+    }
+
     private static void CheckFluentSliderAndProgress(
         ICollection<string> results,
         ICollection<string> failures)
@@ -1810,6 +1917,45 @@ internal static class UiSmokeTestRunner
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);
         using FileStream stream = File.Create(path);
+        encoder.Save(stream);
+    }
+
+    private static void RenderDialogSnapshot(
+        string path)
+    {
+        var dialog = new FocusDialogWindow();
+        dialog.Configure(
+            "确定删除“统一 Fluent 对话框”及其全部关联内容吗？\n\n"
+            + "此操作只用于发布版视觉检查，不会修改任何业务数据。",
+            "确认删除",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        var surface = (Border)dialog.FindName(
+            "DialogSurface");
+        var size = new Size(
+            520,
+            330);
+        surface.Measure(size);
+        surface.Arrange(
+            new Rect(size));
+        surface.UpdateLayout();
+
+        var bitmap = new RenderTargetBitmap(
+            520,
+            330,
+            96,
+            96,
+            PixelFormats.Pbgra32);
+        bitmap.Render(surface);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(
+            BitmapFrame.Create(bitmap));
+        string? directory =
+            Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
+        using FileStream stream =
+            File.Create(path);
         encoder.Save(stream);
     }
 

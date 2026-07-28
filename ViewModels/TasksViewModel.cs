@@ -586,7 +586,11 @@ public partial class TasksViewModel
             }
             catch(System.Exception ex)
             {
-                MessageBox.Show($"Failed to insert image: {ex.Message}");
+                FocusDialogService.Show(
+                    $"插入图片失败：{ex.Message}",
+                    "无法插入图片",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
     }
@@ -684,7 +688,7 @@ public partial class TasksViewModel
         if (item == null) return;
         if (item.Title == "Inbox" && item.ParentId == null) 
         {
-            MessageBox.Show(
+            FocusDialogService.Show(
                 "收件箱是系统保留项目，不能删除。",
                 "无法删除",
                 MessageBoxButton.OK,
@@ -692,7 +696,7 @@ public partial class TasksViewModel
             return;
         }
 
-        var result = MessageBox.Show(
+        var result = FocusDialogService.Show(
             $"确定删除“{item.Title}”及其全部子任务吗？",
             "确认删除",
             MessageBoxButton.YesNo,

@@ -802,7 +802,7 @@ public partial class MainWindow : Window
         _viewModel.MarkReplacementStopped(
             TaskbarReplacementStopReason.StartupFailure,
             error ?? "无法启用任务栏替代模式。");
-        MessageBox.Show(
+        FocusDialogService.Show(
             error ?? "无法启用任务栏替代模式。",
             "已保留 Windows 任务栏",
             MessageBoxButton.OK,
@@ -852,7 +852,7 @@ public partial class MainWindow : Window
             if (!_hiddenToTray)
                 _hotZoneMonitor?.Start();
 
-            MessageBox.Show(
+            FocusDialogService.Show(
                 $"更新包已下载，但无法启动安装：{ex.Message}\n"
                 + "Windows 任务栏已经恢复，可稍后重新尝试。",
                 "无法安装更新",

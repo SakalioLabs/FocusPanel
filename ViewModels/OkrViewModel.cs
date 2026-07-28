@@ -287,7 +287,7 @@ public partial class OkrViewModel
     {
         if (obj == null) return;
 
-        var result = MessageBox.Show(
+        var result = FocusDialogService.Show(
             $"确定删除“{obj.Name}”及其全部关键结果吗？",
             "确认删除目标",
             MessageBoxButton.YesNo,
@@ -451,7 +451,7 @@ public partial class OkrViewModel
 
         var parent = Objectives.FirstOrDefault(o => o.KeyResults.Contains(kr));
         MessageBoxResult confirmation =
-            MessageBox.Show(
+            FocusDialogService.Show(
                 $"确定删除关键结果“{kr.Name}”吗？",
                 "确认删除关键结果",
                 MessageBoxButton.YesNo,
@@ -718,7 +718,7 @@ public partial class OkrViewModel
     private void ClearCredentials()
     {
         MessageBoxResult confirmation =
-            MessageBox.Show(
+            FocusDialogService.Show(
                 "确定清除飞书凭据并停止自动同步吗？本地 OKR 数据不会删除。",
                 "清除飞书凭据",
                 MessageBoxButton.YesNo,

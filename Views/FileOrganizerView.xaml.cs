@@ -318,7 +318,7 @@ public partial class FileOrganizerView : UserControl
                                 details.Add($"{result.AuthorizationCanceled} 个公共桌面项目未获得管理员授权");
                             if (result.Failed > 0)
                                 details.Add($"{result.Failed} 个项目写入属性失败");
-                            MessageBox.Show(
+                            FocusDialogService.Show(
                                 $"已收纳 {result.Collected} 个桌面项目。\n{string.Join("；", details)}。\nFocusPanel 没有移动任何文件。",
                                 "FocusPanel",
                                 MessageBoxButton.OK,

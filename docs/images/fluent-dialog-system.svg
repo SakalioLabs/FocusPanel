@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10141c"/>
+      <stop offset="1" stop-color="#232a37"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a303b" stop-opacity=".96"/>
+      <stop offset="1" stop-color="#1c212a" stop-opacity=".9"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity=".42"/>
+    </filter>
+  </defs>
+  <rect width="1180" height="500" rx="28" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f5f7fb" font-family="Segoe UI Variable Display,Segoe UI" font-size="28" font-weight="600">统一 Fluent 模态对话框</text>
+  <text x="54" y="94" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="15">确认、错误与更新提示不再跳回白底直角 MessageBox</text>
+
+  <g transform="translate(80 132)" filter="url(#shadow)">
+    <rect width="700" height="300" rx="20" fill="url(#glass)" stroke="#fff" stroke-opacity=".13"/>
+    <g transform="translate(26 24)">
+      <rect width="42" height="42" rx="9" fill="#087ac1"/>
+      <text x="12" y="29" fill="#ffd54a" font-family="Segoe Fluent Icons" font-size="19"></text>
+      <text x="58" y="19" fill="#f6f8fc" font-family="Segoe UI Variable Display,Segoe UI" font-size="19" font-weight="600">确认删除目标</text>
+      <text x="58" y="40" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">FocusPanel</text>
+      <text x="626" y="27" fill="#f6f8fc" font-family="Segoe Fluent Icons" font-size="15"></text>
+    </g>
+    <text x="26" y="118" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="15">确定删除“侧边任务栏体验”及其全部关键结果吗？</text>
+    <text x="26" y="151" fill="#aeb7c5" font-family="Segoe UI Variable Text,Segoe UI" font-size="13">危险操作使用语义色；默认焦点停在安全选项。</text>
+    <g transform="translate(466 218)">
+      <rect width="94" height="44" rx="8" fill="#303744" stroke="#87a9ff" stroke-width="2"/>
+      <text x="39" y="28" fill="#f4f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14">否</text>
+      <rect x="104" width="104" height="44" rx="8" fill="#ff6b7a" fill-opacity=".18" stroke="#ff6b7a"/>
+      <text x="149" y="28" fill="#ff7b89" font-family="Segoe UI Variable Text,Segoe UI" font-size="14" font-weight="600">是</text>
+    </g>
+  </g>
+
+  <g transform="translate(830 146)">
+    <text x="0" y="0" fill="#8f9bad" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">一致的运行期反馈</text>
+    <g transform="translate(0 28)">
+      <rect width="286" height="54" rx="12" fill="#ffffff" fill-opacity=".07"/>
+      <circle cx="27" cy="27" r="13" fill="#4b8ff7"/>
+      <text x="21" y="33" fill="#fff" font-family="Segoe UI" font-size="16" font-weight="700">i</text>
+      <text x="52" y="23" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14">信息与完成状态</text>
+      <text x="52" y="41" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">单一“确定”操作</text>
+    </g>
+    <g transform="translate(0 96)">
+      <rect width="286" height="54" rx="12" fill="#ffffff" fill-opacity=".07"/>
+      <circle cx="27" cy="27" r="13" fill="#f2b84b"/>
+      <text x="22" y="33" fill="#171a20" font-family="Segoe UI" font-size="16" font-weight="700">!</text>
+      <text x="52" y="23" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14">危险与系统操作</text>
+      <text x="52" y="41" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">默认选择“否”</text>
+    </g>
+    <g transform="translate(0 164)">
+      <rect width="286" height="54" rx="12" fill="#ffffff" fill-opacity=".07"/>
+      <circle cx="27" cy="27" r="13" fill="#e15b68"/>
+      <text x="22" y="33" fill="#fff" font-family="Segoe UI" font-size="16" font-weight="700">×</text>
+      <text x="52" y="23" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14">错误与恢复说明</text>
+      <text x="52" y="41" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">可复制理解的中文内容</text>
+    </g>
+  </g>
+</svg>
