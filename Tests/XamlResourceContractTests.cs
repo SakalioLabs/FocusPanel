@@ -1136,6 +1136,62 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void CheckBoxes_UseOneRoundedDynamicTheme()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string views = string.Join(
+            Environment.NewLine,
+            Directory.GetFiles(
+                    Path.Combine(
+                        root,
+                        "Views"),
+                    "*.xaml")
+                .Select(File.ReadAllText));
+
+        Assert.Contains(
+            "x:Key=\"FocusCheckBox\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusCheckBox}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"InteractionSurface\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"CheckBoxChrome\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"CheckGlyph\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"IndeterminateGlyph\"",
+            theme);
+        Assert.Contains(
+            "<Setter Property=\"MinHeight\" Value=\"44\"/>",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusAccentBrush}\"",
+            theme);
+        Assert.Contains(
+            "Property=\"IsChecked\"",
+            theme);
+        Assert.Contains(
+            "Property=\"IsEnabled\"",
+            theme);
+        Assert.Contains(
+            "<CheckBox",
+            views);
+        Assert.DoesNotContain(
+            "IsThreeState=\"True\"",
+            views);
+    }
+
+    [Fact]
     public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
     {
         string root = FindRepositoryRoot();

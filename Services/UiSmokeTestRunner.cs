@@ -31,7 +31,8 @@ internal static class UiSmokeTestRunner
         "FocusMenuSeparator",
         "FocusToolTip",
         "FocusComboBox",
-        "FocusComboBoxItem"
+        "FocusComboBoxItem",
+        "FocusCheckBox"
     };
 
     public static int Run(
@@ -80,6 +81,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentComboBox(
+                results,
+                failures);
+            CheckFluentCheckBox(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -556,6 +560,76 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"路径刷新滚动稳定性验证失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentCheckBox(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var checkBox = new CheckBox
+            {
+                Content = "随 Windows 启动 FocusPanel",
+                IsChecked = true,
+                Width = 280
+            };
+
+            checkBox.Measure(
+                new Size(
+                    320,
+                    100));
+            checkBox.Arrange(
+                new Rect(
+                    0,
+                    0,
+                    280,
+                    Math.Max(
+                        44,
+                        checkBox.DesiredSize.Height)));
+            checkBox.UpdateLayout();
+            checkBox.ApplyTemplate();
+
+            if (checkBox.Template.FindName(
+                    "InteractionSurface",
+                    checkBox) is not Border surface
+                || checkBox.Template.FindName(
+                    "CheckBoxChrome",
+                    checkBox) is not Border chrome
+                || chrome.CornerRadius.TopLeft <= 0
+                || checkBox.Template.FindName(
+                    "CheckGlyph",
+                    checkBox) is not TextBlock glyph)
+            {
+                failures.Add(
+                    "Fluent 勾选框缺少点击表面、圆角标记或勾选字形");
+                return;
+            }
+
+            if (glyph.Visibility != Visibility.Visible
+                || !ReferenceEquals(
+                    chrome.Background,
+                    Application.Current.FindResource(
+                        "FocusAccentBrush"))
+                || !ReferenceEquals(
+                    checkBox.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush"))
+                || surface.MinHeight < 44)
+            {
+                failures.Add(
+                    "Fluent 勾选框未应用选中状态、动态主题或最小点击区");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 勾选框点击区、圆角与选中状态");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 勾选框加载失败：{ex}");
         }
     }
 

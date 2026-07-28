@@ -46,6 +46,9 @@ public sealed class UiSmokeTestProcessTests
             Assert.Contains(
                 "PASS Fluent 下拉框封闭态、Popup 与选中项",
                 report);
+            Assert.Contains(
+                "PASS Fluent 勾选框点击区、圆角与选中状态",
+                report);
             Assert.Contains("RESULT PASS", report);
         }
         finally

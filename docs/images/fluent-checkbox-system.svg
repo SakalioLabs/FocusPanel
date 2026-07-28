@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="430" viewBox="0 0 1120 430">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151e30"/>
+      <stop offset="1" stop-color="#0a101b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1687d4"/>
+      <stop offset="1" stop-color="#796cf2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="430" rx="28" fill="url(#bg)"/>
+  <text x="56" y="64" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="600">统一 Fluent 勾选控件</text>
+  <text x="56" y="98" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="16">复选语义不变 · 20px 圆角标记 · 44px 最小点击区</text>
+
+  <g transform="translate(56 138)">
+    <rect width="500" height="230" rx="22" fill="#20242c" stroke="#3b4960"/>
+    <rect x="28" y="26" width="444" height="52" rx="10" fill="#18ffffff"/>
+    <rect x="42" y="42" width="20" height="20" rx="6" fill="url(#accent)" stroke="#72baf0"/>
+    <path d="M47 52 l4 4 7-9" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="78" y="59" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="16">随 Windows 启动 FocusPanel</text>
+    <rect x="28" y="92" width="444" height="52" rx="10" fill="transparent"/>
+    <rect x="42" y="108" width="20" height="20" rx="6" fill="#302c313d" stroke="#556176"/>
+    <text x="78" y="125" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="16">全屏应用前台时停用热区</text>
+    <rect x="28" y="158" width="444" height="44" rx="10" fill="transparent" opacity=".38"/>
+    <rect x="42" y="170" width="20" height="20" rx="6" fill="#302c313d" stroke="#556176"/>
+    <text x="78" y="187" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="16">不可用选项</text>
+  </g>
+
+  <g transform="translate(612 138)">
+    <rect width="452" height="230" rx="22" fill="#f6f8fc" stroke="#d5dbe7"/>
+    <text x="28" y="42" fill="#1d2433" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="600">同一控件，多种业务语义</text>
+    <circle cx="40" cy="79" r="4" fill="#4ca6e8"/>
+    <text x="56" y="85" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="15">设置开关：是否启用某项行为</text>
+    <circle cx="40" cy="116" r="4" fill="#4ca6e8"/>
+    <text x="56" y="122" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="15">任务完成：保留清晰的完成/未完成语义</text>
+    <circle cx="40" cy="153" r="4" fill="#4ca6e8"/>
+    <text x="56" y="159" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="15">多选字段：允许同时选择多个选项</text>
+    <text x="28" y="201" fill="#1d2433" font-family="Segoe UI, Microsoft YaHei" font-size="14">不会为了视觉统一而错误替换成 ToggleSwitch</text>
+  </g>
+</svg>

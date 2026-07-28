@@ -152,6 +152,132 @@
         </Setter>
     </Style>
 
+    <Style x:Key="FocusCheckBox"
+           TargetType="CheckBox">
+        <Setter Property="MinHeight" Value="44"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource FocusStrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle"
+                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Border x:Name="InteractionSurface"
+                            MinHeight="{TemplateBinding MinHeight}"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="CheckBoxChrome"
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource FocusSurfaceSoftBrush}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="6"
+                                    SnapsToDevicePixels="True">
+                                <Grid>
+                                    <TextBlock x:Name="CheckGlyph"
+                                               Text="&#xE73E;"
+                                               FontFamily="Segoe Fluent Icons"
+                                               FontSize="12"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Visibility="Collapsed"/>
+                                    <Border x:Name="IndeterminateGlyph"
+                                            Width="9"
+                                            Height="2"
+                                            Background="White"
+                                            CornerRadius="1"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <ContentPresenter x:Name="CheckContent"
+                                              Grid.Column="1"
+                                              Margin="8,0,0,0"
+                                              ContentSource="Content"
+                                              RecognizesAccessKey="True"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter TargetName="InteractionSurface"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked"
+                                 Value="True">
+                            <Setter TargetName="CheckBoxChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusAccentBrush}"/>
+                            <Setter TargetName="CheckBoxChrome"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                            <Setter TargetName="CheckGlyph"
+                                    Property="Visibility"
+                                    Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked"
+                                 Value="{x:Null}">
+                            <Setter TargetName="CheckBoxChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusAccentBrush}"/>
+                            <Setter TargetName="CheckBoxChrome"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                            <Setter TargetName="IndeterminateGlyph"
+                                    Property="Visibility"
+                                    Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="HasContent"
+                                 Value="False">
+                            <Setter TargetName="CheckContent"
+                                    Property="Margin"
+                                    Value="0"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed"
+                                 Value="True">
+                            <Setter TargetName="InteractionSurface"
+                                    Property="Opacity"
+                                    Value="0.72"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="InteractionSurface"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                            <Setter Property="Cursor"
+                                    Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="CheckBox"
+           BasedOn="{StaticResource FocusCheckBox}"/>
+
     <Style x:Key="FocusComboBoxItem"
            TargetType="ComboBoxItem">
         <Setter Property="MinHeight" Value="38"/>
