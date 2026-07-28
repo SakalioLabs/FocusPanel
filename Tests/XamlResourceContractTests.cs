@@ -416,6 +416,27 @@ public sealed class XamlResourceContractTests
             codeBehind.Split("StopAutoScroll();", StringSplitOptions.None).Length >= 7);
     }
 
+    [Fact]
+    public void HiddenShell_PausesWindowTrackingAndDetailRefreshTimers()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+        string tracker = File.ReadAllText(
+            Path.Combine(root, "Services", "WindowTracker.cs"));
+
+        Assert.Contains("_viewModel.SetShellVisible(false)", mainWindow);
+        Assert.Contains("_viewModel.SetShellVisible(true)", mainWindow);
+        Assert.Contains("_windowTracker.SetTrackingActive(isVisible)", viewModel);
+        Assert.Contains("ShellRefreshActivityPolicy.GetActivity", viewModel);
+        Assert.Contains("if (_trackingActive)", tracker);
+        Assert.Contains(
+            "WindowTrackingActivityPolicy.ShouldProcessWindowEvent",
+            tracker);
+    }
+
     private static HashSet<string> ReadDefinedKeys(params string[] paths)
     {
         var keys = new HashSet<string>(StringComparer.Ordinal);

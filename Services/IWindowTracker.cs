@@ -8,6 +8,7 @@ public interface IWindowTracker : IDisposable
 {
     event EventHandler? SnapshotChanged;
     IReadOnlyList<WindowTaskItem> GetSnapshot();
+    void SetTrackingActive(bool isActive);
     void ActivateOrMinimize(WindowTaskItem task);
     void Activate(IntPtr handle);
     void Close(IntPtr handle);

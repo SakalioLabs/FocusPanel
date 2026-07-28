@@ -36,6 +36,7 @@ public sealed class WindowTracker : IWindowTracker
     private readonly List<IntPtr> _hooks = new();
     private readonly IAppIdentityResolver _identityResolver;
     private IReadOnlyList<WindowTaskItem> _snapshot = Array.Empty<WindowTaskItem>();
+    private volatile bool _trackingActive = true;
 
     public WindowTracker() : this(new AppIdentityResolver())
     {
@@ -49,7 +50,8 @@ public sealed class WindowTracker : IWindowTracker
         _refreshDebounce.Tick += (_, _) =>
         {
             _refreshDebounce.Stop();
-            RefreshSnapshot();
+            if (_trackingActive)
+                RefreshSnapshot();
         };
 
         AddHook(EventSystemForeground, EventSystemForeground);
@@ -61,6 +63,22 @@ public sealed class WindowTracker : IWindowTracker
     public event EventHandler? SnapshotChanged;
 
     public IReadOnlyList<WindowTaskItem> GetSnapshot() => _snapshot;
+
+    public void SetTrackingActive(bool isActive)
+    {
+        bool wasActive = _trackingActive;
+        if (wasActive == isActive)
+            return;
+
+        _trackingActive = isActive;
+        _refreshDebounce.Stop();
+        if (WindowTrackingActivityPolicy.ShouldRefreshAfterActivityChange(
+                wasActive,
+                isActive))
+        {
+            RefreshSnapshot();
+        }
+    }
 
     public void ActivateOrMinimize(WindowTaskItem task)
     {
@@ -242,12 +260,29 @@ public sealed class WindowTracker : IWindowTracker
     {
         if (eventType >= EventObjectShow && idObject != ObjidWindow)
             return;
-
-        _refreshDebounce.Dispatcher.BeginInvoke(() =>
+        if (!WindowTrackingActivityPolicy.ShouldProcessWindowEvent(
+                _trackingActive))
         {
+            return;
+        }
+
+        void RestartDebounce()
+        {
+            if (!_trackingActive)
+                return;
+
             _refreshDebounce.Stop();
             _refreshDebounce.Start();
-        });
+        }
+
+        if (_refreshDebounce.Dispatcher.CheckAccess())
+        {
+            RestartDebounce();
+        }
+        else
+        {
+            _refreshDebounce.Dispatcher.BeginInvoke(RestartDebounce);
+        }
     }
 
     public void Dispose()

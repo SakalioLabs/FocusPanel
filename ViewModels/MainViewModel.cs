@@ -38,6 +38,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
     private string? _lastNotifiedUpdateVersion;
+    private bool _isShellVisible;
 
     [ObservableProperty]
     private string title = "FocusPanel";
@@ -196,15 +197,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _appCatalog.CatalogChanged += OnCatalogChanged;
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now;
-        _clockTimer.Start();
 
         _systemStatusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _systemStatusTimer.Tick += (_, _) => RefreshSystemStatus();
-        _systemStatusTimer.Start();
 
         _taskSummaryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
         _taskSummaryTimer.Tick += (_, _) => RefreshTaskSummary();
-        _taskSummaryTimer.Start();
 
         _updateCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
         _updateCheckTimer.Tick += async (_, _) => await CheckForUpdatesInBackgroundAsync();
@@ -213,6 +211,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<AppLaunchItem> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+
+    public void SetShellVisible(bool isVisible)
+    {
+        _isShellVisible = isVisible;
+        _windowTracker.SetTrackingActive(isVisible);
+        if (isVisible)
+            CurrentTime = DateTime.Now;
+        UpdateRefreshActivity();
+    }
 
     public event Action? RequestClose;
     public event Action? RequestEnableReplacement;
@@ -225,6 +232,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsSearchOpen = true;
         RefreshSearchResults();
+    }
+
+    partial void OnIsCalendarOpenChanged(bool value)
+    {
+        if (value && _isShellVisible)
+            RefreshTaskSummary();
+        UpdateRefreshActivity();
+    }
+
+    partial void OnIsStatusCenterOpenChanged(bool value)
+    {
+        if (value && _isShellVisible)
+            RefreshSystemStatus();
+        UpdateRefreshActivity();
     }
 
     partial void OnMasterVolumeChanged(float value)
@@ -425,8 +446,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool open = !IsCalendarOpen;
         CloseTransientPanels();
         IsCalendarOpen = open;
-        if (open)
-            RefreshTaskSummary();
     }
 
     [RelayCommand]
@@ -443,8 +462,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool open = !IsStatusCenterOpen;
         CloseTransientPanels();
         IsStatusCenterOpen = open;
-        if (open)
-            RefreshSystemStatus();
     }
 
     [RelayCommand]
@@ -793,6 +810,33 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch
         {
             OpenTaskCount = 0;
+        }
+    }
+
+    private void UpdateRefreshActivity()
+    {
+        ShellRefreshActivity activity =
+            ShellRefreshActivityPolicy.GetActivity(
+                _isShellVisible,
+                IsStatusCenterOpen,
+                IsCalendarOpen);
+        SetTimerState(_clockTimer, activity.Clock);
+        SetTimerState(_systemStatusTimer, activity.SystemStatus);
+        SetTimerState(_taskSummaryTimer, activity.TaskSummary);
+    }
+
+    private static void SetTimerState(
+        DispatcherTimer timer,
+        bool shouldRun)
+    {
+        if (shouldRun)
+        {
+            if (!timer.IsEnabled)
+                timer.Start();
+        }
+        else
+        {
+            timer.Stop();
         }
     }
 

@@ -331,6 +331,7 @@ public partial class MainWindow : Window
     private void HideShell()
     {
         CloseOverlayPanels();
+        _viewModel.SetShellVisible(false);
         Visibility = Visibility.Hidden;
         UpdateEdgeIndicatorVisibility();
     }
@@ -341,6 +342,7 @@ public partial class MainWindow : Window
         if (!IsVisible)
             Show();
         Visibility = Visibility.Visible;
+        _viewModel.SetShellVisible(true);
         Topmost = true;
 
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
