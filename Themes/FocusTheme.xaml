@@ -152,6 +152,75 @@
         </Setter>
     </Style>
 
+    <Style x:Key="FocusComboBoxItem"
+           TargetType="ComboBoxItem">
+        <Setter Property="MinHeight" Value="38"/>
+        <Setter Property="Padding" Value="12,7"/>
+        <Setter Property="Margin" Value="2"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="HorizontalContentAlignment"
+                Value="Stretch"/>
+        <Setter Property="FocusVisualStyle"
+                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="ItemChrome"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <Grid>
+                            <Border x:Name="SelectionIndicator"
+                                    Width="3"
+                                    Margin="-5,3,0,3"
+                                    HorizontalAlignment="Left"
+                                    Background="{DynamicResource FocusAccentBrightBrush}"
+                                    CornerRadius="2"
+                                    Visibility="Collapsed"/>
+                            <ContentPresenter Margin="6,0,0,0"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted"
+                                 Value="True">
+                            <Setter TargetName="ItemChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin"
+                                 Value="True">
+                            <Setter TargetName="ItemChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected"
+                                 Value="True">
+                            <Setter TargetName="ItemChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+                            <Setter TargetName="SelectionIndicator"
+                                    Property="Visibility"
+                                    Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="ItemChrome"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="FocusComboBox"
            TargetType="ComboBox">
         <Setter Property="MinHeight" Value="44"/>
@@ -165,7 +234,119 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FocusVisualStyle"
                 Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="ItemContainerStyle"
+                Value="{StaticResource FocusComboBoxItem}"/>
+        <Setter Property="ScrollViewer.CanContentScroll"
+                Value="True"/>
+        <Setter Property="MaxDropDownHeight" Value="320"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="DropDownToggle"
+                                      Focusable="False"
+                                      ClickMode="Press"
+                                      Foreground="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"
+                                      IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="ComboChrome"
+                                            MinHeight="{Binding MinHeight, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            Padding="{Binding Padding, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            SnapsToDevicePixels="True">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="28"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ContentPresenter Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                              ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                              ContentStringFormat="{Binding SelectionBoxItemStringFormat, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                              HorizontalAlignment="Left"
+                                                              VerticalAlignment="Center"
+                                                              SnapsToDevicePixels="True"/>
+                                            <TextBlock x:Name="DropDownArrow"
+                                                       Grid.Column="1"
+                                                       Text="&#xE70D;"
+                                                       FontFamily="Segoe Fluent Icons"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource FocusMutedTextBrush}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver"
+                                                 Value="True">
+                                            <Setter TargetName="ComboChrome"
+                                                    Property="Background"
+                                                    Value="{DynamicResource FocusHoverBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsChecked"
+                                                 Value="True">
+                                            <Setter TargetName="ComboChrome"
+                                                    Property="Background"
+                                                    Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+                                            <Setter TargetName="DropDownArrow"
+                                                    Property="Foreground"
+                                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <Popup x:Name="PART_Popup"
+                               Placement="Bottom"
+                               PlacementTarget="{Binding ElementName=DropDownToggle}"
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               PopupAnimation="Fade">
+                            <Border x:Name="DropDownSurface"
+                                    MinWidth="{Binding ActualWidth, ElementName=DropDownToggle}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                    Margin="0,6,0,0"
+                                    Padding="4"
+                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                    BorderBrush="{DynamicResource FocusStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="{StaticResource FocusCardCornerRadius}"
+                                    SnapsToDevicePixels="True">
+                                <ScrollViewer CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="HasItems"
+                                 Value="False">
+                            <Setter TargetName="DropDownSurface"
+                                    Property="MinHeight"
+                                    Value="44"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="DropDownToggle"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
+    <Style TargetType="ComboBox"
+           BasedOn="{StaticResource FocusComboBox}"/>
+    <Style TargetType="ComboBoxItem"
+           BasedOn="{StaticResource FocusComboBoxItem}"/>
 
     <Style x:Key="FocusSearchBox" TargetType="TextBox">
         <Setter Property="MinHeight" Value="44"/>

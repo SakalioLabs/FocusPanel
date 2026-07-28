@@ -1083,6 +1083,59 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void ComboBoxes_UseOneRoundedDynamicPopupTheme()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+
+        Assert.Contains(
+            "x:Key=\"FocusComboBox\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusComboBoxItem\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusComboBox}\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusComboBoxItem}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"DropDownToggle\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"PART_Popup\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"DropDownSurface\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"SelectionIndicator\"",
+            theme);
+        Assert.Contains(
+            "CornerRadius=\"{StaticResource FocusCardCornerRadius}\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusSurfaceStrongBrush}\"",
+            theme);
+        Assert.Contains(
+            "<ComboBox SelectedValuePath=\"Tag\"",
+            mainWindow);
+        Assert.DoesNotContain(
+            "IsEditable=\"True\"",
+            mainWindow);
+    }
+
+    [Fact]
     public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
     {
         string root = FindRepositoryRoot();

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.67 - 2026-07-29
+
+- 修复设置页主题选择仍使用系统默认 ComboBox，以及 AI 模型、任务字段、任务详情和 OKR 间隔下拉层仍可能退回浅色直角 Popup 的问题。
+- 新增完整非编辑式 `FocusComboBox` 模板，统一封闭按钮、Segoe Fluent 箭头、鼠标悬停、展开状态、键盘焦点、禁用状态和最大下拉高度。
+- 新增 `FocusComboBoxItem`，以单层圆角表面、柔和选中背景和左侧强调标记显示当前项；不使用系统蓝高亮，避免浅色主题下文字对比度失控。
+- 下拉 Popup 使用动态 `FocusSurfaceStrongBrush`、`FocusStrokeBrush` 和卡片圆角，不叠加矩形外框或黑色投影；所有现有 ComboBox 均为非编辑式，业务绑定语义保持不变。
+- UI 冒烟真实创建 ComboBox、Popup 和 ComboBoxItem，验证模板部件、圆角及动态资源；资源契约覆盖设置页隐式样式和不可编辑边界。
+- README 新增统一 Fluent 下拉选择结构图。
+
 ## v0.9.66 - 2026-07-29
 
 - 修复按钮、应用状态、文件路径和输入控件提示仍沿用 WPF 默认矩形模板的问题；工具提示现在使用单层 Fluent 圆角表面。

@@ -29,7 +29,9 @@ internal static class UiSmokeTestRunner
         "FocusContextMenu",
         "FocusMenuItem",
         "FocusMenuSeparator",
-        "FocusToolTip"
+        "FocusToolTip",
+        "FocusComboBox",
+        "FocusComboBoxItem"
     };
 
     public static int Run(
@@ -75,6 +77,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentToolTip(
+                results,
+                failures);
+            CheckFluentComboBox(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -551,6 +556,99 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"路径刷新滚动稳定性验证失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentComboBox(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var first = new ComboBoxItem
+            {
+                Content = "跟随系统",
+                IsSelected = true
+            };
+            var second = new ComboBoxItem
+            {
+                Content = "深色"
+            };
+            var comboBox = new ComboBox
+            {
+                Width = 220,
+                Items =
+                {
+                    first,
+                    second
+                }
+            };
+
+            comboBox.Measure(
+                new Size(
+                    320,
+                    200));
+            comboBox.Arrange(
+                new Rect(
+                    0,
+                    0,
+                    220,
+                    Math.Max(
+                        44,
+                        comboBox.DesiredSize.Height)));
+            comboBox.UpdateLayout();
+            comboBox.ApplyTemplate();
+            first.ApplyTemplate();
+
+            if (comboBox.Template.FindName(
+                    "DropDownToggle",
+                    comboBox) is not ToggleButton
+                || comboBox.Template.FindName(
+                    "PART_Popup",
+                    comboBox) is not Popup
+                || comboBox.Template.FindName(
+                    "DropDownSurface",
+                    comboBox) is not Border surface
+                || surface.CornerRadius.TopLeft <= 0)
+            {
+                failures.Add(
+                    "Fluent 下拉框缺少封闭按钮、Popup 或单层圆角表面");
+                return;
+            }
+
+            if (first.Template.FindName(
+                    "ItemChrome",
+                    first) is not Border
+                || first.Template.FindName(
+                    "SelectionIndicator",
+                    first) is not Border)
+            {
+                failures.Add(
+                    "Fluent 下拉项缺少高亮表面或选中标记");
+                return;
+            }
+
+            if (!ReferenceEquals(
+                    comboBox.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush"))
+                || !ReferenceEquals(
+                    surface.Background,
+                    Application.Current.FindResource(
+                        "FocusSurfaceStrongBrush")))
+            {
+                failures.Add(
+                    "Fluent 下拉框未使用动态主题资源");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 下拉框封闭态、Popup 与选中项");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 下拉框加载失败：{ex}");
         }
     }
 

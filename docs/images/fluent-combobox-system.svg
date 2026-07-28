@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="440" viewBox="0 0 1120 440">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151e30"/>
+      <stop offset="1" stop-color="#0a101b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4ca6e8"/>
+      <stop offset="1" stop-color="#8c7df6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="440" rx="28" fill="url(#bg)"/>
+  <text x="56" y="64" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="600">统一 Fluent 下拉选择</text>
+  <text x="56" y="98" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="16">封闭态、Popup 与选中项使用同一套动态主题令牌</text>
+
+  <g transform="translate(56 138)">
+    <rect width="470" height="246" rx="22" fill="#20242c" stroke="#3b4960"/>
+    <text x="28" y="38" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="14">主题</text>
+    <rect x="28" y="54" width="414" height="48" rx="10" fill="#2c313d" stroke="#46536a"/>
+    <text x="48" y="84" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="16">跟随系统</text>
+    <path d="M406 74 l7 7 7-7" fill="none" stroke="#6bb7ef" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="112" width="414" height="108" rx="12" fill="#d020242c" stroke="#46536a"/>
+    <rect x="34" y="120" width="402" height="42" rx="8" fill="#302c313d"/>
+    <rect x="41" y="128" width="3" height="26" rx="2" fill="url(#accent)"/>
+    <text x="58" y="147" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">跟随系统</text>
+    <text x="58" y="192" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">深色</text>
+  </g>
+
+  <g transform="translate(582 138)">
+    <rect width="482" height="246" rx="22" fill="#f6f8fc" stroke="#d5dbe7"/>
+    <text x="28" y="38" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="14">AI 模型</text>
+    <rect x="28" y="54" width="426" height="48" rx="10" fill="#ffffff" stroke="#d6dce7"/>
+    <text x="48" y="84" fill="#1d2433" font-family="Segoe UI, Microsoft YaHei" font-size="16">gpt-5</text>
+    <path d="M418 74 l7 7 7-7" fill="none" stroke="#347fba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="28" y="142" fill="#1d2433" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="600">一致的交互边界</text>
+    <text x="28" y="174" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="14">↑ ↓ 选择 · Enter 确认 · Esc 关闭</text>
+    <text x="28" y="202" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="14">最大高度 320px，超出后仅在弹层内部滚动</text>
+  </g>
+</svg>
