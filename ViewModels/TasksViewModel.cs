@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Windows;
-using Microsoft.Win32;
 using System.IO;
 using System;
 
@@ -136,6 +135,7 @@ public partial class TasksViewModel
     private readonly AppDbContext _context; // Keep context alive
     private readonly SettingsService _settingsService;
     private readonly IFolderPickerService _folderPickerService;
+    private readonly IFilePickerService _filePickerService;
 
     // Unified Items List (Replaces RootItems and ChildItems)
     [ObservableProperty]
@@ -216,15 +216,20 @@ public partial class TasksViewModel
     private string taskStatusMessage = string.Empty;
 
     public TasksViewModel()
-        : this(new ShellFolderPickerService())
+        : this(
+            new ShellFolderPickerService(),
+            new WindowsFilePickerService())
     {
     }
 
     internal TasksViewModel(
-        IFolderPickerService folderPickerService)
+        IFolderPickerService folderPickerService,
+        IFilePickerService filePickerService)
     {
         _folderPickerService =
             folderPickerService;
+        _filePickerService =
+            filePickerService;
         _context = new AppDbContext();
         _taskService = new TaskService(_context);
         _settingsService = new SettingsService();
@@ -610,32 +615,61 @@ public partial class TasksViewModel
     private void InsertImageToMarkdown(CustomFieldValueViewModel fieldViewModel)
     {
         if (fieldViewModel == null || !fieldViewModel.IsLongText) return;
-        
-        // Open File Dialog
-        var openFileDialog = new OpenFileDialog();
-        openFileDialog.Filter = "Images|*.png;*.jpg;*.jpeg;*.gif;*.bmp";
-        if (openFileDialog.ShowDialog() == true)
+
+        FilePickerResult result =
+            _filePickerService.PickFile(
+                new FilePickerRequest(
+                    "选择要插入的图片",
+                    "图片文件 (*.png;*.jpg;*.jpeg;*.gif;*.bmp)|*.png;*.jpg;*.jpeg;*.gif;*.bmp",
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder.MyPictures)));
+        FileSelectionDecision decision =
+            FileSelectionPolicy.Resolve(result);
+        if (!decision.ShouldOpen
+            && decision.Error == null)
         {
-            try 
+            return;
+        }
+        if (!decision.ShouldOpen
+            || string.IsNullOrWhiteSpace(
+                decision.Path))
+        {
+            FocusDialogService.Show(
+                decision.Error
+                    ?? "Windows 没有返回有效的图片路径。",
+                "无法选择图片",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
+        }
+
+        try
+        {
+            string savedPath =
+                SaveImageForMarkdown(
+                    decision.Path);
+            string imageMarkdown =
+                $"![图片]({savedPath})";
+
+            if (string.IsNullOrEmpty(
+                    fieldViewModel.Value))
             {
-                string savedPath = SaveImageForMarkdown(openFileDialog.FileName);
-                // Insert markdown syntax
-                string imageMarkdown = $"![Image]({savedPath})";
-                
-                // Append or Insert at cursor (cursor position tricky in MVVM, just append for now)
-                if (string.IsNullOrEmpty(fieldViewModel.Value))
-                    fieldViewModel.Value = imageMarkdown;
-                else
-                    fieldViewModel.Value += $"\n{imageMarkdown}";
+                fieldViewModel.Value =
+                    imageMarkdown;
             }
-            catch(System.Exception ex)
+            else
             {
-                FocusDialogService.Show(
-                    $"插入图片失败：{ex.Message}",
-                    "无法插入图片",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                fieldViewModel.Value +=
+                    $"\n{imageMarkdown}";
             }
+        }
+        catch (Exception ex)
+        {
+            FocusDialogService.Show(
+                $"插入图片失败：{ex.Message}",
+                "无法插入图片",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
     }
 

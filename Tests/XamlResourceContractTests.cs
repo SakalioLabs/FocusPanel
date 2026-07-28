@@ -481,6 +481,33 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "FocusDialogInteractionLease.Enter(",
             picker);
+
+        string filePicker = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowsFilePickerService.cs"));
+        Assert.DoesNotContain(
+            "new OpenFileDialog",
+            tasks);
+        Assert.Contains(
+            "new WindowsFilePickerService()",
+            tasks);
+        Assert.Contains(
+            "FileSelectionPolicy.Resolve(result)",
+            tasks);
+        Assert.Contains(
+            "图片文件 (*.png;*.jpg;*.jpeg;*.gif;*.bmp)",
+            tasks);
+        Assert.Contains(
+            "![图片]",
+            tasks);
+        Assert.Contains(
+            "dialog.ShowDialog(owner)",
+            filePicker);
+        Assert.Contains(
+            "FocusDialogInteractionLease.Enter(",
+            filePicker);
     }
 
     [Fact]

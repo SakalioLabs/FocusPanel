@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10151d"/>
+      <stop offset="1" stop-color="#242b39"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000" flood-opacity=".42"/>
+    </filter>
+  </defs>
+  <rect width="1180" height="500" rx="28" fill="url(#bg)"/>
+  <text x="52" y="62" fill="#f5f7fb" font-family="Segoe UI Variable Display,Segoe UI" font-size="28" font-weight="600">Windows 现代图片选择器</text>
+  <text x="52" y="94" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="15">显式 Owner、中文过滤器与可替代边界，系统窗口期间 Panel 保持展开</text>
+
+  <g transform="translate(62 126)" filter="url(#shadow)">
+    <rect width="760" height="320" rx="18" fill="#f7f8fb"/>
+    <rect width="760" height="54" rx="18" fill="#eef1f6"/>
+    <rect y="36" width="760" height="18" fill="#eef1f6"/>
+    <text x="24" y="34" fill="#18202c" font-family="Segoe UI Variable Text,Segoe UI" font-size="15" font-weight="600">选择要插入的图片</text>
+    <text x="716" y="34" fill="#394657" font-family="Segoe Fluent Icons" font-size="14"></text>
+
+    <rect x="20" y="70" width="720" height="40" rx="8" fill="#fff" stroke="#d7dce5"/>
+    <text x="36" y="95" fill="#59677a" font-family="Segoe Fluent Icons" font-size="14"></text>
+    <text x="62" y="95" fill="#283446" font-family="Segoe UI Variable Text,Segoe UI" font-size="13">此电脑  ›  图片  ›  FocusPanel 素材</text>
+
+    <g transform="translate(20 126)">
+      <rect width="166" height="112" rx="10" fill="#dbe8fb" stroke="#3b7edc" stroke-width="2"/>
+      <rect x="8" y="8" width="150" height="72" rx="7" fill="#7eb1dc"/>
+      <circle cx="126" cy="28" r="10" fill="#ffd35a"/>
+      <path d="M8 67l38-29 28 22 25-17 59 37H8z" fill="#3f7b68"/>
+      <text x="8" y="101" fill="#253246" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">任务面板.png</text>
+
+      <rect x="184" width="166" height="112" rx="10" fill="#fff" stroke="#d7dce5"/>
+      <rect x="192" y="8" width="150" height="72" rx="7" fill="#d7b293"/>
+      <circle cx="314" cy="28" r="10" fill="#fff2b0"/>
+      <path d="M192 67l42-32 26 20 30-18 52 43H192z" fill="#80684c"/>
+      <text x="192" y="101" fill="#253246" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">项目封面.jpg</text>
+
+      <rect x="368" width="166" height="112" rx="10" fill="#fff" stroke="#d7dce5"/>
+      <rect x="376" y="8" width="150" height="72" rx="7" fill="#262d3a"/>
+      <rect x="392" y="24" width="58" height="40" rx="6" fill="#447fc9"/>
+      <rect x="460" y="24" width="48" height="8" rx="4" fill="#9aa8ba"/>
+      <rect x="460" y="40" width="38" height="8" rx="4" fill="#697789"/>
+      <text x="376" y="101" fill="#253246" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">深色界面.bmp</text>
+    </g>
+
+    <text x="20" y="286" fill="#59677a" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">文件类型：图片文件 (*.png; *.jpg; *.jpeg; *.gif; *.bmp)</text>
+    <rect x="630" y="266" width="110" height="40" rx="8" fill="#2879d7"/>
+    <text x="670" y="291" fill="#fff" font-family="Segoe UI Variable Text,Segoe UI" font-size="13" font-weight="600">打开</text>
+  </g>
+
+  <g transform="translate(860 146)">
+    <text x="0" y="0" fill="#8f9bad" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">插入流程</text>
+    <g transform="translate(0 28)">
+      <rect width="260" height="62" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="25" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14" font-weight="600">选择</text>
+      <text x="18" y="46" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">只显示支持的图片格式</text>
+    </g>
+    <g transform="translate(0 104)">
+      <rect width="260" height="62" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="25" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14" font-weight="600">复制</text>
+      <text x="18" y="46" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">保存到任务图片目录</text>
+    </g>
+    <g transform="translate(0 180)">
+      <rect width="260" height="62" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="25" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14" font-weight="600">插入</text>
+      <text x="18" y="46" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">生成 ![图片](路径) Markdown</text>
+    </g>
+  </g>
+</svg>

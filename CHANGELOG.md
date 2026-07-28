@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.81 - 2026-07-29
+
+- 将任务长文本“插入图片”从 ViewModel 直接创建 `Microsoft.Win32.OpenFileDialog` 改为可替换的 `IFilePickerService` 与 `WindowsFilePickerService`，系统 UI 边界不再混入业务逻辑。
+- 现代文件选择窗口显式使用当前活动 FocusPanel 窗口作为 Owner；打开期间复用临时交互租约，Panel 和任务详情不会因系统窗口取得焦点而自动缩回。
+- 新增类型化 Selected/Canceled/Failed 结果和纯 `FileSelectionPolicy`；取消不写正文、不显示错误，系统异常或空路径才进入统一 Fluent 错误提示。
+- 选图标题改为“选择要插入的图片”，过滤器改为中文“图片文件”，默认从 Windows 图片目录打开；生成的 Markdown 替代文字从 `Image` 改为“图片”。
+- `WpfFileDialogBoundary` 保留 Windows 现代通用文件对话框行为，启用文件与路径存在检查、单选和扩展名处理。
+- 自动测试使用替代文件选择边界，覆盖请求与结果转发、取消、异常、空标题/过滤器、交互锁、选择/取消/失败决策；不会弹出真实系统窗口。
+- XAML/源码契约禁止任务 ViewModel 再直接实例化 `OpenFileDialog`，并确保 Owner 与交互锁持续存在。
+- README 新增现代图片选择器图示。
+
 ## v0.9.80 - 2026-07-29
 
 - 移除任务图片保存路径使用的老式 `System.Windows.Forms.FolderBrowserDialog`，改用 Windows Shell 公开的 `IFileOpenDialog` 现代通用文件夹选择器；继续保持 .NET 7，不引入额外 UI 包。
