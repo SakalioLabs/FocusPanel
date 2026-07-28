@@ -49,6 +49,7 @@ public partial class MainWindow : Window
     private bool _isDesktopFileDragging;
     private bool _isHotZoneAvailable;
     private bool _autoHideIgnoresKeyboardFocus;
+    private int _transientInteractionDepth;
     private System.Windows.Point _pinnedDragStart;
 
     public MainWindow()
@@ -78,6 +79,7 @@ public partial class MainWindow : Window
             _autoHideTimer.Stop();
             bool shouldHide = ShellAutoHidePolicy.ShouldHide(
                 _isDesktopFileDragging,
+                _transientInteractionDepth > 0 || Mouse.Captured != null,
                 IsCursorInsideShell(),
                 ShellBorder.IsKeyboardFocusWithin,
                 _autoHideIgnoresKeyboardFocus);
@@ -445,6 +447,28 @@ public partial class MainWindow : Window
     private void ButtonContextMenu_Closed(object sender, RoutedEventArgs e)
         => ScheduleAutoHide();
 
+    private void TransientContextMenu_Opened(object sender, RoutedEventArgs e)
+        => BeginTransientInteraction();
+
+    private void TransientContextMenu_Closed(object sender, RoutedEventArgs e)
+        => EndTransientInteraction();
+
+    public void BeginTransientInteraction()
+    {
+        _transientInteractionDepth++;
+        _autoHideTimer.Stop();
+        _autoHideIgnoresKeyboardFocus = false;
+    }
+
+    public void EndTransientInteraction()
+    {
+        if (_transientInteractionDepth > 0)
+            _transientInteractionDepth--;
+
+        if (_transientInteractionDepth == 0)
+            ScheduleAutoHide();
+    }
+
     private void TaskbarApp_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { DataContext: TaskbarAppItem task } button)
@@ -689,6 +713,7 @@ public partial class MainWindow : Window
         }
 
         _autoHideTimer.Stop();
+        _transientInteractionDepth = 0;
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
         if (_summonHotkeyRegistered && hwnd != IntPtr.Zero)
         {

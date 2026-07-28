@@ -232,6 +232,35 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void ShellAutoHide_WaitsForMenusPopupsAndMouseCapture()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string mainWindowCode = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string organizer = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml"));
+
+        Assert.Equal(
+            3,
+            Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
+        Assert.Equal(
+            3,
+            Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
+        Assert.Contains("Mouse.Captured != null", mainWindowCode);
+        Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
+        Assert.Contains("Opened=\"TransientSurface_Opened\"", organizer);
+        Assert.Contains("Closed=\"TransientSurface_Closed\"", organizer);
+        Assert.Equal(
+            3,
+            Regex.Matches(organizer, "Opened=\"TransientPopup_Opened\"").Count);
+        Assert.Equal(
+            3,
+            Regex.Matches(organizer, "Closed=\"TransientPopup_Closed\"").Count);
+    }
+
+    [Fact]
     public void CompactDock_ExposesNativeWindowsAndMultiWindowActions()
     {
         string root = FindRepositoryRoot();

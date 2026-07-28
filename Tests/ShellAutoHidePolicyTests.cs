@@ -6,13 +6,15 @@ namespace FocusPanel.Tests;
 public sealed class ShellAutoHidePolicyTests
 {
     [Theory]
-    [InlineData(false, false, false, false, true)]
-    [InlineData(false, true, false, false, false)]
-    [InlineData(true, false, false, false, false)]
-    [InlineData(false, false, true, false, false)]
-    [InlineData(false, false, true, true, true)]
+    [InlineData(false, false, false, false, false, true)]
+    [InlineData(false, false, true, false, false, false)]
+    [InlineData(true, false, false, false, false, false)]
+    [InlineData(false, true, false, false, false, false)]
+    [InlineData(false, false, false, true, false, false)]
+    [InlineData(false, false, false, true, true, true)]
     public void DeterminesWhenShellCanHide(
         bool isDragging,
+        bool transientInteraction,
         bool cursorInside,
         bool keyboardFocus,
         bool ignoreKeyboardFocus,
@@ -22,6 +24,7 @@ public sealed class ShellAutoHidePolicyTests
             expected,
             ShellAutoHidePolicy.ShouldHide(
                 isDragging,
+                transientInteraction,
                 cursorInside,
                 keyboardFocus,
                 ignoreKeyboardFocus));

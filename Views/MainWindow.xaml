@@ -49,7 +49,8 @@
                         MenuActivation="LeftOrRightClick"
                         DoubleClickCommand="{Binding ShowWindowCommand}">
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu>
+                <ContextMenu Opened="TransientContextMenu_Opened"
+                             Closed="TransientContextMenu_Closed">
                     <MenuItem Header="显示 FocusPanel" Command="{Binding ShowWindowCommand}"/>
                     <MenuItem Header="恢复原任务栏设置" Command="{Binding DisableReplacementCommand}"/>
                     <Separator/>
@@ -568,7 +569,8 @@
                                                         </StackPanel>
                                                     </Button.ToolTip>
                                                     <Button.ContextMenu>
-                                                        <ContextMenu/>
+                                                        <ContextMenu Opened="TransientContextMenu_Opened"
+                                                                     Closed="TransientContextMenu_Closed"/>
                                                     </Button.ContextMenu>
                                                     <Image Source="{Binding Icon}" Width="30" Height="30"/>
                                                 </Button>
@@ -605,7 +607,8 @@
                                     Command="{Binding OpenStartMenuCommand}"
                                     ToolTip="开始 · 右键打开系统管理菜单">
                                 <Button.ContextMenu>
-                                    <ContextMenu>
+                                    <ContextMenu Opened="TransientContextMenu_Opened"
+                                                 Closed="TransientContextMenu_Closed">
                                         <MenuItem Header="安装的应用"
                                                   Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{x:Static services:SystemManagementTool.InstalledApps}"/>

@@ -99,7 +99,9 @@
             </Style.Triggers>
         </Style>
 
-        <ContextMenu x:Key="FileContextMenu">
+        <ContextMenu x:Key="FileContextMenu"
+                     Opened="TransientSurface_Opened"
+                     Closed="TransientSurface_Closed">
             <MenuItem Header="&#x6253;&#x5F00;"
                       Command="{Binding Data.OpenFileCommand, Source={StaticResource VmProxy}}"
                       CommandParameter="{Binding}"/>
@@ -404,7 +406,9 @@
                                PlacementTarget="{Binding ElementName=ViewToggle}"
                                Placement="Bottom"
                                StaysOpen="False"
-                               AllowsTransparency="True">
+                               AllowsTransparency="True"
+                               Opened="TransientPopup_Opened"
+                               Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
                                 <StackPanel Width="220">
                                     <TextBlock Text="&#x89C6;&#x56FE;&#x6A21;&#x5F0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
@@ -472,7 +476,9 @@
                                PlacementTarget="{Binding ElementName=AddPartitionToggle}"
                                Placement="Bottom"
                                StaysOpen="False"
-                               AllowsTransparency="True">
+                               AllowsTransparency="True"
+                               Opened="TransientPopup_Opened"
+                               Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
                                 <StackPanel Width="210" FocusManager.FocusedElement="{Binding ElementName=PartitionNameBox}">
                                     <TextBlock Text="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;" FontWeight="SemiBold" Margin="0,0,0,10"/>
@@ -508,7 +514,9 @@
                                PlacementTarget="{Binding ElementName=RescueToggle}"
                                Placement="Bottom"
                                StaysOpen="False"
-                               AllowsTransparency="True">
+                               AllowsTransparency="True"
+                               Opened="TransientPopup_Opened"
+                               Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
                                 <StackPanel Width="170">
                                     <TextBlock Text="&#x4FEE;&#x590D;&#x5DE5;&#x5177;" FontSize="12" Opacity="0.65" Margin="0,0,0,10"/>

@@ -18,6 +18,8 @@ public partial class FileOrganizerView : UserControl
     private double _scrollSpeed;
     private ScrollViewer? _scrollViewer;
     private bool _isDragOverOrganizer;
+    private int _transientInteractionDepth;
+    private MainWindow? _transientInteractionOwner;
 
     public FileOrganizerView()
     {
@@ -189,6 +191,47 @@ public partial class FileOrganizerView : UserControl
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
         StopAutoScroll();
+        ReleaseTransientInteractions();
+    }
+
+    private void TransientSurface_Opened(object sender, RoutedEventArgs e)
+        => BeginTransientSurface();
+
+    private void TransientSurface_Closed(object sender, RoutedEventArgs e)
+        => EndTransientSurface();
+
+    private void TransientPopup_Opened(object? sender, EventArgs e)
+        => BeginTransientSurface();
+
+    private void TransientPopup_Closed(object? sender, EventArgs e)
+        => EndTransientSurface();
+
+    private void BeginTransientSurface()
+    {
+        _transientInteractionOwner ??= Window.GetWindow(this) as MainWindow;
+        _transientInteractionDepth++;
+        _transientInteractionOwner?.BeginTransientInteraction();
+    }
+
+    private void EndTransientSurface()
+    {
+        if (_transientInteractionDepth == 0)
+            return;
+
+        _transientInteractionDepth--;
+        _transientInteractionOwner?.EndTransientInteraction();
+        if (_transientInteractionDepth == 0)
+            _transientInteractionOwner = null;
+    }
+
+    private void ReleaseTransientInteractions()
+    {
+        while (_transientInteractionDepth > 0)
+        {
+            _transientInteractionDepth--;
+            _transientInteractionOwner?.EndTransientInteraction();
+        }
+        _transientInteractionOwner = null;
     }
 
     private async void Partition_Drop(object sender, DragEventArgs e)
