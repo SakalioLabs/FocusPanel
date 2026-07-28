@@ -23,7 +23,7 @@ public sealed class CommonDesktopElevationRequiredException : InvalidOperationEx
     public string Path { get; }
 }
 
-public class FileOrganizerService
+public class FileOrganizerService : IDisposable
 {
     private readonly string _desktopPath;
     private readonly string _commonDesktopPath;
@@ -33,6 +33,10 @@ public class FileOrganizerService
     private FileSystemWatcher _desktopWatcher = null!;
     private FileSystemWatcher? _commonDesktopWatcher;
     private FileSystemWatcher? _storageWatcher;
+    private readonly DesktopChangeAccumulator _pendingChanges = new();
+    private readonly System.Threading.Timer _debounceTimer;
+    private readonly SemaphoreSlim _refreshGate = new(1, 1);
+    private bool _disposed;
 
     /// <summary>All files: desktop visible + stored in .FocusPanel</summary>
     public ObservableCollection<DesktopFile> AllFiles { get; private set; } = new();
@@ -42,7 +46,6 @@ public class FileOrganizerService
 
     public event Action? FilesChanged;
 
-    private System.Threading.Timer? _debounceTimer;
     private readonly SemaphoreSlim _organizeGate = new(1, 1);
     private const int DebounceInterval = 500;
 
@@ -70,9 +73,14 @@ public class FileOrganizerService
         _commonDesktopPath = commonDesktopPath;
         _storageRoot = Path.Combine(_desktopPath, ".FocusPanel");
         _visibility = visibility;
+        _debounceTimer = new System.Threading.Timer(
+            _ => _ = ProcessPendingChangesAsync(),
+            null,
+            Timeout.Infinite,
+            Timeout.Infinite);
 
         InitializeWatchers();
-        RefreshFilesDebounced();
+        ScheduleFullRefresh();
     }
 
     public bool ShowsProtectedSystemFiles => _visibility.ShowsProtectedSystemFiles;
@@ -82,11 +90,17 @@ public class FileOrganizerService
         // Watch desktop root for visible file changes
         _desktopWatcher = new FileSystemWatcher(_desktopPath)
         {
-            NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+            NotifyFilter =
+                NotifyFilters.FileName
+                | NotifyFilters.DirectoryName
+                | NotifyFilters.LastWrite
+                | NotifyFilters.Attributes
         };
         _desktopWatcher.Created += OnChanged;
+        _desktopWatcher.Changed += OnChanged;
         _desktopWatcher.Deleted += OnChanged;
         _desktopWatcher.Renamed += OnRenamed;
+        _desktopWatcher.Error += OnWatcherError;
         _desktopWatcher.EnableRaisingEvents = true;
 
         if (!string.IsNullOrWhiteSpace(_commonDesktopPath)
@@ -95,11 +109,17 @@ public class FileOrganizerService
         {
             _commonDesktopWatcher = new FileSystemWatcher(_commonDesktopPath)
             {
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+                NotifyFilter =
+                    NotifyFilters.FileName
+                    | NotifyFilters.DirectoryName
+                    | NotifyFilters.LastWrite
+                    | NotifyFilters.Attributes
             };
             _commonDesktopWatcher.Created += OnChanged;
+            _commonDesktopWatcher.Changed += OnChanged;
             _commonDesktopWatcher.Deleted += OnChanged;
             _commonDesktopWatcher.Renamed += OnRenamed;
+            _commonDesktopWatcher.Error += OnWatcherError;
             _commonDesktopWatcher.EnableRaisingEvents = true;
         }
 
@@ -124,9 +144,11 @@ public class FileOrganizerService
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite,
                 IncludeSubdirectories = true
             };
-            _storageWatcher.Created += (s, e) => RefreshFilesDebounced();
-            _storageWatcher.Deleted += (s, e) => RefreshFilesDebounced();
-            _storageWatcher.Renamed += (s, e) => RefreshFilesDebounced();
+            _storageWatcher.Created += OnStorageChanged;
+            _storageWatcher.Changed += OnStorageChanged;
+            _storageWatcher.Deleted += OnStorageChanged;
+            _storageWatcher.Renamed += OnStorageRenamed;
+            _storageWatcher.Error += OnWatcherError;
             _storageWatcher.EnableRaisingEvents = true;
         }
     }
@@ -135,7 +157,7 @@ public class FileOrganizerService
     {
         // Ignore changes inside the storage folder from the desktop watcher
         if (e.FullPath.StartsWith(_storageRoot, StringComparison.OrdinalIgnoreCase)) return;
-        RefreshFilesDebounced();
+        SchedulePathRefresh(e.FullPath);
     }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
@@ -160,20 +182,359 @@ public class FileOrganizerService
         {
             System.Diagnostics.Debug.WriteLine($"Track collected rename error: {ex.Message}");
         }
-        RefreshFilesDebounced();
+        _ = InvokeOnUiAsync(() =>
+        {
+            DesktopFile? renamed = AllFiles
+                .FirstOrDefault(item =>
+                    string.Equals(
+                        item.FullPath,
+                        e.OldFullPath,
+                        StringComparison.OrdinalIgnoreCase));
+            if (renamed == null)
+                return;
+
+            renamed.Name =
+                Path.GetFileName(e.FullPath);
+            renamed.FullPath = e.FullPath;
+        });
+        SchedulePathRefresh(e.OldFullPath);
+        SchedulePathRefresh(e.FullPath);
     }
 
-    private void RefreshFilesDebounced()
+    private void OnStorageChanged(
+        object sender,
+        FileSystemEventArgs e)
+        => ScheduleFullRefresh();
+
+    private void OnStorageRenamed(
+        object sender,
+        RenamedEventArgs e)
+        => ScheduleFullRefresh();
+
+    private void OnWatcherError(
+        object sender,
+        ErrorEventArgs e)
+        => ScheduleFullRefresh();
+
+    private void SchedulePathRefresh(string path)
     {
-        _debounceTimer?.Dispose();
-        _debounceTimer = new System.Threading.Timer(_ =>
+        if (_disposed)
+            return;
+
+        _pendingChanges.AddPath(path);
+        RestartDebounceTimer();
+    }
+
+    private void ScheduleFullRefresh()
+    {
+        if (_disposed)
+            return;
+
+        _pendingChanges.RequireFullRefresh();
+        RestartDebounceTimer();
+    }
+
+    private void RestartDebounceTimer()
+    {
+        try
         {
-            Application.Current.Dispatcher.Invoke(async () =>
-            {
+            _debounceTimer.Change(
+                DebounceInterval,
+                Timeout.Infinite);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Shutdown raced the last watcher callback.
+        }
+    }
+
+    private async Task ProcessPendingChangesAsync()
+    {
+        if (_disposed)
+            return;
+
+        await _refreshGate.WaitAsync();
+        try
+        {
+            DesktopChangeBatch batch =
+                _pendingChanges.Take();
+            if (batch.IsEmpty || _disposed)
+                return;
+
+            if (batch.RequiresFullRefresh)
                 await RefreshFiles();
-                await AutoOrganizeIfEnabled();
-            });
-        }, null, DebounceInterval, System.Threading.Timeout.Infinite);
+            else
+                await RefreshChangedPaths(batch.Paths);
+
+            await AutoOrganizeIfEnabled();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"Process desktop changes error: {ex.Message}");
+        }
+        finally
+        {
+            _refreshGate.Release();
+        }
+    }
+
+    private async Task RefreshChangedPaths(
+        IReadOnlyList<string> changedPaths)
+    {
+        Dictionary<string, DesktopPreferenceSnapshot> preferences =
+            await Task.Run(LoadDesktopPreferences);
+        IReadOnlyList<DesktopItemRefresh> changes =
+            await Task.Run(() => changedPaths
+                .Select(path =>
+                    ReadChangedPath(
+                        path,
+                        preferences))
+                .Where(change => change != null)
+                .Cast<DesktopItemRefresh>()
+                .ToArray());
+
+        await InvokeOnUiAsync(() =>
+        {
+            DesktopFileCollectionSynchronizer.Apply(
+                AllFiles,
+                Files,
+                changes);
+            if (changes.Count > 0)
+                FilesChanged?.Invoke();
+        });
+    }
+
+    private DesktopItemRefresh? ReadChangedPath(
+        string changedPath,
+        Dictionary<string, DesktopPreferenceSnapshot>
+            preferences)
+    {
+        string fullPath;
+        try
+        {
+            fullPath = Path.GetFullPath(changedPath);
+        }
+        catch
+        {
+            return null;
+        }
+
+        string? root = GetDesktopRoots()
+            .FirstOrDefault(candidate =>
+                string.Equals(
+                    Path.GetDirectoryName(fullPath),
+                    candidate,
+                    StringComparison.OrdinalIgnoreCase));
+        if (root == null)
+            return null;
+
+        string fileName = Path.GetFileName(fullPath);
+        if (string.IsNullOrWhiteSpace(fileName)
+            || fileName.Equals(
+                "desktop.ini",
+                StringComparison.OrdinalIgnoreCase)
+            || fileName.Equals(
+                ".FocusPanel",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return new DesktopItemRefresh(
+                fullPath,
+                null,
+                true);
+        }
+
+        string? currentPath = GetDesktopRoots()
+            .Select(candidate =>
+                Path.Combine(candidate, fileName))
+            .FirstOrDefault(_visibility.Exists);
+        if (currentPath == null)
+        {
+            if (preferences.TryGetValue(
+                    fileName,
+                    out DesktopPreferenceSnapshot? missing)
+                && missing.IsHidden)
+            {
+                MarkRecoveryRequired(missing.Id);
+                return new DesktopItemRefresh(
+                    fullPath,
+                    BuildRecoveryItem(missing),
+                    false);
+            }
+
+            return new DesktopItemRefresh(
+                fullPath,
+                null,
+                true);
+        }
+
+        try
+        {
+            FileAttributes attributes =
+                _visibility.GetAttributes(currentPath);
+            DesktopPreferenceSnapshot? preference =
+                ResolvePreference(
+                    fileName,
+                    currentPath,
+                    attributes,
+                    preferences);
+            bool isCollected =
+                preference?.IsHidden ?? false;
+            if (isCollected)
+            {
+                FileAttributes collected =
+                    DesktopItemAttributePolicy.Collect(
+                        attributes);
+                if (attributes != collected)
+                {
+                    _visibility.SetAttributes(
+                        currentPath,
+                        collected);
+                    _visibility.NotifyAttributesChanged(
+                        currentPath);
+                    attributes = collected;
+                }
+            }
+            else if (IsSystemHidden(attributes))
+            {
+                return new DesktopItemRefresh(
+                    fullPath,
+                    null,
+                    true);
+            }
+
+            DesktopFile item = BuildDesktopFileFromPath(
+                currentPath,
+                isCollected,
+                preference,
+                0);
+            return new DesktopItemRefresh(
+                fullPath,
+                item,
+                false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"Refresh desktop item {currentPath} error: "
+                + ex.Message);
+            return null;
+        }
+    }
+
+    private DesktopFile BuildDesktopFileFromPath(
+        string fullPath,
+        bool isCollected,
+        DesktopPreferenceSnapshot? preference,
+        int index)
+    {
+        DesktopFile item;
+        if (File.Exists(fullPath))
+        {
+            var file = new FileInfo(fullPath);
+            item = BuildDesktopFile(
+                file.FullName,
+                file.Name,
+                file.Extension,
+                file.Length,
+                file.CreationTime,
+                ClassifyFile(file),
+                isCollected,
+                preference?.X,
+                preference?.Y,
+                index);
+        }
+        else
+        {
+            var directory = new DirectoryInfo(fullPath);
+            item = BuildDesktopFile(
+                directory.FullName,
+                directory.Name,
+                string.Empty,
+                0,
+                directory.CreationTime,
+                "Folder",
+                isCollected,
+                preference?.X,
+                preference?.Y,
+                index);
+        }
+
+        try
+        {
+            item.Icon = IconHelper.GetIcon(
+                fullPath,
+                true);
+        }
+        catch
+        {
+            // The shell may still be committing a newly created item.
+        }
+        return item;
+    }
+
+    private DesktopFile BuildRecoveryItem(
+        DesktopPreferenceSnapshot preference)
+        => new()
+        {
+            Name = preference.FileName,
+            FullPath = preference.ManagedPath
+                ?? Path.Combine(
+                    _desktopPath,
+                    preference.FileName),
+            Extension =
+                Path.GetExtension(preference.FileName),
+            FileType = "Recovery",
+            CreatedAt = DateTime.Now,
+            IsHidden = true,
+            NeedsRecovery = true,
+            DesktopX = preference.X ?? 16,
+            DesktopY = preference.Y ?? 16
+        };
+
+    private static void MarkRecoveryRequired(int preferenceId)
+    {
+        try
+        {
+            using var context = new AppDbContext();
+            DesktopFilePreference? preference =
+                context.DesktopFilePreferences.Find(
+                    preferenceId);
+            if (preference == null
+                || preference.OperationState
+                    == DesktopVisibilityOperation
+                        .RecoveryRequired)
+            {
+                return;
+            }
+
+            preference.OperationState =
+                DesktopVisibilityOperation.RecoveryRequired;
+            context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                "Mark desktop recovery required error: "
+                + ex.Message);
+        }
+    }
+
+    private static Task InvokeOnUiAsync(
+        Action action)
+    {
+        Application? application =
+            Application.Current;
+        if (application == null
+            || application.Dispatcher.CheckAccess())
+        {
+            action();
+            return Task.CompletedTask;
+        }
+
+        return application.Dispatcher
+            .InvokeAsync(action)
+            .Task;
     }
 
     private async Task AutoOrganizeIfEnabled()
@@ -524,10 +885,10 @@ public class FileOrganizerService
             var existing = AllFiles[i];
             if (newFileMap.TryGetValue(existing.Name, out var newFile))
             {
-                existing.Icon = newFile.Icon;
-                existing.Size = newFile.Size;
-                existing.FullPath = newFile.FullPath;
-                existing.IsHidden = newFile.IsHidden;
+                DesktopFileCollectionSynchronizer
+                    .CopyState(
+                        existing,
+                        newFile);
                 newFileMap.Remove(existing.Name);
             }
             else
@@ -543,14 +904,26 @@ public class FileOrganizerService
         var visibleFiles = AllFiles.Where(f => !f.IsHidden).ToList();
         for (int i = Files.Count - 1; i >= 0; i--)
         {
-            if (!visibleFiles.Any(v => v.Name == Files[i].Name))
+            if (!visibleFiles.Any(v =>
+                    string.Equals(
+                        v.Name,
+                        Files[i].Name,
+                        StringComparison.OrdinalIgnoreCase)))
                 Files.RemoveAt(i);
         }
         foreach (var vf in visibleFiles)
         {
-            if (!Files.Any(f => f.Name == vf.Name))
+            if (!Files.Any(f =>
+                    string.Equals(
+                        f.Name,
+                        vf.Name,
+                        StringComparison.OrdinalIgnoreCase)))
                 Files.Add(vf);
         }
+        DesktopFileCollectionSynchronizer.Sort(
+            AllFiles);
+        DesktopFileCollectionSynchronizer.Sort(
+            Files);
     }
 
     // ============================================================
@@ -937,7 +1310,7 @@ public class FileOrganizerService
             }
         });
 
-        RefreshFilesDebounced();
+        ScheduleFullRefresh();
     }
 
     // ============================================================
@@ -987,5 +1360,20 @@ public class FileOrganizerService
         {
             _organizeGate.Release();
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _debounceTimer.Change(
+            Timeout.Infinite,
+            Timeout.Infinite);
+        _desktopWatcher.Dispose();
+        _commonDesktopWatcher?.Dispose();
+        _storageWatcher?.Dispose();
+        _debounceTimer.Dispose();
     }
 }

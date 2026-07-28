@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1823"/>
+      <stop offset="1" stop-color="#1b2d3b"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#7dc4ec" stop-opacity=".055"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".3"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="500" rx="30" fill="url(#bg)"/>
+  <circle cx="80" cy="40" r="190" fill="#0d83cc" opacity=".13"/>
+  <circle cx="1120" cy="460" r="220" fill="#57c995" opacity=".08"/>
+  <text x="64" y="64" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="30" font-weight="650">桌面变一项，只刷新一项</text>
+  <text x="64" y="100" fill="#aebdca" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="17">文件监视通知先合并，再沿路径更新对应卡片</text>
+
+  <g transform="translate(64 142)" filter="url(#shadow)">
+    <rect width="292" height="286" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".11"/>
+    <text x="24" y="40" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="18" font-weight="650">Windows 桌面</text>
+    <g transform="translate(24 66)">
+      <rect width="244" height="42" rx="12" fill="#fff" fill-opacity=".06"/>
+      <circle cx="22" cy="21" r="7" fill="#65bdf3"/>
+      <text x="42" y="27" fill="#dce8f2" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">Created · 新建文件</text>
+      <rect y="52" width="244" height="42" rx="12" fill="#fff" fill-opacity=".06"/>
+      <circle cx="22" cy="73" r="7" fill="#f2bd68"/>
+      <text x="42" y="79" fill="#dce8f2" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">Changed · 保存内容</text>
+      <rect y="104" width="244" height="42" rx="12" fill="#fff" fill-opacity=".06"/>
+      <circle cx="22" cy="125" r="7" fill="#9b8df2"/>
+      <text x="42" y="131" fill="#dce8f2" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">Renamed · 修改名称</text>
+      <rect y="156" width="244" height="42" rx="12" fill="#fff" fill-opacity=".06"/>
+      <circle cx="22" cy="177" r="7" fill="#ef7b87"/>
+      <text x="42" y="183" fill="#dce8f2" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">Deleted · 删除项目</text>
+    </g>
+  </g>
+
+  <g transform="translate(386 220)">
+    <path d="M0 0h70" stroke="#65bdf3" stroke-width="2"/>
+    <path d="m62-7 8 7-8 7" fill="none" stroke="#65bdf3" stroke-width="2"/>
+  </g>
+
+  <g transform="translate(476 142)" filter="url(#shadow)">
+    <rect width="260" height="286" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".11"/>
+    <text x="24" y="40" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="18" font-weight="650">500ms 路径批处理</text>
+    <rect x="24" y="68" width="212" height="78" rx="14" fill="#0c7ec2" fill-opacity=".25"/>
+    <text x="42" y="98" fill="#8fd3ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">report.docx</text>
+    <text x="42" y="124" fill="#b9c9d6" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="13">4 次通知 → 1 条路径</text>
+    <rect x="24" y="160" width="212" height="76" rx="14" fill="#fff" fill-opacity=".055"/>
+    <text x="42" y="190" fill="#dce8f2" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">photo.png</text>
+    <text x="42" y="216" fill="#91a6b6" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="13">独立变化 · 独立处理</text>
+    <text x="24" y="264" fill="#78d9ab" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="13">不扫描无关目录</text>
+  </g>
+
+  <g transform="translate(766 220)">
+    <path d="M0 0h70" stroke="#65bdf3" stroke-width="2"/>
+    <path d="m62-7 8 7-8 7" fill="none" stroke="#65bdf3" stroke-width="2"/>
+  </g>
+
+  <g transform="translate(856 142)" filter="url(#shadow)">
+    <rect width="280" height="286" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".11"/>
+    <text x="24" y="40" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="18" font-weight="650">对应卡片差量更新</text>
+    <rect x="24" y="68" width="232" height="92" rx="16" fill="#fff" fill-opacity=".065"/>
+    <rect x="42" y="86" width="48" height="56" rx="11" fill="#147fc2" fill-opacity=".52"/>
+    <path d="M55 100h22M55 110h18M55 120h22" stroke="#bce5ff" stroke-width="2"/>
+    <text x="106" y="105" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">report.docx</text>
+    <text x="106" y="130" fill="#91a8ba" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="12">大小与类型已更新</text>
+    <g transform="translate(24 184)">
+      <circle cx="8" cy="8" r="8" fill="#57c995"/>
+      <path d="m4 8 3 3 5-6" stroke="#0f2820" stroke-width="2" fill="none"/>
+      <text x="26" y="14" fill="#b2ead0" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="13">卡片对象与选择保留</text>
+      <circle cx="8" cy="42" r="8" fill="#57c995"/>
+      <path d="m4 42 3 3 5-6" stroke="#0f2820" stroke-width="2" fill="none"/>
+      <text x="26" y="48" fill="#b2ead0" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="13">排序只发送 Move</text>
+      <circle cx="8" cy="76" r="8" fill="#57c995"/>
+      <path d="m4 76 3 3 5-6" stroke="#0f2820" stroke-width="2" fill="none"/>
+      <text x="26" y="82" fill="#b2ead0" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="13">滚动位置不变</text>
+    </g>
+  </g>
+
+  <text x="600" y="468" text-anchor="middle" fill="#8fa5b5" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">旧仓库变化或监视器异常 → 安全回退全量扫描</text>
+</svg>

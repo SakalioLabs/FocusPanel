@@ -14,7 +14,9 @@ using System.Windows.Threading;
 
 namespace FocusPanel.ViewModels;
 
-public partial class FileOrganizerViewModel : ObservableObject
+public partial class FileOrganizerViewModel :
+    ObservableObject,
+    IDisposable
 {
     private readonly FileOrganizerService _fileService;
     private readonly SettingsService _settingsService;
@@ -245,11 +247,8 @@ public partial class FileOrganizerViewModel : ObservableObject
         LoadLayoutSettings();
         
         // Listen for file updates
-        _fileService.FilesChanged += () => 
-        {
-            // Rebuild partitions on file change
-            System.Windows.Application.Current.Dispatcher.Invoke(BuildPartitions);
-        };
+        _fileService.FilesChanged +=
+            FileService_FilesChanged;
 
         // Check initial desktop state
         try
@@ -263,6 +262,14 @@ public partial class FileOrganizerViewModel : ObservableObject
 
         // Initial Build
         BuildPartitions();
+    }
+
+    private void FileService_FilesChanged()
+    {
+        // FileOrganizerService publishes collection changes on the
+        // UI thread; keep the guard for explicit service calls.
+        System.Windows.Application.Current
+            .Dispatcher.Invoke(BuildPartitions);
     }
 
     private void BuildPartitions()
@@ -968,6 +975,12 @@ public partial class FileOrganizerViewModel : ObservableObject
             authorizationCanceled);
     }
 
+    public void Dispose()
+    {
+        _fileService.FilesChanged -=
+            FileService_FilesChanged;
+        _fileService.Dispose();
+    }
 }
 
 public sealed record DesktopImportResult(

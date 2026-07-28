@@ -18,18 +18,22 @@ public partial class DesktopFile : ObservableObject
     private string fullPath = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayName))]
     private string extension = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SizeDisplay))]
     private long size;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DateGroup))]
     private DateTime createdAt;
 
     [ObservableProperty]
     private ImageSource? icon;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Category))]
     private string fileType = string.Empty; // e.g. "Image", "Document"
 
     [ObservableProperty]

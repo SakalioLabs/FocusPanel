@@ -1189,6 +1189,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _tasksViewModel?.Dispose();
         _okrViewModel?.Dispose();
         _aiAssistantViewModel?.Dispose();
+        _fileOrganizerViewModel?.Dispose();
         if (_dashboardViewModel != null)
         {
             _dashboardViewModel.NavigationRequested -=

@@ -731,6 +731,44 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void DesktopOrganizer_WatcherUsesPathLevelRefresh()
+    {
+        string root = FindRepositoryRoot();
+        string service = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FileOrganizerService.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+
+        Assert.Contains(
+            "_desktopWatcher.Changed += OnChanged",
+            service);
+        Assert.Contains(
+            "SchedulePathRefresh(e.FullPath)",
+            service);
+        Assert.Contains(
+            "RefreshChangedPaths(batch.Paths)",
+            service);
+        Assert.Contains(
+            "_storageWatcher.Error += OnWatcherError",
+            service);
+        Assert.Contains(
+            "ScheduleFullRefresh()",
+            service);
+        Assert.Contains(
+            "public void Dispose()",
+            service);
+        Assert.Contains(
+            "_fileService.Dispose()",
+            viewModel);
+    }
+
+    [Fact]
     public void WindowClosing_UsesWmCloseWithoutProcessTermination()
     {
         string root = FindRepositoryRoot();

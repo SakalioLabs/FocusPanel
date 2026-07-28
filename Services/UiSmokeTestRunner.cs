@@ -69,6 +69,9 @@ internal static class UiSmokeTestRunner
             CheckPartitionRefreshScroll(
                 results,
                 failures);
+            CheckDesktopPathRefreshScroll(
+                results,
+                failures);
             if (!string.IsNullOrWhiteSpace(
                     dashboardSnapshotPath))
             {
@@ -290,6 +293,98 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"分区滚动稳定性验证失败：{ex}");
+        }
+    }
+
+    private static void CheckDesktopPathRefreshScroll(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var all =
+                new ObservableCollection<DesktopFile>();
+            var visible =
+                new ObservableCollection<DesktopFile>();
+            for (int index = 0; index < 40; index++)
+            {
+                var file = new DesktopFile
+                {
+                    Name = $"项目 {index + 1:D2}.txt",
+                    FullPath =
+                        $@"C:\Desktop\项目 {index + 1:D2}.txt",
+                    FileType = "Document"
+                };
+                all.Add(file);
+                visible.Add(file);
+            }
+            DesktopFile selected = visible[18];
+            selected.IsSelected = true;
+
+            var items = new ItemsControl
+            {
+                ItemsSource = visible,
+                DisplayMemberPath =
+                    nameof(DesktopFile.Name)
+            };
+            var viewer = new ScrollViewer
+            {
+                Width = 280,
+                Height = 90,
+                Content = items,
+                VerticalScrollBarVisibility =
+                    ScrollBarVisibility.Auto
+            };
+            var size = new Size(280, 90);
+            viewer.Measure(size);
+            viewer.Arrange(new Rect(size));
+            viewer.UpdateLayout();
+            viewer.ScrollToVerticalOffset(100);
+            viewer.UpdateLayout();
+            double before = viewer.VerticalOffset;
+            if (before <= 0)
+            {
+                failures.Add(
+                    "路径刷新滚动验证未建立有效偏移");
+                return;
+            }
+
+            var refreshed = new DesktopFile
+            {
+                Name = selected.Name,
+                FullPath = selected.FullPath,
+                FileType = "Document",
+                Size = 4096
+            };
+            DesktopFileCollectionSynchronizer.Apply(
+                all,
+                visible,
+                new[]
+                {
+                    new DesktopItemRefresh(
+                        selected.FullPath,
+                        refreshed,
+                        false)
+                });
+            viewer.UpdateLayout();
+
+            if (Math.Abs(
+                    viewer.VerticalOffset
+                    - before) > 0.1
+                || !selected.IsSelected
+                || selected.Size != 4096)
+            {
+                failures.Add(
+                    "路径差量刷新未保留滚动或选择状态");
+                return;
+            }
+            results.Add(
+                "PASS 路径差量刷新保持卡片与滚动偏移");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"路径刷新滚动稳定性验证失败：{ex}");
         }
     }
 
