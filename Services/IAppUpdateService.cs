@@ -14,5 +14,6 @@ public interface IAppUpdateService : IDisposable
     Task DownloadUpdateAsync(
         IProgress<int>? progress = null,
         CancellationToken cancellationToken = default);
+    bool OpenDownloadPage();
     void ApplyAndRestart();
 }

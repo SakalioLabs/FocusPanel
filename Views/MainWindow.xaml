@@ -140,6 +140,9 @@
                                 <TextBox x:Name="SearchBox"
                                          Style="{StaticResource FocusSearchBox}"
                                          Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                         PreviewKeyDown="SearchBox_PreviewKeyDown"
+                                         AutomationProperties.Name="搜索应用"
+                                         AutomationProperties.HelpText="输入名称，使用上下方向键选择，按回车启动"
                                          ToolTip="搜索开始菜单应用"/>
                                 <TextBlock Text="输入应用名称"
                                            Margin="16,0"
@@ -161,8 +164,11 @@
                             <Grid Grid.Row="2">
                                 <ListBox x:Name="SearchResultsList"
                                          ItemsSource="{Binding SearchResults}"
+                                         SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"
                                          Background="Transparent"
+                                         Foreground="{DynamicResource FocusTextBrush}"
                                          BorderThickness="0"
+                                         AutomationProperties.Name="应用搜索结果"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
@@ -170,6 +176,7 @@
                                             <Setter Property="Margin" Value="0,3"/>
                                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                             <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
                                             <Setter Property="Template">
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="ListBoxItem">
@@ -181,6 +188,9 @@
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <Setter TargetName="ItemChrome" Property="Background" Value="{DynamicResource FocusHoverBrush}"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="ItemChrome" Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -198,6 +208,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 <Button Grid.ColumnSpan="2"
                                                         HorizontalContentAlignment="Stretch"
+                                                        Foreground="{DynamicResource FocusTextBrush}"
                                                         Background="Transparent"
                                                         BorderThickness="0"
                                                         Command="{Binding DataContext.LaunchAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -213,6 +224,7 @@
                                                         <TextBlock Grid.Column="1"
                                                                    Text="{Binding DisplayName}"
                                                                    Margin="10,0"
+                                                                   Foreground="{DynamicResource FocusTextBrush}"
                                                                    VerticalAlignment="Center"
                                                                    TextTrimming="CharacterEllipsis"/>
                                                     </Grid>
@@ -520,7 +532,7 @@
                                         <TextBlock Grid.Column="1"
                                                    Margin="12,0,0,0"
                                                    HorizontalAlignment="Right"
-                                                   Text="GitHub Releases · 自动检查"
+                                                   Text="GitHub Releases · 静态清单"
                                                    Foreground="{DynamicResource FocusTextBrush}"/>
                                     </Grid>
                                     <TextBlock Margin="0,6,0,10"
@@ -546,6 +558,10 @@
                                             </Style>
                                         </Button.Style>
                                     </Button>
+                                    <Button Margin="0,8,0,0"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            Command="{Binding OpenUpdateDownloadPageCommand}"
+                                            Content="打开官方下载页"/>
                                 </StackPanel>
                             </Border>
                             <Button Style="{StaticResource FocusSecondaryButton}"

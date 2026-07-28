@@ -395,8 +395,10 @@ public sealed class XamlResourceContractTests
         string viewModel = File.ReadAllText(Path.Combine(root, "ViewModels", "MainViewModel.cs"));
         string windowCode = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml.cs"));
 
-        Assert.Contains("GitHub Releases · 自动检查", mainWindow);
+        Assert.Contains("GitHub Releases · 静态清单", mainWindow);
         Assert.Contains("CheckAndInstallUpdateCommand", mainWindow);
+        Assert.Contains("OpenUpdateDownloadPageCommand", mainWindow);
+        Assert.Contains("打开官方下载页", mainWindow);
         Assert.DoesNotContain("LanUpdateSource", mainWindow);
         Assert.DoesNotContain("SaveUpdateSourceCommand", mainWindow);
         Assert.DoesNotContain("Update.SourceMode", viewModel);
@@ -889,6 +891,73 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Name = \"FocusPanel.AppIcons\"",
             catalog);
+    }
+
+    [Fact]
+    public void AppSearch_ProvidesCompleteKeyboardLaunchPath()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        XDocument document = XDocument.Parse(mainWindow);
+        XNamespace xaml =
+            "http://schemas.microsoft.com/winfx/2006/xaml";
+        XElement resultsList = document
+            .Descendants()
+            .Single(element =>
+                (string?)element.Attribute(
+                    xaml + "Name") == "SearchResultsList");
+
+        Assert.Contains(
+            "PreviewKeyDown=\"SearchBox_PreviewKeyDown\"",
+            mainWindow);
+        Assert.Contains(
+            "SelectedItem=\"{Binding SelectedSearchResult, Mode=TwoWay}\"",
+            mainWindow);
+        Assert.Contains(
+            "使用上下方向键选择，按回车启动",
+            mainWindow);
+        Assert.Contains(
+            "AppSearchSelectionPolicy.Move(",
+            codeBehind);
+        Assert.Contains(
+            "_viewModel.LaunchAppCommand.Execute(app);",
+            codeBehind);
+        Assert.Contains(
+            "SearchBox.SelectAll();",
+            codeBehind);
+        Assert.Contains(
+            "new Action(() => SearchButton.Focus())",
+            codeBehind);
+        Assert.Contains(
+            "SelectedSearchResult?.IdentityKey",
+            viewModel);
+        Assert.Equal(
+            "{DynamicResource FocusTextBrush}",
+            (string?)resultsList.Attribute("Foreground"));
+        Assert.Contains(
+            resultsList.Descendants(),
+            element => element.Name.LocalName == "Button"
+                && (string?)element.Attribute("Foreground")
+                    == "{DynamicResource FocusTextBrush}");
+        Assert.Contains(
+            resultsList.Descendants(),
+            element => element.Name.LocalName == "TextBlock"
+                && (string?)element.Attribute("Foreground")
+                    == "{DynamicResource FocusTextBrush}");
+        Assert.Contains(
+            "<Trigger Property=\"IsSelected\" Value=\"True\">",
+            mainWindow);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusSurfaceSoftBrush}\"",
+            mainWindow);
     }
 
     [Fact]

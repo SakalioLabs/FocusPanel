@@ -377,8 +377,46 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(() =>
         {
             if (_viewModel.IsSearchOpen)
+            {
                 SearchBox.Focus();
+                SearchBox.SelectAll();
+            }
         }, DispatcherPriority.Input);
+    }
+
+    private void SearchBox_PreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (e.Key is Key.Up or Key.Down)
+        {
+            int selectedIndex = AppSearchSelectionPolicy.Move(
+                SearchResultsList.Items.Count,
+                SearchResultsList.SelectedIndex,
+                e.Key == Key.Up ? -1 : 1);
+            SearchResultsList.SelectedIndex = selectedIndex;
+            if (selectedIndex >= 0)
+                SearchResultsList.ScrollIntoView(
+                    SearchResultsList.Items[selectedIndex]);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key != Key.Enter)
+            return;
+
+        int launchIndex = AppSearchSelectionPolicy.ResolveLaunchIndex(
+            SearchResultsList.Items.Count,
+            SearchResultsList.SelectedIndex);
+        if (launchIndex < 0
+            || SearchResultsList.Items[launchIndex] is not AppLaunchItem app
+            || !_viewModel.LaunchAppCommand.CanExecute(app))
+        {
+            return;
+        }
+
+        _viewModel.LaunchAppCommand.Execute(app);
+        e.Handled = true;
     }
 
     private void CalendarButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
@@ -703,7 +741,14 @@ public partial class MainWindow : Window
             || _viewModel.IsSettingsOpen
             || _viewModel.IsPowerMenuOpen)
         {
+            bool returnToSearch = _viewModel.IsSearchOpen;
             CloseOverlayPanels();
+            if (returnToSearch)
+            {
+                Dispatcher.BeginInvoke(
+                    new Action(() => SearchButton.Focus()),
+                    DispatcherPriority.Input);
+            }
         }
         else if (WorkspaceHost.Visibility == Visibility.Visible)
         {

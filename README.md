@@ -19,8 +19,10 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 键盘导航使用统一的 2px Fluent 圆角焦点环，轮廓只在键盘操作时出现，不给鼠标点击增加常驻边框；高对比度模式跟随 Windows 系统高亮色。
 - 固定应用与运行应用按 Windows AppUserModelID 或可执行路径合并为单一任务栏图标；固定项保持用户顺序，未固定运行项保持本次运行中的稳定顺序。
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
+- 搜索结果的列表、启动按钮和标题全部显式使用动态 `FocusTextBrush`；键盘选中使用现有 `FocusSurfaceSoftBrush`，不再落回 WPF 的系统蓝色选择背景，因此深色、浅色及系统强调色变化下都保持可读。
 - 开始菜单快捷方式、`shell:AppsFolder` 和应用身份解析在可取消的 STA 后台线程构建；Panel 壳层不再等待完整目录扫描才响应鼠标与键盘。
 - 搜索和固定项会先显示名称与首字符占位，再由单一后台队列按需加载真实图标；Shell 图标提供器响应缓慢时不会卡住搜索输入。索引期间显示“正在载入应用目录”，完成但无匹配项时显示明确空状态。
+- 打开搜索后会立即聚焦并全选搜索框；无需离开键盘即可用上下方向键选择结果、回车启动，`Esc` 关闭后焦点返回紧凑栏搜索入口。应用目录在后台补全时会按稳定身份保留当前选择，不会把光标跳回第一项。
 - 窗口前台状态改变时按应用身份增量更新图标，只替换真正变化的项目，不再清空并重建整条应用栏，因此滚动位置和未变化图标保持稳定。
 - 窗口跟踪覆盖 `CREATE / DESTROY / SHOW / HIDE / NAMECHANGE / FOREGROUND` 完整生命周期；新应用窗口创建后及时进入统一应用栏，最后窗口销毁后及时移除，不再依赖下一次偶然的前台或标题事件纠正陈旧图标。
 - WinEvent 只接收 `OBJID_WINDOW` 窗口本体并跳过 FocusPanel 自身进程；按钮、菜单和 Panel 显隐不会触发无意义的完整窗口重扫，短时间重复通知继续合并为一次刷新。
@@ -62,6 +64,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![多窗口应用一层直接列表](docs/images/multi-window-direct-list.svg)
 
 ![统一应用栏运行与活动状态](docs/images/taskbar-app-state-feedback.svg)
+
+![应用搜索完整键盘路径](docs/images/app-search-keyboard-flow.svg)
 
 ### 两个中心
 
@@ -211,7 +215,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.62 `
+  -Version 0.9.63 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -220,13 +224,15 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.62-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.63-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
-安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
+安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
-正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES` 和完整更新包。验证失败会中止发布，因此另一台设备只要安装过一次 `Setup.exe`，以后即可在设置页直接完成检查、下载、安装和重启。
+正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES` 和完整更新包。验证失败会中止发布，因此另一台设备只要安装过一次 `Setup.exe`，以后即可在设置页直接完成检查、下载、安装和重启。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载 `FocusPanel-win-Setup.exe` 覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
+
+![GitHub 静态清单一键更新与手动兜底](docs/images/github-static-update-flow.svg)
 
 用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备只需首次安装一次 `FocusPanel-win-Setup.exe`，后续版本均沿用这条更新链。
 
@@ -239,7 +245,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.62 `
+  -Version 0.9.63 `
   -Dotnet8Path dotnet
 ```
 

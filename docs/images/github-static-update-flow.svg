@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="390" viewBox="0 0 1120 390" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel GitHub 静态清单更新链路</title>
+  <desc id="desc">FocusPanel 直接读取 GitHub Latest Release 静态清单并下载差分或完整包，失败时可打开官方下载页。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101725"/>
+      <stop offset="1" stop-color="#1d2946"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#58c6ff"/>
+      <stop offset="1" stop-color="#8a7dff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#050913" flood-opacity=".45"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="390" rx="28" fill="url(#background)"/>
+  <text x="52" y="58" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="25" font-weight="600">GitHub Release：零配置、无 API 限额的一键更新</text>
+  <text x="52" y="88" fill="#aab6cf" font-family="Segoe UI, Microsoft YaHei" font-size="15">其他设备只需安装一次 Setup.exe，之后直接读取 Latest Release 静态资产</text>
+
+  <g filter="url(#shadow)" font-family="Segoe UI, Microsoft YaHei">
+    <g transform="translate(52 128)">
+      <rect width="230" height="156" rx="20" fill="#202d49" stroke="#415274"/>
+      <rect x="24" y="24" width="42" height="42" rx="12" fill="url(#accent)"/>
+      <path d="M36 45h18M45 36v18" stroke="#101725" stroke-width="3" stroke-linecap="round"/>
+      <text x="82" y="52" fill="#f4f7ff" font-size="18" font-weight="600">检查更新</text>
+      <text x="24" y="94" fill="#b9c5da" font-size="14">读取 Latest Release</text>
+      <text x="24" y="119" fill="#79d5ff" font-size="14">releases.win.json</text>
+      <text x="24" y="141" fill="#8d9bb7" font-size="13">不调用 Releases API</text>
+    </g>
+
+    <g transform="translate(338 128)">
+      <rect width="230" height="156" rx="20" fill="#202d49" stroke="#415274"/>
+      <path d="M24 45h40l12 14h130v70H24z" fill="#273857" stroke="#506586"/>
+      <text x="43" y="87" fill="#f4f7ff" font-size="18" font-weight="600">选择最小更新</text>
+      <text x="43" y="114" fill="#79d5ff" font-size="14">优先差分包</text>
+      <text x="43" y="137" fill="#b9c5da" font-size="14">失败自动使用完整包</text>
+    </g>
+
+    <g transform="translate(624 128)">
+      <rect width="230" height="156" rx="20" fill="#202d49" stroke="#415274"/>
+      <circle cx="48" cy="47" r="22" fill="url(#accent)"/>
+      <path d="M38 47l7 7 13-15" fill="none" stroke="#101725" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="82" y="53" fill="#f4f7ff" font-size="18" font-weight="600">安全安装</text>
+      <text x="24" y="96" fill="#b9c5da" font-size="14">恢复任务栏后重启</text>
+      <text x="24" y="121" fill="#b9c5da" font-size="14">保留数据库与设置</text>
+      <text x="24" y="144" fill="#79d5ff" font-size="14">无需管理员常驻服务</text>
+    </g>
+
+    <g transform="translate(910 128)">
+      <rect width="158" height="156" rx="20" fill="#202d49" stroke="#415274"/>
+      <text x="24" y="44" fill="#f4f7ff" font-size="17" font-weight="600">网络异常？</text>
+      <rect x="24" y="67" width="110" height="42" rx="12" fill="#2b3a59"/>
+      <text x="39" y="93" fill="#f4f7ff" font-size="14">官方下载页</text>
+      <text x="24" y="137" fill="#9facbf" font-size="13">手动覆盖升级</text>
+    </g>
+  </g>
+
+  <g fill="none" stroke="#68ceff" stroke-width="3" stroke-linecap="round">
+    <path d="M291 206h37"/>
+    <path d="M577 206h37"/>
+    <path d="M863 206h37"/>
+  </g>
+  <g fill="#68ceff">
+    <path d="M329 206l-9-6v12z"/>
+    <path d="M615 206l-9-6v12z"/>
+    <path d="M901 206l-9-6v12z"/>
+  </g>
+
+  <rect x="222" y="320" width="676" height="38" rx="19" fill="#18243b" stroke="#354867"/>
+  <circle cx="247" cy="339" r="6" fill="#6bd2ff"/>
+  <text x="265" y="345" fill="#b9c5da" font-family="Segoe UI, Microsoft YaHei" font-size="14">静态清单、差分包、完整包和安装程序全部来自同一个公开 GitHub Latest Release</text>
+</svg>

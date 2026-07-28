@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,10 @@ namespace FocusPanel.Services;
 public sealed class VelopackUpdateService : IAppUpdateService
 {
     public const string RepositoryUrl = "https://github.com/SakalioLabs/FocusPanel";
+    public const string StaticFeedUrl =
+        "https://github.com/SakalioLabs/FocusPanel/releases/latest/download";
+    public const string DownloadPageUrl =
+        "https://github.com/SakalioLabs/FocusPanel/releases/latest";
 
     private UpdateManager? _manager;
     private UpdateInfo? _pendingUpdate;
@@ -20,7 +25,7 @@ public sealed class VelopackUpdateService : IAppUpdateService
     {
         try
         {
-            _manager = new UpdateManager(new GithubSource(RepositoryUrl, null, false));
+            _manager = new UpdateManager(CreateUpdateSource());
         }
         catch (InvalidOperationException)
         {
@@ -37,7 +42,10 @@ public sealed class VelopackUpdateService : IAppUpdateService
     public bool CanUpdate => _manager != null
         && (_manager.IsInstalled || _manager.IsPortable);
 
-    public string SourceDescription => "GitHub Releases";
+    public string SourceDescription => "GitHub Releases · 静态清单";
+
+    internal static IUpdateSource CreateUpdateSource()
+        => new SimpleWebSource(StaticFeedUrl);
 
     public async Task<AppUpdateInfo?> CheckForUpdateAsync(
         CancellationToken cancellationToken = default)
@@ -81,6 +89,23 @@ public sealed class VelopackUpdateService : IAppUpdateService
             throw new InvalidOperationException("更新包尚未下载完成。");
 
         _manager.ApplyUpdatesAndRestart(_downloadedAsset);
+    }
+
+    public bool OpenDownloadPage()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = DownloadPageUrl,
+                UseShellExecute = true
+            });
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void Dispose()

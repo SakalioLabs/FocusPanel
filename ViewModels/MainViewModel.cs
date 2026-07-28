@@ -91,6 +91,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isSearchOpen;
 
     [ObservableProperty]
+    private AppLaunchItem? selectedSearchResult;
+
+    [ObservableProperty]
     private bool isCalendarOpen;
 
     [ObservableProperty]
@@ -1143,9 +1146,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            UpdateStatus = $"更新失败：{ex.Message}";
+            string message = UpdateFailureMessage.Describe(ex);
+            UpdateStatus = $"更新失败：{message}";
             MessageBox.Show(
-                $"无法完成更新：{ex.Message}\n\n系统任务栏和现有数据不会被修改。",
+                $"无法完成更新：{message}\n\n系统任务栏和现有数据不会被修改。",
                 "FocusPanel 更新失败",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
@@ -1154,6 +1158,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             IsUpdateBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private void OpenUpdateDownloadPage()
+    {
+        UpdateStatus = _updateService.OpenDownloadPage()
+            ? "已在浏览器打开 FocusPanel 官方下载页"
+            : "无法打开浏览器，请访问 GitHub 上的 SakalioLabs/FocusPanel Releases";
     }
 
     private void ApplyUpdateAvailability(AppUpdateInfo? update)
@@ -1171,7 +1183,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void RefreshSearchResults()
     {
+        string? selectedIdentity = SelectedSearchResult?.IdentityKey;
         ReplaceCollection(SearchResults, _appCatalog.Search(SearchQuery));
+        SelectedSearchResult = SearchResults.FirstOrDefault(
+            item => !string.IsNullOrWhiteSpace(selectedIdentity)
+                && string.Equals(
+                    item.IdentityKey,
+                    selectedIdentity,
+                    StringComparison.OrdinalIgnoreCase))
+            ?? SearchResults.FirstOrDefault();
         OnPropertyChanged(
             nameof(IsAppSearchStatusVisible));
         OnPropertyChanged(
