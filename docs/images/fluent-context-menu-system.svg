@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="430" viewBox="0 0 1120 430" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 统一 Fluent 任务栏菜单</title>
+  <desc id="desc">开始菜单、应用菜单、多窗口列表、子菜单和托盘菜单共享单层圆角表面及主题状态。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101725"/>
+      <stop offset="1" stop-color="#1c2946"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5dcaff"/>
+      <stop offset="1" stop-color="#8b7fff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="430" rx="28" fill="url(#background)"/>
+  <text x="52" y="58" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="25" font-weight="600">一套菜单系统覆盖全部任务栏操作</text>
+  <text x="52" y="88" fill="#aab6cf" font-family="Segoe UI, Microsoft YaHei" font-size="15">单层圆角表面 · 动态主题文字 · 无系统蓝高亮 · 无黑色投影边框</text>
+
+  <g transform="translate(52 120)" font-family="Segoe UI, Microsoft YaHei">
+    <rect width="290" height="252" rx="18" fill="#202c46" stroke="#465776"/>
+    <text x="20" y="34" fill="#91a0ba" font-size="13">开始 · 系统管理</text>
+    <g transform="translate(10 51)">
+      <rect width="270" height="40" rx="10" fill="#2b3957"/>
+      <text x="18" y="26" fill="#f3f7ff" font-size="15">任务管理器</text>
+    </g>
+    <text x="28" y="121" fill="#f3f7ff" font-size="15">设置</text>
+    <text x="28" y="163" fill="#f3f7ff" font-size="15">文件资源管理器</text>
+    <rect x="22" y="184" width="246" height="1" fill="#52607a" opacity=".55"/>
+    <text x="28" y="218" fill="#f3f7ff" font-size="15">关机或注销</text>
+    <text x="252" y="218" fill="#75d5ff" font-family="Segoe Fluent Icons" font-size="12">&#xE76C;</text>
+  </g>
+
+  <g transform="translate(415 120)" font-family="Segoe UI, Microsoft YaHei">
+    <rect width="290" height="252" rx="18" fill="#202c46" stroke="#465776"/>
+    <text x="20" y="34" fill="#91a0ba" font-size="13">应用 · 多窗口</text>
+    <text x="28" y="79" fill="#f3f7ff" font-size="15">启动新实例</text>
+    <text x="28" y="121" fill="#f3f7ff" font-size="15">固定到任务栏</text>
+    <rect x="22" y="142" width="246" height="1" fill="#52607a" opacity=".55"/>
+    <g transform="translate(10 156)">
+      <rect width="270" height="40" rx="10" fill="#2b3957"/>
+      <text x="17" y="26" fill="#70d3ff" font-family="Segoe Fluent Icons" font-size="13">&#xE73E;</text>
+      <text x="48" y="26" fill="#f3f7ff" font-size="15">当前窗口 · README</text>
+    </g>
+    <text x="28" y="228" fill="#aab6cf" font-size="14">第二个窗口 · 设置</text>
+  </g>
+
+  <g transform="translate(778 120)" font-family="Segoe UI, Microsoft YaHei">
+    <rect width="290" height="252" rx="18" fill="#202c46" stroke="#465776"/>
+    <text x="20" y="34" fill="#91a0ba" font-size="13">统一状态与主题</text>
+    <g transform="translate(20 58)">
+      <circle cx="9" cy="9" r="7" fill="#67d0ff"/>
+      <text x="30" y="15" fill="#f3f7ff" font-size="15">悬停 / 键盘焦点</text>
+    </g>
+    <g transform="translate(20 105)">
+      <circle cx="9" cy="9" r="7" fill="#8b7fff"/>
+      <text x="30" y="15" fill="#f3f7ff" font-size="15">勾选 / 子菜单展开</text>
+    </g>
+    <g transform="translate(20 152)">
+      <circle cx="9" cy="9" r="7" fill="#68748c"/>
+      <text x="30" y="15" fill="#aab6cf" font-size="15">禁用 / 次级信息</text>
+    </g>
+    <rect x="20" y="198" width="250" height="34" rx="17" fill="url(#accent)" opacity=".16"/>
+    <text x="44" y="220" fill="#85dcff" font-size="14">浅色与深色动态切换</text>
+  </g>
+
+  <g fill="none" stroke="#68d0ff" stroke-width="3" stroke-linecap="round">
+    <path d="M352 246h53"/>
+    <path d="M715 246h53"/>
+  </g>
+  <g fill="#68d0ff">
+    <path d="M406 246l-9-6v12z"/>
+    <path d="M769 246l-9-6v12z"/>
+  </g>
+
+  <text x="560" y="404" text-anchor="middle" fill="#8f9db7" font-family="Segoe UI, Microsoft YaHei" font-size="14">静态 XAML 菜单与运行时窗口菜单自动继承同一隐式样式</text>
+</svg>

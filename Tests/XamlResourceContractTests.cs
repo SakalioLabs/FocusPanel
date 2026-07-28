@@ -961,6 +961,71 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void ContextMenus_UseOneFluentThemeForStaticAndDynamicItems()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "x:Key=\"FocusContextMenu\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusMenuItem\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusMenuSeparator\"",
+            theme);
+        Assert.Contains(
+            "<Style TargetType=\"ContextMenu\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusContextMenu}\"",
+            theme);
+        Assert.Contains(
+            "<Style TargetType=\"MenuItem\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusMenuItem}\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusMenuSeparator}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"MenuSurface\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"PART_Popup\"",
+            theme);
+        Assert.Contains(
+            "Property=\"IsHighlighted\"",
+            theme);
+        Assert.Contains(
+            "Property=\"IsChecked\"",
+            theme);
+        Assert.Contains(
+            "Property=\"HasItems\"",
+            theme);
+        Assert.DoesNotContain(
+            "SystemColors.Highlight",
+            theme);
+        Assert.Contains(
+            "ContextMenu menu = button.ContextMenu ?? new ContextMenu();",
+            codeBehind);
+        Assert.Contains(
+            "menu.Items.Add(new MenuItem",
+            codeBehind);
+    }
+
+    [Fact]
     public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
     {
         string root = FindRepositoryRoot();

@@ -259,12 +259,183 @@
         </Setter>
     </Style>
 
-    <Style x:Key="FocusMenuItem" TargetType="MenuItem">
-        <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
-        <Setter Property="Background" Value="{DynamicResource FocusSurfaceStrongBrush}"/>
-        <Setter Property="Padding" Value="12,8"/>
-        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+    <Style x:Key="FocusContextMenu"
+           TargetType="ContextMenu">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HasDropShadow" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border x:Name="MenuSurface"
+                            MinWidth="188"
+                            MaxWidth="420"
+                            Padding="4"
+                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                            BorderBrush="{DynamicResource FocusStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource FocusCardCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <ScrollViewer CanContentScroll="True"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
+
+    <Style x:Key="FocusMenuItem"
+           TargetType="MenuItem">
+        <Setter Property="MinHeight" Value="38"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Margin" Value="2"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="HorizontalContentAlignment"
+                Value="Stretch"/>
+        <Setter Property="FocusVisualStyle"
+                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Grid>
+                        <Border x:Name="ItemChrome"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="18"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="CheckIndicator"
+                                           Text="&#xE73E;"
+                                           FontFamily="Segoe Fluent Icons"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Visibility="Collapsed"/>
+                                <ContentPresenter Grid.Column="1"
+                                                  Margin="7,0"
+                                                  ContentSource="Header"
+                                                  RecognizesAccessKey="True"
+                                                  VerticalAlignment="Center"
+                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                <TextBlock x:Name="SubmenuArrow"
+                                           Grid.Column="2"
+                                           Text="&#xE76C;"
+                                           FontFamily="Segoe Fluent Icons"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource FocusMutedTextBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                        <Popup x:Name="PART_Popup"
+                               Placement="Right"
+                               PlacementTarget="{Binding ElementName=ItemChrome}"
+                               HorizontalOffset="-3"
+                               IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               PopupAnimation="Fade">
+                            <Border MinWidth="188"
+                                    MaxWidth="420"
+                                    Padding="4"
+                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                    BorderBrush="{DynamicResource FocusStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="{StaticResource FocusCardCornerRadius}"
+                                    SnapsToDevicePixels="True">
+                                <ScrollViewer CanContentScroll="True"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted"
+                                 Value="True">
+                            <Setter TargetName="ItemChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin"
+                                 Value="True">
+                            <Setter TargetName="ItemChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSubmenuOpen"
+                                 Value="True">
+                            <Setter TargetName="ItemChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+                            <Setter TargetName="SubmenuArrow"
+                                    Property="Foreground"
+                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked"
+                                 Value="True">
+                            <Setter TargetName="CheckIndicator"
+                                    Property="Visibility"
+                                    Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="HasItems"
+                                 Value="True">
+                            <Setter TargetName="SubmenuArrow"
+                                    Property="Visibility"
+                                    Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="ItemChrome"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="FocusMenuSeparator"
+           TargetType="Separator">
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Margin" Value="12,5"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusStrokeBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Height="{TemplateBinding Height}"
+                            Background="{TemplateBinding Background}"
+                            SnapsToDevicePixels="True"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ContextMenu"
+           BasedOn="{StaticResource FocusContextMenu}"/>
+    <Style TargetType="MenuItem"
+           BasedOn="{StaticResource FocusMenuItem}"/>
+    <Style TargetType="Separator"
+           BasedOn="{StaticResource FocusMenuSeparator}"/>
 
     <Style TargetType="ToolTip">
         <Setter Property="Background" Value="#F02A2E38"/>

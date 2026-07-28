@@ -29,6 +29,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - Panel 隐藏后暂停完整窗口枚举、时钟、系统状态和任务摘要刷新；右缘热区、全屏抑制、安全恢复和 GitHub 更新检查继续运行。再次唤出时先刷新窗口快照和当前时间，状态中心与日历在打开时即时刷新。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
 - 多窗口列表精确标记当前前台窗口；同一应用内部切换窗口也会增量更新标记。标题超过 340px 时视觉省略，读屏名称仍保留完整标题并说明“当前窗口”。
+- 开始按钮右键、应用管理、多窗口列表、关机子菜单和托盘菜单统一使用单层 Fluent 圆角菜单；静态 XAML 项与运行时创建项自动继承同一主题，深色模式不再落回系统浅色背景、蓝色高亮或直角模板。
+- 菜单悬停、键盘焦点、当前窗口勾选、禁用状态和子菜单箭头全部使用动态主题令牌；子菜单保持文字省略与完整辅助功能名称，不增加黑色投影边框。
 - 应用图标左侧使用任务栏式圆角状态条：后台运行显示 `4×12px` 短条，当前活动扩展为 `4×24px` 长条并使用单一柔和背景，固定但未运行的应用不显示状态条。状态层完全点击穿透，不会吞掉图标左缘操作。
 - 工具提示和读屏名称明确区分“已固定 · 未运行”“正在运行 · 1 个窗口”“正在使用 · 2 个窗口”；辅助操作提示会按启动、单窗口切换/最小化和多窗口列表自动变化。
 - 应用启动会区分普通可执行文件、快捷方式、Shell 路径和 `shell:AppsFolder` 返回的 AUMID；商店应用不再把 AUMID 错当文件名。应用已卸载、固定路径移动或 Shell 拒绝启动时不会让 Panel 闪退，而是在状态中心说明原因并引导重新固定。
@@ -66,6 +68,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![统一应用栏运行与活动状态](docs/images/taskbar-app-state-feedback.svg)
 
 ![应用搜索完整键盘路径](docs/images/app-search-keyboard-flow.svg)
+
+![统一 Fluent 任务栏菜单](docs/images/fluent-context-menu-system.svg)
 
 ### 两个中心
 
@@ -215,7 +219,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.63 `
+  -Version 0.9.64 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -224,7 +228,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.63-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.64-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -245,7 +249,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.63 `
+  -Version 0.9.64 `
   -Dotnet8Path dotnet
 ```
 

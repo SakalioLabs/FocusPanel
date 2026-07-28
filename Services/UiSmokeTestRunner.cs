@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FocusPanel.Controls;
@@ -24,7 +25,10 @@ internal static class UiSmokeTestRunner
         "FocusSurfaceSoftBrush",
         "FocusSurfaceStrongBrush",
         "FocusStrokeBrush",
-        "FocusKeyboardFocusBrush"
+        "FocusKeyboardFocusBrush",
+        "FocusContextMenu",
+        "FocusMenuItem",
+        "FocusMenuSeparator"
     };
 
     public static int Run(
@@ -64,6 +68,9 @@ internal static class UiSmokeTestRunner
                 {
                     DisplayName = "FocusPanel"
                 },
+                results,
+                failures);
+            CheckFluentContextMenu(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -203,6 +210,79 @@ internal static class UiSmokeTestRunner
         catch (Exception ex)
         {
             failures.Add($"界面 {name} 加载失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentContextMenu(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var checkedItem = new MenuItem
+            {
+                Header = "当前窗口",
+                IsCheckable = true,
+                IsChecked = true
+            };
+            var submenu = new MenuItem
+            {
+                Header = "关机或注销"
+            };
+            submenu.Items.Add(
+                new MenuItem
+                {
+                    Header = "锁定"
+                });
+            var menu = new ContextMenu();
+            menu.Items.Add(checkedItem);
+            menu.Items.Add(new Separator());
+            menu.Items.Add(submenu);
+
+            menu.Measure(new Size(420, 800));
+            menu.Arrange(
+                new Rect(
+                    0,
+                    0,
+                    Math.Max(
+                        188,
+                        menu.DesiredSize.Width),
+                    Math.Max(
+                        120,
+                        menu.DesiredSize.Height)));
+            menu.UpdateLayout();
+            menu.ApplyTemplate();
+            checkedItem.ApplyTemplate();
+            submenu.ApplyTemplate();
+
+            if (menu.Template.FindName(
+                    "MenuSurface",
+                    menu) is not Border)
+            {
+                failures.Add(
+                    "Fluent 菜单缺少单层圆角表面");
+                return;
+            }
+
+            if (checkedItem.Template.FindName(
+                    "ItemChrome",
+                    checkedItem) is not Border
+                || submenu.Template.FindName(
+                    "PART_Popup",
+                    submenu) is not Popup)
+            {
+                failures.Add(
+                    "Fluent 菜单项缺少高亮或子菜单模板");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 菜单叶项、勾选、分隔线与子菜单");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 菜单加载失败：{ex}");
         }
     }
 
