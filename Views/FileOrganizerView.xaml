@@ -320,6 +320,7 @@
                                        Placement="Bottom"
                                        StaysOpen="False"
                                        AllowsTransparency="True"
+                                       PreviewKeyDown="TransientPopup_PreviewKeyDown"
                                        Opened="TransientPopup_Opened"
                                        Closed="TransientPopup_Closed">
                                     <Border Style="{StaticResource PopupPanelStyle}"
@@ -452,6 +453,7 @@
                                Placement="Bottom"
                                StaysOpen="False"
                                AllowsTransparency="True"
+                               PreviewKeyDown="TransientPopup_PreviewKeyDown"
                                Opened="TransientPopup_Opened"
                                Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
@@ -533,6 +535,7 @@
                                Placement="Bottom"
                                StaysOpen="False"
                                AllowsTransparency="True"
+                               PreviewKeyDown="TransientPopup_PreviewKeyDown"
                                Opened="TransientPopup_Opened"
                                Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
@@ -573,6 +576,7 @@
                                Placement="Bottom"
                                StaysOpen="False"
                                AllowsTransparency="True"
+                               PreviewKeyDown="TransientPopup_PreviewKeyDown"
                                Opened="TransientPopup_Opened"
                                Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">

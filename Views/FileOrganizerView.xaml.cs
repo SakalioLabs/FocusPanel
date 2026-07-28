@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -21,6 +22,8 @@ public partial class FileOrganizerView : UserControl
     private DesktopFile? _fileDragCandidate;
     private int _transientInteractionDepth;
     private MainWindow? _transientInteractionOwner;
+    private readonly ExclusiveSurfaceTracker<Popup>
+        _transientPopups = new();
 
     public FileOrganizerView()
     {
@@ -234,11 +237,13 @@ public partial class FileOrganizerView : UserControl
     {
         ClearFileDragCandidate();
         StopAutoScroll();
+        CloseActiveTransientPopup(false);
         ReleaseTransientInteractions();
     }
 
     private void TransientSurface_Opened(object sender, RoutedEventArgs e)
     {
+        CloseActiveTransientPopup(false);
         if (sender is ContextMenu
             {
                 PlacementTarget:
@@ -260,10 +265,82 @@ public partial class FileOrganizerView : UserControl
         => EndTransientSurface();
 
     private void TransientPopup_Opened(object? sender, EventArgs e)
-        => BeginTransientSurface();
+    {
+        if (sender is not Popup popup)
+            return;
+
+        Popup? previous =
+            _transientPopups.Activate(popup);
+        if (previous is { IsOpen: true })
+        {
+            previous.IsOpen = false;
+        }
+
+        BeginTransientSurface();
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (ReferenceEquals(
+                        _transientPopups.Active,
+                        popup)
+                    && popup.IsOpen
+                    && popup.Child is UIElement child)
+                {
+                    child.MoveFocus(
+                        new TraversalRequest(
+                            FocusNavigationDirection.First));
+                }
+            }),
+            DispatcherPriority.Input);
+    }
 
     private void TransientPopup_Closed(object? sender, EventArgs e)
-        => EndTransientSurface();
+    {
+        if (sender is Popup popup)
+            _transientPopups.Deactivate(popup);
+
+        EndTransientSurface();
+    }
+
+    private void TransientPopup_PreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape
+            || sender is not Popup popup)
+        {
+            return;
+        }
+
+        IInputElement? placementTarget =
+            popup.PlacementTarget;
+        popup.IsOpen = false;
+        if (placementTarget != null)
+        {
+            Dispatcher.BeginInvoke(
+                new Action(() =>
+                    Keyboard.Focus(placementTarget)),
+                DispatcherPriority.Input);
+        }
+
+        e.Handled = true;
+    }
+
+    private void CloseActiveTransientPopup(
+        bool returnFocus)
+    {
+        Popup? popup = _transientPopups.Clear();
+        if (popup == null)
+            return;
+
+        IInputElement? placementTarget =
+            returnFocus
+                ? popup.PlacementTarget
+                : null;
+        popup.IsOpen = false;
+        if (placementTarget != null)
+            Keyboard.Focus(placementTarget);
+    }
 
     private void BeginTransientSurface()
     {

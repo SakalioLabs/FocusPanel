@@ -1558,6 +1558,71 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void OrganizerPopups_AreExclusiveAndReturnKeyboardFocusOnEscape()
+    {
+        string root = FindRepositoryRoot();
+        string organizer = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FileOrganizerView.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FileOrganizerView.xaml.cs"));
+
+        Assert.Equal(
+            4,
+            Regex.Matches(
+                organizer,
+                "PreviewKeyDown=\"TransientPopup_PreviewKeyDown\"").Count);
+        Assert.Equal(
+            4,
+            Regex.Matches(
+                organizer,
+                "Opened=\"TransientPopup_Opened\"").Count);
+        Assert.Equal(
+            4,
+            Regex.Matches(
+                organizer,
+                "Closed=\"TransientPopup_Closed\"").Count);
+        Assert.Contains(
+            "ExclusiveSurfaceTracker<Popup>",
+            codeBehind);
+        Assert.Contains(
+            "_transientPopups.Activate(popup)",
+            codeBehind);
+        Assert.Contains(
+            "previous.IsOpen = false;",
+            codeBehind);
+        Assert.Contains(
+            "_transientPopups.Deactivate(popup)",
+            codeBehind);
+        Assert.Contains(
+            "_transientPopups.Clear()",
+            codeBehind);
+        Assert.Contains(
+            "FocusNavigationDirection.First",
+            codeBehind);
+        Assert.Contains(
+            "if (e.Key != Key.Escape",
+            codeBehind);
+        Assert.Contains(
+            "popup.IsOpen = false;",
+            codeBehind);
+        Assert.Contains(
+            "Keyboard.Focus(placementTarget)",
+            codeBehind);
+        Assert.Contains(
+            "CloseActiveTransientPopup(false);",
+            codeBehind);
+        Assert.Contains(
+            "e.Handled = true;",
+            codeBehind);
+    }
+
+    [Fact]
     public void ToolTips_UseOneRoundedDynamicTheme()
     {
         string root = FindRepositoryRoot();

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="500" viewBox="0 0 1120 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="1" stop-color="#26344C"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".17"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity=".06"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#4CA6E8"/>
+    </marker>
+  </defs>
+  <rect width="1120" height="500" rx="28" fill="url(#bg)"/>
+  <text x="56" y="62" fill="#F5F7FF" font-family="Segoe UI Variable Display, Segoe UI" font-size="28" font-weight="600">桌面收纳弹层：始终单一，键盘路径闭环</text>
+  <text x="56" y="94" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="15">打开、切换、Esc 和页面卸载使用同一活动表面状态。</text>
+
+  <g transform="translate(58 132)" font-family="Segoe UI Variable Text, Segoe UI">
+    <rect width="220" height="286" rx="20" fill="url(#glass)" stroke="#FFFFFF" stroke-opacity=".14"/>
+    <text x="22" y="38" fill="#AEB5C8" font-size="13">工具栏入口</text>
+    <g font-size="14">
+      <rect x="18" y="58" width="184" height="44" rx="11" fill="#006FC4" fill-opacity=".34"/>
+      <text x="38" y="86" fill="#F5F7FF">视图选项</text>
+      <rect x="18" y="110" width="184" height="44" rx="11" fill="#FFFFFF" fill-opacity=".06"/>
+      <text x="38" y="138" fill="#F5F7FF">新建收纳盒</text>
+      <rect x="18" y="162" width="184" height="44" rx="11" fill="#FFFFFF" fill-opacity=".06"/>
+      <text x="38" y="190" fill="#F5F7FF">收纳盒操作</text>
+      <rect x="18" y="214" width="184" height="44" rx="11" fill="#FFFFFF" fill-opacity=".06"/>
+      <text x="38" y="242" fill="#F5F7FF">修复工具</text>
+    </g>
+  </g>
+
+  <path d="M294 274 H382" fill="none" stroke="#4CA6E8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="338" y="256" text-anchor="middle" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="12">打开新项</text>
+
+  <g transform="translate(402 132)" font-family="Segoe UI Variable Text, Segoe UI">
+    <rect width="298" height="286" rx="20" fill="#20242C" fill-opacity=".97" stroke="#4CA6E8" stroke-opacity=".6"/>
+    <text x="22" y="38" fill="#4CA6E8" font-size="13">唯一活动 Popup</text>
+    <rect x="18" y="58" width="262" height="52" rx="12" fill="#FFFFFF" fill-opacity=".07"/>
+    <text x="36" y="90" fill="#F5F7FF" font-size="15">① 关闭上一个弹层</text>
+    <rect x="18" y="120" width="262" height="52" rx="12" fill="#FFFFFF" fill-opacity=".07"/>
+    <text x="36" y="152" fill="#F5F7FF" font-size="15">② 锁定 Panel 自动收起</text>
+    <rect x="18" y="182" width="262" height="52" rx="12" fill="#006FC4" fill-opacity=".28"/>
+    <text x="36" y="214" fill="#F5F7FF" font-size="15">③ 焦点进入首个控件</text>
+    <text x="22" y="266" fill="#AEB5C8" font-size="12">旧 Popup 延迟 Closed 不影响当前项</text>
+  </g>
+
+  <path d="M716 220 H808" fill="none" stroke="#4CA6E8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="762" y="202" text-anchor="middle" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="12">Esc</text>
+
+  <g transform="translate(828 132)" font-family="Segoe UI Variable Text, Segoe UI">
+    <rect width="234" height="286" rx="20" fill="url(#glass)" stroke="#FFFFFF" stroke-opacity=".14"/>
+    <rect x="68" y="30" width="98" height="48" rx="12" fill="#FFFFFF" fill-opacity=".1" stroke="#FFFFFF" stroke-opacity=".18"/>
+    <text x="117" y="61" text-anchor="middle" fill="#F5F7FF" font-size="18" font-weight="600">Esc</text>
+    <text x="117" y="116" text-anchor="middle" fill="#F5F7FF" font-size="15">关闭当前 Popup</text>
+    <text x="117" y="144" text-anchor="middle" fill="#AEB5C8" font-size="13">复位 ToggleButton</text>
+    <path d="M117 166 V208" fill="none" stroke="#4CA6E8" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="34" y="220" width="166" height="44" rx="11" fill="#006FC4" fill-opacity=".3"/>
+    <text x="117" y="248" text-anchor="middle" fill="#F5F7FF" font-size="14">焦点返回原入口</text>
+  </g>
+</svg>
