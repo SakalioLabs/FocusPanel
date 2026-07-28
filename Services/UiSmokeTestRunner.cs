@@ -110,6 +110,9 @@ internal static class UiSmokeTestRunner
             CheckFluentContextMenu(
                 results,
                 failures);
+            CheckOrganizerContextMenu(
+                results,
+                failures);
             CheckFluentToolTip(
                 results,
                 failures);
@@ -364,6 +367,57 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"Fluent 菜单加载失败：{ex}");
+        }
+    }
+
+    private static void CheckOrganizerContextMenu(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var organizer = new FileOrganizerView();
+            object first =
+                organizer.FindResource("FileContextMenu");
+            object second =
+                organizer.FindResource("FileContextMenu");
+            if (first is not ContextMenu firstMenu
+                || second is not ContextMenu secondMenu)
+            {
+                failures.Add(
+                    "桌面文件菜单资源不是 ContextMenu");
+                return;
+            }
+
+            if (ReferenceEquals(firstMenu, secondMenu))
+            {
+                failures.Add(
+                    "桌面文件菜单仍在不同卡片间共享实例");
+                return;
+            }
+
+            object expectedStyle =
+                Application.Current.FindResource(
+                    "FocusContextMenu");
+            if (!ReferenceEquals(
+                    firstMenu.Style,
+                    expectedStyle)
+                || !ReferenceEquals(
+                    secondMenu.Style,
+                    expectedStyle))
+            {
+                failures.Add(
+                    "桌面文件菜单未显式使用 Fluent 主题");
+                return;
+            }
+
+            results.Add(
+                "PASS 桌面文件菜单实例隔离与 Fluent 主题");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"桌面文件菜单检查失败：{ex}");
         }
     }
 

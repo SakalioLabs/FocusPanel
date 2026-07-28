@@ -114,6 +114,9 @@
         </Style>
 
         <ContextMenu x:Key="FileContextMenu"
+                     x:Shared="False"
+                     Style="{StaticResource FocusContextMenu}"
+                     DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
                      Opened="TransientSurface_Opened"
                      Closed="TransientSurface_Closed">
             <ContextMenu.Resources>

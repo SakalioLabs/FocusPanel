@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.86 - 2026-07-29
+
+- 修复桌面文件右键菜单资源默认共享实例的问题；网格、列表和视口虚拟化容器现在通过 `x:Shared="False"` 获得独立 `ContextMenu`，不在不同文件卡片间泄漏打开状态或 DataContext。
+- 菜单 DataContext 显式绑定当前 `PlacementTarget.DataContext`，即使视觉容器被回收后承载另一文件，也会在打开时重新解析真实目标。
+- 菜单打开事件先从 `PlacementTarget` 收窄到 `FrameworkElement` 并取得当前 `DesktopFile`，再调用现有 `SelectFileCommand`；“移动到”“收纳到面板”等依赖 `SelectedFile` 的动作不会误操作上一次选中项。
+- 文件菜单显式引用 `FocusContextMenu`，并保留现有菜单项 Fluent 样式与 transient-interaction 锁；深色主题、右键操作和 Panel 自动收起使用同一生命周期。
+- UI 冒烟真实连续解析两次 `FileContextMenu`，验证实例互不相同且都引用全局 Fluent 样式；新增当前卡片绑定与右键目标契约，全量 506 项测试通过。
+- README 新增桌面右键菜单目标安全链路图。
+
 ## v0.9.85 - 2026-07-29
 
 - 修复统一应用栏多窗口列表在深色主题下退回 WPF 默认浅色 `ContextMenu`、导致浅色窗口标题与背景失去对比度的问题。

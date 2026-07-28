@@ -238,7 +238,23 @@ public partial class FileOrganizerView : UserControl
     }
 
     private void TransientSurface_Opened(object sender, RoutedEventArgs e)
-        => BeginTransientSurface();
+    {
+        if (sender is ContextMenu
+            {
+                PlacementTarget:
+                    FrameworkElement
+                    {
+                        DataContext:
+                            DesktopFile file
+                    }
+            }
+            && DataContext is FileOrganizerViewModel viewModel)
+        {
+            viewModel.SelectFileCommand.Execute(file);
+        }
+
+        BeginTransientSurface();
+    }
 
     private void TransientSurface_Closed(object sender, RoutedEventArgs e)
         => EndTransientSurface();

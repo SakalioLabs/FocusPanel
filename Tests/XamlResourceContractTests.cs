@@ -1506,6 +1506,58 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void DesktopFileContextMenu_TracksTheCurrentCardWithoutSharingState()
+    {
+        string root = FindRepositoryRoot();
+        string organizer = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FileOrganizerView.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FileOrganizerView.xaml.cs"));
+
+        Assert.Contains(
+            "x:Key=\"FileContextMenu\"",
+            organizer);
+        Assert.Contains(
+            "x:Shared=\"False\"",
+            organizer);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusContextMenu}\"",
+            organizer);
+        Assert.Contains(
+            "DataContext=\"{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}\"",
+            organizer);
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                organizer,
+                "ContextMenu=\"\\{StaticResource FileContextMenu\\}\"").Count);
+        Assert.Contains(
+            "PlacementTarget:",
+            codeBehind);
+        Assert.Contains(
+            "FrameworkElement",
+            codeBehind);
+        Assert.Contains(
+            "DataContext:",
+            codeBehind);
+        Assert.Contains(
+            "DesktopFile file",
+            codeBehind);
+        Assert.Contains(
+            "viewModel.SelectFileCommand.Execute(file);",
+            codeBehind);
+        Assert.Contains(
+            "BeginTransientSurface();",
+            codeBehind);
+    }
+
+    [Fact]
     public void ToolTips_UseOneRoundedDynamicTheme()
     {
         string root = FindRepositoryRoot();
