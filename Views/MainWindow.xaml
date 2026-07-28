@@ -185,6 +185,7 @@
                                                     <ColumnDefinition Width="48"/>
                                                 </Grid.ColumnDefinitions>
                                                 <Button Grid.ColumnSpan="2"
+                                                        Style="{StaticResource FocusRowButton}"
                                                         HorizontalContentAlignment="Stretch"
                                                         Foreground="{DynamicResource FocusTextBrush}"
                                                         Background="Transparent"
@@ -557,9 +558,8 @@
                                     HorizontalContentAlignment="Left"
                                     Content="从最新备份恢复数据库"
                                     Command="{Binding RestoreDatabaseCommand}"/>
-                            <Button Style="{StaticResource FocusSecondaryButton}"
+                            <Button Style="{StaticResource FocusDangerButton}"
                                     HorizontalContentAlignment="Left"
-                                    Foreground="{DynamicResource FocusDangerBrush}"
                                     Content="退出 FocusPanel"
                                     Command="{Binding CloseAppCommand}"/>
                           </StackPanel>
@@ -586,7 +586,7 @@
                             <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="锁定" Command="{Binding LockComputerCommand}"/>
                             <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="睡眠" Command="{Binding SleepComputerCommand}"/>
                             <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="重启…" Command="{Binding RestartComputerCommand}"/>
-                            <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Foreground="{DynamicResource FocusDangerBrush}" Content="关机…" Command="{Binding ShutdownComputerCommand}"/>
+                            <Button Style="{StaticResource FocusDangerButton}" HorizontalContentAlignment="Left" Content="关机…" Command="{Binding ShutdownComputerCommand}"/>
                         </StackPanel>
                     </Border>
                 </Grid>

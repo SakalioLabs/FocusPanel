@@ -335,7 +335,7 @@
                                             <Button Command="{Binding Data.DeletePartitionCommand, Source={StaticResource VmProxy}}"
                                                     CommandParameter="{Binding}"
                                                     Visibility="{Binding IsCustom, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                    Style="{StaticResource FocusSecondaryButton}"
+                                                    Style="{StaticResource FocusDangerButton}"
                                                     HorizontalContentAlignment="Left"
                                                     Content="删除"/>
                                         </StackPanel>

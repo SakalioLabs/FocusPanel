@@ -199,6 +199,87 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void Buttons_UseFluentRowAndDangerActionStyles()
+    {
+        string root = FindRepositoryRoot();
+        XNamespace presentation =
+            "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var unstyled = new List<string>();
+
+        foreach (string xamlPath in Directory.GetFiles(
+                     Path.Combine(root, "Views"),
+                     "*.xaml",
+                     SearchOption.TopDirectoryOnly))
+        {
+            XDocument document = XDocument.Load(xamlPath);
+            foreach (XElement button in document.Descendants(
+                         presentation + "Button"))
+            {
+                bool hasStyle =
+                    button.Attribute("Style") != null
+                    || button.Elements(
+                            presentation + "Button.Style")
+                        .Any();
+                if (!hasStyle)
+                {
+                    unstyled.Add(
+                        $"{Path.GetFileName(xamlPath)}: "
+                        + ((string?)button.Attribute("Content")
+                           ?? "(复合内容)"));
+                }
+            }
+        }
+
+        Assert.True(
+            unstyled.Count == 0,
+            "发现回退到 WPF 原生外观的按钮："
+            + Environment.NewLine
+            + string.Join(Environment.NewLine, unstyled));
+
+        string theme = File.ReadAllText(
+            Path.Combine(root, "Themes", "FocusTheme.xaml"));
+        string themeService = File.ReadAllText(
+            Path.Combine(root, "Services", "ThemeService.cs"));
+        string main = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string ai = File.ReadAllText(
+            Path.Combine(root, "Views", "AIAssistantView.xaml"));
+        string organizer = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml"));
+        string okr = File.ReadAllText(
+            Path.Combine(root, "Views", "OkrView.xaml"));
+
+        Assert.Contains("x:Key=\"FocusRowButton\"", theme);
+        Assert.Contains("x:Key=\"FocusDangerButton\"", theme);
+        Assert.Contains("x:Key=\"FocusDangerSoftBrush\"", theme);
+        Assert.Contains(
+            "HorizontalAlignment=\"{TemplateBinding HorizontalContentAlignment}\"",
+            theme);
+        Assert.Contains(
+            "SetBrush(\"FocusDangerSoftBrush\"",
+            themeService);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusRowButton}\"",
+            main);
+        Assert.True(
+            CountOccurrences(
+                main,
+                "Style=\"{StaticResource FocusDangerButton}\"")
+            >= 2);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusDangerButton}\"",
+            ai);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusDangerButton}\"",
+            organizer);
+        Assert.True(
+            CountOccurrences(
+                okr,
+                "Style=\"{StaticResource FocusDangerButton}\"")
+            >= 2);
+    }
+
+    [Fact]
     public void MainShell_HasOnlyOneTopLevelRoundedOutline()
     {
         string root = FindRepositoryRoot();

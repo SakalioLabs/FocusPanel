@@ -53,6 +53,9 @@ public sealed class UiSmokeTestProcessTests
                 "PASS Fluent 页面、章节、正文、说明与指标字体层级",
                 report);
             Assert.Contains(
+                "PASS Fluent 行按钮与危险操作动态状态",
+                report);
+            Assert.Contains(
                 "PASS Fluent 勾选框点击区、圆角与选中状态",
                 report);
             Assert.Contains(

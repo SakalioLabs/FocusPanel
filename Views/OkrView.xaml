@@ -215,7 +215,7 @@
                                     Command="{Binding ValidateAndSaveCredentialsCommand}"/>
                             <Button Content="清除凭据"
                                     Margin="8,0,0,0"
-                                    Style="{StaticResource FocusSecondaryButton}"
+                                    Style="{StaticResource FocusDangerButton}"
                                     Command="{Binding ClearCredentialsCommand}"/>
                         </StackPanel>
                     </StackPanel>
@@ -488,7 +488,7 @@
                                     CommandParameter="{Binding SelectedObjective}"/>
                             <Button Content="删除目标"
                                     Margin="8,0,0,0"
-                                    Style="{StaticResource FocusSecondaryButton}"
+                                    Style="{StaticResource FocusDangerButton}"
                                     Command="{Binding DeleteObjectiveCommand}"
                                     CommandParameter="{Binding SelectedObjective}"/>
                         </StackPanel>

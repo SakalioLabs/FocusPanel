@@ -30,6 +30,7 @@ internal static class UiSmokeTestRunner
         "FocusWarningBrush",
         "FocusWarningSoftBrush",
         "FocusWarningTextBrush",
+        "FocusDangerSoftBrush",
         "FocusOverlayBrush",
         "FocusEdgeIndicatorBrush",
         "FocusTextBase",
@@ -59,7 +60,9 @@ internal static class UiSmokeTestRunner
         "FocusSearchBox",
         "FocusPasswordBox",
         "FocusToggleButton",
-        "FocusSegmentRadioButton"
+        "FocusSegmentRadioButton",
+        "FocusRowButton",
+        "FocusDangerButton"
     };
 
     public static int Run(
@@ -114,6 +117,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentTypography(
+                results,
+                failures);
+            CheckFluentActionButtons(
                 results,
                 failures);
             CheckFluentCheckBox(
@@ -1072,6 +1078,84 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"Fluent 字体层级加载失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentActionButtons(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var row = new Button
+            {
+                Content = "文件资源管理器",
+                Width = double.NaN,
+                Height = double.NaN,
+                Style = (Style)Application.Current.FindResource(
+                    "FocusRowButton")
+            };
+            var danger = new Button
+            {
+                Content = "删除目标",
+                Style = (Style)Application.Current.FindResource(
+                    "FocusDangerButton")
+            };
+            var panel = new StackPanel
+            {
+                Width = 320,
+                Children =
+                {
+                    row,
+                    danger
+                }
+            };
+            panel.Measure(new Size(320, 160));
+            panel.Arrange(new Rect(0, 0, 320, 160));
+            panel.UpdateLayout();
+            row.ApplyTemplate();
+            danger.ApplyTemplate();
+
+            Border? rowChrome =
+                row.Template.FindName("Chrome", row) as Border;
+            Border? dangerChrome =
+                danger.Template.FindName("Chrome", danger) as Border;
+            if (rowChrome == null
+                || dangerChrome == null
+                || !double.IsNaN(row.Width)
+                || !double.IsNaN(row.Height)
+                || row.MinHeight < 44
+                || row.HorizontalContentAlignment
+                    != HorizontalAlignment.Stretch
+                || !ReferenceEquals(
+                    row.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush"))
+                || !ReferenceEquals(
+                    danger.Background,
+                    Application.Current.FindResource(
+                        "FocusDangerSoftBrush"))
+                || !ReferenceEquals(
+                    danger.Foreground,
+                    Application.Current.FindResource(
+                        "FocusDangerBrush"))
+                || danger.BorderThickness.Left < 1
+                || danger.FontWeight != FontWeights.SemiBold
+                || rowChrome.CornerRadius.TopLeft != 8
+                || dangerChrome.CornerRadius.TopLeft != 8)
+            {
+                failures.Add(
+                    "Fluent 行按钮或危险操作未使用统一圆角、动态画刷与点击区");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 行按钮与危险操作动态状态");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 操作按钮加载失败：{ex}");
         }
     }
 

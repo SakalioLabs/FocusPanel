@@ -120,7 +120,18 @@ public static class ThemeService
             SystemParameters.HighContrast
                 ? SystemColors.HighlightColor
                 : accentBright);
-        SetBrush("FocusDangerBrush", dark ? "#FFFF6B7A" : "#FFD92D4B");
+        Color danger = SystemParameters.HighContrast
+            ? SystemColors.HighlightColor
+            : dark
+                ? Color.FromRgb(0xFF, 0x6B, 0x7A)
+                : Color.FromRgb(0xD9, 0x2D, 0x4B);
+        SetBrush("FocusDangerBrush", danger);
+        Color dangerSoft = SystemParameters.HighContrast
+            ? SystemColors.WindowColor
+            : danger;
+        if (!SystemParameters.HighContrast)
+            dangerSoft.A = dark ? (byte)0x26 : (byte)0x20;
+        SetBrush("FocusDangerSoftBrush", dangerSoft);
         Color warning = SystemParameters.HighContrast
             ? SystemColors.HighlightColor
             : dark
