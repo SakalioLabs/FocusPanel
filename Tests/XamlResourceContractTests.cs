@@ -2128,10 +2128,31 @@ public sealed class XamlResourceContractTests
             "_desktopWatcher.Changed += OnChanged",
             service);
         Assert.Contains(
-            "SchedulePathRefresh(e.FullPath)",
+            "e.ChangeType == WatcherChangeTypes.Created",
             service);
         Assert.Contains(
             "RefreshChangedPaths(batch.Paths)",
+            service);
+        Assert.Contains(
+            "DesktopItemsCreated?.Invoke(",
+            service);
+        Assert.Contains(
+            "_pendingChanges.RenamePath(",
+            service);
+        Assert.Contains(
+            "_createdPathSuppression.Suppress(",
+            service);
+        Assert.Contains(
+            "_createdPathSuppression.TryConsume(",
+            service);
+        Assert.Contains(
+            "OrganizeFiles(paths)",
+            viewModel);
+        Assert.Contains(
+            "AutoOrganizeStatus",
+            viewModel);
+        Assert.DoesNotContain(
+            "AutoOrganizeIfEnabled",
             service);
         Assert.Contains(
             "_storageWatcher.Error += OnWatcherError",
@@ -2492,6 +2513,10 @@ public sealed class XamlResourceContractTests
 
         Assert.Contains("<Grid Background=\"Transparent\">", organizer);
         Assert.Contains("IsAutoOrganizeEnabled", organizer);
+        Assert.Contains("AutoOrganizeStatus", organizer);
+        Assert.Contains(
+            "仅处理开启后新增到桌面根目录的项目",
+            organizer);
         Assert.DoesNotContain("DropShadowEffect", organizer);
         Assert.DoesNotContain("OrganizerCardShadow", organizer);
         Assert.DoesNotContain("ToggleDesktopCommand", organizer);

@@ -20,6 +20,7 @@ public partial class FileOrganizerViewModel :
 {
     private readonly FileOrganizerService _fileService;
     private readonly SettingsService _settingsService;
+    private bool _isDisposed;
 
     // Split partitions for Masonry/Staggered Layout
     public ObservableCollection<PartitionViewModel> PartitionsCol1 { get; } = new();
@@ -64,6 +65,10 @@ public partial class FileOrganizerViewModel :
     private bool isAutoOrganizeEnabled;
 
     [ObservableProperty]
+    private string autoOrganizeStatus =
+        "关闭时不会处理新增桌面项目";
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CardWidth))]
     [NotifyPropertyChangedFor(nameof(CardHeight))]
     [NotifyPropertyChangedFor(nameof(IconImageSize))]
@@ -103,6 +108,9 @@ public partial class FileOrganizerViewModel :
 
     partial void OnIsAutoOrganizeEnabledChanged(bool value)
     {
+        AutoOrganizeStatus = value
+            ? "正在监听新增桌面项目；现有项目不会被自动收纳"
+            : "关闭时不会处理新增桌面项目";
         try
         {
             using var context = new AppDbContext();
@@ -123,6 +131,9 @@ public partial class FileOrganizerViewModel :
         }
         catch (Exception ex)
         {
+            AutoOrganizeStatus = value
+                ? "本次会话已启用，但设置未能持久保存"
+                : "本次会话已关闭，但设置未能持久保存";
             System.Diagnostics.Debug.WriteLine(
                 $"Save auto organize setting failed: {ex.Message}");
         }
@@ -249,6 +260,8 @@ public partial class FileOrganizerViewModel :
         // Listen for file updates
         _fileService.FilesChanged +=
             FileService_FilesChanged;
+        _fileService.DesktopItemsCreated +=
+            FileService_DesktopItemsCreated;
 
         // Check initial desktop state
         try
@@ -270,6 +283,40 @@ public partial class FileOrganizerViewModel :
         // UI thread; keep the guard for explicit service calls.
         System.Windows.Application.Current
             .Dispatcher.Invoke(BuildPartitions);
+    }
+
+    private async void FileService_DesktopItemsCreated(
+        IReadOnlyList<string> paths)
+    {
+        if (!IsAutoOrganizeEnabled
+            || _isDisposed
+            || paths.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            DesktopOrganizeResult result =
+                await _fileService.OrganizeFiles(paths);
+            string status =
+                DesktopAutoOrganizePolicy
+                    .DescribeAutomaticResult(result);
+            if (!_isDisposed
+                && !string.IsNullOrWhiteSpace(status))
+                AutoOrganizeStatus = status;
+        }
+        catch (Exception ex)
+        {
+            if (!_isDisposed)
+            {
+                AutoOrganizeStatus =
+                    "自动收纳暂时失败；项目仍保留在桌面";
+            }
+            System.Diagnostics.Debug.WriteLine(
+                "Auto organize created desktop items failed: "
+                + ex.Message);
+        }
     }
 
     private void BuildPartitions()
@@ -978,8 +1025,14 @@ public partial class FileOrganizerViewModel :
 
     public void Dispose()
     {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
         _fileService.FilesChanged -=
             FileService_FilesChanged;
+        _fileService.DesktopItemsCreated -=
+            FileService_DesktopItemsCreated;
         _fileService.Dispose();
     }
 }

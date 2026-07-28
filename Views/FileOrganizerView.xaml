@@ -507,8 +507,13 @@
                                             Background="{DynamicResource FocusStrokeBrush}"/>
                                     <CheckBox IsChecked="{Binding IsAutoOrganizeEnabled}"
                                               Content="新增桌面项目自动按类型收纳"
-                                              ToolTip="监听到新增项目后自动分类；不会移动或改名"
+                                              ToolTip="仅处理开启后新增到桌面根目录的项目；不会移动或改名"
                                               Padding="2,5"/>
+                                    <TextBlock Text="{Binding AutoOrganizeStatus}"
+                                               Margin="2,4,2,0"
+                                               Style="{StaticResource FocusMetaText}"
+                                               TextWrapping="Wrap"
+                                               AutomationProperties.LiveSetting="Polite"/>
                                 </StackPanel>
                             </Border>
                         </Popup>

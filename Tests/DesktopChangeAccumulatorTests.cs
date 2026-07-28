@@ -26,6 +26,7 @@ public sealed class DesktopChangeAccumulatorTests
                 @"C:\Desktop\Report.txt"
             },
             batch.Paths);
+        Assert.Empty(batch.CreatedPaths);
     }
 
     [Fact]
@@ -50,6 +51,7 @@ public sealed class DesktopChangeAccumulatorTests
         Assert.Contains(
             @"C:\Desktop\New.txt",
             batch.Paths);
+        Assert.Empty(batch.CreatedPaths);
     }
 
     [Fact]
@@ -68,6 +70,7 @@ public sealed class DesktopChangeAccumulatorTests
 
         Assert.True(batch.RequiresFullRefresh);
         Assert.Empty(batch.Paths);
+        Assert.Empty(batch.CreatedPaths);
     }
 
     [Fact]
@@ -108,5 +111,68 @@ public sealed class DesktopChangeAccumulatorTests
                 @"C:\Desktop\Later.txt"
             },
             incremental.Paths);
+    }
+
+    [Fact]
+    public void CreatedPath_RemainsMarkedAcrossLaterChanges()
+    {
+        var accumulator =
+            new DesktopChangeAccumulator();
+
+        accumulator.AddPath(
+            @"C:\Desktop\New.txt",
+            isCreated: true);
+        accumulator.AddPath(
+            @"c:\desktop\NEW.txt");
+
+        DesktopChangeBatch batch =
+            accumulator.Take();
+
+        Assert.Single(batch.Paths);
+        Assert.Equal(
+            new[] { @"C:\Desktop\New.txt" },
+            batch.CreatedPaths);
+    }
+
+    [Fact]
+    public void Rename_TransfersCreatedIdentityToFinalPath()
+    {
+        var accumulator =
+            new DesktopChangeAccumulator();
+        accumulator.AddPath(
+            @"C:\Desktop\download.tmp",
+            isCreated: true);
+
+        accumulator.RenamePath(
+            @"C:\Desktop\download.tmp",
+            @"C:\Desktop\report.pdf");
+        DesktopChangeBatch batch =
+            accumulator.Take();
+
+        Assert.Contains(
+            @"C:\Desktop\download.tmp",
+            batch.Paths);
+        Assert.Contains(
+            @"C:\Desktop\report.pdf",
+            batch.Paths);
+        Assert.Equal(
+            new[] { @"C:\Desktop\report.pdf" },
+            batch.CreatedPaths);
+    }
+
+    [Fact]
+    public void RenameOfExistingItem_IsNotMarkedCreated()
+    {
+        var accumulator =
+            new DesktopChangeAccumulator();
+
+        accumulator.RenamePath(
+            @"C:\Desktop\old.txt",
+            @"C:\Desktop\new.txt");
+        DesktopChangeBatch batch =
+            accumulator.Take();
+
+        Assert.Equal(2, batch.Paths.Count);
+        Assert.Empty(batch.CreatedPaths);
     }
 }

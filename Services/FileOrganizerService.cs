@@ -34,6 +34,8 @@ public class FileOrganizerService : IDisposable
     private FileSystemWatcher? _commonDesktopWatcher;
     private FileSystemWatcher? _storageWatcher;
     private readonly DesktopChangeAccumulator _pendingChanges = new();
+    private readonly DesktopCreatedPathSuppression
+        _createdPathSuppression = new();
     private readonly System.Threading.Timer _debounceTimer;
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
     private bool _disposed;
@@ -45,6 +47,8 @@ public class FileOrganizerService : IDisposable
     public ObservableCollection<DesktopFile> Files { get; private set; } = new();
 
     public event Action? FilesChanged;
+    public event Action<IReadOnlyList<string>>?
+        DesktopItemsCreated;
 
     private readonly SemaphoreSlim _organizeGate = new(1, 1);
     private const int DebounceInterval = 500;
@@ -157,7 +161,14 @@ public class FileOrganizerService : IDisposable
     {
         // Ignore changes inside the storage folder from the desktop watcher
         if (e.FullPath.StartsWith(_storageRoot, StringComparison.OrdinalIgnoreCase)) return;
-        SchedulePathRefresh(e.FullPath);
+        bool isCreated =
+            e.ChangeType == WatcherChangeTypes.Created
+            && !_createdPathSuppression.TryConsume(
+                e.FullPath,
+                DateTimeOffset.UtcNow);
+        SchedulePathRefresh(
+            e.FullPath,
+            isCreated);
     }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
@@ -197,8 +208,9 @@ public class FileOrganizerService : IDisposable
                 Path.GetFileName(e.FullPath);
             renamed.FullPath = e.FullPath;
         });
-        SchedulePathRefresh(e.OldFullPath);
-        SchedulePathRefresh(e.FullPath);
+        ScheduleRenamedPathRefresh(
+            e.OldFullPath,
+            e.FullPath);
     }
 
     private void OnStorageChanged(
@@ -216,12 +228,27 @@ public class FileOrganizerService : IDisposable
         ErrorEventArgs e)
         => ScheduleFullRefresh();
 
-    private void SchedulePathRefresh(string path)
+    private void SchedulePathRefresh(
+        string path,
+        bool isCreated = false)
     {
         if (_disposed)
             return;
 
-        _pendingChanges.AddPath(path);
+        _pendingChanges.AddPath(path, isCreated);
+        RestartDebounceTimer();
+    }
+
+    private void ScheduleRenamedPathRefresh(
+        string oldPath,
+        string newPath)
+    {
+        if (_disposed)
+            return;
+
+        _pendingChanges.RenamePath(
+            oldPath,
+            newPath);
         RestartDebounceTimer();
     }
 
@@ -266,7 +293,12 @@ public class FileOrganizerService : IDisposable
             else
                 await RefreshChangedPaths(batch.Paths);
 
-            await AutoOrganizeIfEnabled();
+            if (batch.CreatedPaths.Count > 0)
+            {
+                await InvokeOnUiAsync(() =>
+                    DesktopItemsCreated?.Invoke(
+                        batch.CreatedPaths));
+            }
         }
         catch (Exception ex)
         {
@@ -535,26 +567,6 @@ public class FileOrganizerService : IDisposable
         return application.Dispatcher
             .InvokeAsync(action)
             .Task;
-    }
-
-    private async Task AutoOrganizeIfEnabled()
-    {
-        try
-        {
-            using var context = new AppDbContext();
-            var config = context.AppConfigs.Find("FileOrganizer_AutoOrganize");
-            if (config != null && bool.TryParse(config.Value, out var enable) && enable && Files.Count > 0)
-            {
-                DesktopOrganizeResult result = await OrganizeAllFiles();
-                if (result.Failed > 0 || result.AuthorizationRequired > 0)
-                {
-                    System.Diagnostics.Debug.WriteLine(
-                        $"Auto organize incomplete: {result.Failed} failed, "
-                        + $"{result.AuthorizationRequired} require authorization.");
-                }
-            }
-        }
-        catch { }
     }
 
     private sealed record DesktopPreferenceSnapshot(
@@ -1103,9 +1115,19 @@ public class FileOrganizerService : IDisposable
                 }
 
                 if (File.Exists(srcPath))
+                {
+                    _createdPathSuppression.Suppress(
+                        destPath,
+                        DateTimeOffset.UtcNow);
                     File.Move(srcPath, destPath);
+                }
                 else if (Directory.Exists(srcPath))
+                {
+                    _createdPathSuppression.Suppress(
+                        destPath,
+                        DateTimeOffset.UtcNow);
                     Directory.Move(srcPath, destPath);
+                }
                 else
                     throw new FileNotFoundException("找不到旧版收纳项目。", srcPath);
 
@@ -1282,7 +1304,13 @@ public class FileOrganizerService : IDisposable
         await Task.Run(() =>
         {
             var rescueRoot = Path.Combine(_desktopPath, "FocusPanel_Recovered");
-            if (!Directory.Exists(rescueRoot)) Directory.CreateDirectory(rescueRoot);
+            if (!Directory.Exists(rescueRoot))
+            {
+                _createdPathSuppression.Suppress(
+                    rescueRoot,
+                    DateTimeOffset.UtcNow);
+                Directory.CreateDirectory(rescueRoot);
+            }
 
             foreach (var file in new DirectoryInfo(_desktopPath).GetFiles())
             {
@@ -1318,19 +1346,35 @@ public class FileOrganizerService : IDisposable
     // ============================================================
     public async Task<DesktopOrganizeResult> OrganizeAllFiles(
         bool allowCommonDesktopElevation = false)
+        => await OrganizeFiles(
+            Files
+                .Where(file =>
+                    !file.IsHidden
+                    && !file.NeedsRecovery)
+                .Select(file => file.FullPath)
+                .ToArray(),
+            allowCommonDesktopElevation);
+
+    public async Task<DesktopOrganizeResult> OrganizeFiles(
+        IReadOnlyList<string> paths,
+        bool allowCommonDesktopElevation = false)
     {
         await _organizeGate.WaitAsync();
         try
         {
-            var visibleFiles = Files
-                .Where(file => !file.IsHidden && !file.NeedsRecovery)
-                .ToList();
-            var items = visibleFiles
+            var candidates = Files
                 .Select(file => new DesktopAutoOrganizeItem(
                     file.Name,
                     file.FullPath,
-                    file.FileType))
-                .ToList();
+                    file.FileType,
+                    file.IsHidden,
+                    file.NeedsRecovery))
+                .ToArray();
+            IReadOnlyList<DesktopAutoOrganizeItem> items =
+                DesktopAutoOrganizePolicy
+                    .SelectCreatedItems(
+                        candidates,
+                        paths);
 
             DesktopOrganizeResult result =
                 await DesktopAutoOrganizePolicy.ExecuteAsync(
