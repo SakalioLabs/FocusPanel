@@ -154,7 +154,15 @@ public sealed class AppCatalogService : IAppCatalogService
         return AppLaunchExecution.TryStart(startInfo);
     }
 
-    public void SetPinned(AppLaunchItem app, bool pinned)
+    public bool SetPinned(
+        AppLaunchItem app,
+        bool pinned) =>
+        SystemActionExecution.Try(
+            () => SetPinnedCore(app, pinned));
+
+    private bool SetPinnedCore(
+        AppLaunchItem app,
+        bool pinned)
     {
         EnsureIdentity(app);
         using var context = new AppDbContext();
@@ -185,21 +193,31 @@ public sealed class AppCatalogService : IAppCatalogService
 
         context.SaveChanges();
         app.IsPinned = pinned;
+        return true;
     }
 
-    public void MovePinned(AppLaunchItem app, int newIndex)
+    public bool MovePinned(
+        AppLaunchItem app,
+        int newIndex) =>
+        SystemActionExecution.Try(
+            () => MovePinnedCore(app, newIndex));
+
+    private bool MovePinnedCore(
+        AppLaunchItem app,
+        int newIndex)
     {
         using var context = new AppDbContext();
         var ordered = context.PinnedApps.OrderBy(item => item.OrderIndex).ToList();
         var target = ordered.FirstOrDefault(item =>
             string.Equals(BuildKey(item), BuildKey(app), StringComparison.OrdinalIgnoreCase));
         if (target == null)
-            return;
+            return false;
 
         PinnedAppOrdering.Move(ordered, target, newIndex);
         for (int index = 0; index < ordered.Count; index++)
             ordered[index].OrderIndex = index;
         context.SaveChanges();
+        return true;
     }
 
     internal static IEnumerable<string> SafeEnumerateShortcuts(string root)

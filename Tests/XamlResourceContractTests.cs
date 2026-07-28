@@ -714,8 +714,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains("ObservableCollection<TaskbarAppItem> TaskbarApps", viewModel);
         Assert.DoesNotContain("ObservableCollection<AppLaunchItem> PinnedApps", viewModel);
         Assert.DoesNotContain("ObservableCollection<WindowTaskItem> RunningApps", viewModel);
-        Assert.Contains("_appCatalog.SetPinned(launch, true)", viewModel);
-        Assert.Contains("_appCatalog.MovePinned(launch", viewModel);
+        Assert.Contains("TrySetPinned(launch, true)", viewModel);
+        Assert.Contains("TryMovePinned(", viewModel);
     }
 
     [Fact]
@@ -919,9 +919,17 @@ public sealed class XamlResourceContractTests
         string root = FindRepositoryRoot();
         string windowTracker = File.ReadAllText(
             Path.Combine(root, "Services", "WindowTracker.cs"));
+        string commandBoundary = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowsWindowCommandBoundary.cs"));
 
-        Assert.Contains("PostMessage(handle, WmClose", windowTracker);
+        Assert.Contains("_commands.Close(handle)", windowTracker);
+        Assert.Contains("PostMessage(", commandBoundary);
+        Assert.Contains("WmClose", commandBoundary);
         Assert.DoesNotContain(".Kill(", windowTracker);
+        Assert.DoesNotContain(".Kill(", commandBoundary);
     }
 
     [Fact]
@@ -1386,6 +1394,69 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AutomationProperties.LiveSetting=\"Assertive\"",
             mainWindow);
+    }
+
+    [Fact]
+    public void TaskbarWindowAndPinActions_ReportFailures()
+    {
+        string root = FindRepositoryRoot();
+        string windowContract = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "IWindowTracker.cs"));
+        string appContract = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "IAppCatalogService.cs"));
+        string catalog = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "AppCatalogService.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+
+        Assert.Contains(
+            "bool ActivateOrMinimize(WindowTaskItem task)",
+            windowContract);
+        Assert.Contains(
+            "bool Activate(IntPtr handle)",
+            windowContract);
+        Assert.Contains(
+            "bool Close(IntPtr handle)",
+            windowContract);
+        Assert.Contains(
+            "bool SetPinned(AppLaunchItem app, bool pinned)",
+            appContract);
+        Assert.Contains(
+            "bool MovePinned(AppLaunchItem app, int newIndex)",
+            appContract);
+        Assert.Contains(
+            "SystemActionExecution.Try(",
+            catalog);
+        Assert.Contains(
+            "CompleteTaskbarWindowAction(",
+            viewModel);
+        Assert.Contains(
+            "TrySetPinned(",
+            viewModel);
+        Assert.Contains(
+            "TryMovePinned(",
+            viewModel);
+        Assert.Contains(
+            "Windows 暂时阻止了前台切换",
+            viewModel);
+        Assert.Contains(
+            "无法保存“",
+            viewModel);
+        Assert.Contains(
+            "ReportTaskbarActionFailure(",
+            viewModel);
     }
 
     private static HashSet<string> ReadDefinedKeys(params string[] paths)

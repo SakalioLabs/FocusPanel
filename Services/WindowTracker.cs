@@ -26,15 +26,13 @@ public sealed class WindowTracker : IWindowTracker
     private const long WsThickFrame = 0x00040000L;
     private const long WsExToolWindow = 0x00000080L;
     private const long WsExNoActivate = 0x08000000L;
-    private const int SwMinimize = 6;
-    private const int SwRestore = 9;
-    private const uint WmClose = 0x0010;
     private const int DwmwaCloaked = 14;
 
     private readonly DispatcherTimer _refreshDebounce;
     private readonly NativeMethods.WinEventDelegate _callback;
     private readonly List<IntPtr> _hooks = new();
     private readonly IAppIdentityResolver _identityResolver;
+    private readonly WindowCommandExecutor _commands;
     private IReadOnlyList<WindowTaskItem> _snapshot = Array.Empty<WindowTaskItem>();
     private volatile bool _trackingActive = true;
 
@@ -45,6 +43,8 @@ public sealed class WindowTracker : IWindowTracker
     internal WindowTracker(IAppIdentityResolver identityResolver)
     {
         _identityResolver = identityResolver;
+        _commands = new WindowCommandExecutor(
+            new WindowsWindowCommandBoundary());
         _callback = OnWinEvent;
         _refreshDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(140) };
         _refreshDebounce.Tick += (_, _) =>
@@ -80,32 +80,15 @@ public sealed class WindowTracker : IWindowTracker
         }
     }
 
-    public void ActivateOrMinimize(WindowTaskItem task)
-    {
-        if (task.PrimaryHandle == IntPtr.Zero)
-            return;
+    public bool ActivateOrMinimize(
+        WindowTaskItem task) =>
+        _commands.ActivateOrMinimize(task);
 
-        if (NativeMethods.GetForegroundWindow() == task.PrimaryHandle)
-            NativeMethods.ShowWindow(task.PrimaryHandle, SwMinimize);
-        else
-            Activate(task.PrimaryHandle);
-    }
+    public bool Activate(IntPtr handle) =>
+        _commands.Activate(handle);
 
-    public void Activate(IntPtr handle)
-    {
-        if (handle == IntPtr.Zero)
-            return;
-
-        if (NativeMethods.IsIconic(handle))
-            NativeMethods.ShowWindow(handle, SwRestore);
-        NativeMethods.SetForegroundWindow(handle);
-    }
-
-    public void Close(IntPtr handle)
-    {
-        if (handle != IntPtr.Zero)
-            NativeMethods.PostMessage(handle, WmClose, IntPtr.Zero, IntPtr.Zero);
-    }
+    public bool Close(IntPtr handle) =>
+        _commands.Close(handle);
 
     public bool IsForegroundFullscreen()
     {
@@ -354,23 +337,7 @@ public sealed class WindowTracker : IWindowTracker
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool IsIconic(IntPtr hwnd);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsZoomed(IntPtr hwnd);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool ShowWindow(IntPtr hwnd, int command);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool SetForegroundWindow(IntPtr hwnd);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool PostMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]

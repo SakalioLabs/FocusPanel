@@ -11,7 +11,7 @@ public interface IAppCatalogService : IDisposable
     IReadOnlyList<AppLaunchItem> Search(string query, int limit = 24);
     IReadOnlyList<AppLaunchItem> GetPinned();
     bool Launch(AppLaunchItem app);
-    void SetPinned(AppLaunchItem app, bool pinned);
-    void MovePinned(AppLaunchItem app, int newIndex);
+    bool SetPinned(AppLaunchItem app, bool pinned);
+    bool MovePinned(AppLaunchItem app, int newIndex);
     void Refresh();
 }

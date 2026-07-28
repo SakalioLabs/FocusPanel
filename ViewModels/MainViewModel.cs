@@ -582,7 +582,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (app == null)
             return;
 
-        _appCatalog.SetPinned(app, !app.IsPinned);
+        if (!TrySetPinned(app, !app.IsPinned))
+            return;
         RefreshTaskbarApps();
         RefreshSearchResults();
     }
@@ -595,16 +596,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
         AppLaunchItem? launch = source.CreateLaunchItem();
         if (launch == null)
             return;
-        if (!source.IsPinned)
-            _appCatalog.SetPinned(launch, true);
+        if (!source.IsPinned
+            && !TrySetPinned(launch, true))
+        {
+            return;
+        }
 
         int targetIndex = TaskbarApps
             .TakeWhile(item => !ReferenceEquals(item, target))
             .Count(item => item.IsPinned);
         if (!target.IsPinned)
             targetIndex = TaskbarApps.Count(item => item.IsPinned) - 1;
-        _appCatalog.MovePinned(launch, Math.Max(0, targetIndex));
+        if (!TryMovePinned(
+                launch,
+                Math.Max(0, targetIndex)))
+        {
+            RefreshTaskbarApps();
+            RefreshSearchResults();
+            return;
+        }
         RefreshTaskbarApps();
+        RefreshSearchResults();
     }
 
     [RelayCommand]
@@ -612,7 +624,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (task?.RunningTask != null)
         {
-            _windowTracker.ActivateOrMinimize(task.RunningTask);
+            CompleteTaskbarWindowAction(
+                SystemActionExecution.Try(
+                    () => _windowTracker.ActivateOrMinimize(
+                        task.RunningTask)),
+                $"无法切换“{task.DisplayName}”。窗口可能已经关闭，"
+                + "或 Windows 暂时阻止了前台切换。");
             return;
         }
         AppLaunchItem? launch = task?.CreateLaunchItem();
@@ -637,14 +654,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (task.IsPinned)
         {
             foreach (AppLaunchItem launch in task.PinnedLaunches)
-                _appCatalog.SetPinned(launch, false);
+            {
+                if (!TrySetPinned(launch, false))
+                    break;
+            }
         }
         else
         {
             AppLaunchItem? launch = task.CreateLaunchItem();
             if (launch == null)
                 return;
-            _appCatalog.SetPinned(launch, true);
+            TrySetPinned(launch, true);
         }
         RefreshTaskbarApps();
         RefreshSearchResults();
@@ -654,14 +674,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void ActivateWindow(WindowReference? window)
     {
         if (window != null)
-            _windowTracker.Activate(window.Handle);
+        {
+            CompleteTaskbarWindowAction(
+                SystemActionExecution.Try(
+                    () => _windowTracker.Activate(
+                        window.Handle)),
+                $"无法切换到“{window.Title}”。窗口可能已经关闭，"
+                + "或 Windows 暂时阻止了前台切换。");
+        }
     }
 
     [RelayCommand]
     private void CloseWindow(WindowReference? window)
     {
         if (window != null)
-            _windowTracker.Close(window.Handle);
+        {
+            CompleteTaskbarWindowAction(
+                SystemActionExecution.Try(
+                    () => _windowTracker.Close(
+                        window.Handle)),
+                $"无法关闭“{window.Title}”。窗口可能已经关闭，"
+                + "或当前应用拒绝了关闭消息。");
+        }
     }
 
     [RelayCommand]
@@ -670,8 +704,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (task == null)
             return;
 
+        bool succeeded = true;
         foreach (WindowReference window in task.Windows)
-            _windowTracker.Close(window.Handle);
+        {
+            if (!SystemActionExecution.Try(
+                    () => _windowTracker.Close(
+                        window.Handle)))
+            {
+                succeeded = false;
+            }
+        }
+
+        CompleteTaskbarWindowAction(
+            succeeded,
+            $"未能关闭“{task.DisplayName}”的全部窗口。"
+            + "部分窗口可能已经关闭或拒绝了关闭消息。");
     }
 
     [RelayCommand]
@@ -1390,6 +1437,66 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CloseTransientPanels();
         IsStatusCenterOpen = true;
         return false;
+    }
+
+    private bool TrySetPinned(
+        AppLaunchItem app,
+        bool pinned)
+    {
+        bool succeeded = SystemActionExecution.Try(
+            () => _appCatalog.SetPinned(app, pinned));
+        if (succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            return true;
+        }
+
+        ReportTaskbarActionFailure(
+            pinned
+                ? $"无法固定“{app.DisplayName}”。请稍后重试。"
+                : $"无法取消固定“{app.DisplayName}”。请稍后重试。");
+        return false;
+    }
+
+    private bool TryMovePinned(
+        AppLaunchItem app,
+        int newIndex)
+    {
+        bool succeeded = SystemActionExecution.Try(
+            () => _appCatalog.MovePinned(
+                app,
+                newIndex));
+        if (succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            return true;
+        }
+
+        ReportTaskbarActionFailure(
+            $"无法保存“{app.DisplayName}”的新位置。"
+            + "固定状态已经保留，请稍后重新排序。");
+        return false;
+    }
+
+    private void CompleteTaskbarWindowAction(
+        bool succeeded,
+        string error)
+    {
+        if (succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            return;
+        }
+
+        ReportTaskbarActionFailure(error);
+    }
+
+    private void ReportTaskbarActionFailure(
+        string message)
+    {
+        SystemActionMessage = message;
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
     }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> destination, System.Collections.Generic.IEnumerable<T> source)
