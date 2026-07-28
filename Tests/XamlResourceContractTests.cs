@@ -293,7 +293,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AutomationProperties.Name=\"{Binding StatusCenterAutomationName}\"",
             mainWindow);
-        Assert.Contains("ToolTip=\"{Binding AudioSummary}\"", mainWindow);
+        Assert.Contains("ToolTip=\"{Binding StatusCenterSummary}\"", mainWindow);
+        Assert.Contains("Text=\"{Binding BatteryGlyph}\"", mainWindow);
+        Assert.Contains("Text=\"{Binding BatteryValueText}\"", mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"{Binding BatterySummary}\"",
+            mainWindow);
         Assert.Contains("NetworkDetail", mainWindow);
         Assert.Contains("LockComputerCommand", mainWindow);
         Assert.Contains("SleepComputerCommand", mainWindow);
@@ -322,6 +327,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains("AudioStatusSnapshot GetAudioStatus()", statusContract);
         Assert.Contains("bool TrySetMasterVolume(float value)", statusContract);
         Assert.Contains("bool TrySetMuted(bool value)", statusContract);
+        Assert.Contains(
+            "BatteryStatusSnapshot GetBatteryStatus()",
+            statusContract);
+        Assert.DoesNotContain(
+            "bool HasBattery { get; }",
+            statusContract);
+        Assert.DoesNotContain(
+            "int BatteryPercent { get; }",
+            statusContract);
+        Assert.DoesNotContain(
+            "bool IsCharging { get; }",
+            statusContract);
         Assert.DoesNotContain("float MasterVolume { get; set; }", statusContract);
         Assert.DoesNotContain("bool IsMuted { get; set; }", statusContract);
 

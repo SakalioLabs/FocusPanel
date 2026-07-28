@@ -12,9 +12,7 @@ public interface ISystemStatusService : IDisposable
     string NetworkDetail { get; }
     string InputLanguageDisplay { get; }
     string InputMethodDisplay { get; }
-    bool HasBattery { get; }
-    int BatteryPercent { get; }
-    bool IsCharging { get; }
+    BatteryStatusSnapshot GetBatteryStatus();
     bool OpenQuickSettings();
     bool OpenNotifications();
     bool OpenInputSwitcher();

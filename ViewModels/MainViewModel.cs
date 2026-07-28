@@ -142,6 +142,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private float masterVolume;
 
@@ -149,6 +150,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isMuted;
 
@@ -156,6 +158,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isAudioAvailable;
 
@@ -164,9 +167,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "正在读取音频设备…";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NetworkSummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isNetworkAvailable;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NetworkSummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private string networkDisplayName = "未连接";
 
     [ObservableProperty]
@@ -179,12 +188,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string inputMethodDisplay = "—";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(BatteryGlyph))]
+    [NotifyPropertyChangedFor(nameof(BatteryValueText))]
+    [NotifyPropertyChangedFor(nameof(BatterySummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool hasBattery;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(BatteryGlyph))]
+    [NotifyPropertyChangedFor(nameof(BatteryValueText))]
+    [NotifyPropertyChangedFor(nameof(BatterySummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private int batteryPercent;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(BatteryGlyph))]
+    [NotifyPropertyChangedFor(nameof(BatteryValueText))]
+    [NotifyPropertyChangedFor(nameof(BatterySummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isCharging;
 
     [ObservableProperty]
@@ -292,8 +316,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GetAudioPresentation().Summary;
     public string AudioToggleLabel =>
         GetAudioPresentation().ToggleLabel;
+    public string NetworkSummary =>
+        SystemStatusSummaryComposer.ComposeNetwork(
+            IsNetworkAvailable,
+            NetworkDisplayName);
+    public string BatteryGlyph =>
+        GetBatteryPresentation().Glyph;
+    public string BatteryValueText =>
+        GetBatteryPresentation().ValueText;
+    public string BatterySummary =>
+        GetBatteryPresentation().Summary;
+    public string StatusCenterSummary =>
+        SystemStatusSummaryComposer.Compose(
+            NetworkSummary,
+            AudioSummary,
+            BatterySummary);
     public string StatusCenterAutomationName =>
-        $"状态中心，{AudioSummary}";
+        $"状态中心，{StatusCenterSummary}";
     public ObservableCollection<CalendarDayItem> CalendarDays
     {
         get;
@@ -1114,9 +1153,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         NetworkDetail = _systemStatus.NetworkDetail;
         InputLanguageDisplay = _systemStatus.InputLanguageDisplay;
         InputMethodDisplay = _systemStatus.InputMethodDisplay;
-        HasBattery = _systemStatus.HasBattery;
-        BatteryPercent = _systemStatus.BatteryPercent;
-        IsCharging = _systemStatus.IsCharging;
+        BatteryStatusSnapshot battery =
+            _systemStatus.GetBatteryStatus();
+        HasBattery = battery.HasBattery;
+        BatteryPercent = battery.Percent;
+        IsCharging = battery.IsCharging;
     }
 
     private AudioStatusPresentation GetAudioPresentation()
@@ -1124,6 +1165,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             IsAudioAvailable,
             MasterVolume,
             IsMuted);
+
+    private BatteryStatusPresentation GetBatteryPresentation()
+        => BatteryStatusPresentationComposer.Compose(
+            HasBattery,
+            BatteryPercent,
+            IsCharging);
 
     private void RestoreConfirmedAudioState(
         float volume,

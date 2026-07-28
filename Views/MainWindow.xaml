@@ -361,9 +361,16 @@
                                 </Grid>
                                 <Grid Visibility="{Binding HasBattery, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE850;"/>
-                                    <ProgressBar Grid.Column="1" Height="6" Margin="8,0,14,0" Maximum="100" Value="{Binding BatteryPercent}"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding BatteryPercent, StringFormat={}{0}%}"/>
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               Text="{Binding BatteryGlyph}"/>
+                                    <ProgressBar Grid.Column="1"
+                                                 Height="6"
+                                                 Margin="8,0,14,0"
+                                                 Maximum="100"
+                                                 Value="{Binding BatteryPercent}"
+                                                 AutomationProperties.Name="{Binding BatterySummary}"/>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding BatteryValueText}"/>
                                 </Grid>
                                 <UniformGrid Columns="2">
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="输入法" Command="{Binding OpenInputSwitcherCommand}"/>
@@ -794,7 +801,7 @@
                                     MouseRightButtonUp="VolumeButton_MouseRightButtonUp"
                                     AutomationProperties.Name="{Binding StatusCenterAutomationName}"
                                     AutomationProperties.HelpText="鼠标滚轮调节音量，右键静音"
-                                    ToolTip="{Binding AudioSummary}">
+                                    ToolTip="{Binding StatusCenterSummary}">
                                 <TextBlock>
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">

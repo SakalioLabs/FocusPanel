@@ -204,15 +204,31 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    public bool HasBattery => SystemInformation.PowerStatus.BatteryChargeStatus
-        != BatteryChargeStatus.NoSystemBattery;
-
-    public int BatteryPercent => HasBattery
-        ? (int)Math.Round(SystemInformation.PowerStatus.BatteryLifePercent * 100)
-        : 0;
-
-    public bool IsCharging => HasBattery
-        && (SystemInformation.PowerStatus.BatteryChargeStatus & BatteryChargeStatus.Charging) != 0;
+    public BatteryStatusSnapshot GetBatteryStatus()
+    {
+        try
+        {
+            PowerStatus power = SystemInformation.PowerStatus;
+            BatteryChargeStatus chargeStatus =
+                power.BatteryChargeStatus;
+            bool hasBattery =
+                chargeStatus !=
+                BatteryChargeStatus.NoSystemBattery;
+            bool isCharging = hasBattery
+                && chargeStatus
+                    != BatteryChargeStatus.Unknown
+                && (chargeStatus
+                    & BatteryChargeStatus.Charging) != 0;
+            return BatteryStatusSnapshot.FromFraction(
+                hasBattery,
+                power.BatteryLifePercent,
+                isCharging);
+        }
+        catch
+        {
+            return BatteryStatusSnapshot.Unavailable;
+        }
+    }
 
     public bool OpenQuickSettings() => TrySendWindowsShortcut(WindowsShellAction.QuickSettings);
 
