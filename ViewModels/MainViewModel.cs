@@ -167,12 +167,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "正在读取音频设备…";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NetworkGlyph))]
     [NotifyPropertyChangedFor(nameof(NetworkSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isNetworkAvailable;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NetworkGlyph))]
     [NotifyPropertyChangedFor(nameof(NetworkSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
@@ -180,6 +182,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string networkDetail = "当前没有可用连接";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NetworkGlyph))]
+    private NetworkConnectionKind networkConnectionKind;
 
     [ObservableProperty]
     private string inputLanguageDisplay = "—";
@@ -316,10 +322,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GetAudioPresentation().Summary;
     public string AudioToggleLabel =>
         GetAudioPresentation().ToggleLabel;
+    public string NetworkGlyph =>
+        GetNetworkPresentation().Glyph;
     public string NetworkSummary =>
-        SystemStatusSummaryComposer.ComposeNetwork(
-            IsNetworkAvailable,
-            NetworkDisplayName);
+        GetNetworkPresentation().Summary;
     public string BatteryGlyph =>
         GetBatteryPresentation().Glyph;
     public string BatteryValueText =>
@@ -1148,9 +1154,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 audio.IsMuted);
         }
 
-        IsNetworkAvailable = _systemStatus.IsNetworkAvailable;
-        NetworkDisplayName = _systemStatus.NetworkDisplayName;
-        NetworkDetail = _systemStatus.NetworkDetail;
+        NetworkStatusSnapshot network =
+            _systemStatus.GetNetworkStatus();
+        IsNetworkAvailable = network.IsAvailable;
+        NetworkConnectionKind =
+            network.ConnectionKind;
+        NetworkDisplayName = network.DisplayName;
+        NetworkDetail = network.Detail;
         InputLanguageDisplay = _systemStatus.InputLanguageDisplay;
         InputMethodDisplay = _systemStatus.InputMethodDisplay;
         BatteryStatusSnapshot battery =
@@ -1171,6 +1181,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             HasBattery,
             BatteryPercent,
             IsCharging);
+
+    private NetworkStatusPresentation GetNetworkPresentation()
+        => NetworkStatusPresentationComposer.Compose(
+            IsNetworkAvailable,
+            NetworkConnectionKind,
+            NetworkDisplayName);
 
     private void RestoreConfirmedAudioState(
         float volume,

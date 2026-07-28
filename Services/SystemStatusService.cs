@@ -112,55 +112,75 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    public bool IsNetworkAvailable => NetworkInterface.GetIsNetworkAvailable();
-
-    public string NetworkDisplayName
+    public NetworkStatusSnapshot GetNetworkStatus()
     {
-        get
+        try
         {
-            try
-            {
-                NetworkInterface? active = NetworkInterface.GetAllNetworkInterfaces()
+            if (!NetworkInterface.GetIsNetworkAvailable())
+                return NetworkStatusSnapshot.Unavailable;
+
+            NetworkInterface? active =
+                NetworkInterface.GetAllNetworkInterfaces()
                     .Where(item =>
-                        item.OperationalStatus == OperationalStatus.Up
-                        && item.NetworkInterfaceType != NetworkInterfaceType.Loopback
-                        && item.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                        item.OperationalStatus
+                            == OperationalStatus.Up
+                        && item.NetworkInterfaceType
+                            != NetworkInterfaceType.Loopback
+                        && item.NetworkInterfaceType
+                            != NetworkInterfaceType.Tunnel)
                     .OrderByDescending(item =>
-                        item.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
+                        item.NetworkInterfaceType
+                            == NetworkInterfaceType.Wireless80211)
                     .FirstOrDefault();
-                return active?.Name ?? "未连接";
-            }
-            catch
+            if (active == null)
             {
-                return IsNetworkAvailable ? "网络已连接" : "未连接";
+                return NetworkStatusSnapshot.FromObservation(
+                    true,
+                    null,
+                    NetworkConnectionKind.Unknown,
+                    null,
+                    null);
             }
+
+            string? ipv4 = active.GetIPProperties()
+                .UnicastAddresses
+                .FirstOrDefault(address =>
+                    address.Address.AddressFamily
+                        == AddressFamily.InterNetwork)
+                ?.Address.ToString();
+            NetworkConnectionKind connectionKind;
+            string kindLabel;
+            if (active.NetworkInterfaceType
+                == NetworkInterfaceType.Wireless80211)
+            {
+                connectionKind =
+                    NetworkConnectionKind.WiFi;
+                kindLabel = "Wi‑Fi";
+            }
+            else if (active.NetworkInterfaceType
+                == NetworkInterfaceType.Ethernet)
+            {
+                connectionKind =
+                    NetworkConnectionKind.Ethernet;
+                kindLabel = "以太网";
+            }
+            else
+            {
+                connectionKind =
+                    NetworkConnectionKind.Other;
+                kindLabel =
+                    active.NetworkInterfaceType.ToString();
+            }
+            return NetworkStatusSnapshot.FromObservation(
+                true,
+                active.Name,
+                connectionKind,
+                kindLabel,
+                ipv4);
         }
-    }
-
-    public string NetworkDetail
-    {
-        get
+        catch
         {
-            try
-            {
-                NetworkInterface? active = GetActiveNetworkInterface();
-                if (active == null)
-                    return "当前没有可用连接";
-
-                string? ipv4 = active.GetIPProperties().UnicastAddresses
-                    .FirstOrDefault(address => address.Address.AddressFamily == AddressFamily.InterNetwork)
-                    ?.Address.ToString();
-                string kind = active.NetworkInterfaceType == NetworkInterfaceType.Wireless80211
-                    ? "Wi‑Fi"
-                    : active.NetworkInterfaceType == NetworkInterfaceType.Ethernet
-                        ? "以太网"
-                        : active.NetworkInterfaceType.ToString();
-                return string.IsNullOrWhiteSpace(ipv4) ? kind : $"{kind} · {ipv4}";
-            }
-            catch
-            {
-                return IsNetworkAvailable ? "网络已连接" : "当前没有可用连接";
-            }
+            return NetworkStatusSnapshot.Unavailable;
         }
     }
 
@@ -349,16 +369,6 @@ public sealed class SystemStatusService : ISystemStatusService
             ReleaseComObject(device);
         }
     }
-
-    private static NetworkInterface? GetActiveNetworkInterface()
-        => NetworkInterface.GetAllNetworkInterfaces()
-            .Where(item =>
-                item.OperationalStatus == OperationalStatus.Up
-                && item.NetworkInterfaceType != NetworkInterfaceType.Loopback
-                && item.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
-            .OrderByDescending(item =>
-                item.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
-            .FirstOrDefault();
 
     internal static bool HResultSucceeded(int result) =>
         result >= 0;

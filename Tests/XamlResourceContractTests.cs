@@ -300,6 +300,10 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"{Binding BatterySummary}\"",
             mainWindow);
         Assert.Contains("NetworkDetail", mainWindow);
+        Assert.Contains("Text=\"{Binding NetworkGlyph}\"", mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"{Binding NetworkSummary}\"",
+            mainWindow);
         Assert.Contains("LockComputerCommand", mainWindow);
         Assert.Contains("SleepComputerCommand", mainWindow);
         Assert.Contains("ShowDesktopCommand", mainWindow);
@@ -329,6 +333,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains("bool TrySetMuted(bool value)", statusContract);
         Assert.Contains(
             "BatteryStatusSnapshot GetBatteryStatus()",
+            statusContract);
+        Assert.Contains(
+            "NetworkStatusSnapshot GetNetworkStatus()",
+            statusContract);
+        Assert.DoesNotContain(
+            "bool IsNetworkAvailable { get; }",
+            statusContract);
+        Assert.DoesNotContain(
+            "string NetworkDisplayName { get; }",
+            statusContract);
+        Assert.DoesNotContain(
+            "string NetworkDetail { get; }",
             statusContract);
         Assert.DoesNotContain(
             "bool HasBattery { get; }",

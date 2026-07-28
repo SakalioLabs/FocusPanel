@@ -327,7 +327,10 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE701;" VerticalAlignment="Center"/>
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               Text="{Binding NetworkGlyph}"
+                                               VerticalAlignment="Center"
+                                               AutomationProperties.Name="{Binding NetworkSummary}"/>
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="{Binding NetworkDisplayName}" FontWeight="SemiBold"/>
                                         <TextBlock Text="{Binding NetworkDetail}" Foreground="{DynamicResource FocusMutedTextBrush}"/>
