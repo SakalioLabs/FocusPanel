@@ -44,6 +44,7 @@
         <DataTemplate DataType="{x:Type vm:AIAssistantViewModel}">
             <local:AIAssistantView/>
         </DataTemplate>
+
     </Window.Resources>
 
     <Grid>
@@ -345,10 +346,10 @@
                         </ScrollViewer>
                     </Border>
 
-                    <!-- Clock and daily overview -->
+                    <!-- Calendar and daily overview -->
                     <Border Grid.RowSpan="2"
                             Panel.ZIndex="11"
-                            Width="360"
+                            Width="430"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"
                             Margin="0,0,14,8"
@@ -358,24 +359,7 @@
                             BorderBrush="{DynamicResource FocusStrokeBrush}"
                             BorderThickness="1"
                             Visibility="{Binding IsCalendarOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <StackPanel>
-                            <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm:ss}}"
-                                       FontSize="42"
-                                       FontWeight="SemiBold"/>
-                            <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:yyyy年M月d日 dddd}}"
-                                       Margin="1,2,0,18"
-                                       Foreground="{DynamicResource FocusMutedTextBrush}"/>
-                            <Border Height="1" Background="{DynamicResource FocusStrokeBrush}" Margin="0,0,0,18"/>
-                            <TextBlock Text="今日概览" FontSize="16" FontWeight="SemiBold"/>
-                            <TextBlock Text="{Binding OpenTaskCount, StringFormat=还有 {0} 项任务待完成}"
-                                       Margin="0,6,0,16"
-                                       Foreground="{DynamicResource FocusMutedTextBrush}"/>
-                            <UniformGrid Columns="3">
-                                <Button Style="{StaticResource FocusPrimaryButton}" Content="查看任务" Command="{Binding NavigateCommand}" CommandParameter="Tasks"/>
-                                <Button Style="{StaticResource FocusSecondaryButton}" Content="通知中心" Command="{Binding OpenNotificationsCommand}"/>
-                                <Button Style="{StaticResource FocusSecondaryButton}" Content="显示桌面" Command="{Binding ShowDesktopCommand}"/>
-                            </UniformGrid>
-                        </StackPanel>
+                        <local:CalendarPanelView/>
                     </Border>
 
                     <!-- Settings overlay -->

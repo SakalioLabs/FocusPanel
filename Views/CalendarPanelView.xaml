@@ -1,0 +1,175 @@
+<UserControl x:Class="FocusPanel.Views.CalendarPanelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignWidth="386"
+             d:DesignHeight="510">
+    <UserControl.Resources>
+        <Style x:Key="CalendarDayButtonStyle"
+               TargetType="Button">
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="MinWidth" Value="42"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource FocusTextBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="DaySurface"
+                                CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource FocusAccentBrightBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="DaySurface"
+                                        Property="Background"
+                                        Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused"
+                                     Value="True">
+                                <Setter TargetName="DaySurface"
+                                        Property="BorderThickness"
+                                        Value="2"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsToday}"
+                                         Value="True">
+                                <Setter TargetName="DaySurface"
+                                        Property="BorderThickness"
+                                        Value="1"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsSelected}"
+                                         Value="True">
+                                <Setter TargetName="DaySurface"
+                                        Property="Background"
+                                        Value="{DynamicResource FocusAccentBrush}"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsCurrentMonth}"
+                                         Value="False">
+                                <Setter Property="Opacity"
+                                        Value="0.38"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <Grid Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0"
+                    Style="{StaticResource FocusIconButton}"
+                    Command="{Binding ShowPreviousCalendarMonthCommand}"
+                    AutomationProperties.Name="上个月"
+                    ToolTip="上个月">
+                <TextBlock Style="{StaticResource FocusIconText}"
+                           Text="&#xE76B;"/>
+            </Button>
+            <TextBlock Grid.Column="1"
+                       Margin="10,0"
+                       VerticalAlignment="Center"
+                       Text="{Binding DisplayedCalendarMonthTitle}"
+                       FontSize="19"
+                       FontWeight="SemiBold"/>
+            <Button Grid.Column="2"
+                    Style="{StaticResource FocusIconButton}"
+                    Command="{Binding ShowNextCalendarMonthCommand}"
+                    AutomationProperties.Name="下个月"
+                    ToolTip="下个月">
+                <TextBlock Style="{StaticResource FocusIconText}"
+                           Text="&#xE76C;"/>
+            </Button>
+            <Button Grid.Column="3"
+                    Margin="6,3,0,3"
+                    Style="{StaticResource FocusSecondaryButton}"
+                    Command="{Binding ShowTodayInCalendarCommand}"
+                    Content="今天"/>
+        </Grid>
+
+        <UniformGrid Columns="7"
+                     Margin="2,0,2,4">
+            <TextBlock Text="一" HorizontalAlignment="Center" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+            <TextBlock Text="二" HorizontalAlignment="Center" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+            <TextBlock Text="三" HorizontalAlignment="Center" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+            <TextBlock Text="四" HorizontalAlignment="Center" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+            <TextBlock Text="五" HorizontalAlignment="Center" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+            <TextBlock Text="六" HorizontalAlignment="Center" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+            <TextBlock Text="日" HorizontalAlignment="Center" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+        </UniformGrid>
+
+        <ItemsControl ItemsSource="{Binding CalendarDays}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="7"
+                                 Rows="6"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Style="{StaticResource CalendarDayButtonStyle}"
+                            Command="{Binding DataContext.SelectCalendarDateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"
+                            AutomationProperties.Name="{Binding AccessibleName}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="8"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="{Binding DayNumber}"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"
+                                       FontWeight="SemiBold"/>
+                            <Ellipse Grid.Row="1"
+                                     Width="5"
+                                     Height="5"
+                                     Fill="{DynamicResource FocusAccentBrightBrush}"
+                                     Visibility="{Binding HasFocus, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </Grid>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Border Height="1"
+                Background="{DynamicResource FocusStrokeBrush}"
+                Margin="0,14,0,14"/>
+        <TextBlock Text="{Binding SelectedCalendarDateTitle}"
+                   FontSize="16"
+                   FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding SelectedDayFocusSummary}"
+                   Margin="0,5,0,3"
+                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+        <TextBlock Text="{Binding OpenTaskCount, StringFormat=当前还有 {0} 项任务待完成}"
+                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+        <UniformGrid Columns="2"
+                     Margin="0,12,0,0">
+            <Button Style="{StaticResource FocusPrimaryButton}"
+                    Content="查看任务"
+                    Command="{Binding NavigateCommand}"
+                    CommandParameter="Tasks"/>
+            <Button Style="{StaticResource FocusSecondaryButton}"
+                    Content="开始专注"
+                    Command="{Binding NavigateCommand}"
+                    CommandParameter="Pomodoro"/>
+        </UniformGrid>
+    </StackPanel>
+</UserControl>

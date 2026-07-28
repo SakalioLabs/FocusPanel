@@ -87,6 +87,50 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void MainWindow_TimeEntryContainsNavigableMonthCalendar()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string calendar = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "CalendarPanelView.xaml"));
+
+        Assert.Contains(
+            "<local:CalendarPanelView/>",
+            mainWindow);
+        Assert.Contains(
+            "ItemsSource=\"{Binding CalendarDays}\"",
+            calendar);
+        Assert.Contains(
+            "ShowPreviousCalendarMonthCommand",
+            calendar);
+        Assert.Contains(
+            "ShowNextCalendarMonthCommand",
+            calendar);
+        Assert.Contains(
+            "ShowTodayInCalendarCommand",
+            calendar);
+        Assert.Contains(
+            "SelectCalendarDateCommand",
+            calendar);
+        Assert.Contains(
+            "SelectedDayFocusSummary",
+            calendar);
+        Assert.Contains(
+            "<UniformGrid Columns=\"7\"",
+            calendar);
+        Assert.Contains(
+            "<UniformGrid Columns=\"2\"",
+            calendar);
+    }
+
+    [Fact]
     public void EveryViewResourceReference_IsDefinedGloballyOrLocally()
     {
         string root = FindRepositoryRoot();

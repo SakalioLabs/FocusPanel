@@ -44,7 +44,8 @@ public static class Program
         {
             Environment.ExitCode = UiSmokeTestRunner.Run(
                 args.Length > 1 ? args[1] : null,
-                args.Length > 2 ? args[2] : null);
+                args.Length > 2 ? args[2] : null,
+                args.Length > 3 ? args[3] : null);
             return;
         }
 

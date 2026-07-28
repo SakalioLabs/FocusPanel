@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.43 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.44 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.43 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.44 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -25,6 +25,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 紧凑栏固定为开始、搜索、任务视图、Focus 中心、状态中心和时间六个入口，中部只显示统一的固定/运行应用列表。
 - 中部应用列表超出可视高度时显示轻量悬浮上下导航；到达顶部或底部后相应箭头自动消失，点击按一个应用图标步长移动，鼠标滚轮仍可直接滚动。
 - Focus 中心统一承载桌面收纳、任务、番茄钟、OKR、AI、最近使用模块和设置更新；状态中心集中音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
+- 时间入口提供周一开头的 6 周月历，可切换月份、回到今天或直接选择日期；完成过番茄钟的日期显示专注圆点，底部汇总所选日期的专注次数和分钟数。
 - 后台发现 GitHub 新版本后，紧凑栏 Focus 中心入口会显示更新状态点，Focus 中心顶部显示目标版本卡片；点击即可进入设置页一键安装，不再只依赖托盘气泡。
 - 开始按钮左键打开 Windows 开始菜单，右键提供 Win+X 风格系统管理菜单，包括安装的应用、电源选项、事件查看器、系统、设备管理器、网络连接、磁盘管理、计算机管理、终端、管理员终端、任务管理器、设置和文件资源管理器。
 - 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
@@ -42,6 +43,12 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![状态中心](docs/images/status-center.svg)
 
 ![今日概览与快速行动](docs/images/dashboard-today.svg)
+
+### 月历与专注回顾
+
+时间弹层只承载日期、专注历史和两个高频动作，不再重复堆放通知、桌面等状态中心入口。月历固定生成 42 个日期，避免不同月份打开时高度跳动；今天使用细描边，选中日期使用单一强调表面，相邻月份降低透明度。专注圆点与摘要直接读取现有 `PomodoroSessions`，不会创建新业务表，也不会修改历史记录。
+
+![月历与每日专注回顾](docs/images/calendar-focus-history.svg)
 
 ## 侧边任务栏完整替代与安全恢复
 
@@ -161,7 +168,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.43 `
+  -Version 0.9.44 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -170,7 +177,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.43-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.44-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -187,7 +194,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.43 `
+  -Version 0.9.44 `
   -Dotnet8Path dotnet
 ```
 

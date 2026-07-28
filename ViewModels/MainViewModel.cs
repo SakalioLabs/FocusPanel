@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,6 +22,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private const string ReplacementEnabledKey = "Shell.ReplacementEnabled";
     private const string ThemeModeKey = "Shell.Theme";
     private const string FullscreenHotZoneKey = "Shell.DisableHotZoneInFullscreen";
+    private static readonly CultureInfo ChineseCulture =
+        CultureInfo.GetCultureInfo("zh-CN");
 
     private readonly IAppCatalogService _appCatalog;
     private readonly IWindowTracker _windowTracker;
@@ -41,6 +45,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _updatingStartupState;
     private string? _lastNotifiedUpdateVersion;
     private bool _isShellVisible;
+    private IReadOnlyDictionary<DateTime, CalendarFocusSummary>
+        _calendarFocusByDate =
+            new Dictionary<DateTime, CalendarFocusSummary>();
 
     [ObservableProperty]
     private string title = "FocusPanel";
@@ -53,6 +60,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private DateTime currentTime;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(DisplayedCalendarMonthTitle))]
+    private DateTime displayedCalendarMonth;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(SelectedCalendarDateTitle))]
+    private DateTime selectedCalendarDate;
+
+    [ObservableProperty]
+    private string selectedDayFocusSummary =
+        "该日没有完成的专注记录";
 
     [ObservableProperty]
     private string searchQuery = string.Empty;
@@ -178,6 +199,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _desktopVisibility = new WindowsDesktopItemVisibilityService();
 
         CurrentTime = DateTime.Now;
+        DisplayedCalendarMonth = new DateTime(
+            CurrentTime.Year,
+            CurrentTime.Month,
+            1);
+        SelectedCalendarDate = CurrentTime.Date;
         CurrentAppVersion = _updateService.CurrentVersion;
         UpdateStatus = _updateService.CanUpdate
             ? "将自动从 GitHub Releases 检查更新"
@@ -225,6 +251,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<AppLaunchItem> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+    public ObservableCollection<CalendarDayItem> CalendarDays
+    {
+        get;
+    } = new();
+
+    public string DisplayedCalendarMonthTitle =>
+        DisplayedCalendarMonth.ToString("yyyy年 M月");
+
+    public string SelectedCalendarDateTitle =>
+        SelectedCalendarDate.ToString(
+            "M月d日 dddd",
+            ChineseCulture);
 
     public void SetShellVisible(bool isVisible)
     {
@@ -489,6 +527,60 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool open = !IsCalendarOpen;
         CloseTransientPanels();
         IsCalendarOpen = open;
+    }
+
+    [RelayCommand]
+    private void ShowPreviousCalendarMonth()
+    {
+        DisplayedCalendarMonth =
+            DisplayedCalendarMonth.AddMonths(-1);
+        SelectCalendarDate(
+            new DateTime(
+                DisplayedCalendarMonth.Year,
+                DisplayedCalendarMonth.Month,
+                1));
+        RefreshTaskSummary();
+    }
+
+    [RelayCommand]
+    private void ShowNextCalendarMonth()
+    {
+        DisplayedCalendarMonth =
+            DisplayedCalendarMonth.AddMonths(1);
+        SelectCalendarDate(
+            new DateTime(
+                DisplayedCalendarMonth.Year,
+                DisplayedCalendarMonth.Month,
+                1));
+        RefreshTaskSummary();
+    }
+
+    [RelayCommand]
+    private void ShowTodayInCalendar()
+    {
+        DateTime today = DateTime.Today;
+        DisplayedCalendarMonth =
+            new DateTime(today.Year, today.Month, 1);
+        SelectedCalendarDate = today;
+        RefreshTaskSummary();
+    }
+
+    [RelayCommand]
+    private void SelectCalendarDate(CalendarDayItem? item)
+    {
+        if (item == null)
+            return;
+
+        SelectCalendarDate(item.Date);
+        if (!item.IsCurrentMonth)
+        {
+            DisplayedCalendarMonth =
+                new DateTime(
+                    item.Date.Year,
+                    item.Date.Month,
+                    1);
+            RefreshTaskSummary();
+        }
     }
 
     [RelayCommand]
@@ -906,11 +998,72 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             using var context = new AppDbContext();
-            OpenTaskCount = context.Todos.Count(item => item.ParentId != null && !item.IsCompleted);
+            OpenTaskCount = context.Todos.Count(
+                item =>
+                    item.ParentId != null
+                    && !item.IsCompleted);
+            DateTime gridStart =
+                CalendarMonthComposer.GetGridStart(
+                    DisplayedCalendarMonth);
+            DateTime gridEnd = gridStart.AddDays(
+                CalendarMonthComposer.DayCount);
+            _calendarFocusByDate =
+                context.PomodoroSessions
+                    .Where(session =>
+                        session.Status == "Completed"
+                        && session.StartTime >= gridStart
+                        && session.StartTime < gridEnd)
+                    .AsEnumerable()
+                    .GroupBy(session =>
+                        session.StartTime.Date)
+                    .ToDictionary(
+                        group => group.Key,
+                        group =>
+                            new CalendarFocusSummary(
+                                group.Count(),
+                                group.Sum(session =>
+                                    session.DurationMinutes)));
         }
         catch
         {
             OpenTaskCount = 0;
+            _calendarFocusByDate =
+                new Dictionary<
+                    DateTime,
+                    CalendarFocusSummary>();
+        }
+
+        RefreshCalendarDays();
+    }
+
+    private void SelectCalendarDate(DateTime date)
+    {
+        SelectedCalendarDate = date.Date;
+        RefreshCalendarDays();
+    }
+
+    private void RefreshCalendarDays()
+    {
+        ReplaceCollection(
+            CalendarDays,
+            CalendarMonthComposer.Compose(
+                DisplayedCalendarMonth,
+                SelectedCalendarDate,
+                DateTime.Today,
+                _calendarFocusByDate));
+        if (_calendarFocusByDate.TryGetValue(
+                SelectedCalendarDate.Date,
+                out CalendarFocusSummary? focus)
+            && focus.SessionCount > 0)
+        {
+            SelectedDayFocusSummary =
+                $"完成 {focus.SessionCount} 次专注 · "
+                + $"{focus.DurationMinutes} 分钟";
+        }
+        else
+        {
+            SelectedDayFocusSummary =
+                "该日没有完成的专注记录";
         }
     }
 

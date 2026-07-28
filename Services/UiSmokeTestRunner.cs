@@ -26,7 +26,8 @@ internal static class UiSmokeTestRunner
 
     public static int Run(
         string? reportPath,
-        string? dashboardSnapshotPath = null)
+        string? dashboardSnapshotPath = null,
+        string? calendarSnapshotPath = null)
     {
         var results = new List<string>();
         var failures = new List<string>();
@@ -53,6 +54,7 @@ internal static class UiSmokeTestRunner
             CheckSurface("TaskDetailWindow", () => new TaskDetailWindow(), results, failures);
             CheckSurface("PomodoroFloatingWindow", () => new PomodoroFloatingWindow(), results, failures);
             CheckSurface("EdgeIndicatorWindow", () => new EdgeIndicatorWindow(), results, failures);
+            CheckSurface("CalendarPanelView", () => new CalendarPanelView(), results, failures);
             if (!string.IsNullOrWhiteSpace(
                     dashboardSnapshotPath))
             {
@@ -61,6 +63,15 @@ internal static class UiSmokeTestRunner
                     dashboardSnapshotPath);
                 results.Add(
                     "PASS DashboardView 视觉快照");
+            }
+            if (!string.IsNullOrWhiteSpace(
+                    calendarSnapshotPath))
+            {
+                RenderCalendarSnapshot(
+                    application,
+                    calendarSnapshotPath);
+                results.Add(
+                    "PASS CalendarPanelView 视觉快照");
             }
         }
         catch (Exception ex)
@@ -175,6 +186,73 @@ internal static class UiSmokeTestRunner
         }
     }
 
+    private static void RenderCalendarSnapshot(
+        Application application,
+        string path)
+    {
+        var focusByDate =
+            new Dictionary<DateTime, CalendarFocusSummary>
+            {
+                [new DateTime(2026, 7, 8)] =
+                    new CalendarFocusSummary(2, 50),
+                [new DateTime(2026, 7, 16)] =
+                    new CalendarFocusSummary(1, 25),
+                [new DateTime(2026, 7, 28)] =
+                    new CalendarFocusSummary(3, 75)
+            };
+        var view = new CalendarPanelView
+        {
+            DataContext = new CalendarPreviewModel
+            {
+                DisplayedCalendarMonthTitle =
+                    "2026年 7月",
+                SelectedCalendarDateTitle =
+                    "7月28日 星期二",
+                SelectedDayFocusSummary =
+                    "完成 3 次专注 · 75 分钟",
+                OpenTaskCount = 7,
+                CalendarDays =
+                    CalendarMonthComposer.Compose(
+                        new DateTime(2026, 7, 1),
+                        new DateTime(2026, 7, 28),
+                        new DateTime(2026, 7, 28),
+                        focusByDate)
+            }
+        };
+        var surface = new Border
+        {
+            Width = 430,
+            Height = 560,
+            Padding = new Thickness(22),
+            CornerRadius = new CornerRadius(16),
+            Background =
+                (Brush)application.FindResource(
+                    "FocusSurfaceStrongBrush"),
+            Child = view
+        };
+        var size = new Size(430, 560);
+        surface.Measure(size);
+        surface.Arrange(new Rect(size));
+        surface.UpdateLayout();
+
+        var bitmap = new RenderTargetBitmap(
+            430,
+            560,
+            96,
+            96,
+            PixelFormats.Pbgra32);
+        bitmap.Render(surface);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(
+            BitmapFrame.Create(bitmap));
+
+        string? directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+        using FileStream stream = File.Create(path);
+        encoder.Save(stream);
+    }
+
     private static void WriteReport(
         string? reportPath,
         IEnumerable<string> results,
@@ -200,5 +278,34 @@ internal static class UiSmokeTestRunner
         }
 
         File.WriteAllLines(reportPath, lines);
+    }
+
+    private sealed class CalendarPreviewModel
+    {
+        public string DisplayedCalendarMonthTitle
+        {
+            get;
+            init;
+        } = string.Empty;
+
+        public string SelectedCalendarDateTitle
+        {
+            get;
+            init;
+        } = string.Empty;
+
+        public string SelectedDayFocusSummary
+        {
+            get;
+            init;
+        } = string.Empty;
+
+        public int OpenTaskCount { get; init; }
+
+        public IReadOnlyList<CalendarDayItem> CalendarDays
+        {
+            get;
+            init;
+        } = Array.Empty<CalendarDayItem>();
     }
 }
