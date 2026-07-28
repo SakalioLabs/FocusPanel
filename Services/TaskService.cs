@@ -34,7 +34,7 @@ public class TaskService
             .ToListAsync();
     }
 
-    public async Task<TodoItem> GetItemByIdAsync(int id)
+    public async Task<TodoItem?> GetItemByIdAsync(int id)
     {
         return await _context.Todos
             .Include(t => t.Children)

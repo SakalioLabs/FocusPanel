@@ -120,6 +120,64 @@
         <Setter Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
     </Style>
 
+    <Style x:Key="FocusSegmentRadioButton"
+           TargetType="RadioButton">
+        <Setter Property="MinHeight" Value="38"/>
+        <Setter Property="MinWidth" Value="72"/>
+        <Setter Property="Padding" Value="14,0"/>
+        <Setter Property="Margin" Value="2,0"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusMutedTextBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle"
+                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Chrome"
+                            Background="Transparent"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter TargetName="Chrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked"
+                                 Value="True">
+                            <Setter TargetName="Chrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusAccentBrush}"/>
+                            <Setter Property="Foreground"
+                                    Value="White"/>
+                            <Setter Property="FontWeight"
+                                    Value="SemiBold"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="FocusComboBox"
+           TargetType="ComboBox">
+        <Setter Property="MinHeight" Value="44"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource FocusStrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FocusVisualStyle"
+                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+    </Style>
+
     <Style x:Key="FocusSearchBox" TargetType="TextBox">
         <Setter Property="MinHeight" Value="44"/>
         <Setter Property="Padding" Value="14,8"/>

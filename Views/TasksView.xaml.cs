@@ -1,61 +1,116 @@
-using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Controls;
+using FocusPanel.Models;
 using FocusPanel.ViewModels;
 
 namespace FocusPanel.Views;
 
 public partial class TasksView : UserControl
 {
-    private TaskDetailWindow _detailWindow;
+    private TaskDetailWindow? _detailWindow;
+    private TasksViewModel? _subscribedViewModel;
 
     public TasksView()
     {
         InitializeComponent();
-        this.DataContextChanged += TasksView_DataContextChanged;
+        DataContextChanged +=
+            TasksView_DataContextChanged;
+        Loaded += (_, _) =>
+            AttachViewModel(
+                DataContext as TasksViewModel);
+        Unloaded += (_, _) =>
+        {
+            AttachViewModel(null);
+            CloseDetailWindow();
+        };
     }
 
-    private void TasksView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    private void TasksView_DataContextChanged(
+        object sender,
+        DependencyPropertyChangedEventArgs e)
     {
-        if (e.OldValue is TasksViewModel oldVm)
-        {
-            oldVm.OpenTaskDetailRequested -= OnOpenTaskDetailRequested;
-            oldVm.CloseTaskDetailRequested -= OnCloseTaskDetailRequested;
-        }
-
-        if (e.NewValue is TasksViewModel newVm)
-        {
-            newVm.OpenTaskDetailRequested += OnOpenTaskDetailRequested;
-            newVm.CloseTaskDetailRequested += OnCloseTaskDetailRequested;
-        }
+        AttachViewModel(
+            e.NewValue as TasksViewModel);
+        if (e.OldValue != e.NewValue)
+            CloseDetailWindow();
     }
 
-    private void OnOpenTaskDetailRequested(FocusPanel.Models.TodoItem item)
+    private void AttachViewModel(
+        TasksViewModel? viewModel)
     {
-        if (_detailWindow != null)
+        if (ReferenceEquals(
+                _subscribedViewModel,
+                viewModel))
         {
-            _detailWindow.Activate();
             return;
         }
 
-        _detailWindow = new TaskDetailWindow
+        if (_subscribedViewModel != null)
         {
-            DataContext = this.DataContext // Share VM
-        };
-        _detailWindow.Closed += (s, args) => 
+            _subscribedViewModel
+                .OpenTaskDetailRequested -=
+                OnOpenTaskDetailRequested;
+            _subscribedViewModel
+                .CloseTaskDetailRequested -=
+                OnCloseTaskDetailRequested;
+        }
+
+        _subscribedViewModel = viewModel;
+        if (_subscribedViewModel != null)
         {
-            _detailWindow = null;
-            // Also ensure VM knows it's closed if closed via X
-            if (DataContext is TasksViewModel vm && vm.SelectedTask != null)
+            _subscribedViewModel
+                .OpenTaskDetailRequested +=
+                OnOpenTaskDetailRequested;
+            _subscribedViewModel
+                .CloseTaskDetailRequested +=
+                OnCloseTaskDetailRequested;
+        }
+    }
+
+    private void OnOpenTaskDetailRequested(
+        TodoItem item)
+    {
+        if (_detailWindow is
+            { IsVisible: true } existing)
+        {
+            existing.Activate();
+            return;
+        }
+
+        var detailWindow =
+            new TaskDetailWindow
             {
-                vm.SelectedTask = null;
+                DataContext =
+                    DataContext
+            };
+        _detailWindow = detailWindow;
+        detailWindow.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(
+                    _detailWindow,
+                    detailWindow))
+            {
+                _detailWindow = null;
+            }
+
+            if (DataContext
+                    is TasksViewModel viewModel
+                && viewModel.SelectedTask != null)
+            {
+                viewModel.SelectedTask = null;
             }
         };
-        _detailWindow.Show();
+        detailWindow.Show();
     }
 
     private void OnCloseTaskDetailRequested()
+        => CloseDetailWindow();
+
+    private void CloseDetailWindow()
     {
-        _detailWindow?.Close();
+        TaskDetailWindow? window =
+            _detailWindow;
         _detailWindow = null;
+        window?.Close();
     }
 }

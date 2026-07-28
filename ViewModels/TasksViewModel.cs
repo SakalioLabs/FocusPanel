@@ -11,16 +11,126 @@ using System.Text.Json;
 using System.Windows;
 using Microsoft.Win32;
 using System.IO;
+using System;
 
 namespace FocusPanel.ViewModels;
 
 public class KanbanColumn : ObservableObject
 {
-    public string Header { get; set; }
+    public string Header { get; set; } = string.Empty;
+    public string DisplayHeader => Header switch
+    {
+        "To Do" => "待处理",
+        "In Progress" => "进行中",
+        "Done" => "已完成",
+        _ => Header
+    };
     public ObservableCollection<TodoItem> Tasks { get; set; } = new();
 }
 
-public partial class TasksViewModel : ObservableObject
+internal static class TaskBoardComposer
+{
+    internal static IReadOnlyList<string> GetColumnNames(
+        string? columnsJson)
+    {
+        List<string>? parsed = null;
+        if (!string.IsNullOrWhiteSpace(columnsJson))
+        {
+            try
+            {
+                parsed =
+                    JsonSerializer.Deserialize<List<string>>(
+                        columnsJson);
+            }
+            catch (JsonException)
+            {
+                parsed = null;
+            }
+        }
+
+        List<string> names = (parsed
+                ?? new List<string>
+                {
+                    "To Do",
+                    "In Progress",
+                    "Done"
+                })
+            .Where(name =>
+                !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return names.Count == 0
+            ? new[]
+            {
+                "To Do",
+                "In Progress",
+                "Done"
+            }
+            : names;
+    }
+
+    internal static IReadOnlyList<KanbanColumn> Compose(
+        IEnumerable<TodoItem> tasks,
+        string? columnsJson)
+    {
+        List<KanbanColumn> columns =
+            GetColumnNames(columnsJson)
+                .Select(
+                    name =>
+                        new KanbanColumn
+                        {
+                            Header = name
+                        })
+                .ToList();
+        foreach (TodoItem task in tasks)
+        {
+            KanbanColumn target =
+                columns.FirstOrDefault(
+                    column =>
+                        string.Equals(
+                            column.Header,
+                            task.Status,
+                            StringComparison.OrdinalIgnoreCase))
+                ?? columns[0];
+            target.Tasks.Add(task);
+        }
+
+        return columns;
+    }
+
+    internal static string? GetAdjacentStatus(
+        string? currentStatus,
+        string? columnsJson,
+        int offset)
+    {
+        IReadOnlyList<string> columns =
+            GetColumnNames(columnsJson);
+        int currentIndex =
+            columns
+                .Select((name, index) =>
+                    new { name, index })
+                .Where(item =>
+                    string.Equals(
+                        item.name,
+                        currentStatus,
+                        StringComparison.OrdinalIgnoreCase))
+                .Select(item => item.index)
+                .DefaultIfEmpty(0)
+                .First();
+        int targetIndex = currentIndex + offset;
+        return targetIndex >= 0
+            && targetIndex < columns.Count
+            ? columns[targetIndex]
+            : null;
+    }
+}
+
+public sealed record CustomFieldTypeOption(
+    CustomFieldType Value,
+    string DisplayName);
+
+public partial class TasksViewModel
+    : ObservableObject, IDisposable
 {
     private readonly TaskService _taskService;
     private readonly AppDbContext _context; // Keep context alive
@@ -29,13 +139,16 @@ public partial class TasksViewModel : ObservableObject
     // Unified Items List (Replaces RootItems and ChildItems)
     [ObservableProperty]
     private ObservableCollection<TodoItem> currentViewItems = new();
+
+    [ObservableProperty]
+    private ObservableCollection<KanbanColumn> boardColumns = new();
     
     // Current Context (Parent Item). Null means we are at the Root.
     [ObservableProperty]
-    private TodoItem currentParentItem;
+    private TodoItem? currentParentItem;
 
     [ObservableProperty]
-    private TodoItem selectedTask; // Selected child item for detail view
+    private TodoItem? selectedTask; // Selected child item for detail view
 
     [ObservableProperty]
     private string newTaskTitle = string.Empty;
@@ -54,8 +167,8 @@ public partial class TasksViewModel : ObservableObject
     private bool isTaskDetailView = false;
     
     // Window Management Events
-    public event System.Action<TodoItem> OpenTaskDetailRequested;
-    public event System.Action CloseTaskDetailRequested;
+    public event Action<TodoItem>? OpenTaskDetailRequested;
+    public event Action? CloseTaskDetailRequested;
     
     // Navigation Support
     public bool CanGoBack => CurrentParentItem != null;
@@ -87,9 +200,19 @@ public partial class TasksViewModel : ObservableObject
 
     // Global Settings
     [ObservableProperty]
-    private string imageSavePath;
+    private string imageSavePath = string.Empty;
 
-    public IEnumerable<CustomFieldType> FieldTypes => System.Enum.GetValues(typeof(CustomFieldType)).Cast<CustomFieldType>();
+    public IReadOnlyList<CustomFieldTypeOption> FieldTypes { get; } =
+    new CustomFieldTypeOption[]
+    {
+        new(CustomFieldType.ShortText, "短文本"),
+        new(CustomFieldType.LongText, "长文本 / Markdown"),
+        new(CustomFieldType.SingleSelect, "单选"),
+        new(CustomFieldType.MultiSelect, "多选")
+    };
+
+    [ObservableProperty]
+    private string taskStatusMessage = string.Empty;
 
     public TasksViewModel()
     {
@@ -98,18 +221,45 @@ public partial class TasksViewModel : ObservableObject
         _settingsService = new SettingsService();
         ImageSavePath = _settingsService.CurrentSettings.ImageSavePath;
         
-        LoadCurrentViewItemsCommand.Execute(null);
+        _ = InitializeAsync();
+    }
+
+    private async Task InitializeAsync()
+    {
+        try
+        {
+            await LoadCurrentViewItems();
+            LoadCustomFieldDefinitions();
+        }
+        catch (Exception ex)
+        {
+            TaskStatusMessage =
+                $"无法加载任务：{ex.Message}";
+        }
     }
 
     private async void OnTodoItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (sender is TodoItem item)
         {
-            await _taskService.UpdateItemAsync(item);
+            try
+            {
+                if (e.PropertyName == nameof(TodoItem.Status))
+                    RefreshBoardColumns();
+                await _taskService.UpdateItemAsync(item);
+                TaskStatusMessage = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                TaskStatusMessage =
+                    $"任务保存失败：{ex.Message}";
+            }
         }
     }
 
-    async partial void OnCurrentParentItemChanged(TodoItem? oldValue, TodoItem newValue)
+    async partial void OnCurrentParentItemChanged(
+        TodoItem? oldValue,
+        TodoItem? newValue)
     {
         if (oldValue != null) oldValue.PropertyChanged -= OnTodoItemPropertyChanged;
         if (newValue != null) newValue.PropertyChanged += OnTodoItemPropertyChanged;
@@ -117,25 +267,28 @@ public partial class TasksViewModel : ObservableObject
         OnPropertyChanged(nameof(CanGoBack));
         OnPropertyChanged(nameof(IsProjectSelected));
         UpdateViewMode();
-        await LoadCurrentViewItems();
-        LoadCustomFieldDefinitions();
+        try
+        {
+            await LoadCurrentViewItems();
+            LoadCustomFieldDefinitions();
+        }
+        catch (Exception ex)
+        {
+            TaskStatusMessage =
+                $"无法切换任务范围：{ex.Message}";
+        }
         CloseTaskDetail(); 
     }
     
-    async partial void OnSelectedTaskChanged(TodoItem? oldValue, TodoItem newValue)
+    partial void OnSelectedTaskChanged(
+        TodoItem? oldValue,
+        TodoItem? newValue)
     {
-        if (oldValue != null)
-        {
-            oldValue.PropertyChanged -= OnTodoItemPropertyChanged;
-        }
-
         if (newValue != null)
         {
             IsTaskDetailView = true;
             LoadCurrentTaskCustomFields(newValue);
             OpenTaskDetailRequested?.Invoke(newValue);
-            
-            newValue.PropertyChanged += OnTodoItemPropertyChanged;
         }
         else
         {
@@ -172,7 +325,7 @@ public partial class TasksViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SwitchViewMode(string mode)
+    private async Task SwitchViewMode(string? mode)
     {
         IsListView = false;
         IsBoardView = false;
@@ -214,6 +367,13 @@ public partial class TasksViewModel : ObservableObject
     {
         SelectedTask = null;
         IsTaskDetailView = false;
+    }
+
+    [RelayCommand]
+    private void OpenTaskDetail(TodoItem? item)
+    {
+        if (item != null)
+            SelectedTask = item;
     }
 
     // --- Custom Fields Logic (Definition) ---
@@ -472,10 +632,12 @@ public partial class TasksViewModel : ObservableObject
             t.PropertyChanged += OnTodoItemPropertyChanged;
             CurrentViewItems.Add(t);
         }
+
+        RefreshBoardColumns();
     }
 
     [RelayCommand]
-    private async Task AddItem(string status = null)
+    private async Task AddItem(string? status = null)
     {
         if (string.IsNullOrWhiteSpace(NewTaskTitle)) return;
         
@@ -502,12 +664,14 @@ public partial class TasksViewModel : ObservableObject
         {
             CurrentViewItems.Insert(0, task);
         }
+
+        RefreshBoardColumns();
         
         NewTaskTitle = string.Empty;
     }
 
     [RelayCommand]
-    private async Task ToggleTask(TodoItem task)
+    private void ToggleTask(TodoItem? task)
     {
         // PropertyChanged event handles the save, but we keep this command for explicit UI actions if needed
         if (task == null) return;
@@ -515,17 +679,24 @@ public partial class TasksViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task DeleteItem(TodoItem item)
+    private async Task DeleteItem(TodoItem? item)
     {
         if (item == null) return;
         if (item.Title == "Inbox" && item.ParentId == null) 
         {
-            MessageBox.Show("Cannot delete Inbox.");
+            MessageBox.Show(
+                "收件箱是系统保留项目，不能删除。",
+                "无法删除",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
             return;
         }
 
-        var result = MessageBox.Show($"Are you sure you want to delete '{item.Title}' and all its children?", 
-                                     "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        var result = MessageBox.Show(
+            $"确定删除“{item.Title}”及其全部子任务吗？",
+            "确认删除",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
         if (result != MessageBoxResult.Yes) return;
 
         await _taskService.DeleteItemAsync(item);
@@ -541,12 +712,13 @@ public partial class TasksViewModel : ObservableObject
         }
         
         if (SelectedTask == item) CloseTaskDetail();
+        RefreshBoardColumns();
     }
     
     // --- Navigation Commands ---
     
     [RelayCommand]
-    private void NavigateToItem(TodoItem item)
+    private void NavigateToItem(TodoItem? item)
     {
         if (item == null) return;
         CurrentParentItem = item;
@@ -584,58 +756,64 @@ public partial class TasksViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task MoveTaskNext(TodoItem task)
+    private void MoveTaskNext(TodoItem? task)
     {
         if (task == null) return;
-        
-        List<string> columns;
-        try 
-        { 
-            string json = CurrentParentItem?.ColumnsJson;
-            if (string.IsNullOrEmpty(json)) 
-                columns = new List<string> { "To Do", "In Progress", "Done" };
-            else
-                columns = JsonSerializer.Deserialize<List<string>>(json);
-        }
-        catch { columns = new List<string> { "To Do", "In Progress", "Done" }; }
 
-        int currentIndex = columns.IndexOf(task.Status);
-        if (currentIndex != -1 && currentIndex < columns.Count - 1)
-        {
-            string newStatus = columns[currentIndex + 1];
-            await MoveTaskStatusLogic(task, newStatus);
-        }
+        string? newStatus =
+            TaskBoardComposer.GetAdjacentStatus(
+                task.Status,
+                CurrentParentItem?.ColumnsJson,
+                1);
+        if (newStatus != null)
+            MoveTaskStatusLogic(task, newStatus);
     }
 
     [RelayCommand]
-    private async Task MoveTaskPrev(TodoItem task)
+    private void MoveTaskPrev(TodoItem? task)
     {
         if (task == null) return;
-        
-        List<string> columns;
-        try 
-        { 
-            string json = CurrentParentItem?.ColumnsJson;
-            if (string.IsNullOrEmpty(json)) 
-                columns = new List<string> { "To Do", "In Progress", "Done" };
-            else
-                columns = JsonSerializer.Deserialize<List<string>>(json);
-        }
-        catch { columns = new List<string> { "To Do", "In Progress", "Done" }; }
 
-        int currentIndex = columns.IndexOf(task.Status);
-        if (currentIndex > 0)
-        {
-            string newStatus = columns[currentIndex - 1];
-            await MoveTaskStatusLogic(task, newStatus);
-        }
+        string? newStatus =
+            TaskBoardComposer.GetAdjacentStatus(
+                task.Status,
+                CurrentParentItem?.ColumnsJson,
+                -1);
+        if (newStatus != null)
+            MoveTaskStatusLogic(task, newStatus);
     }
 
-    private async Task MoveTaskStatusLogic(TodoItem task, string newStatus)
+    private static void MoveTaskStatusLogic(
+        TodoItem task,
+        string newStatus)
     {
         if (task.Status == newStatus) return;
 
         task.Status = newStatus;
-        await _taskService.UpdateItemAsync(task);
+    }
+
+    private void RefreshBoardColumns()
+    {
+        BoardColumns = new ObservableCollection<KanbanColumn>(
+            TaskBoardComposer.Compose(
+                CurrentViewItems,
+                CurrentParentItem?.ColumnsJson));
+    }
+
+    public void Dispose()
+    {
+        if (CurrentParentItem != null)
+        {
+            CurrentParentItem.PropertyChanged -=
+                OnTodoItemPropertyChanged;
+        }
+        foreach (TodoItem item in CurrentViewItems)
+        {
+            item.PropertyChanged -=
+                OnTodoItemPropertyChanged;
+        }
+
+        CloseTaskDetailRequested?.Invoke();
+        _context.Dispose();
     }
 }

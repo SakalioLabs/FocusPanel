@@ -31,7 +31,7 @@ public partial class TodoItem : ObservableValidator
     // Recursive Relationship (Self-Referencing)
     public int? ParentId { get; set; }
     
-    public virtual TodoItem Parent { get; set; }
+    public virtual TodoItem? Parent { get; set; }
     
     public virtual ICollection<TodoItem> Children { get; set; } = new List<TodoItem>();
 
@@ -64,7 +64,7 @@ public partial class TodoItem : ObservableValidator
     private string customFieldsJson = "[]";
 
     [NotMapped]
-    public string CoverImage
+    public string? CoverImage
     {
         get
         {

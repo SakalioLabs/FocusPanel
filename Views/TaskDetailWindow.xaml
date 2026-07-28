@@ -3,139 +3,160 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:materialDesign="clr-namespace:FocusPanel.Controls"
         xmlns:vm="clr-namespace:FocusPanel.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:TasksViewModel}"
-        Title="Task Detail" Height="800" Width="600"
+        Title="FocusPanel 任务详情"
+        Height="720"
+        Width="560"
+        MinHeight="480"
+        MinWidth="440"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
-        AllowsTransparency="True"
+        AllowsTransparency="False"
         Background="Transparent"
-        ResizeMode="CanResizeWithGrip">
-    
-    <Border Background="{DynamicResource MaterialDesignPaper}" 
-            CornerRadius="{StaticResource FocusCardCornerRadius}"
-            Padding="0"
-            BorderThickness="1" 
-            BorderBrush="{DynamicResource MaterialDesignDivider}">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.3"/>
-        </Border.Effect>
-        
+        ShowInTaskbar="False"
+        ResizeMode="CanResizeWithGrip"
+        FontFamily="Segoe UI Variable Text">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
+
+    <Border Background="{DynamicResource FocusShellTintBrush}"
+            BorderThickness="0">
         <DockPanel>
-            <!-- Header -->
-            <Grid DockPanel.Dock="Top" Margin="12,12,12,0" MouseDown="Header_MouseDown">
+            <Grid DockPanel.Dock="Top"
+                  Height="58"
+                  Margin="18,4,10,0"
+                  MouseLeftButtonDown="Header_MouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
-                <!-- Actions -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-                    <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
-                            Command="{Binding DataContext.NavigateToItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                            CommandParameter="{Binding SelectedTask}"
-                            ToolTip="Open List"
-                            Width="32" Height="32"
-                            Margin="0,0,4,0">
-                        <materialDesign:PackIcon Kind="OpenInNew" Width="18" Height="18"/>
-                    </Button>
 
-                    <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="任务详情"
+                               FontSize="17"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="修改内容会自动保存"
+                               Margin="0,2,0,0"
+                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                               FontSize="11"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Width="38"
+                            Height="38"
+                            Style="{StaticResource FocusIconButton}"
+                            Command="{Binding NavigateToItemCommand}"
+                            CommandParameter="{Binding SelectedTask}"
+                            ToolTip="进入此任务的子任务">
+                        <TextBlock Text="&#xE8A7;"
+                                   Style="{StaticResource FocusIconText}"
+                                   FontSize="15"/>
+                    </Button>
+                    <Button Width="38"
+                            Height="38"
+                            Style="{StaticResource FocusIconButton}"
                             Command="{Binding CloseTaskDetailCommand}"
-                            ToolTip="Close Details"
-                            Width="32" Height="32">
-                        <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
+                            ToolTip="关闭详情">
+                        <TextBlock Text="&#xE711;"
+                                   Style="{StaticResource FocusIconText}"
+                                   FontSize="15"/>
                     </Button>
                 </StackPanel>
             </Grid>
-            
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="32,16,32,24">
-                    <!-- Title (Large) -->
-                    <TextBox Text="{Binding SelectedTask.Title}" 
-                             Style="{StaticResource MaterialDesignTextBox}"
-                             FontSize="24"
-                             FontWeight="Regular"
-                             Margin="0,0,0,32"
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="24,12,24,26">
+                    <TextBlock Text="标题"
+                               Margin="2,0,0,6"
+                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                               FontSize="12"/>
+                    <TextBox Text="{Binding SelectedTask.Title, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="21"
+                             FontWeight="SemiBold"
                              TextWrapping="Wrap"
-                             materialDesign:HintAssist.Hint="Task Title"
-                             BorderThickness="0"/>
-                    
-                    <!-- Custom Fields -->
+                             Margin="0,0,0,22"/>
+
                     <ItemsControl ItemsSource="{Binding CurrentTaskCustomFields}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="0,0,0,24">
-                                    <TextBlock Text="{Binding Definition.Name}" 
-                                               Style="{StaticResource MaterialDesignCaptionTextBlock}" 
-                                               Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                               Margin="0,0,0,8"/>
-                                    
-                                    <!-- Short Text -->
-                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                             Visibility="{Binding IsShortText, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                             Padding="8"/>
-                                    
-                                    <!-- Multi/Single Select -->
-                                    <ComboBox ItemsSource="{Binding Options}" 
+                                <StackPanel Margin="0,0,0,18">
+                                    <TextBlock Text="{Binding Definition.Name}"
+                                               Margin="2,0,0,6"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                             Visibility="{Binding IsShortText, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                    <ComboBox ItemsSource="{Binding Options}"
                                               SelectedItem="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
                                               Visibility="{Binding IsSingleSelect, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                              materialDesign:HintAssist.Hint="Select option"
-                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                              Padding="8"/>
-                                    
+                                              Style="{StaticResource FocusComboBox}"/>
+
                                     <ItemsControl ItemsSource="{Binding MultiSelectOptions}"
                                                   Visibility="{Binding IsMultiSelect, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Name}" Margin="0,4"/>
+                                                <CheckBox IsChecked="{Binding IsSelected}"
+                                                          Content="{Binding Name}"
+                                                          Margin="2,5"/>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                    
-                                    <!-- Long Text (Markdown) -->
+
                                     <StackPanel Visibility="{Binding IsLongText, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <Grid Margin="0,0,0,8">
+                                        <Grid Margin="0,0,0,7">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Markdown" Opacity="0.5" VerticalAlignment="Center" FontSize="12"/>
-                                            <Button Grid.Column="1" Style="{StaticResource MaterialDesignFlatButton}"
+                                            <TextBlock Text="支持 Markdown"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource FocusMutedTextBrush}"
+                                                       FontSize="11"/>
+                                            <Button Grid.Column="1"
+                                                    Height="36"
+                                                    MinWidth="92"
+                                                    Content="插入图片"
+                                                    Style="{StaticResource FocusSecondaryButton}"
                                                     Command="{Binding DataContext.InsertImageToMarkdownCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"
-                                                    Content="Insert Image"
-                                                    Height="24" FontSize="10" Padding="8,0"/>
+                                                    CommandParameter="{Binding}"/>
                                         </Grid>
-                                        
-                                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+
+                                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
                                                  AcceptsReturn="True"
                                                  TextWrapping="Wrap"
                                                  VerticalScrollBarVisibility="Auto"
-                                                 MinHeight="120" MaxHeight="300"
-                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                 Padding="8"/>
-                                        
-                                        <!-- Image Thumbnails -->
-                                        <ItemsControl ItemsSource="{Binding ExtractedImages}" Margin="0,8,0,0">
+                                                 MinHeight="130"
+                                                 MaxHeight="320"
+                                                 VerticalContentAlignment="Top"/>
+
+                                        <ItemsControl ItemsSource="{Binding ExtractedImages}"
+                                                      Margin="0,9,0,0">
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate>
-                                                    <WrapPanel Orientation="Horizontal"/>
+                                                    <WrapPanel/>
                                                 </ItemsPanelTemplate>
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Button Command="{Binding DataContext.OpenImageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                            CommandParameter="{Binding}"
-                                                            Width="80" Height="80"
+                                                    <Button Width="86"
+                                                            Height="86"
                                                             Margin="0,0,8,8"
-                                                            Padding="0"
-                                                            ToolTip="Open Image"
-                                                            Style="{StaticResource MaterialDesignFlatButton}">
-                                                        <Image Source="{Binding}" Stretch="UniformToFill"/>
+                                                            Padding="2"
+                                                            Style="{StaticResource FocusSecondaryButton}"
+                                                            Command="{Binding DataContext.OpenImageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="打开图片">
+                                                        <Image Source="{Binding}"
+                                                               Stretch="UniformToFill"/>
                                                     </Button>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
@@ -145,6 +166,11 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+
+                    <TextBlock Text="{Binding TaskStatusMessage}"
+                               Foreground="{DynamicResource FocusDangerBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
             </ScrollViewer>
         </DockPanel>

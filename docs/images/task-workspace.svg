@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 任务工作区</title>
+  <desc id="desc">展示任务列表、状态看板与原生毛玻璃详情窗口的关系。</desc>
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef4ff"/>
+      <stop offset="1" stop-color="#dfe9f7"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".84"/>
+      <stop offset="1" stop-color="#d9e8fb" stop-opacity=".64"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#496582" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#page)"/>
+  <text x="44" y="54" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="24" font-weight="700" fill="#16283c">任务工作区</text>
+  <text x="44" y="81" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14" fill="#60758c">列表管理 · 真实状态看板 · Windows 11 毛玻璃详情</text>
+
+  <g transform="translate(44 110)">
+    <rect width="290" height="354" rx="22" fill="#ffffff" fill-opacity=".76" stroke="#ffffff"/>
+    <text x="22" y="38" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="17" font-weight="650" fill="#1d3045">列表</text>
+    <rect x="172" y="15" width="96" height="36" rx="12" fill="#176bdb"/>
+    <text x="220" y="39" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#fff">添加任务</text>
+    <g font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#294057">
+      <rect x="18" y="70" width="254" height="58" rx="14" fill="#f6f9fd"/>
+      <circle cx="42" cy="99" r="9" fill="#fff" stroke="#7f96ae" stroke-width="2"/>
+      <text x="62" y="104">整理今天的任务</text>
+      <rect x="18" y="140" width="254" height="58" rx="14" fill="#f6f9fd"/>
+      <circle cx="42" cy="169" r="9" fill="#176bdb"/>
+      <path d="M37 169l4 4 7-9" fill="none" stroke="#fff" stroke-width="2"/>
+      <text x="62" y="174" fill="#6f8194">完成界面审查</text>
+      <rect x="18" y="210" width="254" height="58" rx="14" fill="#f6f9fd"/>
+      <circle cx="42" cy="239" r="9" fill="#fff" stroke="#7f96ae" stroke-width="2"/>
+      <text x="62" y="244">准备更新说明</text>
+    </g>
+    <rect x="18" y="288" width="254" height="44" rx="12" fill="#e8f1fc"/>
+    <text x="145" y="315" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#176bdb">项目 / 子任务 / 自定义字段</text>
+  </g>
+
+  <g transform="translate(356 110)">
+    <rect width="466" height="354" rx="22" fill="#ffffff" fill-opacity=".76" stroke="#ffffff"/>
+    <text x="22" y="38" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="17" font-weight="650" fill="#1d3045">看板</text>
+    <g transform="translate(18 66)" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+      <g>
+        <rect width="132" height="264" rx="16" fill="#f4f8fc"/>
+        <text x="14" y="28" font-size="13" font-weight="650" fill="#435a72">待处理</text>
+        <text x="111" y="28" font-size="11" fill="#8396aa">2</text>
+        <rect x="10" y="44" width="112" height="76" rx="12" fill="#fff"/>
+        <text x="20" y="68" font-size="12" fill="#294057">任务结构图</text>
+        <text x="20" y="90" font-size="10" fill="#8193a7">详情 · 子任务</text>
+        <rect x="10" y="130" width="112" height="76" rx="12" fill="#fff"/>
+        <text x="20" y="154" font-size="12" fill="#294057">文档校对</text>
+        <text x="20" y="176" font-size="10" fill="#8193a7">向后移动 →</text>
+      </g>
+      <g transform="translate(148)">
+        <rect width="132" height="264" rx="16" fill="#f4f8fc"/>
+        <text x="14" y="28" font-size="13" font-weight="650" fill="#435a72">进行中</text>
+        <text x="111" y="28" font-size="11" fill="#8396aa">1</text>
+        <rect x="10" y="44" width="112" height="92" rx="12" fill="#e9f2ff" stroke="#9dc6fa"/>
+        <text x="20" y="68" font-size="12" fill="#294057">Fluent 重构</text>
+        <text x="20" y="90" font-size="10" fill="#176bdb">正在处理</text>
+        <path d="M22 116h76" stroke="#aac1d9" stroke-width="5" stroke-linecap="round"/>
+        <path d="M22 116h48" stroke="#176bdb" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(296)">
+        <rect width="132" height="264" rx="16" fill="#f4f8fc"/>
+        <text x="14" y="28" font-size="13" font-weight="650" fill="#435a72">已完成</text>
+        <text x="111" y="28" font-size="11" fill="#8396aa">1</text>
+        <rect x="10" y="44" width="112" height="76" rx="12" fill="#fff"/>
+        <text x="20" y="68" font-size="12" fill="#60758c">空值修复</text>
+        <text x="20" y="90" font-size="10" fill="#2c8a5b">✓ 已完成</text>
+      </g>
+    </g>
+  </g>
+
+  <g transform="translate(844 86)" filter="url(#shadow)">
+    <rect width="232" height="396" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".9"/>
+    <circle cx="28" cy="30" r="7" fill="#176bdb"/>
+    <text x="45" y="36" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="650" fill="#1d3045">任务详情</text>
+    <text x="20" y="78" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="11" fill="#60758c">标题</text>
+    <rect x="20" y="88" width="192" height="42" rx="12" fill="#fff" fill-opacity=".72"/>
+    <text x="34" y="114" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#294057">Fluent 任务工作区</text>
+    <text x="20" y="158" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="11" fill="#60758c">状态</text>
+    <rect x="20" y="168" width="192" height="42" rx="12" fill="#fff" fill-opacity=".72"/>
+    <text x="34" y="194" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#294057">进行中</text>
+    <text x="20" y="238" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="11" fill="#60758c">Markdown 备注</text>
+    <rect x="20" y="248" width="192" height="94" rx="12" fill="#fff" fill-opacity=".72"/>
+    <text x="34" y="274" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12" fill="#294057">统一圆角和间距</text>
+    <text x="34" y="298" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12" fill="#294057">• 原生 DWM 毛玻璃</text>
+    <text x="34" y="322" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12" fill="#294057">• 安全窗口生命周期</text>
+    <text x="116" y="372" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="11" fill="#60758c">透明关闭时自动降级为不透明表面</text>
+  </g>
+</svg>

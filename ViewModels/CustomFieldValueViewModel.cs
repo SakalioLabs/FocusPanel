@@ -19,11 +19,11 @@ public partial class CustomFieldValueViewModel : ObservableObject
     private readonly Action<string, string> _onValueChanged;
 
     [ObservableProperty]
-    private string value;
+    private string value = string.Empty;
 
     partial void OnValueChanged(string value)
     {
-        _onValueChanged?.Invoke(Definition.Id, value);
+        _onValueChanged(Definition.Id, value);
         if (IsLongText)
         {
             ExtractImagesFromMarkdown();
@@ -48,8 +48,7 @@ public partial class CustomFieldValueViewModel : ObservableObject
     public CustomFieldValueViewModel(CustomFieldDefinition def, string initialValue, Action<string, string> onValueChanged)
     {
         Definition = def;
-        value = initialValue; // direct assignment to field to avoid triggering OnValueChanged immediately if not needed, but we might want to extract images initially.
-        this.value = initialValue;
+        value = initialValue;
         _onValueChanged = onValueChanged;
 
         if (IsMultiSelect)
@@ -130,6 +129,6 @@ public partial class SelectableOption : ObservableObject
 
     partial void OnIsSelectedChanged(bool value)
     {
-        _onSelectionChanged?.Invoke();
+        _onSelectionChanged();
     }
 }

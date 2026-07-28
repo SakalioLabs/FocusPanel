@@ -1,19 +1,23 @@
 using System.Windows;
 using System.Windows.Input;
+using FocusPanel.Services;
 
-namespace FocusPanel.Views
+namespace FocusPanel.Views;
+
+public partial class TaskDetailWindow : Window
 {
-    public partial class TaskDetailWindow : Window
+    public TaskDetailWindow()
     {
-        public TaskDetailWindow()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+        SourceInitialized += (_, _) =>
+            WindowBackdropService.Apply(this);
+    }
 
-        private void Header_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left)
-                this.DragMove();
-        }
+    private void Header_MouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left)
+            DragMove();
     }
 }

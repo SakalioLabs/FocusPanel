@@ -9,7 +9,7 @@ public class SettingsService
 {
     private static readonly string SettingsFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
     
-    public AppSettings CurrentSettings { get; private set; }
+    public AppSettings CurrentSettings { get; private set; } = new();
 
     public SettingsService()
     {

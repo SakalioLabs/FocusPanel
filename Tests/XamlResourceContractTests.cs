@@ -629,6 +629,79 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TaskModule_UsesFluentSurfacesRealKanbanAndSafeDetailLifecycle()
+    {
+        string root = FindRepositoryRoot();
+        string tasksView = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "TasksView.xaml"));
+        string detailView = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "TaskDetailWindow.xaml"));
+        string detailCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "TaskDetailWindow.xaml.cs"));
+        string tasksCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "TasksView.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "TasksViewModel.cs"));
+
+        Assert.DoesNotContain(
+            "materialDesign:",
+            tasksView,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(
+            "materialDesign:",
+            detailView,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(
+            "DropShadowEffect",
+            detailView);
+        Assert.Contains(
+            "AllowsTransparency=\"False\"",
+            detailView);
+        Assert.Contains(
+            "WindowBackdropService.Apply",
+            detailCode);
+        Assert.Contains(
+            "ItemsSource=\"{Binding BoardColumns}\"",
+            tasksView);
+        Assert.Contains(
+            "MoveTaskPrevCommand",
+            tasksView);
+        Assert.Contains(
+            "MoveTaskNextCommand",
+            tasksView);
+        Assert.Contains(
+            "TaskDetailWindow? _detailWindow",
+            tasksCode);
+        Assert.Contains(
+            "Unloaded +=",
+            tasksCode);
+        Assert.Contains(
+            "AttachViewModel(null)",
+            tasksCode);
+        Assert.Contains(
+            "TaskBoardComposer.Compose",
+            viewModel);
+        Assert.Contains(
+            "IDisposable",
+            viewModel);
+    }
+
+    [Fact]
     public void Organizer_UsesOneSurfaceHierarchyAndExposesAutoOrganize()
     {
         string root = FindRepositoryRoot();

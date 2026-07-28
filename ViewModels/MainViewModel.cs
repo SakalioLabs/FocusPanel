@@ -997,6 +997,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _updateCheckTimer.Stop();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
+        _tasksViewModel?.Dispose();
         if (_pomodoroViewModel != null)
         {
             _pomodoroViewModel.SessionCompleted -=
