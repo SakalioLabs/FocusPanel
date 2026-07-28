@@ -184,43 +184,29 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    public string InputLanguageDisplay
+    public InputMethodStatusSnapshot GetInputMethodStatus()
     {
-        get
-        {
-            CultureInfo? culture = GetForegroundInputCulture();
-            return culture == null ? "—" : GetShortLanguageName(culture);
-        }
-    }
-
-    public string InputMethodDisplay
-    {
-        get
+        try
         {
             IntPtr layout = GetForegroundKeyboardLayout();
             CultureInfo? culture = GetInputCulture(layout);
-            if (culture?.TwoLetterISOLanguageName != "zh")
-                return culture == null ? "—" : GetShortLanguageName(culture);
-
-            var description = new StringBuilder(128);
-            _ = NativeMethods.ImmGetDescription(layout, description, (uint)description.Capacity);
-            string name = description.ToString();
-            if (name.Contains("拼音", StringComparison.OrdinalIgnoreCase)
-                || name.Contains("Pinyin", StringComparison.OrdinalIgnoreCase))
+            string? description = null;
+            if (culture?.TwoLetterISOLanguageName == "zh")
             {
-                return "拼";
+                var buffer = new StringBuilder(128);
+                _ = NativeMethods.ImmGetDescription(
+                    layout,
+                    buffer,
+                    (uint)buffer.Capacity);
+                description = buffer.ToString();
             }
-            if (name.Contains("五笔", StringComparison.OrdinalIgnoreCase)
-                || name.Contains("Wubi", StringComparison.OrdinalIgnoreCase))
-            {
-                return "五";
-            }
-            if (name.Contains("注音", StringComparison.OrdinalIgnoreCase)
-                || name.Contains("Bopomofo", StringComparison.OrdinalIgnoreCase))
-            {
-                return "注";
-            }
-            return "中";
+            return InputMethodStatusSnapshot.FromObservation(
+                culture?.TwoLetterISOLanguageName,
+                description);
+        }
+        catch
+        {
+            return InputMethodStatusSnapshot.Unavailable;
         }
     }
 
@@ -382,9 +368,6 @@ public sealed class SystemStatusService : ISystemStatusService
         return NativeMethods.GetKeyboardLayout(threadId);
     }
 
-    private static CultureInfo? GetForegroundInputCulture() =>
-        GetInputCulture(GetForegroundKeyboardLayout());
-
     private static CultureInfo? GetInputCulture(IntPtr layout)
     {
         try
@@ -397,16 +380,6 @@ public sealed class SystemStatusService : ISystemStatusService
             return null;
         }
     }
-
-    private static string GetShortLanguageName(CultureInfo culture) =>
-        culture.TwoLetterISOLanguageName switch
-        {
-            "zh" => "中",
-            "ja" => "日",
-            "ko" => "한",
-            "en" => "EN",
-            string language => language.ToUpperInvariant()
-        };
 
     private static void StartShutdown(string arguments)
     {

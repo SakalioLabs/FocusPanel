@@ -188,10 +188,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private NetworkConnectionKind networkConnectionKind;
 
     [ObservableProperty]
-    private string inputLanguageDisplay = "—";
-
-    [ObservableProperty]
-    private string inputMethodDisplay = "—";
+    [NotifyPropertyChangedFor(nameof(InputLanguageDisplay))]
+    [NotifyPropertyChangedFor(nameof(InputMethodDisplay))]
+    [NotifyPropertyChangedFor(nameof(InputSwitcherLabel))]
+    [NotifyPropertyChangedFor(nameof(InputSwitcherSummary))]
+    private InputMethodStatusSnapshot inputMethodStatus =
+        InputMethodStatusSnapshot.Unavailable;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(BatteryGlyph))]
@@ -339,6 +341,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             BatterySummary);
     public string StatusCenterAutomationName =>
         $"状态中心，{StatusCenterSummary}";
+    public string InputLanguageDisplay =>
+        InputMethodStatus.LanguageDisplay;
+    public string InputMethodDisplay =>
+        InputMethodStatus.MethodDisplay;
+    public string InputSwitcherLabel =>
+        InputMethodStatus.ButtonLabel;
+    public string InputSwitcherSummary =>
+        InputMethodStatus.Summary;
     public ObservableCollection<CalendarDayItem> CalendarDays
     {
         get;
@@ -1161,8 +1171,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             network.ConnectionKind;
         NetworkDisplayName = network.DisplayName;
         NetworkDetail = network.Detail;
-        InputLanguageDisplay = _systemStatus.InputLanguageDisplay;
-        InputMethodDisplay = _systemStatus.InputMethodDisplay;
+        InputMethodStatus =
+            _systemStatus.GetInputMethodStatus();
         BatteryStatusSnapshot battery =
             _systemStatus.GetBatteryStatus();
         HasBattery = battery.HasBattery;

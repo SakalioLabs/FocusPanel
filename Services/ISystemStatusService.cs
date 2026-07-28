@@ -8,8 +8,7 @@ public interface ISystemStatusService : IDisposable
     bool TrySetMasterVolume(float value);
     bool TrySetMuted(bool value);
     NetworkStatusSnapshot GetNetworkStatus();
-    string InputLanguageDisplay { get; }
-    string InputMethodDisplay { get; }
+    InputMethodStatusSnapshot GetInputMethodStatus();
     BatteryStatusSnapshot GetBatteryStatus();
     bool OpenQuickSettings();
     bool OpenNotifications();

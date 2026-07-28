@@ -376,7 +376,11 @@
                                                Text="{Binding BatteryValueText}"/>
                                 </Grid>
                                 <UniformGrid Columns="2">
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="输入法" Command="{Binding OpenInputSwitcherCommand}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            Content="{Binding InputSwitcherLabel}"
+                                            Command="{Binding OpenInputSwitcherCommand}"
+                                            ToolTip="{Binding InputSwitcherSummary}"
+                                            AutomationProperties.Name="{Binding InputSwitcherSummary}"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="通知中心" Command="{Binding OpenNotificationsCommand}"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="显示桌面" Command="{Binding ShowDesktopCommand}"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="锁定" Command="{Binding LockComputerCommand}"/>

@@ -284,6 +284,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains("OpenQuickSettingsCommand", mainWindow);
         Assert.Contains("OpenNotificationsCommand", mainWindow);
         Assert.Contains("OpenInputSwitcherCommand", mainWindow);
+        Assert.Contains(
+            "Content=\"{Binding InputSwitcherLabel}\"",
+            mainWindow);
+        Assert.Contains(
+            "ToolTip=\"{Binding InputSwitcherSummary}\"",
+            mainWindow);
         Assert.Contains("Value=\"{Binding MasterVolume, Mode=TwoWay", mainWindow);
         Assert.Contains("ToggleMuteCommand", mainWindow);
         Assert.Contains("IsEnabled=\"{Binding IsAudioAvailable}\"", mainWindow);
@@ -336,6 +342,15 @@ public sealed class XamlResourceContractTests
             statusContract);
         Assert.Contains(
             "NetworkStatusSnapshot GetNetworkStatus()",
+            statusContract);
+        Assert.Contains(
+            "InputMethodStatusSnapshot GetInputMethodStatus()",
+            statusContract);
+        Assert.DoesNotContain(
+            "string InputLanguageDisplay { get; }",
+            statusContract);
+        Assert.DoesNotContain(
+            "string InputMethodDisplay { get; }",
             statusContract);
         Assert.DoesNotContain(
             "bool IsNetworkAvailable { get; }",
