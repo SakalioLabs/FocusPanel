@@ -815,6 +815,12 @@ public sealed class XamlResourceContractTests
             "release-notes-unicode.md",
             packager);
         Assert.Contains(
+            "$expectedReleaseHeading",
+            packager);
+        Assert.Contains(
+            "Release notes heading is",
+            packager);
+        Assert.Contains(
             "Release notes changed while packaging",
             packager);
         Assert.Contains(

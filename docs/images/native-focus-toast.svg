@@ -29,7 +29,7 @@
     <rect x="24" y="24" width="48" height="48" rx="12" fill="#1677c8" fill-opacity=".22"/>
     <text x="48" y="56" text-anchor="middle" fill="#d9f0ff" font-family="Segoe Fluent Icons" font-size="21"></text>
     <text x="92" y="45" fill="#ffffff" font-family="Segoe UI Variable Display,Segoe UI" font-size="17" font-weight="600">FocusPanel 更新可用</text>
-    <text x="92" y="72" fill="#edf3fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14">GitHub 已发布 v0.9.82，可在设置中一键安装。</text>
+    <text x="92" y="72" fill="#edf3fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14">GitHub 已发布新版本，可在设置中一键安装。</text>
     <text x="582" y="47" text-anchor="middle" fill="#eef4fc" font-family="Segoe Fluent Icons" font-size="14"></text>
     <rect x="92" y="112" width="118" height="44" rx="12" fill="#1686d9"/>
     <text x="151" y="140" text-anchor="middle" fill="#ffffff" font-family="Segoe UI Variable Text,Segoe UI" font-size="14" font-weight="600">打开更新</text>

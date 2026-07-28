@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.9.82',
+    [string]$Version = '0.9.83',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -66,6 +66,14 @@ $unicodeWithBom = New-Object System.Text.UnicodeEncoding($false, $true)
 $releaseNotesText = [IO.File]::ReadAllText(
     $releaseNotesSource,
     $utf8NoBom)
+$expectedReleaseHeading = "# FocusPanel $Version"
+$actualReleaseHeading = (
+    $releaseNotesText -split "`r?`n",
+    2
+)[0].Trim()
+if ($actualReleaseHeading -cne $expectedReleaseHeading) {
+    throw "Release notes heading is '$actualReleaseHeading', expected '$expectedReleaseHeading'."
+}
 [IO.File]::WriteAllText(
     $releaseNotes,
     $releaseNotesText,
