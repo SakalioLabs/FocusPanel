@@ -33,7 +33,9 @@ internal static class UiSmokeTestRunner
         "FocusComboBox",
         "FocusComboBoxItem",
         "FocusCheckBox",
-        "FocusScrollBar"
+        "FocusScrollBar",
+        "FocusSlider",
+        "FocusLinearProgress"
     };
 
     public static int Run(
@@ -88,6 +90,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentScrollBars(
+                results,
+                failures);
+            CheckFluentSliderAndProgress(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -835,6 +840,136 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"Fluent 滚动条加载失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentSliderAndProgress(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var slider = new Slider
+            {
+                Width = 240,
+                Minimum = 0,
+                Maximum = 1,
+                Value = 0.62,
+                Style =
+                    (Style)Application.Current.FindResource(
+                        "FocusSlider")
+            };
+            slider.ApplyTemplate();
+            slider.Measure(new Size(280, 80));
+            slider.Arrange(new Rect(0, 0, 240, 44));
+            slider.UpdateLayout();
+
+            if (slider.Template.FindName(
+                    "PART_Track",
+                    slider) is not Track sliderTrack
+                || slider.Template.FindName(
+                    "SliderThumb",
+                    slider) is not Thumb sliderThumb
+                || slider.Template.FindName(
+                    "DecreaseTrackButton",
+                    slider) is not RepeatButton decreaseTrack
+                || slider.Template.FindName(
+                    "IncreaseTrackButton",
+                    slider) is not RepeatButton increaseTrack)
+            {
+                failures.Add(
+                    "Fluent 滑块缺少标准轨道、圆角滑块或双段进度");
+                return;
+            }
+
+            sliderThumb.ApplyTemplate();
+            if (sliderThumb.Template.FindName(
+                    "SliderThumbSurface",
+                    sliderThumb) is not Border thumbSurface
+                || thumbSurface.CornerRadius.TopLeft <= 0
+                || sliderTrack.Orientation !=
+                    Orientation.Horizontal
+                || Math.Abs(
+                    sliderTrack.Value
+                    - slider.Value) > 0.001
+                || slider.MinHeight < 44)
+            {
+                failures.Add(
+                    "Fluent 滑块未应用圆角滑块、方向或 44px 交互区");
+                return;
+            }
+
+            if (!ReferenceEquals(
+                    decreaseTrack.Background,
+                    Application.Current.FindResource(
+                        "FocusAccentBrush"))
+                || !ReferenceEquals(
+                    increaseTrack.Background,
+                    Application.Current.FindResource(
+                        "FocusSurfaceStrongBrush")))
+            {
+                failures.Add(
+                    "Fluent 滑块已选和未选轨道未使用动态主题");
+                return;
+            }
+
+            var progress = new ProgressBar
+            {
+                Width = 240,
+                Height = 8,
+                Minimum = 0,
+                Maximum = 100,
+                Value = 64,
+                Style =
+                    (Style)Application.Current.FindResource(
+                        "FocusLinearProgress")
+            };
+            progress.ApplyTemplate();
+            progress.Measure(new Size(240, 20));
+            progress.Arrange(new Rect(0, 0, 240, 8));
+            progress.UpdateLayout();
+            if (progress.Template.FindName(
+                    "PART_Track",
+                    progress) is not Border progressTrack
+                || progress.Template.FindName(
+                    "PART_Indicator",
+                    progress) is not Border indicator
+                || progress.Template.FindName(
+                    "IndeterminateIndicator",
+                    progress) is not Border indeterminate
+                || progressTrack.CornerRadius.TopLeft <= 0
+                || indicator.ActualWidth <= 0)
+            {
+                failures.Add(
+                    "Fluent 进度条缺少圆角轨道、有效进度或加载层");
+                return;
+            }
+
+            progress.IsIndeterminate = true;
+            progress.UpdateLayout();
+            if (indeterminate.Visibility != Visibility.Visible
+                || indicator.Visibility != Visibility.Collapsed
+                || !ReferenceEquals(
+                    progress.Foreground,
+                    Application.Current.FindResource(
+                        "FocusAccentBrightBrush"))
+                || !ReferenceEquals(
+                    progress.Background,
+                    Application.Current.FindResource(
+                        "FocusSurfaceStrongBrush")))
+            {
+                failures.Add(
+                    "Fluent 进度条未切换不确定状态或动态主题");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 音量滑块与确定/加载进度状态");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 滑块和进度条加载失败：{ex}");
         }
     }
 

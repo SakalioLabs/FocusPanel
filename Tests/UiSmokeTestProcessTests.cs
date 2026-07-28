@@ -52,6 +52,9 @@ public sealed class UiSmokeTestProcessTests
             Assert.Contains(
                 "PASS Fluent 纵横滚动条圆角、动态主题与紧凑轨道",
                 report);
+            Assert.Contains(
+                "PASS Fluent 音量滑块与确定/加载进度状态",
+                report);
             Assert.Contains("RESULT PASS", report);
         }
         finally

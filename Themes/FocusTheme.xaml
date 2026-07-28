@@ -542,6 +542,152 @@
         <Setter Property="Padding" Value="14"/>
     </Style>
 
+    <Style x:Key="FocusSliderThumb"
+           TargetType="Thumb">
+        <Setter Property="Width"
+                Value="18"/>
+        <Setter Property="Height"
+                Value="18"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusAccentBrush}"/>
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource FocusAccentBrightBrush}"/>
+        <Setter Property="BorderThickness"
+                Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="SliderThumbSurface"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="9"
+                            SnapsToDevicePixels="True"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="FocusSliderTrackButton"
+           TargetType="RepeatButton">
+        <Setter Property="Focusable"
+                Value="False"/>
+        <Setter Property="IsTabStop"
+                Value="False"/>
+        <Setter Property="Height"
+                Value="4"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusSurfaceStrongBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border x:Name="SliderTrackSegment"
+                            Height="{TemplateBinding Height}"
+                            Width="{TemplateBinding Width}"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="2"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center"
+                            SnapsToDevicePixels="True"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="FocusSlider"
+           TargetType="Slider">
+        <Setter Property="MinHeight"
+                Value="44"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusAccentBrush}"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusSurfaceStrongBrush}"/>
+        <Setter Property="FocusVisualStyle"
+                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid x:Name="SliderRoot"
+                          MinHeight="{TemplateBinding MinHeight}"
+                          MinWidth="{TemplateBinding MinWidth}"
+                          Background="Transparent"
+                          SnapsToDevicePixels="True">
+                        <Track x:Name="PART_Track"
+                               Margin="9,0"
+                               Orientation="{TemplateBinding Orientation}"
+                               IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                               Minimum="{TemplateBinding Minimum}"
+                               Maximum="{TemplateBinding Maximum}"
+                               Value="{TemplateBinding Value}">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton x:Name="DecreaseTrackButton"
+                                              Style="{StaticResource FocusSliderTrackButton}"
+                                              Background="{TemplateBinding Foreground}"
+                                              Command="{x:Static Slider.DecreaseLarge}"
+                                              CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb x:Name="SliderThumb"
+                                       Style="{StaticResource FocusSliderThumb}"/>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton x:Name="IncreaseTrackButton"
+                                              Style="{StaticResource FocusSliderTrackButton}"
+                                              Background="{TemplateBinding Background}"
+                                              Command="{x:Static Slider.IncreaseLarge}"
+                                              CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Orientation"
+                                 Value="Vertical">
+                            <Setter Property="MinHeight"
+                                    Value="0"/>
+                            <Setter Property="MinWidth"
+                                    Value="44"/>
+                            <Setter TargetName="PART_Track"
+                                    Property="Margin"
+                                    Value="0,9"/>
+                            <Setter TargetName="DecreaseTrackButton"
+                                    Property="Height"
+                                    Value="Auto"/>
+                            <Setter TargetName="DecreaseTrackButton"
+                                    Property="Width"
+                                    Value="4"/>
+                            <Setter TargetName="IncreaseTrackButton"
+                                    Property="Height"
+                                    Value="Auto"/>
+                            <Setter TargetName="IncreaseTrackButton"
+                                    Property="Width"
+                                    Value="4"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter TargetName="SliderThumb"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                            <Setter TargetName="SliderThumb"
+                                    Property="Width"
+                                    Value="20"/>
+                            <Setter TargetName="SliderThumb"
+                                    Property="Height"
+                                    Value="20"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="SliderRoot"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="Slider"
+           BasedOn="{StaticResource FocusSlider}"/>
+
     <Style x:Key="FocusLinearProgress"
            TargetType="ProgressBar">
         <Setter Property="Foreground"
@@ -553,18 +699,59 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">
-                    <Grid>
-                        <Border Background="{TemplateBinding Background}"
+                    <Grid x:Name="ProgressRoot"
+                          ClipToBounds="True">
+                        <Border x:Name="PART_Track"
+                                Background="{TemplateBinding Background}"
                                 CornerRadius="4"/>
                         <Border x:Name="PART_Indicator"
                                 HorizontalAlignment="Left"
                                 Background="{TemplateBinding Foreground}"
                                 CornerRadius="4"/>
+                        <Border x:Name="IndeterminateIndicator"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="4"
+                                Opacity="0.28"
+                                Visibility="Collapsed"/>
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsIndeterminate"
+                                 Value="True">
+                            <Setter TargetName="PART_Indicator"
+                                    Property="Visibility"
+                                    Value="Collapsed"/>
+                            <Setter TargetName="IndeterminateIndicator"
+                                    Property="Visibility"
+                                    Value="Visible"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard x:Name="IndeterminatePulseStoryboard">
+                                    <Storyboard RepeatBehavior="Forever"
+                                                AutoReverse="True">
+                                        <DoubleAnimation Storyboard.TargetName="IndeterminateIndicator"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         From="0.28"
+                                                         To="0.9"
+                                                         Duration="0:0:0.72"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="IndeterminatePulseStoryboard"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="ProgressRoot"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType="ProgressBar"
+           BasedOn="{StaticResource FocusLinearProgress}"/>
 
     <Style x:Key="FocusScrollThumb"
            TargetType="Thumb">

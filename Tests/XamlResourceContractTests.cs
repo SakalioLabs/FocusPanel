@@ -1249,6 +1249,74 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void SlidersAndProgressBars_UseDynamicFluentStates()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string views = string.Join(
+            Environment.NewLine,
+            Directory.GetFiles(
+                    Path.Combine(
+                        root,
+                        "Views"),
+                    "*.xaml")
+                .Select(File.ReadAllText));
+
+        Assert.Contains(
+            "x:Key=\"FocusSlider\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusSlider}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"SliderThumbSurface\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"DecreaseTrackButton\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"IncreaseTrackButton\"",
+            theme);
+        Assert.Contains(
+            "Command=\"{x:Static Slider.DecreaseLarge}\"",
+            theme);
+        Assert.Contains(
+            "Orientation=\"{TemplateBinding Orientation}\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusLinearProgress\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusLinearProgress}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"PART_Track\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"PART_Indicator\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"IndeterminateIndicator\"",
+            theme);
+        Assert.Contains(
+            "<Trigger Property=\"IsIndeterminate\"",
+            theme);
+        Assert.Contains(
+            "<Slider",
+            views);
+        Assert.Contains(
+            "<ProgressBar",
+            views);
+        Assert.DoesNotContain(
+            "SystemColors.HighlightBrushKey",
+            theme);
+    }
+
+    [Fact]
     public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
     {
         string root = FindRepositoryRoot();
