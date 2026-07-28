@@ -498,13 +498,16 @@
                                     <TextBlock Margin="0,10,0,0"
                                                Text="主动唤出：Ctrl + Alt + Space"
                                                Foreground="{DynamicResource FocusMutedTextBrush}"/>
-                                    <Border Margin="0,12,0,0"
+                                    <Border x:Name="ProtectedFilesWarning"
+                                            Margin="0,12,0,0"
                                             Padding="10"
                                             CornerRadius="{StaticResource FocusControlCornerRadius}"
-                                            Background="#33FFB020"
+                                            Background="{DynamicResource FocusWarningSoftBrush}"
+                                            BorderBrush="{DynamicResource FocusWarningBrush}"
+                                            BorderThickness="1"
                                             Visibility="{Binding ShowsProtectedSystemFiles, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <TextBlock TextWrapping="Wrap"
-                                                   Foreground="{DynamicResource FocusTextBrush}"
+                                                   Foreground="{DynamicResource FocusWarningTextBrush}"
                                                    Text="当前 Explorer 已启用“显示受保护的系统文件”。收纳项目仍会保留在原路径，因此无法保证桌面图标不可见；关闭该系统选项后会立即按收纳状态隐藏。"/>
                                     </Border>
                                 </StackPanel>

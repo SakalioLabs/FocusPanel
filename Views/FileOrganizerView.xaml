@@ -645,9 +645,10 @@
             </TextBlock>
         </Grid>
 
-        <Grid Grid.RowSpan="2"
+        <Grid x:Name="RenameOverlay"
+              Grid.RowSpan="2"
               Visibility="{Binding IsRenameDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}"
-              Background="#50000000"
+              Background="{DynamicResource FocusOverlayBrush}"
               Panel.ZIndex="999">
             <Border Width="320"
                     VerticalAlignment="Center"

@@ -61,6 +61,9 @@ public sealed class UiSmokeTestProcessTests
             Assert.Contains(
                 "PASS Fluent 切换与分段选择动态强调状态",
                 report);
+            Assert.Contains(
+                "PASS 右缘指示、遮罩与警告状态动态主题",
+                report);
             Assert.Contains("RESULT PASS", report);
         }
         finally

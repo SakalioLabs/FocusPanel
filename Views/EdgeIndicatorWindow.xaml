@@ -11,5 +11,6 @@
         Topmost="True"
         Focusable="False"
         IsHitTestVisible="False">
-    <Border Background="#C8FFFFFF"/>
+    <Border x:Name="IndicatorSurface"
+            Background="{DynamicResource FocusEdgeIndicatorBrush}"/>
 </Window>

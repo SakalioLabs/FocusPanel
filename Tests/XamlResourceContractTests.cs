@@ -1463,6 +1463,75 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void Views_DoNotBypassDynamicThemeWithLiteralColors()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string themeService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ThemeService.cs"));
+        string views = string.Join(
+            Environment.NewLine,
+            Directory.GetFiles(
+                    Path.Combine(
+                        root,
+                        "Views"),
+                    "*.xaml")
+                .Select(File.ReadAllText));
+
+        Assert.Contains(
+            "x:Key=\"FocusWarningBrush\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusWarningSoftBrush\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusWarningTextBrush\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusOverlayBrush\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusEdgeIndicatorBrush\"",
+            theme);
+        Assert.Contains(
+            "SetBrush(\"FocusWarningBrush\"",
+            themeService);
+        Assert.Contains(
+            "SetBrush(\"FocusOverlayBrush\"",
+            themeService);
+        Assert.Contains(
+            "SetBrush(\"FocusEdgeIndicatorBrush\"",
+            themeService);
+        Assert.Contains(
+            "Background=\"{DynamicResource FocusEdgeIndicatorBrush}\"",
+            views);
+        Assert.Contains(
+            "Background=\"{DynamicResource FocusOverlayBrush}\"",
+            views);
+        Assert.Contains(
+            "Background=\"{DynamicResource FocusWarningSoftBrush}\"",
+            views);
+        Assert.Contains(
+            "Foreground=\"{DynamicResource FocusWarningTextBrush}\"",
+            views);
+        Assert.Contains(
+            "BorderBrush=\"{DynamicResource FocusWarningBrush}\"",
+            views);
+        Assert.Empty(
+            Regex.Matches(
+                views,
+                "#[0-9A-Fa-f]{6,8}")
+                .Cast<Match>());
+    }
+
+    [Fact]
     public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
     {
         string root = FindRepositoryRoot();

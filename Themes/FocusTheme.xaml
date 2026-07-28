@@ -24,6 +24,11 @@
     <SolidColorBrush x:Key="FocusStrokeBrush" Color="{StaticResource FocusStrokeColor}"/>
     <SolidColorBrush x:Key="FocusHoverBrush" Color="{StaticResource FocusHoverColor}"/>
     <SolidColorBrush x:Key="FocusDangerBrush" Color="{StaticResource FocusDangerColor}"/>
+    <SolidColorBrush x:Key="FocusWarningBrush" Color="#FFFFC857"/>
+    <SolidColorBrush x:Key="FocusWarningSoftBrush" Color="#33FFB020"/>
+    <SolidColorBrush x:Key="FocusWarningTextBrush" Color="#FFF5F7FF"/>
+    <SolidColorBrush x:Key="FocusOverlayBrush" Color="#50000000"/>
+    <SolidColorBrush x:Key="FocusEdgeIndicatorBrush" Color="#C8FFFFFF"/>
     <SolidColorBrush x:Key="FocusKeyboardFocusBrush" Color="{StaticResource FocusAccentBrightColor}"/>
     <CornerRadius x:Key="FocusShellCornerRadius">12</CornerRadius>
     <CornerRadius x:Key="FocusCardCornerRadius">10</CornerRadius>

@@ -27,6 +27,11 @@ internal static class UiSmokeTestRunner
         "FocusStrokeBrush",
         "FocusKeyboardFocusBrush",
         "FocusAccentSoftBrush",
+        "FocusWarningBrush",
+        "FocusWarningSoftBrush",
+        "FocusWarningTextBrush",
+        "FocusOverlayBrush",
+        "FocusEdgeIndicatorBrush",
         "FocusContextMenu",
         "FocusMenuItem",
         "FocusMenuSeparator",
@@ -105,6 +110,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentSelectionControls(
+                results,
+                failures);
+            CheckDynamicThemeStateTokens(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -1194,6 +1202,67 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"Fluent 选择控件加载失败：{ex}");
+        }
+    }
+
+    private static void CheckDynamicThemeStateTokens(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var indicator = new EdgeIndicatorWindow();
+            indicator.ApplyTemplate();
+            indicator.Measure(new Size(3, 240));
+            indicator.Arrange(new Rect(0, 0, 3, 240));
+            indicator.UpdateLayout();
+            if (indicator.FindName(
+                    "IndicatorSurface") is not Border indicatorSurface
+                || !ReferenceEquals(
+                    indicatorSurface.Background,
+                    Application.Current.FindResource(
+                        "FocusEdgeIndicatorBrush")))
+            {
+                failures.Add(
+                    "右缘运行指示条未使用动态主题令牌");
+                return;
+            }
+
+            var organizer = new FileOrganizerView();
+            organizer.Measure(new Size(900, 700));
+            organizer.Arrange(new Rect(0, 0, 900, 700));
+            organizer.UpdateLayout();
+            if (organizer.FindName(
+                    "RenameOverlay") is not Grid renameOverlay
+                || !ReferenceEquals(
+                    renameOverlay.Background,
+                    Application.Current.FindResource(
+                        "FocusOverlayBrush")))
+            {
+                failures.Add(
+                    "桌面重命名遮罩未使用动态主题令牌");
+                return;
+            }
+
+            if (Application.Current.FindResource(
+                    "FocusWarningBrush") is not SolidColorBrush
+                || Application.Current.FindResource(
+                    "FocusWarningSoftBrush") is not SolidColorBrush
+                || Application.Current.FindResource(
+                    "FocusWarningTextBrush") is not SolidColorBrush)
+            {
+                failures.Add(
+                    "系统限制警告缺少动态前景或柔和背景令牌");
+                return;
+            }
+
+            results.Add(
+                "PASS 右缘指示、遮罩与警告状态动态主题");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"动态状态主题加载失败：{ex}");
         }
     }
 

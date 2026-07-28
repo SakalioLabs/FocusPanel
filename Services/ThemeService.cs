@@ -121,6 +121,32 @@ public static class ThemeService
                 ? SystemColors.HighlightColor
                 : accentBright);
         SetBrush("FocusDangerBrush", dark ? "#FFFF6B7A" : "#FFD92D4B");
+        Color warning = SystemParameters.HighContrast
+            ? SystemColors.HighlightColor
+            : dark
+                ? Color.FromRgb(0xFF, 0xC8, 0x57)
+                : Color.FromRgb(0x9A, 0x67, 0x00);
+        SetBrush("FocusWarningBrush", warning);
+        Color warningSoft = SystemParameters.HighContrast
+            ? SystemColors.WindowColor
+            : dark
+                ? Color.FromArgb(0x33, 0xFF, 0xB0, 0x20)
+                : Color.FromArgb(0x24, 0xB7, 0x79, 0x1F);
+        SetBrush("FocusWarningSoftBrush", warningSoft);
+        Color warningText = SystemParameters.HighContrast
+            ? SystemColors.HighlightTextColor
+            : dark
+                ? Color.FromRgb(0xF5, 0xF7, 0xFF)
+                : Color.FromRgb(0x49, 0x30, 0x00);
+        SetBrush("FocusWarningTextBrush", warningText);
+        SetBrush("FocusOverlayBrush",
+            dark ? "#50000000" : "#380B1220");
+        Color edgeIndicator = SystemParameters.HighContrast
+            ? SystemColors.HighlightColor
+            : dark
+                ? Color.FromArgb(0xC8, 0xFF, 0xFF, 0xFF)
+                : accentBright;
+        SetBrush("FocusEdgeIndicatorBrush", edgeIndicator);
     }
 
     private static void SetBrush(string key, string colorText)

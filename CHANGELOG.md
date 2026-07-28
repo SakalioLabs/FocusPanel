@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.74 - 2026-07-29
+
+- 完成全量 `Views/*.xaml` 状态色审计，清理最后 3 处页面硬编码颜色：右缘指示条 `#C8FFFFFF`、重命名遮罩 `#50000000` 和 Explorer 系统限制警告 `#33FFB020`。
+- 新增 `FocusEdgeIndicatorBrush`：深色主题保留清晰半透明白色提示，浅色主题改用当前 Windows 强调亮色，高对比度使用系统 Highlight；3px 物理宽度、无激活和点击穿透语义不变。
+- 新增 `FocusOverlayBrush`，桌面收纳重命名遮罩根据深浅色使用不同透明度，不再在浅色表面形成过重黑层。
+- 新增 `FocusWarningBrush`、`FocusWarningSoftBrush` 和 `FocusWarningTextBrush`，系统限制说明的背景、描边和文字分别适配深色、浅色及高对比度。
+- UI 冒烟真实加载 `EdgeIndicatorWindow` 与 `FileOrganizerView`，验证指示表面和重命名遮罩引用应用级动态资源；资源契约禁止任何视图 XAML 回归直接十六进制颜色。
+- README 新增动态状态色令牌图。
+
 ## v0.9.73 - 2026-07-29
 
 - 修复任务视图分段按钮使用整块高饱和蓝色、桌面收纳工具栏 ToggleButton 复制弱化模板，以及文件选中态硬编码 `#26006FC4/#FF007AFF`、无法跟随 Windows 强调色的问题。
