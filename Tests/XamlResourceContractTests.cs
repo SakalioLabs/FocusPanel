@@ -344,9 +344,10 @@ public sealed class XamlResourceContractTests
             "BorderBrush=\"{DynamicResource FocusKeyboardFocusBrush}\"",
             theme);
         Assert.True(
-            theme.Split(
-                "FocusVisualStyle\" Value=\"{StaticResource FocusRoundedKeyboardVisual}\"",
-                StringSplitOptions.None).Length - 1 >= 5);
+            Regex.Matches(
+                theme,
+                "FocusVisualStyle\"\\s+Value=\"\\{StaticResource FocusRoundedKeyboardVisual\\}\"")
+                .Count >= 5);
         Assert.DoesNotContain(
             "IsKeyboardFocused",
             theme);
@@ -444,10 +445,10 @@ public sealed class XamlResourceContractTests
         Assert.Contains("Opened=\"TransientSurface_Opened\"", organizer);
         Assert.Contains("Closed=\"TransientSurface_Closed\"", organizer);
         Assert.Equal(
-            3,
+            4,
             Regex.Matches(organizer, "Opened=\"TransientPopup_Opened\"").Count);
         Assert.Equal(
-            3,
+            4,
             Regex.Matches(organizer, "Closed=\"TransientPopup_Closed\"").Count);
     }
 
@@ -856,6 +857,47 @@ public sealed class XamlResourceContractTests
         Assert.Contains("private void Column_Drop", codeBehind);
         Assert.True(
             codeBehind.Split("StopAutoScroll();", StringSplitOptions.None).Length >= 7);
+    }
+
+    [Fact]
+    public void Organizer_UsesOnlySharedFluentControls()
+    {
+        string root = FindRepositoryRoot();
+        string organizer = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml"));
+        string theme = File.ReadAllText(
+            Path.Combine(root, "Themes", "FocusTheme.xaml"));
+
+        Assert.DoesNotContain(
+            "materialDesign:",
+            organizer,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(
+            "MaterialDesign",
+            organizer,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(
+            "MaterialDesign",
+            theme,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "ToolbarToggleButtonStyle",
+            organizer);
+        Assert.Contains(
+            "FocusSegmentRadioButton",
+            organizer);
+        Assert.Contains(
+            "FocusMenuItem",
+            organizer);
+        Assert.Contains(
+            "Opened=\"TransientPopup_Opened\"",
+            organizer);
+        Assert.False(
+            File.Exists(
+                Path.Combine(
+                    root,
+                    "Controls",
+                    "MaterialCompat.cs")));
     }
 
     [Fact]

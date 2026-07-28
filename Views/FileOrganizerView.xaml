@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:materialDesign="clr-namespace:FocusPanel.Controls"
              xmlns:vm="clr-namespace:FocusPanel.ViewModels"
              xmlns:converters="clr-namespace:FocusPanel.Converters"
              mc:Ignorable="d"
@@ -24,21 +23,62 @@
 
         <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#26006FC4"/>
 
-        <Style x:Key="OrganizerIconStyle" TargetType="materialDesign:PackIcon">
-            <Setter Property="Width" Value="20"/>
-            <Setter Property="Height" Value="20"/>
-            <Setter Property="Foreground" Value="{DynamicResource FocusAccentBrush}"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-        </Style>
-
-        <Style x:Key="ToolbarButtonStyle" TargetType="ButtonBase" BasedOn="{StaticResource MaterialDesignIconButton}">
+        <Style x:Key="ToolbarButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource FocusIconButton}">
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Margin" Value="2,0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+        </Style>
+
+        <Style x:Key="ToolbarToggleButtonStyle"
+               TargetType="ToggleButton">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="{StaticResource FocusControlCornerRadius}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome"
+                                        Property="Background"
+                                        Value="{DynamicResource FocusHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Chrome"
+                                        Property="Background"
+                                        Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.72"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OrganizerChoiceChipStyle"
+               TargetType="RadioButton"
+               BasedOn="{StaticResource FocusSegmentRadioButton}">
+            <Setter Property="MinWidth" Value="56"/>
+            <Setter Property="Padding" Value="10,0"/>
         </Style>
 
         <Style x:Key="PopupPanelStyle" TargetType="Border">
@@ -106,13 +146,17 @@
         <ContextMenu x:Key="FileContextMenu"
                      Opened="TransientSurface_Opened"
                      Closed="TransientSurface_Closed">
+            <ContextMenu.Resources>
+                <Style TargetType="MenuItem"
+                       BasedOn="{StaticResource FocusMenuItem}"/>
+            </ContextMenu.Resources>
             <MenuItem Header="&#x6253;&#x5F00;"
                       Command="{Binding Data.OpenFileCommand, Source={StaticResource VmProxy}}"
                       CommandParameter="{Binding}"/>
             <MenuItem Header="&#x79FB;&#x52A8;&#x5230;"
                       ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
                 <MenuItem.ItemContainerStyle>
-                    <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource FocusMenuItem}">
                         <Setter Property="Header" Value="{Binding Name}"/>
                         <Setter Property="Command" Value="{Binding Data.AssignToPartitionCommand, Source={StaticResource VmProxy}}"/>
                         <Setter Property="CommandParameter" Value="{Binding Name}"/>
@@ -122,7 +166,7 @@
             <MenuItem Header="&#x6536;&#x7EB3;&#x5230;&#x9762;&#x677F;"
                       ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
                 <MenuItem.ItemContainerStyle>
-                    <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource FocusMenuItem}">
                         <Setter Property="Header" Value="{Binding Name}"/>
                         <Setter Property="Command" Value="{Binding Data.HideFileToPanelCommand, Source={StaticResource VmProxy}}"/>
                         <Setter Property="CommandParameter" Value="{Binding Name}"/>
@@ -233,15 +277,12 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0"
-                            Background="Transparent"
-                            CornerRadius="0"
-                            BorderBrush="{DynamicResource FocusStrokeBrush}"
-                            BorderThickness="0,0,0,1"
-                            AllowDrop="True"
-                            PreviewMouseLeftButtonDown="PartitionHeader_PreviewMouseLeftButtonDown"
-                            PreviewMouseMove="PartitionHeader_PreviewMouseMove"
-                            Drop="PartitionHeader_Drop">
+                    <Grid Grid.Row="0"
+                          Background="Transparent"
+                          AllowDrop="True"
+                          PreviewMouseLeftButtonDown="PartitionHeader_PreviewMouseLeftButtonDown"
+                          PreviewMouseMove="PartitionHeader_PreviewMouseMove"
+                          Drop="PartitionHeader_Drop">
                         <Grid Margin="10,0,8,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -251,23 +292,26 @@
 
                             <ToggleButton Grid.Column="0"
                                           IsChecked="{Binding IsExpanded}"
-                                          Style="{StaticResource MaterialDesignIconButton}"
+                                          Style="{StaticResource ToolbarToggleButtonStyle}"
                                           Width="28"
                                           Height="28"
                                           Padding="0"
                                           ToolTip="&#x5C55;&#x5F00;&#x6216;&#x6298;&#x53E0;">
-                                <materialDesign:PackIcon Width="17" Height="17" Foreground="{DynamicResource FocusAccentBrush}">
-                                    <materialDesign:PackIcon.Style>
-                                        <Style TargetType="materialDesign:PackIcon">
-                                            <Setter Property="Kind" Value="ChevronDown"/>
+                                <TextBlock Width="17"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource FocusAccentBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock"
+                                               BasedOn="{StaticResource FocusIconText}">
+                                            <Setter Property="Text" Value="&#xE70D;"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsExpanded}" Value="False">
-                                                    <Setter Property="Kind" Value="ChevronRight"/>
+                                                    <Setter Property="Text" Value="&#xE76C;"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </materialDesign:PackIcon.Style>
-                                </materialDesign:PackIcon>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </ToggleButton>
 
                             <StackPanel Grid.Column="1"
@@ -290,40 +334,52 @@
                                 </Border>
                             </StackPanel>
 
-                            <materialDesign:PopupBox Grid.Column="2"
-                                                     PlacementMode="Bottom"
-                                                     Padding="0"
-                                                     Height="28"
-                                                     Width="28">
-                                <materialDesign:PopupBox.ToggleContent>
-                                    <materialDesign:PackIcon Kind="DotsVertical"
-                                                             Width="18"
-                                                             Height="18"
-                                                             Foreground="{DynamicResource FocusMutedTextBrush}"/>
-                                </materialDesign:PopupBox.ToggleContent>
-                                <Border Style="{StaticResource PopupPanelStyle}">
-                                    <StackPanel Width="160">
-                                        <Button Command="{Binding Data.OpenPartitionFolderCommand, Source={StaticResource VmProxy}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignFlatButton}"
-                                                HorizontalContentAlignment="Left"
-                                                Content="&#x6253;&#x5F00;&#x6587;&#x4EF6;&#x5939;"/>
-                                        <Button Command="{Binding Data.OpenRenameDialogCommand, Source={StaticResource VmProxy}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignFlatButton}"
-                                                HorizontalContentAlignment="Left"
-                                                Content="&#x91CD;&#x547D;&#x540D;"/>
-                                        <Button Command="{Binding Data.DeletePartitionCommand, Source={StaticResource VmProxy}}"
-                                                CommandParameter="{Binding}"
-                                                Visibility="{Binding IsCustom, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                Style="{StaticResource MaterialDesignFlatButton}"
-                                                HorizontalContentAlignment="Left"
-                                                Content="&#x5220;&#x9664;"/>
-                                    </StackPanel>
-                                </Border>
-                            </materialDesign:PopupBox>
+                            <Grid Grid.Column="2">
+                                <ToggleButton x:Name="PartitionMenuToggle"
+                                              Style="{StaticResource ToolbarToggleButtonStyle}"
+                                              Width="28"
+                                              Height="28"
+                                              ToolTip="收纳盒操作">
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               Text="&#xE712;"
+                                               FontSize="16"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                </ToggleButton>
+                                <Popup IsOpen="{Binding IsChecked, ElementName=PartitionMenuToggle, Mode=TwoWay}"
+                                       PlacementTarget="{Binding ElementName=PartitionMenuToggle}"
+                                       Placement="Bottom"
+                                       StaysOpen="False"
+                                       AllowsTransparency="True"
+                                       Opened="TransientPopup_Opened"
+                                       Closed="TransientPopup_Closed">
+                                    <Border Style="{StaticResource PopupPanelStyle}"
+                                            Margin="0,8,0,0">
+                                        <StackPanel Width="168">
+                                            <Button Command="{Binding Data.OpenPartitionFolderCommand, Source={StaticResource VmProxy}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource FocusSecondaryButton}"
+                                                    HorizontalContentAlignment="Left"
+                                                    Content="打开文件夹"/>
+                                            <Button Command="{Binding Data.OpenRenameDialogCommand, Source={StaticResource VmProxy}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource FocusSecondaryButton}"
+                                                    HorizontalContentAlignment="Left"
+                                                    Content="重命名"/>
+                                            <Button Command="{Binding Data.DeletePartitionCommand, Source={StaticResource VmProxy}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding IsCustom, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Style="{StaticResource FocusSecondaryButton}"
+                                                    HorizontalContentAlignment="Left"
+                                                    Content="删除"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Popup>
+                            </Grid>
                         </Grid>
-                    </Border>
+                        <Border Height="1"
+                                VerticalAlignment="Bottom"
+                                Background="{DynamicResource FocusStrokeBrush}"/>
+                    </Grid>
 
                     <ContentControl Grid.Row="1"
                                     Content="{Binding}"
@@ -402,7 +458,7 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Grid>
                         <ToggleButton x:Name="ViewToggle"
-                                      Style="{StaticResource ToolbarButtonStyle}"
+                                      Style="{StaticResource ToolbarToggleButtonStyle}"
                                       ToolTip="&#x89C6;&#x56FE;&#x9009;&#x9879;">
                             <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE80A;" FontSize="18"/>
                         </ToggleButton>
@@ -417,30 +473,30 @@
                                 <StackPanel Width="220">
                                     <TextBlock Text="&#x89C6;&#x56FE;&#x6A21;&#x5F0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
+                                        <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                      IsChecked="{Binding IsListView, Converter={StaticResource InverseBoolConverter}}"
                                                      Content="&#x7F51;&#x683C;"
                                                      Margin="0,0,8,0"/>
-                                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
+                                        <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                      IsChecked="{Binding IsListView}"
                                                      Content="&#x5217;&#x8868;"/>
                                     </StackPanel>
 
                                     <TextBlock Text="&#x9762;&#x677F;&#x56FE;&#x6807;&#x5927;&#x5C0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
+                                        <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                      Content="&#x5C0F;"
                                                      IsChecked="{Binding IconScale, Converter={StaticResource EqualityConverter}, ConverterParameter=0.8}"
                                                      Command="{Binding SetIconScaleCommand}"
                                                      CommandParameter="0.8"
                                                      Margin="0,0,8,0"/>
-                                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
+                                        <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                      Content="&#x4E2D;"
                                                      IsChecked="{Binding IconScale, Converter={StaticResource EqualityConverter}, ConverterParameter=1.0}"
                                                      Command="{Binding SetIconScaleCommand}"
                                                      CommandParameter="1.0"
                                                      Margin="0,0,8,0"/>
-                                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipOutlineRadioButton}"
+                                        <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                      Content="&#x5927;"
                                                      IsChecked="{Binding IconScale, Converter={StaticResource EqualityConverter}, ConverterParameter=1.2}"
                                                      Command="{Binding SetIconScaleCommand}"
@@ -448,12 +504,12 @@
                                     </StackPanel>
 
                                     <TextBlock Text="&#x5206;&#x7EC4;&#x65B9;&#x5F0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
-                                    <RadioButton Style="{StaticResource MaterialDesignRadioButton}"
+                                    <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                  IsChecked="{Binding IsPersonalizedView}"
                                                  Command="{Binding ToggleViewCommand}"
                                                  Content="&#x81EA;&#x5B9A;&#x4E49;&#x6536;&#x7EB3;&#x76D2;"
                                                  Margin="0,3"/>
-                                    <RadioButton Style="{StaticResource MaterialDesignRadioButton}"
+                                    <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                  IsChecked="{Binding IsPersonalizedView, Converter={StaticResource InverseBoolConverter}}"
                                                  Command="{Binding ToggleViewCommand}"
                                                  Content="&#x65F6;&#x95F4;&#x7EBF;"
@@ -472,7 +528,7 @@
 
                     <Grid Visibility="{Binding IsPersonalizedView, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ToggleButton x:Name="AddPartitionToggle"
-                                      Style="{StaticResource ToolbarButtonStyle}"
+                                      Style="{StaticResource ToolbarToggleButtonStyle}"
                                       ToolTip="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;">
                             <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE710;" FontSize="18"/>
                         </ToggleButton>
@@ -488,13 +544,13 @@
                                     <TextBlock Text="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;" FontWeight="SemiBold" Margin="0,0,0,10"/>
                                     <TextBox x:Name="PartitionNameBox"
                                              Text="{Binding NewPartitionName, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="&#x540D;&#x79F0;"
-                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Style="{StaticResource FocusSearchBox}"
+                                             ToolTip="收纳盒名称"
                                              Padding="8"
                                              Margin="0,0,0,10"/>
                                     <Button Command="{Binding CreatePartitionCommand}"
                                             Content="&#x521B;&#x5EFA;"
-                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            Style="{StaticResource FocusPrimaryButton}"
                                             HorizontalAlignment="Right"/>
                                 </StackPanel>
                             </Border>
@@ -510,7 +566,7 @@
 
                     <Grid>
                         <ToggleButton x:Name="RescueToggle"
-                                      Style="{StaticResource ToolbarButtonStyle}"
+                                      Style="{StaticResource ToolbarToggleButtonStyle}"
                                       ToolTip="&#x4FEE;&#x590D;&#x5DE5;&#x5177;">
                             <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE90F;" FontSize="18"/>
                         </ToggleButton>
@@ -525,12 +581,12 @@
                                 <StackPanel Width="170">
                                     <TextBlock Text="&#x4FEE;&#x590D;&#x5DE5;&#x5177;" FontSize="12" Opacity="0.65" Margin="0,0,0,10"/>
                                     <Button Command="{Binding RescueCommand}"
-                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            Style="{StaticResource FocusSecondaryButton}"
                                             HorizontalContentAlignment="Left"
                                             Padding="8"
                                             Content="&#x6062;&#x590D;&#x684C;&#x9762;"/>
                                     <Button Command="{Binding SmartRescueCommand}"
-                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            Style="{StaticResource FocusSecondaryButton}"
                                             HorizontalContentAlignment="Left"
                                             Padding="8"
                                             Content="&#x667A;&#x80FD;&#x5206;&#x7EC4;"/>
@@ -622,16 +678,16 @@
                                Margin="0,0,0,14"/>
                     <TextBox x:Name="RenameTextBox"
                              Text="{Binding RenamePartitionName, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             materialDesign:HintAssist.Hint="&#x65B0;&#x540D;&#x79F0;"
+                             Style="{StaticResource FocusSearchBox}"
+                             ToolTip="新名称"
                              Margin="0,0,0,14"
                              FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                        <Button Style="{StaticResource FocusSecondaryButton}"
                                 Content="&#x53D6;&#x6D88;"
                                 Command="{Binding CancelRenameCommand}"
                                 Margin="0,0,8,0"/>
-                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                        <Button Style="{StaticResource FocusPrimaryButton}"
                                 Content="&#x91CD;&#x547D;&#x540D;"
                                 Command="{Binding ConfirmRenameCommand}"/>
                     </StackPanel>

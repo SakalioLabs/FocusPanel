@@ -141,13 +141,13 @@ public partial class FileOrganizerView : UserControl
              if (isBottom)
              {
                  // Insert After (Bottom Line)
-                 border.BorderBrush = (Brush)FindResource("PrimaryHueMidBrush");
+                 border.BorderBrush = (Brush)FindResource("FocusAccentBrush");
                  border.BorderThickness = new Thickness(1, 1, 1, 4);
              }
              else
              {
                  // Insert Before (Top Line)
-                 border.BorderBrush = (Brush)FindResource("PrimaryHueMidBrush");
+                 border.BorderBrush = (Brush)FindResource("FocusAccentBrush");
                  border.BorderThickness = new Thickness(1, 4, 1, 1);
              }
         }
@@ -218,7 +218,7 @@ public partial class FileOrganizerView : UserControl
     {
         if (sender is Border border)
         {
-            border.BorderBrush = (Brush)FindResource("PrimaryHueMidBrush");
+            border.BorderBrush = (Brush)FindResource("FocusAccentBrush");
             border.Background = (Brush)FindResource("FocusSurfaceSoftBrush");
             // Keep thickness same to avoid jitter
         }

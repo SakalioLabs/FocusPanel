@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111925"/>
+      <stop offset="1" stop-color="#26374c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".07"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="620" rx="34" fill="url(#bg)"/>
+  <circle cx="180" cy="90" r="170" fill="#1ba7ff" opacity=".14"/>
+  <circle cx="950" cy="540" r="230" fill="#7d5cff" opacity=".12"/>
+  <g filter="url(#shadow)">
+    <rect x="80" y="58" width="960" height="504" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".16"/>
+    <path d="M80 132H1040" stroke="#fff" stroke-opacity=".13"/>
+  </g>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#f5f7ff">
+    <text x="118" y="104" font-size="24" font-weight="650">桌面收纳</text>
+    <text x="818" y="103" font-size="14" fill="#b9c5d7">视图　新建　整理　刷新　修复</text>
+    <g transform="translate(112 162)">
+      <rect width="430" height="164" rx="18" fill="#fff" fill-opacity=".08" stroke="#fff" stroke-opacity=".12"/>
+      <text x="24" y="42" font-size="18" font-weight="650">工作资料</text>
+      <rect x="132" y="22" width="36" height="24" rx="10" fill="#4ca6e8" fill-opacity=".22"/>
+      <text x="146" y="39" font-size="13" text-anchor="middle" fill="#78c3fa">8</text>
+      <path d="M24 62H406" stroke="#fff" stroke-opacity=".10"/>
+      <g fill="#fff" fill-opacity=".10">
+        <rect x="24" y="82" width="82" height="58" rx="12"/>
+        <rect x="116" y="82" width="82" height="58" rx="12"/>
+        <rect x="208" y="82" width="82" height="58" rx="12"/>
+        <rect x="300" y="82" width="82" height="58" rx="12"/>
+      </g>
+      <g fill="#b9c5d7" font-size="12" text-anchor="middle">
+        <text x="65" y="116">方案.docx</text>
+        <text x="157" y="116">数据.xlsx</text>
+        <text x="249" y="116">会议.pdf</text>
+        <text x="341" y="116">素材</text>
+      </g>
+    </g>
+    <g transform="translate(566 162)">
+      <rect width="430" height="250" rx="18" fill="#fff" fill-opacity=".08" stroke="#fff" stroke-opacity=".12"/>
+      <text x="24" y="42" font-size="18" font-weight="650">图片与设计</text>
+      <rect x="142" y="22" width="36" height="24" rx="10" fill="#4ca6e8" fill-opacity=".22"/>
+      <text x="156" y="39" font-size="13" text-anchor="middle" fill="#78c3fa">12</text>
+      <path d="M24 62H406" stroke="#fff" stroke-opacity=".10"/>
+      <g fill="#fff" fill-opacity=".10">
+        <rect x="24" y="82" width="112" height="74" rx="12"/>
+        <rect x="148" y="82" width="112" height="74" rx="12"/>
+        <rect x="272" y="82" width="112" height="74" rx="12"/>
+        <rect x="24" y="168" width="112" height="58" rx="12"/>
+        <rect x="148" y="168" width="112" height="58" rx="12"/>
+      </g>
+      <g fill="#b9c5d7" font-size="12" text-anchor="middle">
+        <text x="80" y="123">封面.png</text>
+        <text x="204" y="123">原型.fig</text>
+        <text x="328" y="123">图标.svg</text>
+        <text x="80" y="202">截图</text>
+        <text x="204" y="202">壁纸</text>
+      </g>
+    </g>
+    <g transform="translate(112 350)">
+      <rect width="430" height="150" rx="18" fill="#fff" fill-opacity=".08" stroke="#fff" stroke-opacity=".12"/>
+      <text x="24" y="42" font-size="18" font-weight="650">待整理</text>
+      <path d="M24 62H406" stroke="#fff" stroke-opacity=".10"/>
+      <rect x="24" y="82" width="382" height="44" rx="12" fill="#fff" fill-opacity=".09"/>
+      <text x="44" y="110" font-size="13" fill="#b9c5d7">拖入桌面项目，原路径保留且可随时恢复</text>
+    </g>
+    <text x="560" y="536" font-size="15" text-anchor="middle" fill="#b9c5d7">单层圆角表面 · Fluent 控件 · 拖拽与文件事务保持不变</text>
+  </g>
+</svg>

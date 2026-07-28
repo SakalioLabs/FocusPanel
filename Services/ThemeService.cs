@@ -118,13 +118,6 @@ public static class ThemeService
                 ? SystemColors.HighlightColor
                 : accentBright);
         SetBrush("FocusDangerBrush", dark ? "#FFFF6B7A" : "#FFD92D4B");
-        SetBrush("PrimaryHueMidBrush", accent);
-        SetBrush("PrimaryHueLightBrush", accentBright);
-        SetBrush("MaterialDesignBody", dark ? "#FFF5F7FF" : "#FF1D2433");
-        SetBrush("MaterialDesignBodyLight", dark ? "#FFAEB5C8" : "#FF667085");
-        SetBrush("MaterialDesignPaper", dark ? "#F0222630" : "#F2FFFFFF");
-        SetBrush("MaterialDesignDivider", dark ? "#33FFFFFF" : "#260B1220");
-        SetBrush("MaterialDesignCardBackground", dark ? "#802C313D" : "#BDE9EDF5");
     }
 
     private static void SetBrush(string key, string colorText)
