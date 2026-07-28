@@ -24,6 +24,7 @@
     <SolidColorBrush x:Key="FocusStrokeBrush" Color="{StaticResource FocusStrokeColor}"/>
     <SolidColorBrush x:Key="FocusHoverBrush" Color="{StaticResource FocusHoverColor}"/>
     <SolidColorBrush x:Key="FocusDangerBrush" Color="{StaticResource FocusDangerColor}"/>
+    <SolidColorBrush x:Key="FocusKeyboardFocusBrush" Color="{StaticResource FocusAccentBrightColor}"/>
     <CornerRadius x:Key="FocusShellCornerRadius">12</CornerRadius>
     <CornerRadius x:Key="FocusCardCornerRadius">10</CornerRadius>
     <CornerRadius x:Key="FocusControlCornerRadius">8</CornerRadius>
@@ -51,6 +52,21 @@
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
+    <Style x:Key="FocusRoundedKeyboardVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border Margin="1"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            BorderBrush="{DynamicResource FocusKeyboardFocusBrush}"
+                            BorderThickness="2"
+                            SnapsToDevicePixels="True"
+                            IsHitTestVisible="False"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="FocusIconButton" TargetType="Button">
         <Setter Property="Width" Value="44"/>
         <Setter Property="Height" Value="44"/>
@@ -60,6 +76,7 @@
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -113,6 +130,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -148,6 +166,7 @@
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
     </Style>
     <Style x:Key="MaterialDesignIconForegroundButton" TargetType="Button" BasedOn="{StaticResource FocusIconButton}"/>
     <Style x:Key="MaterialDesignFlatButton" TargetType="Button" BasedOn="{StaticResource FocusSecondaryButton}"/>
@@ -167,11 +186,13 @@
         <Setter Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
     </Style>
     <Style x:Key="MaterialDesignRadioButton" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
         <Setter Property="Margin" Value="4"/>
         <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
     </Style>
     <Style x:Key="MaterialDesignTabRadioButton" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignRadioButton}"/>
     <Style x:Key="MaterialDesignChoiceChipOutlineRadioButton" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignRadioButton}"/>

@@ -308,6 +308,39 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void FluentControls_UseOneRoundedKeyboardFocusVisual()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(root, "Themes", "FocusTheme.xaml"));
+        string themeService = File.ReadAllText(
+            Path.Combine(root, "Services", "ThemeService.cs"));
+
+        Assert.Contains(
+            "x:Key=\"FocusRoundedKeyboardVisual\"",
+            theme);
+        Assert.Contains(
+            "CornerRadius=\"{StaticResource FocusControlCornerRadius}\"",
+            theme);
+        Assert.Contains(
+            "BorderBrush=\"{DynamicResource FocusKeyboardFocusBrush}\"",
+            theme);
+        Assert.True(
+            theme.Split(
+                "FocusVisualStyle\" Value=\"{StaticResource FocusRoundedKeyboardVisual}\"",
+                StringSplitOptions.None).Length - 1 >= 5);
+        Assert.DoesNotContain(
+            "IsKeyboardFocused",
+            theme);
+        Assert.Contains(
+            "SystemParameters.HighContrast",
+            themeService);
+        Assert.Contains(
+            "SystemColors.HighlightColor",
+            themeService);
+    }
+
+    [Fact]
     public void ShellAutoHide_WaitsForMenusPopupsAndMouseCapture()
     {
         string root = FindRepositoryRoot();

@@ -16,6 +16,7 @@ internal static class UiSmokeTestRunner
         "FocusSurfaceSoftBrush",
         "FocusSurfaceStrongBrush",
         "FocusStrokeBrush",
+        "FocusKeyboardFocusBrush",
         "PrimaryHueMidBrush",
         "SecondaryHueMidBrush"
     };
