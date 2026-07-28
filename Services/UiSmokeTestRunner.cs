@@ -32,7 +32,8 @@ internal static class UiSmokeTestRunner
         "FocusToolTip",
         "FocusComboBox",
         "FocusComboBoxItem",
-        "FocusCheckBox"
+        "FocusCheckBox",
+        "FocusScrollBar"
     };
 
     public static int Run(
@@ -84,6 +85,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentCheckBox(
+                results,
+                failures);
+            CheckFluentScrollBars(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -726,6 +730,114 @@ internal static class UiSmokeTestRunner
         }
     }
 
+    private static void CheckFluentScrollBars(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var content = new Border
+            {
+                Width = 420,
+                Height = 640,
+                Background = Brushes.Transparent
+            };
+            var viewer = new ScrollViewer
+            {
+                Width = 220,
+                Height = 160,
+                Content = content,
+                HorizontalScrollBarVisibility =
+                    ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility =
+                    ScrollBarVisibility.Auto
+            };
+            var size = new Size(220, 160);
+            viewer.Measure(size);
+            viewer.Arrange(new Rect(size));
+            viewer.UpdateLayout();
+            viewer.ApplyTemplate();
+
+            ScrollBar? vertical =
+                FindVisualChildren<ScrollBar>(viewer)
+                    .FirstOrDefault(
+                        bar =>
+                            bar.Orientation
+                            == Orientation.Vertical);
+            ScrollBar? horizontal =
+                FindVisualChildren<ScrollBar>(viewer)
+                    .FirstOrDefault(
+                        bar =>
+                            bar.Orientation
+                            == Orientation.Horizontal);
+            if (vertical == null
+                || horizontal == null
+                || viewer.ScrollableHeight <= 0
+                || viewer.ScrollableWidth <= 0)
+            {
+                failures.Add(
+                    "Fluent 滚动条未覆盖真实纵向和横向滚动容器");
+                return;
+            }
+
+            vertical.ApplyTemplate();
+            horizontal.ApplyTemplate();
+            if (vertical.Template.FindName(
+                    "ScrollThumb",
+                    vertical) is not Thumb verticalThumb
+                || horizontal.Template.FindName(
+                    "ScrollThumb",
+                    horizontal) is not Thumb horizontalThumb)
+            {
+                failures.Add(
+                    "Fluent 滚动条缺少纵向或横向圆角滑块");
+                return;
+            }
+
+            verticalThumb.ApplyTemplate();
+            horizontalThumb.ApplyTemplate();
+            if (verticalThumb.Template.FindName(
+                    "ThumbSurface",
+                    verticalThumb) is not Border verticalSurface
+                || horizontalThumb.Template.FindName(
+                    "ThumbSurface",
+                    horizontalThumb) is not Border horizontalSurface
+                || verticalSurface.CornerRadius.TopLeft <= 0
+                || horizontalSurface.CornerRadius.TopLeft <= 0)
+            {
+                failures.Add(
+                    "Fluent 滚动滑块未应用圆角表面");
+                return;
+            }
+
+            if (!ReferenceEquals(
+                    vertical.Foreground,
+                    Application.Current.FindResource(
+                        "FocusMutedTextBrush"))
+                || !ReferenceEquals(
+                    verticalThumb.Background,
+                    Application.Current.FindResource(
+                        "FocusMutedTextBrush"))
+                || vertical.Width > 10
+                || horizontal.Height > 10
+                || verticalThumb.MinHeight < 28
+                || horizontalThumb.MinWidth < 28)
+            {
+                failures.Add(
+                    "Fluent 滚动条未使用动态主题、紧凑轨道或最小滑块");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 纵横滚动条圆角、动态主题与紧凑轨道");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 滚动条加载失败：{ex}");
+        }
+    }
+
     private static void CheckLargeOrganizerVirtualization(
         ICollection<string> results,
         ICollection<string> failures)
@@ -883,6 +995,31 @@ internal static class UiSmokeTestRunner
                 return descendant;
         }
         return null;
+    }
+
+    private static IEnumerable<T> FindVisualChildren<T>(
+        DependencyObject parent)
+        where T : DependencyObject
+    {
+        int count =
+            VisualTreeHelper.GetChildrenCount(
+                parent);
+        for (int index = 0;
+             index < count;
+             index++)
+        {
+            DependencyObject child =
+                VisualTreeHelper.GetChild(
+                    parent,
+                    index);
+            if (child is T match)
+                yield return match;
+            foreach (T descendant in
+                     FindVisualChildren<T>(child))
+            {
+                yield return descendant;
+            }
+        }
     }
 
     private static void RenderCalendarSnapshot(

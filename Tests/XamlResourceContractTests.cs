@@ -1198,6 +1198,57 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void ScrollBars_UseOneSlimRoundedDynamicTheme()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+
+        Assert.Contains(
+            "x:Key=\"FocusScrollBar\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusScrollBar}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"PART_Track\"",
+            theme);
+        Assert.Contains(
+            "Orientation=\"{TemplateBinding Orientation}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"ScrollThumb\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"ThumbSurface\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusMutedTextBrush}\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusAccentBrightBrush}\"",
+            theme);
+        Assert.Contains(
+            "<Setter Property=\"Width\"",
+            theme);
+        Assert.Contains(
+            "Value=\"10\"",
+            theme);
+        Assert.Contains(
+            "Command=\"{x:Static ScrollBar.PageUpCommand}\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{x:Static ScrollBar.PageRightCommand}\"",
+            theme);
+        Assert.DoesNotContain(
+            "SystemColors.ScrollBar",
+            theme);
+    }
+
+    [Fact]
     public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
     {
         string root = FindRepositoryRoot();

@@ -566,6 +566,138 @@
         </Setter>
     </Style>
 
+    <Style x:Key="FocusScrollThumb"
+           TargetType="Thumb">
+        <Setter Property="Background"
+                Value="{DynamicResource FocusMutedTextBrush}"/>
+        <Setter Property="Opacity"
+                Value="0.52"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="ThumbSurface"
+                            Margin="2"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4"
+                            SnapsToDevicePixels="True"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="FocusScrollPageButton"
+           TargetType="RepeatButton">
+        <Setter Property="Focusable"
+                Value="False"/>
+        <Setter Property="IsTabStop"
+                Value="False"/>
+        <Setter Property="Background"
+                Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="{TemplateBinding Background}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="FocusScrollBar"
+           TargetType="ScrollBar">
+        <Setter Property="Width"
+                Value="10"/>
+        <Setter Property="MinWidth"
+                Value="10"/>
+        <Setter Property="Background"
+                Value="Transparent"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusMutedTextBrush}"/>
+        <Setter Property="Focusable"
+                Value="False"/>
+        <Setter Property="OverridesDefaultStyle"
+                Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid x:Name="ScrollRoot"
+                          Background="{TemplateBinding Background}"
+                          SnapsToDevicePixels="True">
+                        <Track x:Name="PART_Track"
+                               Orientation="{TemplateBinding Orientation}"
+                               IsDirectionReversed="True"
+                               Minimum="{TemplateBinding Minimum}"
+                               Maximum="{TemplateBinding Maximum}"
+                               Value="{TemplateBinding Value}"
+                               ViewportSize="{TemplateBinding ViewportSize}">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton x:Name="DecreasePageButton"
+                                              Style="{StaticResource FocusScrollPageButton}"
+                                              Command="{x:Static ScrollBar.PageUpCommand}"
+                                              CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb x:Name="ScrollThumb"
+                                       MinHeight="28"
+                                       Style="{StaticResource FocusScrollThumb}"/>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton x:Name="IncreasePageButton"
+                                              Style="{StaticResource FocusScrollPageButton}"
+                                              Command="{x:Static ScrollBar.PageDownCommand}"
+                                              CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Orientation"
+                                 Value="Horizontal">
+                            <Setter Property="Width"
+                                    Value="Auto"/>
+                            <Setter Property="MinWidth"
+                                    Value="0"/>
+                            <Setter Property="Height"
+                                    Value="10"/>
+                            <Setter Property="MinHeight"
+                                    Value="10"/>
+                            <Setter TargetName="PART_Track"
+                                    Property="IsDirectionReversed"
+                                    Value="False"/>
+                            <Setter TargetName="ScrollThumb"
+                                    Property="MinHeight"
+                                    Value="0"/>
+                            <Setter TargetName="ScrollThumb"
+                                    Property="MinWidth"
+                                    Value="28"/>
+                            <Setter TargetName="DecreasePageButton"
+                                    Property="Command"
+                                    Value="{x:Static ScrollBar.PageLeftCommand}"/>
+                            <Setter TargetName="IncreasePageButton"
+                                    Property="Command"
+                                    Value="{x:Static ScrollBar.PageRightCommand}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter TargetName="ScrollThumb"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                            <Setter TargetName="ScrollThumb"
+                                    Property="Opacity"
+                                    Value="0.9"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="ScrollRoot"
+                                    Property="Opacity"
+                                    Value="0.28"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ScrollBar"
+           BasedOn="{StaticResource FocusScrollBar}"/>
+
     <Style x:Key="FocusContextMenu"
            TargetType="ContextMenu">
         <Setter Property="OverridesDefaultStyle" Value="True"/>

@@ -49,6 +49,9 @@ public sealed class UiSmokeTestProcessTests
             Assert.Contains(
                 "PASS Fluent 勾选框点击区、圆角与选中状态",
                 report);
+            Assert.Contains(
+                "PASS Fluent 纵横滚动条圆角、动态主题与紧凑轨道",
+                report);
             Assert.Contains("RESULT PASS", report);
         }
         finally
