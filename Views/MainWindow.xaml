@@ -26,6 +26,9 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <local:DashboardView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:TasksViewModel}">
             <local:TasksView/>
         </DataTemplate>
@@ -241,6 +244,12 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
                                 <TextBlock Text="Focus 中心" FontSize="19" FontWeight="SemiBold"/>
+                                <Button Margin="0,14,0,0"
+                                        Height="50"
+                                        Style="{StaticResource FocusPrimaryButton}"
+                                        Content="打开今日概览"
+                                        Command="{Binding NavigateCommand}"
+                                        CommandParameter="Dashboard"/>
                                 <Button Height="64"
                                         Margin="0,12,0,0"
                                         Padding="14,0"

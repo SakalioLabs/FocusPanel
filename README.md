@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.41 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.42 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.41 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.42 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -35,9 +35,13 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 Focus 中心只放 FocusPanel 的业务模块；状态中心只放设备状态、Windows 公开入口与任务栏恢复信息。两个中心与搜索、日历、设置、电源弹层互斥，按 `Esc` 可关闭。
 
+Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任务、今日专注、进行中 OKR 和已收纳桌面项目，并显示可以立即推进的任务与目标。概览不会改变业务数据，打开或手动刷新时才读取最新本地快照。
+
 ![Focus 中心](docs/images/focus-center.svg)
 
 ![状态中心](docs/images/status-center.svg)
+
+![今日概览与快速行动](docs/images/dashboard-today.svg)
 
 ## 侧边任务栏完整替代与安全恢复
 
@@ -153,7 +157,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.41 `
+  -Version 0.9.42 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -162,7 +166,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.41-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.42-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -179,7 +183,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.41 `
+  -Version 0.9.42 `
   -Dotnet8Path dotnet
 ```
 

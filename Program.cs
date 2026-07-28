@@ -42,7 +42,9 @@ public static class Program
                 StringComparison.OrdinalIgnoreCase);
         if (isUiSmokeTest)
         {
-            Environment.ExitCode = UiSmokeTestRunner.Run(args.Length > 1 ? args[1] : null);
+            Environment.ExitCode = UiSmokeTestRunner.Run(
+                args.Length > 1 ? args[1] : null,
+                args.Length > 2 ? args[2] : null);
             return;
         }
 

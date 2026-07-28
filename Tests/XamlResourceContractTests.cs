@@ -52,6 +52,41 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void Dashboard_IsReachableActionableAndNotPlaceholder()
+    {
+        string root = FindRepositoryRoot();
+        string view = File.ReadAllText(
+            Path.Combine(root, "Views", "DashboardView.xaml"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string mainViewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+
+        Assert.Contains("今日概览", mainWindow);
+        Assert.Contains(
+            "CommandParameter=\"Dashboard\"",
+            mainWindow);
+        Assert.Contains(
+            "DataType=\"{x:Type vm:DashboardViewModel}\"",
+            mainWindow);
+        Assert.Contains(
+            "case \"Dashboard\":",
+            mainViewModel);
+        Assert.Contains("PriorityTasks", view);
+        Assert.Contains("ActiveObjectives", view);
+        Assert.Contains("FocusLinearProgress", view);
+        Assert.Contains("CommandParameter=\"Pomodoro\"", view);
+        Assert.Contains("CommandParameter=\"AI\"", view);
+        Assert.DoesNotContain(
+            "Text=\"Dashboard\"",
+            view);
+        Assert.DoesNotContain("MaterialDesign", view);
+    }
+
+    [Fact]
     public void EveryViewResourceReference_IsDefinedGloballyOrLocally()
     {
         string root = FindRepositoryRoot();

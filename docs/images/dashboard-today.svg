@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1622"/>
+      <stop offset="1" stop-color="#233342"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#168de0"/>
+      <stop offset="1" stop-color="#006fc4"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="760" rx="30" fill="url(#bg)"/>
+  <circle cx="1100" cy="80" r="250" fill="#168de0" opacity=".12"/>
+  <circle cx="80" cy="730" r="260" fill="#5bd6d0" opacity=".07"/>
+
+  <text x="58" y="68" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="31" font-weight="600">下午好，把注意力放回当前目标</text>
+  <text x="58" y="101" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="15">7 月 28 日 星期二 · 更新于 15:20 · 数据仅来自本机 FocusPanel</text>
+  <rect x="1064" y="42" width="78" height="44" rx="11" fill="#324352"/>
+  <text x="1103" y="69" text-anchor="middle" fill="#e8eef6" font-family="Segoe UI, sans-serif" font-size="14">刷新</text>
+
+  <g filter="url(#shadow)">
+    <g transform="translate(58 132)">
+      <rect width="254" height="132" rx="16" fill="#7a273541" stroke="#38ffffff"/>
+      <text x="22" y="34" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="14">待办任务</text>
+      <text x="22" y="82" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="35" font-weight="600">7</text>
+      <text x="22" y="108" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">项仍需推进</text>
+    </g>
+    <g transform="translate(328 132)">
+      <rect width="254" height="132" rx="16" fill="#7a273541" stroke="#38ffffff"/>
+      <text x="22" y="34" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="14">今日专注</text>
+      <text x="22" y="82" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="35" font-weight="600">50</text>
+      <text x="22" y="108" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">分钟 · 2 轮</text>
+    </g>
+    <g transform="translate(598 132)">
+      <rect width="254" height="132" rx="16" fill="#7a273541" stroke="#38ffffff"/>
+      <text x="22" y="34" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="14">进行中 OKR</text>
+      <text x="22" y="82" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="35" font-weight="600">2</text>
+      <text x="22" y="108" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">个目标</text>
+    </g>
+    <g transform="translate(868 132)">
+      <rect width="274" height="132" rx="16" fill="#7a273541" stroke="#38ffffff"/>
+      <text x="22" y="34" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="14">已收纳</text>
+      <text x="22" y="82" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="35" font-weight="600">14</text>
+      <text x="22" y="108" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">个桌面项目</text>
+    </g>
+
+    <rect x="58" y="286" width="650" height="318" rx="18" fill="#7a273541" stroke="#38ffffff"/>
+    <text x="82" y="326" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="21" font-weight="600">下一步</text>
+    <text x="82" y="351" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">优先展示进行中和最近创建的任务</text>
+    <rect x="578" y="307" width="106" height="40" rx="10" fill="#344554"/>
+    <text x="631" y="332" text-anchor="middle" fill="#eef5fb" font-family="Segoe UI, sans-serif" font-size="13">全部任务</text>
+
+    <g transform="translate(82 374)">
+      <rect width="602" height="58" rx="12" fill="#4e33414f"/>
+      <text x="16" y="25" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="15" font-weight="600">完成发布版视觉检查</text>
+      <text x="16" y="46" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="12">FocusPanel 迭代 · 进行中</text>
+      <path d="M574 23l6 6-6 6" fill="none" stroke="#aeb5c8" stroke-width="2"/>
+    </g>
+    <g transform="translate(82 442)">
+      <rect width="602" height="58" rx="12" fill="#4e33414f"/>
+      <text x="16" y="25" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="15" font-weight="600">验证任务栏安全恢复</text>
+      <text x="16" y="46" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="12">稳定性 · 待处理</text>
+      <path d="M574 23l6 6-6 6" fill="none" stroke="#aeb5c8" stroke-width="2"/>
+    </g>
+    <g transform="translate(82 510)">
+      <rect width="602" height="58" rx="12" fill="#4e33414f"/>
+      <text x="16" y="25" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="15" font-weight="600">整理下一轮迭代目标</text>
+      <text x="16" y="46" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="12">产品规划 · 待处理</text>
+      <path d="M574 23l6 6-6 6" fill="none" stroke="#aeb5c8" stroke-width="2"/>
+    </g>
+
+    <rect x="726" y="286" width="416" height="318" rx="18" fill="#7a273541" stroke="#38ffffff"/>
+    <text x="750" y="326" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="21" font-weight="600">目标进展</text>
+    <text x="750" y="351" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">最近更新的进行中目标</text>
+    <text x="750" y="397" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="14">稳定替代原生任务栏体验</text>
+    <text x="1108" y="397" text-anchor="end" fill="#4ca6e8" font-family="Segoe UI, sans-serif" font-size="14">72%</text>
+    <rect x="750" y="411" width="358" height="7" rx="4" fill="#25323d"/>
+    <rect x="750" y="411" width="258" height="7" rx="4" fill="url(#accent)"/>
+    <text x="750" y="465" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="14">完成核心工作区 Fluent 化</text>
+    <text x="1108" y="465" text-anchor="end" fill="#4ca6e8" font-family="Segoe UI, sans-serif" font-size="14">88%</text>
+    <rect x="750" y="479" width="358" height="7" rx="4" fill="#25323d"/>
+    <rect x="750" y="479" width="315" height="7" rx="4" fill="url(#accent)"/>
+
+    <rect x="58" y="622" width="1084" height="84" rx="18" fill="#7a273541" stroke="#38ffffff"/>
+    <text x="82" y="657" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="19" font-weight="600">快速开始</text>
+    <text x="82" y="682" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">把概览变成行动，不在首页堆叠更多信息。</text>
+    <rect x="762" y="642" width="106" height="44" rx="11" fill="#344554"/>
+    <text x="815" y="669" text-anchor="middle" fill="#eef5fb" font-family="Segoe UI, sans-serif" font-size="14">开始专注</text>
+    <rect x="880" y="642" width="106" height="44" rx="11" fill="#344554"/>
+    <text x="933" y="669" text-anchor="middle" fill="#eef5fb" font-family="Segoe UI, sans-serif" font-size="14">整理桌面</text>
+    <rect x="998" y="642" width="120" height="44" rx="11" fill="url(#accent)"/>
+    <text x="1058" y="669" text-anchor="middle" fill="white" font-family="Segoe UI, sans-serif" font-size="14" font-weight="600">询问 AI</text>
+  </g>
+</svg>

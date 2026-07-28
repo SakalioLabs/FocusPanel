@@ -31,6 +31,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _systemStatusTimer;
     private readonly DispatcherTimer _taskSummaryTimer;
     private readonly DispatcherTimer _updateCheckTimer;
+    private DashboardViewModel? _dashboardViewModel;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
     private FileOrganizerViewModel? _fileOrganizerViewModel;
@@ -314,6 +315,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CloseTransientPanels();
         switch (destination)
         {
+            case "Dashboard":
+                if (_dashboardViewModel == null)
+                {
+                    _dashboardViewModel =
+                        new DashboardViewModel();
+                    _dashboardViewModel.NavigationRequested +=
+                        Dashboard_NavigationRequested;
+                }
+                CurrentViewModel = _dashboardViewModel;
+                CurrentSectionTitle = "今日概览";
+                _ = _dashboardViewModel.RefreshAsync();
+                break;
             case "Tasks":
                 _tasksViewModel ??= new TasksViewModel();
                 CurrentViewModel = _tasksViewModel;
@@ -829,6 +842,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     private void OnWindowSnapshotChanged(object? sender, EventArgs e) => RefreshTaskbarApps();
+    private void Dashboard_NavigationRequested(
+        string destination) =>
+        Navigate(destination);
+
     private void PomodoroViewModel_SessionCompleted(
         object? sender,
         PomodoroCompletedEventArgs e)
@@ -1000,6 +1017,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _tasksViewModel?.Dispose();
         _okrViewModel?.Dispose();
         _aiAssistantViewModel?.Dispose();
+        if (_dashboardViewModel != null)
+        {
+            _dashboardViewModel.NavigationRequested -=
+                Dashboard_NavigationRequested;
+            _dashboardViewModel.Dispose();
+        }
         if (_pomodoroViewModel != null)
         {
             _pomodoroViewModel.SessionCompleted -=

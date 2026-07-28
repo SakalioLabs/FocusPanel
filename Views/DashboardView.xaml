@@ -1,7 +1,298 @@
 <UserControl x:Class="FocusPanel.Views.DashboardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid>
-        <TextBlock Text="Dashboard" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
-    </Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="22,18,22,24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding Greeting}"
+                               FontSize="28"
+                               FontWeight="SemiBold"/>
+                    <StackPanel Margin="0,6,0,0"
+                                Orientation="Horizontal">
+                        <TextBlock Text="{Binding DateText}"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                        <TextBlock Text=" · "
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                        <TextBlock Text="{Binding StatusText}"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Style="{StaticResource FocusSecondaryButton}"
+                        MinWidth="82"
+                        Content="刷新"
+                        Command="{Binding RefreshCommand}"/>
+            </Grid>
+
+            <UniformGrid Columns="4"
+                         Margin="0,18,0,0">
+                <Border Style="{StaticResource FocusCard}"
+                        Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="待办任务"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                        <TextBlock Text="{Binding OpenTaskCount}"
+                                   Margin="0,5,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="项仍需推进"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource FocusCard}"
+                        Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="今日专注"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                        <TextBlock Text="{Binding FocusMinutesToday}"
+                                   Margin="0,5,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock FontSize="12"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}">
+                            <Run Text="分钟 · "/>
+                            <Run Text="{Binding FocusSessionCountToday}"/>
+                            <Run Text=" 轮"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource FocusCard}"
+                        Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="进行中 OKR"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                        <TextBlock Text="{Binding ActiveOkrCount}"
+                                   Margin="0,5,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="个目标"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource FocusCard}">
+                    <StackPanel>
+                        <TextBlock Text="已收纳"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                        <TextBlock Text="{Binding CollectedItemCount}"
+                                   Margin="0,5,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="个桌面项目"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource FocusCard}"
+                        Margin="0,0,8,0">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="下一步"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text="优先展示进行中和最近创建的任务"
+                                           Margin="0,3,0,0"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Style="{StaticResource FocusSecondaryButton}"
+                                    MinWidth="76"
+                                    Height="38"
+                                    Content="全部任务"
+                                    Command="{Binding NavigateCommand}"
+                                    CommandParameter="Tasks"/>
+                        </Grid>
+
+                        <ItemsControl Margin="0,12,0,0"
+                                      ItemsSource="{Binding PriorityTasks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,6"
+                                            Padding="11,9"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusSurfaceStrongBrush}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Margin="0,3,0,0"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource FocusMutedTextBrush}">
+                                                    <Run Text="{Binding ProjectName}"/>
+                                                    <Run Text=" · "/>
+                                                    <Run Text="{Binding Status}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="12,0,0,0"
+                                                       VerticalAlignment="Center"
+                                                       Text="&#xE76C;"
+                                                       Style="{StaticResource FocusIconText}"
+                                                       FontSize="14"
+                                                       Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Margin="0,14,0,8"
+                                   HorizontalAlignment="Center"
+                                   Text="暂无未完成任务，今天可以从新建一项开始。"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility"
+                                            Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasTasks}"
+                                                     Value="True">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1"
+                        Style="{StaticResource FocusCard}"
+                        Margin="8,0,0,0">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="目标进展"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text="最近更新的进行中目标"
+                                           Margin="0,3,0,0"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Style="{StaticResource FocusSecondaryButton}"
+                                    MinWidth="66"
+                                    Height="38"
+                                    Content="管理"
+                                    Command="{Binding NavigateCommand}"
+                                    CommandParameter="OKR"/>
+                        </Grid>
+
+                        <ItemsControl Margin="0,12,0,0"
+                                      ItemsSource="{Binding ActiveObjectives}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="10,0,0,0"
+                                                       Text="{Binding Progress, StringFormat={}{0:0}%}"
+                                                       Foreground="{DynamicResource FocusAccentBrightBrush}"/>
+                                        </Grid>
+                                        <ProgressBar Margin="0,6,0,0"
+                                                     Height="6"
+                                                     Minimum="0"
+                                                     Maximum="100"
+                                                     Value="{Binding Progress}"
+                                                     Style="{StaticResource FocusLinearProgress}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Margin="0,18,0,8"
+                                   HorizontalAlignment="Center"
+                                   Text="还没有进行中的 OKR。"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility"
+                                            Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasObjectives}"
+                                                     Value="True">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource FocusCard}"
+                    Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="快速开始"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="把概览变成行动，不在首页堆叠更多信息。"
+                                   Margin="0,3,0,0"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                    </StackPanel>
+                    <WrapPanel Grid.Column="1">
+                        <Button Style="{StaticResource FocusSecondaryButton}"
+                                Content="开始专注"
+                                Command="{Binding NavigateCommand}"
+                                CommandParameter="Pomodoro"/>
+                        <Button Style="{StaticResource FocusSecondaryButton}"
+                                Margin="8,1,0,1"
+                                Content="整理桌面"
+                                Command="{Binding NavigateCommand}"
+                                CommandParameter="Files"/>
+                        <Button Style="{StaticResource FocusPrimaryButton}"
+                                Margin="8,1,0,1"
+                                Content="询问 AI"
+                                Command="{Binding NavigateCommand}"
+                                CommandParameter="AI"/>
+                    </WrapPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
