@@ -6,10 +6,10 @@ public static class ShellAutoHidePolicy
         bool isDragging,
         bool isTransientInteractionActive,
         bool isCursorInside,
-        bool hasKeyboardFocus,
-        bool ignoreKeyboardFocus)
+        bool isInputFocusActive,
+        bool ignoreInputFocus)
         => !isDragging
             && !isTransientInteractionActive
             && !isCursorInside
-            && (ignoreKeyboardFocus || !hasKeyboardFocus);
+            && (ignoreInputFocus || !isInputFocusActive);
 }

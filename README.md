@@ -10,7 +10,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 - 主屏右缘显示一条 `3px` 白色运行指示条；它完全点击穿透。最后 `12` 个物理像素由无窗口监测器检测，停留约 `100ms` 唤出 `76px` 紧凑应用坞。
 - 点击搜索、桌面收纳、任务、番茄钟、OKR、AI 等入口后，工作区从右向左展开到约 `720px`。
-- 离开约 `300ms` 自动收起；搜索框或编辑控件持有焦点时保持展开，`Esc` 可关闭。
+- 离开约 `300ms` 自动收起；只有搜索框、密码框和下拉选择等输入控件持有焦点时保持展开，普通按钮或应用图标焦点不会锁住 Panel，`Esc` 可关闭。
 - 应用右键菜单、多窗口列表和桌面收纳的视图/新建/修复弹层打开时会锁住 Panel；菜单关闭并且鼠标离开后才恢复自动收起。
 - 桌面文件卡片只有移动距离超过 Windows 系统拖拽阈值后才开始拖动；靠近主内容区上下边缘时平滑滚动，移回中部、离开、取消、释放或完成放置后立即停止。
 - 独占或无边框全屏应用前台时默认停用鼠标热区。
@@ -189,7 +189,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.52 `
+  -Version 0.9.53 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -198,7 +198,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.52-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.53-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -217,7 +217,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.52 `
+  -Version 0.9.53 `
   -Dotnet8Path dotnet
 ```
 

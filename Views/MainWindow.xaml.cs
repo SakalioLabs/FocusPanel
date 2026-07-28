@@ -5,6 +5,7 @@ using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Animation;
@@ -42,7 +43,7 @@ public partial class MainWindow : Window
     private bool _hiddenToTray;
     private bool _isDesktopFileDragging;
     private bool _isHotZoneAvailable;
-    private bool _autoHideIgnoresKeyboardFocus;
+    private bool _autoHideIgnoresInputFocus;
     private int _transientInteractionDepth;
     private System.Windows.Point _pinnedDragStart;
 
@@ -77,8 +78,8 @@ public partial class MainWindow : Window
                 _isDesktopFileDragging,
                 _transientInteractionDepth > 0 || Mouse.Captured != null,
                 IsCursorInsideShell(),
-                ShellBorder.IsKeyboardFocusWithin,
-                _autoHideIgnoresKeyboardFocus);
+                IsInputFocusActive(),
+                _autoHideIgnoresInputFocus);
             if (!shouldHide)
             {
                 _autoHideTimer.Start();
@@ -95,7 +96,7 @@ public partial class MainWindow : Window
         Loaded += MainWindow_Loaded;
         SourceInitialized += MainWindow_SourceInitialized;
         Closing += MainWindow_Closing;
-        Deactivated += (_, _) => ScheduleAutoHide(220, ignoreKeyboardFocus: true);
+        Deactivated += (_, _) => ScheduleAutoHide(220, ignoreInputFocus: true);
         SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
         SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
     }
@@ -309,13 +310,13 @@ public partial class MainWindow : Window
 
     private void ScheduleAutoHide(
         int delayMilliseconds = 350,
-        bool ignoreKeyboardFocus = false)
+        bool ignoreInputFocus = false)
     {
         if (_isDesktopFileDragging)
             return;
 
         _autoHideTimer.Stop();
-        _autoHideIgnoresKeyboardFocus = ignoreKeyboardFocus;
+        _autoHideIgnoresInputFocus = ignoreInputFocus;
         _autoHideTimer.Interval = TimeSpan.FromMilliseconds(delayMilliseconds);
         _autoHideTimer.Start();
     }
@@ -323,7 +324,7 @@ public partial class MainWindow : Window
     private void Shell_MouseEnter(object sender, MouseEventArgs e)
     {
         _autoHideTimer.Stop();
-        _autoHideIgnoresKeyboardFocus = false;
+        _autoHideIgnoresInputFocus = false;
     }
 
     private void Shell_MouseLeave(object sender, MouseEventArgs e)
@@ -348,6 +349,21 @@ public partial class MainWindow : Window
             && cursor.Y >= rect.Top
             && cursor.Y < rect.Bottom;
     }
+
+    private static bool IsInputFocusActive()
+        => ShellFocusRetentionPolicy.ShouldRetainShell(
+            GetKeyboardFocusKind());
+
+    private static ShellKeyboardFocusKind GetKeyboardFocusKind()
+        => Keyboard.FocusedElement switch
+        {
+            TextBoxBase or PasswordBox =>
+                ShellKeyboardFocusKind.TextInput,
+            ComboBox or ComboBoxItem =>
+                ShellKeyboardFocusKind.SelectionInput,
+            null => ShellKeyboardFocusKind.None,
+            _ => ShellKeyboardFocusKind.Command
+        };
 
     private void CollapseSidebar_Click(object sender, RoutedEventArgs e)
     {
@@ -456,7 +472,7 @@ public partial class MainWindow : Window
     {
         _transientInteractionDepth++;
         _autoHideTimer.Stop();
-        _autoHideIgnoresKeyboardFocus = false;
+        _autoHideIgnoresInputFocus = false;
     }
 
     public void EndTransientInteraction()

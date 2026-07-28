@@ -16,8 +16,8 @@ public sealed class ShellAutoHidePolicyTests
         bool isDragging,
         bool transientInteraction,
         bool cursorInside,
-        bool keyboardFocus,
-        bool ignoreKeyboardFocus,
+        bool inputFocus,
+        bool ignoreInputFocus,
         bool expected)
     {
         Assert.Equal(
@@ -26,7 +26,7 @@ public sealed class ShellAutoHidePolicyTests
                 isDragging,
                 transientInteraction,
                 cursorInside,
-                keyboardFocus,
-                ignoreKeyboardFocus));
+                inputFocus,
+                ignoreInputFocus));
     }
 }

@@ -594,6 +594,12 @@ public sealed class XamlResourceContractTests
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
+        Assert.Contains("IsInputFocusActive()", mainWindowCode);
+        Assert.Contains("TextBoxBase or PasswordBox", mainWindowCode);
+        Assert.Contains("ComboBox or ComboBoxItem", mainWindowCode);
+        Assert.DoesNotContain(
+            "ShellBorder.IsKeyboardFocusWithin,\n",
+            mainWindowCode.Replace("\r\n", "\n"));
         Assert.Contains("Opened=\"TransientSurface_Opened\"", organizer);
         Assert.Contains("Closed=\"TransientSurface_Closed\"", organizer);
         Assert.Equal(
