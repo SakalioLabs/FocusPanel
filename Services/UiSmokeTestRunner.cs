@@ -26,6 +26,7 @@ internal static class UiSmokeTestRunner
         "FocusSurfaceStrongBrush",
         "FocusStrokeBrush",
         "FocusKeyboardFocusBrush",
+        "FocusAccentSoftBrush",
         "FocusContextMenu",
         "FocusMenuItem",
         "FocusMenuSeparator",
@@ -38,7 +39,9 @@ internal static class UiSmokeTestRunner
         "FocusLinearProgress",
         "FocusTextBox",
         "FocusSearchBox",
-        "FocusPasswordBox"
+        "FocusPasswordBox",
+        "FocusToggleButton",
+        "FocusSegmentRadioButton"
     };
 
     public static int Run(
@@ -99,6 +102,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentTextInputs(
+                results,
+                failures);
+            CheckFluentSelectionControls(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -1099,6 +1105,95 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"Fluent 输入控件加载失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentSelectionControls(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var toggle = new ToggleButton
+            {
+                Content = "视图选项",
+                IsChecked = true,
+                Style =
+                    (Style)Application.Current.FindResource(
+                        "FocusToggleButton")
+            };
+            toggle.ApplyTemplate();
+            toggle.Measure(new Size(180, 80));
+            toggle.Arrange(new Rect(0, 0, 160, 44));
+            toggle.UpdateLayout();
+            if (toggle.Template.FindName(
+                    "ToggleChrome",
+                    toggle) is not Border toggleChrome
+                || toggleChrome.CornerRadius.TopLeft <= 0
+                || !ReferenceEquals(
+                    toggleChrome.Background,
+                    Application.Current.FindResource(
+                        "FocusAccentSoftBrush"))
+                || !ReferenceEquals(
+                    toggleChrome.BorderBrush,
+                    Application.Current.FindResource(
+                        "FocusAccentBrightBrush")))
+            {
+                failures.Add(
+                    "Fluent 切换按钮缺少单层圆角或动态选中状态");
+                return;
+            }
+
+            toggle.IsEnabled = false;
+            toggle.UpdateLayout();
+            if (toggleChrome.Opacity > 0.4)
+            {
+                failures.Add(
+                    "Fluent 切换按钮未显示明确禁用状态");
+                return;
+            }
+
+            var segment = new RadioButton
+            {
+                Content = "看板",
+                IsChecked = true,
+                Style =
+                    (Style)Application.Current.FindResource(
+                        "FocusSegmentRadioButton")
+            };
+            segment.ApplyTemplate();
+            segment.Measure(new Size(140, 70));
+            segment.Arrange(new Rect(0, 0, 96, 38));
+            segment.UpdateLayout();
+            if (segment.Template.FindName(
+                    "SegmentChrome",
+                    segment) is not Border segmentChrome
+                || segment.Template.FindName(
+                    "SegmentSelectionIndicator",
+                    segment) is not Border indicator
+                || segmentChrome.CornerRadius.TopLeft <= 0
+                || indicator.Visibility != Visibility.Visible
+                || !ReferenceEquals(
+                    segmentChrome.Background,
+                    Application.Current.FindResource(
+                        "FocusAccentSoftBrush"))
+                || !ReferenceEquals(
+                    segment.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush")))
+            {
+                failures.Add(
+                    "Fluent 分段选择缺少柔和表面、强调标记或动态文字");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 切换与分段选择动态强调状态");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 选择控件加载失败：{ex}");
         }
     }
 

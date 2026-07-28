@@ -22,57 +22,26 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:BindingProxy x:Key="VmProxy" Data="{Binding}"/>
 
-        <SolidColorBrush x:Key="OrganizerSelectedBrush" Color="#26006FC4"/>
-
         <Style x:Key="ToolbarButtonStyle"
                TargetType="Button"
                BasedOn="{StaticResource FocusIconButton}">
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Margin" Value="2,0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
         <Style x:Key="ToolbarToggleButtonStyle"
-               TargetType="ToggleButton">
+               TargetType="ToggleButton"
+               BasedOn="{StaticResource FocusToggleButton}">
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Margin" Value="2,0"/>
-            <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border x:Name="Chrome"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="{StaticResource FocusControlCornerRadius}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Chrome"
-                                        Property="Background"
-                                        Value="{DynamicResource FocusHoverBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Chrome"
-                                        Property="Background"
-                                        Value="{DynamicResource FocusSurfaceSoftBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Chrome" Property="Opacity" Value="0.72"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
         <Style x:Key="OrganizerChoiceChipStyle"
@@ -117,8 +86,8 @@
                     <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
                 </Trigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource OrganizerSelectedBrush}"/>
-                    <Setter Property="BorderBrush" Value="#FF007AFF"/>
+                    <Setter Property="Background" Value="{DynamicResource FocusAccentSoftBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource FocusAccentBrightBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -138,8 +107,8 @@
                     <Setter Property="Background" Value="{DynamicResource FocusHoverBrush}"/>
                 </Trigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource OrganizerSelectedBrush}"/>
-                    <Setter Property="BorderBrush" Value="#FF007AFF"/>
+                    <Setter Property="Background" Value="{DynamicResource FocusAccentSoftBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource FocusAccentBrightBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>

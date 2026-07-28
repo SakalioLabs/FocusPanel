@@ -14,6 +14,7 @@
 
     <SolidColorBrush x:Key="FocusAccentBrush" Color="{StaticResource FocusAccentColor}"/>
     <SolidColorBrush x:Key="FocusAccentBrightBrush" Color="{StaticResource FocusAccentBrightColor}"/>
+    <SolidColorBrush x:Key="FocusAccentSoftBrush" Color="#2E006FC4"/>
     <SolidColorBrush x:Key="FocusTextBrush" Color="{StaticResource FocusTextColor}"/>
     <SolidColorBrush x:Key="FocusMutedTextBrush" Color="{StaticResource FocusMutedTextColor}"/>
     <SolidColorBrush x:Key="FocusShellTintBrush" Color="{StaticResource FocusShellTintColor}"/>
@@ -109,6 +110,74 @@
         <Setter Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
     </Style>
 
+    <Style x:Key="FocusToggleButton"
+           TargetType="ToggleButton">
+        <Setter Property="MinWidth" Value="44"/>
+        <Setter Property="MinHeight" Value="44"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FocusVisualStyle"
+                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="ToggleChrome"
+                            MinWidth="{TemplateBinding MinWidth}"
+                            MinHeight="{TemplateBinding MinHeight}"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          RecognizesAccessKey="True"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter TargetName="ToggleChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked"
+                                 Value="True">
+                            <Setter TargetName="ToggleChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusAccentSoftBrush}"/>
+                            <Setter TargetName="ToggleChrome"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed"
+                                 Value="True">
+                            <Setter TargetName="ToggleChrome"
+                                    Property="Opacity"
+                                    Value="0.72"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="ToggleChrome"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                            <Setter Property="Cursor"
+                                    Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="FocusSegmentRadioButton"
            TargetType="RadioButton">
         <Setter Property="MinHeight" Value="38"/>
@@ -117,34 +186,72 @@
         <Setter Property="Margin" Value="2,0"/>
         <Setter Property="Foreground"
                 Value="{DynamicResource FocusMutedTextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FocusVisualStyle"
                 Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Chrome"
-                            Background="Transparent"
-                            CornerRadius="{StaticResource FocusControlCornerRadius}">
-                        <ContentPresenter HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"/>
+                    <Border x:Name="SegmentChrome"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <Grid>
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                            <Border x:Name="SegmentSelectionIndicator"
+                                    Height="3"
+                                    Margin="10,0,10,3"
+                                    VerticalAlignment="Bottom"
+                                    Background="{DynamicResource FocusAccentBrightBrush}"
+                                    CornerRadius="2"
+                                    Visibility="Collapsed"/>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver"
                                  Value="True">
-                            <Setter TargetName="Chrome"
+                            <Setter TargetName="SegmentChrome"
                                     Property="Background"
                                     Value="{DynamicResource FocusHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsChecked"
                                  Value="True">
-                            <Setter TargetName="Chrome"
+                            <Setter TargetName="SegmentChrome"
                                     Property="Background"
-                                    Value="{DynamicResource FocusAccentBrush}"/>
+                                    Value="{DynamicResource FocusAccentSoftBrush}"/>
+                            <Setter TargetName="SegmentChrome"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource FocusStrokeBrush}"/>
+                            <Setter TargetName="SegmentSelectionIndicator"
+                                    Property="Visibility"
+                                    Value="Visible"/>
                             <Setter Property="Foreground"
-                                    Value="White"/>
+                                    Value="{DynamicResource FocusTextBrush}"/>
                             <Setter Property="FontWeight"
                                     Value="SemiBold"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed"
+                                 Value="True">
+                            <Setter TargetName="SegmentChrome"
+                                    Property="Opacity"
+                                    Value="0.72"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="SegmentChrome"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                            <Setter Property="Cursor"
+                                    Value="Arrow"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -112,6 +112,9 @@ public static class ThemeService
         SetBrush("FocusHoverBrush", dark ? "#18FFFFFF" : "#120B1220");
         SetBrush("FocusAccentBrush", accent);
         SetBrush("FocusAccentBrightBrush", accentBright);
+        Color accentSoft = accent;
+        accentSoft.A = dark ? (byte)0x2E : (byte)0x24;
+        SetBrush("FocusAccentSoftBrush", accentSoft);
         SetBrush(
             "FocusKeyboardFocusBrush",
             SystemParameters.HighContrast

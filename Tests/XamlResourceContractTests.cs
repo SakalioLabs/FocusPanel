@@ -1392,6 +1392,77 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void ToggleAndSegmentSelections_UseDynamicAccentStates()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string themeService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ThemeService.cs"));
+        string organizer = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FileOrganizerView.xaml"));
+
+        Assert.Contains(
+            "x:Key=\"FocusAccentSoftBrush\"",
+            theme);
+        Assert.Contains(
+            "SetBrush(\"FocusAccentSoftBrush\", accentSoft)",
+            themeService);
+        Assert.Contains(
+            "x:Key=\"FocusToggleButton\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"ToggleChrome\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"SegmentChrome\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"SegmentSelectionIndicator\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusAccentSoftBrush}\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusToggleButton}\"",
+            organizer);
+        Assert.Contains(
+            "<Setter Property=\"MinWidth\" Value=\"0\"/>",
+            organizer);
+        Assert.Contains(
+            "<Setter Property=\"MinHeight\" Value=\"0\"/>",
+            organizer);
+        Assert.Equal(
+            5,
+            Regex.Matches(
+                organizer,
+                "Style=\"\\{StaticResource ToolbarToggleButtonStyle\\}\"").Count);
+        Assert.DoesNotContain(
+            "OrganizerSelectedBrush",
+            organizer);
+        Assert.DoesNotContain(
+            "#FF007AFF",
+            organizer);
+        Assert.True(
+            Regex.Matches(
+                organizer,
+                "FocusAccentSoftBrush").Count >= 2);
+        Assert.True(
+            Regex.Matches(
+                organizer,
+                "FocusAccentBrightBrush").Count >= 2);
+    }
+
+    [Fact]
     public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
     {
         string root = FindRepositoryRoot();

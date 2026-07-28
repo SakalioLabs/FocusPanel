@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.73 - 2026-07-29
+
+- 修复任务视图分段按钮使用整块高饱和蓝色、桌面收纳工具栏 ToggleButton 复制弱化模板，以及文件选中态硬编码 `#26006FC4/#FF007AFF`、无法跟随 Windows 强调色的问题。
+- 新增动态 `FocusAccentSoftBrush`；`ThemeService` 从当前 Windows 强调色生成深色/浅色对应透明度，主题切换或系统强调色变化后同步更新。
+- 新增通用 `FocusToggleButton`：单层圆角 Chrome、柔和选中背景、动态强调描边、悬停、按下、禁用和键盘焦点状态完整；收纳页 5 个工具栏开关改为继承该基类。
+- `FocusSegmentRadioButton` 改为低饱和选中表面、动态文字和底部强调标记，不再用整块实色蓝表达列表/看板/字段选择；补齐按下和禁用状态。
+- 收纳文件网格与列表选中态统一使用 `FocusAccentSoftBrush` 和 `FocusAccentBrightBrush`，移除页面内静态颜色资源。
+- UI 冒烟真实创建已选及禁用 ToggleButton、已选 RadioButton，验证圆角、动态资源、底部标记和状态透明度；资源契约覆盖收纳页全部 5 个开关。
+- README 新增统一 Fluent 选择状态图。
+
 ## v0.9.72 - 2026-07-29
 
 - 修复搜索、任务、OKR、桌面重命名和 AI 输入框虽然已有圆角表面，但文本选择仍可能使用系统蓝色、只读/禁用状态不清晰、键盘焦点叠加额外系统焦点框的问题。
