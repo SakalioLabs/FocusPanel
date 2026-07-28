@@ -23,6 +23,35 @@ public sealed class XamlResourceContractTests
         RegexOptions.Compiled);
 
     [Fact]
+    public void AiAssistant_IsChineseFluentAndPrivacyExplicit()
+    {
+        string root = FindRepositoryRoot();
+        string view = File.ReadAllText(
+            Path.Combine(root, "Views", "AIAssistantView.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "AIAssistantViewModel.cs"));
+        string mainViewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.Contains("AI 助手", view);
+        Assert.Contains("FocusCard", view);
+        Assert.Contains("OpenAI API 配置", view);
+        Assert.Contains("不读取文件内容", view);
+        Assert.Contains("IncludeLocalContext", viewModel);
+        Assert.Contains("StopCommand", view);
+        Assert.Contains(
+            "_aiAssistantViewModel?.Dispose()",
+            mainViewModel);
+        Assert.DoesNotContain("MaterialDesign", view);
+        Assert.DoesNotContain(
+            "Text=\"AI Assistant\"",
+            view);
+    }
+
+    [Fact]
     public void EveryViewResourceReference_IsDefinedGloballyOrLocally()
     {
         string root = FindRepositoryRoot();

@@ -999,6 +999,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _appCatalog.CatalogChanged -= OnCatalogChanged;
         _tasksViewModel?.Dispose();
         _okrViewModel?.Dispose();
+        _aiAssistantViewModel?.Dispose();
         if (_pomodoroViewModel != null)
         {
             _pomodoroViewModel.SessionCompleted -=

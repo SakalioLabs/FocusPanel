@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#08131f"/>
+      <stop offset="1" stop-color="#172a39"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#168de0"/>
+      <stop offset="1" stop-color="#006fc4"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="700" rx="28" fill="url(#bg)"/>
+  <circle cx="1050" cy="90" r="210" fill="#168de0" opacity=".13"/>
+  <circle cx="120" cy="660" r="230" fill="#5bd6d0" opacity=".08"/>
+
+  <text x="62" y="68" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="29" font-weight="600">隐私优先的 AI 助手</text>
+  <text x="62" y="101" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="16">默认不读取本地数据 · 请求可随时停止 · Key 由 Windows DPAPI 保护</text>
+
+  <g filter="url(#shadow)">
+    <rect x="58" y="134" width="780" height="496" rx="20" fill="#a01e2935" stroke="#42ffffff"/>
+    <rect x="86" y="162" width="726" height="90" rx="14" fill="#5b33414f" stroke="#2fffffff"/>
+    <text x="108" y="192" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="16" font-weight="600">OpenAI API 配置</text>
+    <text x="108" y="218" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">已保存的 API Key 不回显；更换时输入新值</text>
+    <rect x="580" y="180" width="112" height="44" rx="10" fill="#31404e"/>
+    <text x="636" y="207" text-anchor="middle" fill="#dce7f3" font-family="Segoe UI, sans-serif" font-size="13">gpt-5.6-sol</text>
+    <rect x="702" y="180" width="88" height="44" rx="10" fill="url(#accent)"/>
+    <text x="746" y="207" text-anchor="middle" fill="white" font-family="Segoe UI, sans-serif" font-size="14" font-weight="600">保存</text>
+
+    <rect x="106" y="284" width="470" height="78" rx="14" fill="#374554"/>
+    <text x="126" y="314" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="13" font-weight="600">Focus AI  ·  14:32</text>
+    <text x="126" y="342" fill="#e8eef6" font-family="Segoe UI, sans-serif" font-size="15">先完成影响最大的任务，再安排一轮 25 分钟专注。</text>
+
+    <rect x="360" y="382" width="426" height="78" rx="14" fill="url(#accent)"/>
+    <text x="380" y="412" fill="white" font-family="Segoe UI, sans-serif" font-size="13" font-weight="600">你  ·  14:33</text>
+    <text x="380" y="440" fill="white" font-family="Segoe UI, sans-serif" font-size="15">帮我把今天的重点拆成三个可执行步骤。</text>
+
+    <rect x="86" y="494" width="726" height="108" rx="14" fill="#512c3946" stroke="#28ffffff"/>
+    <text x="108" y="526" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="14">输入问题…</text>
+    <circle cx="115" cy="572" r="8" fill="#168de0"/>
+    <text x="134" y="577" fill="#d7e2ed" font-family="Segoe UI, sans-serif" font-size="13">附带任务、OKR 与近 7 天专注摘要</text>
+    <rect x="704" y="548" width="86" height="40" rx="10" fill="url(#accent)"/>
+    <text x="747" y="573" text-anchor="middle" fill="white" font-family="Segoe UI, sans-serif" font-size="14" font-weight="600">发送</text>
+  </g>
+
+  <g transform="translate(886 158)">
+    <rect width="256" height="134" rx="18" fill="#6a253441" stroke="#36ffffff"/>
+    <circle cx="36" cy="38" r="18" fill="#123f5f"/>
+    <path d="M28 38l6 6 11-13" fill="none" stroke="#5bd6d0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="66" y="35" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="16" font-weight="600">明确授权</text>
+    <text x="24" y="72" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">本地摘要默认关闭</text>
+    <text x="24" y="96" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">不会读取文件内容或路径</text>
+  </g>
+  <g transform="translate(886 318)">
+    <rect width="256" height="134" rx="18" fill="#6a253441" stroke="#36ffffff"/>
+    <circle cx="36" cy="38" r="18" fill="#123f5f"/>
+    <path d="M30 38h12M36 32v12" stroke="#4ca6e8" stroke-width="3" stroke-linecap="round"/>
+    <text x="66" y="35" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="16" font-weight="600">只读建议</text>
+    <text x="24" y="72" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">不直接修改任务或 OKR</text>
+    <text x="24" y="96" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">不执行系统或付费操作</text>
+  </g>
+  <g transform="translate(886 478)">
+    <rect width="256" height="134" rx="18" fill="#6a253441" stroke="#36ffffff"/>
+    <circle cx="36" cy="38" r="18" fill="#123f5f"/>
+    <rect x="29" y="31" width="14" height="15" rx="3" fill="none" stroke="#f4c96b" stroke-width="2"/>
+    <path d="M32 31v-3a4 4 0 018 0v3" fill="none" stroke="#f4c96b" stroke-width="2"/>
+    <text x="66" y="35" fill="#f5f7ff" font-family="Segoe UI, sans-serif" font-size="16" font-weight="600">当前用户加密</text>
+    <text x="24" y="72" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">Windows DPAPI 保护 API Key</text>
+    <text x="24" y="96" fill="#aeb5c8" font-family="Segoe UI, sans-serif" font-size="13">保存后立即清空输入框</text>
+  </g>
+</svg>
