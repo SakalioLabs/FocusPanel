@@ -635,69 +635,81 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void OpenQuickSettings()
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenQuickSettings(),
             "无法唤起 Windows 快捷设置，请使用 Win+A。");
 
     [RelayCommand]
     private void OpenNotifications()
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenNotifications(),
             "无法唤起 Windows 通知中心，请使用 Win+N。");
 
     [RelayCommand]
     private void OpenInputSwitcher()
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenInputSwitcher(),
             "无法唤起输入法切换器，请使用 Win+Space。");
 
     [RelayCommand]
     private void OpenStartMenu()
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenStartMenu(),
             "无法唤起开始菜单，请按 Windows 键。");
 
     [RelayCommand]
     private void OpenTaskView()
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenTaskView(),
             "无法唤起任务视图，请使用 Win+Tab。");
 
     [RelayCommand]
     private void OpenWindowsSearch()
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenWindowsSearch(),
             "无法唤起 Windows 搜索，请使用 Win+S。");
 
     [RelayCommand]
     private void OpenWidgets()
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenWidgets(),
             "无法唤起 Windows 小组件，请使用 Win+W。");
 
     [RelayCommand]
     private void OpenRunDialog()
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenRunDialog(),
             "无法唤起运行对话框，请使用 Win+R。");
 
     [RelayCommand]
     private void OpenManagementTool(SystemManagementTool tool)
-        => SetSystemActionResult(
+        => CompleteSystemAction(
             _systemStatus.OpenManagementTool(tool),
             "无法打开所选 Windows 管理工具。当前账户权限或系统版本可能不支持该入口。");
 
     [RelayCommand]
-    private void OpenPowerSettings() => _systemStatus.OpenPowerSettings();
+    private void OpenPowerSettings()
+        => CompleteSystemAction(
+            _systemStatus.OpenPowerSettings(),
+            "无法打开 Windows 电源设置。");
 
     [RelayCommand]
-    private void ShowDesktop() => _systemStatus.ShowDesktop();
+    private void ShowDesktop()
+        => CompleteSystemAction(
+            _systemStatus.ShowDesktop(),
+            "无法显示桌面，请使用 Win+D。");
 
     [RelayCommand]
-    private void LockComputer() => _systemStatus.Lock();
+    private void LockComputer()
+        => CompleteSystemAction(
+            _systemStatus.Lock(),
+            "Windows 拒绝锁定当前会话，请使用 Win+L。");
 
     [RelayCommand]
-    private void SleepComputer() => _systemStatus.Sleep();
+    private void SleepComputer()
+        => CompleteSystemAction(
+            _systemStatus.Sleep(),
+            "Windows 拒绝进入睡眠，当前电源策略可能不支持该操作。");
 
     [RelayCommand]
     private void RestartComputer()
@@ -705,7 +717,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (MessageBox.Show("确定要立即重启电脑吗？", "重启电脑", MessageBoxButton.YesNo, MessageBoxImage.Warning)
             == MessageBoxResult.Yes)
         {
-            _systemStatus.Restart();
+            CompleteSystemAction(
+                _systemStatus.Restart(),
+                "无法启动系统重启，当前账户权限或系统策略可能阻止了操作。");
         }
     }
 
@@ -715,7 +729,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (MessageBox.Show("确定要立即关闭电脑吗？", "关闭电脑", MessageBoxButton.YesNo, MessageBoxImage.Warning)
             == MessageBoxResult.Yes)
         {
-            _systemStatus.Shutdown();
+            CompleteSystemAction(
+                _systemStatus.Shutdown(),
+                "无法启动系统关机，当前账户权限或系统策略可能阻止了操作。");
         }
     }
 
@@ -1123,8 +1139,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsPowerMenuOpen = false;
     }
 
-    private void SetSystemActionResult(bool succeeded, string error)
-        => SystemActionMessage = succeeded ? string.Empty : error;
+    private void CompleteSystemAction(bool succeeded, string error)
+    {
+        SystemActionMessage = succeeded ? string.Empty : error;
+        CloseTransientPanels();
+        if (!succeeded)
+            IsStatusCenterOpen = true;
+    }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> destination, System.Collections.Generic.IEnumerable<T> source)
     {

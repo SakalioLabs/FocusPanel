@@ -315,6 +315,11 @@
                                 <TextBlock Text="{Binding ReplacementStatus}" Margin="0,5,0,12" Foreground="{DynamicResource FocusMutedTextBrush}"/>
                                 <TextBlock Text="{Binding ReplacementError}" Margin="0,0,0,10"
                                            Foreground="{DynamicResource FocusDangerBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SystemActionMessage}"
+                                           Margin="0,0,0,10"
+                                           Foreground="{DynamicResource FocusDangerBrush}"
+                                           TextWrapping="Wrap"
+                                           AutomationProperties.LiveSetting="Assertive"/>
                                 <Button Style="{StaticResource FocusSecondaryButton}" Content="重新接管任务栏"
                                         Command="{Binding EnableReplacementCommand}"
                                         Visibility="{Binding HasReplacementWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
@@ -327,7 +332,7 @@
                                         <TextBlock Text="{Binding NetworkDisplayName}" FontWeight="SemiBold"/>
                                         <TextBlock Text="{Binding NetworkDetail}" Foreground="{DynamicResource FocusMutedTextBrush}"/>
                                     </StackPanel>
-                                    <Button Grid.Column="2" Style="{StaticResource FocusSecondaryButton}" Content="网络" Command="{Binding OpenQuickSettingsCommand}"/>
+                                    <Button Grid.Column="2" Style="{StaticResource FocusSecondaryButton}" Content="快捷设置" Command="{Binding OpenQuickSettingsCommand}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/></Grid.ColumnDefinitions>

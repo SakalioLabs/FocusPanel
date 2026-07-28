@@ -290,6 +290,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains("LockComputerCommand", mainWindow);
         Assert.Contains("SleepComputerCommand", mainWindow);
         Assert.Contains("ShowDesktopCommand", mainWindow);
+        Assert.Contains("Text=\"{Binding SystemActionMessage}\"", mainWindow);
+        Assert.Contains("Content=\"快捷设置\"", mainWindow);
         Assert.Contains("Visibility=\"{Binding IsCalendarOpen", mainWindow);
         Assert.Contains("Visibility=\"{Binding IsStatusCenterOpen", mainWindow);
         Assert.Contains("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
@@ -301,6 +303,19 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("ms-settings:network-status", systemStatus);
         Assert.DoesNotContain("ms-settings:notifications", systemStatus);
         Assert.DoesNotContain("ms-settings:typing", systemStatus);
+
+        string statusContract = File.ReadAllText(
+            Path.Combine(root, "Services", "ISystemStatusService.cs"));
+        Assert.Contains("bool ShowDesktop()", statusContract);
+        Assert.Contains("bool Lock()", statusContract);
+        Assert.Contains("bool Sleep()", statusContract);
+        Assert.Contains("bool Restart()", statusContract);
+        Assert.Contains("bool Shutdown()", statusContract);
+
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+        Assert.Contains("CompleteSystemAction(", viewModel);
+        Assert.Contains("IsStatusCenterOpen = true", viewModel);
     }
 
     [Fact]

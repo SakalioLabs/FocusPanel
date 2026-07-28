@@ -275,17 +275,27 @@ public sealed class SystemStatusService : ISystemStatusService
         return Process.Start(startInfo);
     }
 
-    public void OpenPowerSettings() => OpenSystemUri("ms-settings:powersleep");
+    public bool OpenPowerSettings() =>
+        SystemActionExecution.TryStart(
+            () => OpenSystemUri("ms-settings:powersleep"));
 
-    public void ShowDesktop()
-    {
-        if (!TrySendWindowsShortcut(WindowsShellAction.ShowDesktop))
-            NativeMethods.ShowDesktopFallback();
-    }
-    public void Lock() => NativeMethods.LockWorkStation();
-    public void Sleep() => NativeMethods.SetSuspendState(false, false, false);
-    public void Restart() => StartShutdown("/r /t 0");
-    public void Shutdown() => StartShutdown("/s /t 0");
+    public bool ShowDesktop() =>
+        SystemActionExecution.TryWithFallback(
+            () => TrySendWindowsShortcut(WindowsShellAction.ShowDesktop),
+            NativeMethods.ShowDesktopFallback);
+
+    public bool Lock() =>
+        SystemActionExecution.Try(NativeMethods.LockWorkStation);
+
+    public bool Sleep() =>
+        SystemActionExecution.Try(
+            () => NativeMethods.SetSuspendState(false, false, false));
+
+    public bool Restart() =>
+        SystemActionExecution.TryStart(() => StartShutdown("/r /t 0"));
+
+    public bool Shutdown() =>
+        SystemActionExecution.TryStart(() => StartShutdown("/s /t 0"));
 
     private IAudioEndpointVolume? GetDefaultAudioEndpoint()
     {
@@ -542,20 +552,27 @@ public sealed class SystemStatusService : ISystemStatusService
         [DllImport("user32.dll")]
         internal static extern uint SendInput(uint inputCount, Input[] inputs, int inputSize);
 
-        internal static void ShowDesktopFallback()
+        internal static bool ShowDesktopFallback()
         {
             Type? shellType = Type.GetTypeFromProgID("Shell.Application");
             if (shellType == null)
-                return;
+                return false;
             object? shell = Activator.CreateInstance(shellType);
-            shellType.InvokeMember(
-                "ToggleDesktop",
-                System.Reflection.BindingFlags.InvokeMethod,
-                null,
-                shell,
-                null);
-            if (shell != null && Marshal.IsComObject(shell))
-                Marshal.FinalReleaseComObject(shell);
+            try
+            {
+                shellType.InvokeMember(
+                    "ToggleDesktop",
+                    System.Reflection.BindingFlags.InvokeMethod,
+                    null,
+                    shell,
+                    null);
+                return true;
+            }
+            finally
+            {
+                if (shell != null && Marshal.IsComObject(shell))
+                    Marshal.FinalReleaseComObject(shell);
+            }
         }
 
         [DllImport("user32.dll")]
