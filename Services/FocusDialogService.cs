@@ -58,6 +58,13 @@ public static class FocusDialogService
                 WindowStartupLocation.CenterScreen;
         }
 
+        IFocusDialogInteractionHost? shell =
+            application.Windows
+                .OfType<MainWindow>()
+                .FirstOrDefault(window =>
+                    window.IsVisible);
+        using FocusDialogInteractionLease interaction =
+            FocusDialogInteractionLease.Enter(shell);
         dialog.ShowDialog();
         return dialog.Result;
     }

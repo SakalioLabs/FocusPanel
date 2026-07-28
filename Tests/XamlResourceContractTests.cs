@@ -326,6 +326,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "FocusDialogService.cs"));
+        string mainWindowCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
         string organizer = File.ReadAllText(
             Path.Combine(
                 root,
@@ -352,12 +357,83 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Dispatcher.CheckAccess()",
             service);
+        Assert.Contains(
+            "FocusDialogInteractionLease.Enter(shell)",
+            service);
+        Assert.Contains(
+            "IFocusDialogInteractionHost",
+            mainWindowCode);
         Assert.DoesNotContain(
             "Rescue Desktop",
             organizer);
         Assert.DoesNotContain(
             "Failed to insert image",
             tasks);
+    }
+
+    [Fact]
+    public void CompositeButtons_AreNamedAndViewSurfacesUseGeometryTokens()
+    {
+        string root = FindRepositoryRoot();
+        XNamespace presentation =
+            "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var unnamed = new List<string>();
+        var hardCodedCorners = new List<string>();
+
+        foreach (string path in Directory.GetFiles(
+                     Path.Combine(root, "Views"),
+                     "*.xaml",
+                     SearchOption.TopDirectoryOnly))
+        {
+            XDocument document = XDocument.Load(path);
+            foreach (XElement button in document.Descendants(
+                         presentation + "Button"))
+            {
+                bool hasDirectLabel =
+                    button.Attribute("Content") != null
+                    || button.Attribute("ToolTip") != null
+                    || button.Attributes().Any(
+                        attribute =>
+                            attribute.Name.LocalName
+                                == "AutomationProperties.Name");
+                if (!hasDirectLabel)
+                {
+                    unnamed.Add(
+                        Path.GetFileName(path));
+                }
+            }
+
+            foreach (XElement element in document.Descendants())
+            {
+                string? corner =
+                    (string?)element.Attribute(
+                        "CornerRadius");
+                if (corner == null
+                    || corner.Contains(
+                        "Resource",
+                        StringComparison.Ordinal)
+                    || corner is "0" or "2")
+                {
+                    continue;
+                }
+
+                hardCodedCorners.Add(
+                    $"{Path.GetFileName(path)}: {corner}");
+            }
+        }
+
+        Assert.True(
+            unnamed.Count == 0,
+            "复合按钮缺少读屏名称："
+            + string.Join(
+                ", ",
+                unnamed.Distinct()));
+        Assert.True(
+            hardCodedCorners.Count == 0,
+            "页面表面绕过统一圆角令牌："
+            + string.Join(
+                ", ",
+                hardCodedCorners));
     }
 
     [Fact]

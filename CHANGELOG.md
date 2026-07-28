@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.79 - 2026-07-29
+
+- 修复 0.9.78 Fluent 模态窗口成为前台后，主 Panel 收到 `Deactivated` 并可能在 220ms 后自动收起的问题；确认过程现在始终保留背后的工作区上下文。
+- 新增可测试的 `IFocusDialogInteractionHost` 与幂等 `FocusDialogInteractionLease`，对话框显示前进入现有 transient-interaction 锁，确认、取消、关闭或异常退出时均通过 `Dispose` 成对释放。
+- 覆盖正常进入/退出、重复释放和无宿主三种生命周期测试，避免对话框关闭后 Panel 永久保持展开或交互深度变负。
+- 应用搜索整行启动按钮和 Focus 中心“最近使用”复合按钮新增动态 UI Automation 名称，图标与绑定文字组合不再对读屏暴露为空名称。
+- OKR 同步状态图标和任务看板数量徽标移除页面硬编码 `12/8` 圆角，统一引用 `FocusControlCornerRadius`。
+- 新增全视图契约：复合 Button 必须提供 Content、ToolTip 或 AutomationProperties.Name；除 DWM 客户区零圆角与 2px 状态标记外，页面不得绕过共享几何令牌。
+
 ## v0.9.78 - 2026-07-29
 
 - 新增统一 `FocusDialogWindow` 与 `FocusDialogService`，任务、OKR、桌面收纳、任务栏接管、数据库恢复、系统电源和自动更新等运行期确认及错误提示不再跳回白底直角的 WPF `MessageBox`。

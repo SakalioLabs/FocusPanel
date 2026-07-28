@@ -236,7 +236,7 @@
                                             <Border Grid.Column="1"
                                                     Padding="7,2"
                                                     Background="{DynamicResource FocusSurfaceStrongBrush}"
-                                                    CornerRadius="8">
+                                                    CornerRadius="{StaticResource FocusControlCornerRadius}">
                                                 <TextBlock Text="{Binding Tasks.Count}"
                                                            Style="{StaticResource FocusMetaText}"/>
                                             </Border>

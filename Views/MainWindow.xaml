@@ -186,6 +186,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 <Button Grid.ColumnSpan="2"
                                                         Style="{StaticResource FocusRowButton}"
+                                                        AutomationProperties.Name="{Binding DisplayName, StringFormat=启动 {0}}"
                                                         HorizontalContentAlignment="Stretch"
                                                         Foreground="{DynamicResource FocusTextBrush}"
                                                         Background="Transparent"
@@ -271,7 +272,9 @@
                                                    Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Margin="0,14,0,10" Style="{StaticResource FocusSecondaryButton}"
+                                <Button Margin="0,14,0,10"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        AutomationProperties.Name="{Binding CurrentSectionTitle, StringFormat=打开最近使用的模块：{0}}"
                                         Command="{Binding OpenLastWorkspaceCommand}">
                                     <TextBlock Text="{Binding CurrentSectionTitle, StringFormat=最近使用 · {0}}"/>
                                 </Button>

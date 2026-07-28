@@ -20,7 +20,9 @@ using Forms = System.Windows.Forms;
 
 namespace FocusPanel.Views;
 
-public partial class MainWindow : Window
+public partial class MainWindow :
+    Window,
+    IFocusDialogInteractionHost
 {
     private const double CompactWidth = 76;
     private const double ExpandedWidth = 720;

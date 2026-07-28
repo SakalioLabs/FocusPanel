@@ -42,7 +42,7 @@
       <circle cx="27" cy="27" r="13" fill="#4b8ff7"/>
       <text x="21" y="33" fill="#fff" font-family="Segoe UI" font-size="16" font-weight="700">i</text>
       <text x="52" y="23" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14">信息与完成状态</text>
-      <text x="52" y="41" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">单一“确定”操作</text>
+      <text x="52" y="41" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">单一“确定”操作 · Panel 保持展开</text>
     </g>
     <g transform="translate(0 96)">
       <rect width="286" height="54" rx="12" fill="#ffffff" fill-opacity=".07"/>

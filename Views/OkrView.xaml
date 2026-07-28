@@ -85,7 +85,7 @@
 
                 <Border Width="38"
                         Height="38"
-                        CornerRadius="12"
+                        CornerRadius="{StaticResource FocusControlCornerRadius}"
                         Background="{DynamicResource FocusSurfaceStrongBrush}">
                     <TextBlock Text="&#xE895;"
                                Style="{StaticResource FocusIconText}"
