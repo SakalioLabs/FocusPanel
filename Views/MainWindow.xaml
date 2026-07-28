@@ -656,6 +656,7 @@
                                             <Grid>
                                                 <Button Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         AllowDrop="True"
+                                                        PreviewMouseDown="TaskbarApp_PreviewMouseDown"
                                                         PreviewMouseLeftButtonDown="TaskbarApp_PreviewMouseLeftButtonDown"
                                                         PreviewMouseMove="TaskbarApp_PreviewMouseMove"
                                                         DragOver="TaskbarApp_DragOver"
@@ -679,6 +680,10 @@
                                                         <StackPanel>
                                                             <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
                                                             <TextBlock Text="{Binding StatusSummary}" Opacity="0.65"/>
+                                                            <TextBlock Text="{Binding InteractionHint}"
+                                                                       Foreground="{DynamicResource FocusMutedTextBrush}"
+                                                                       TextWrapping="Wrap"
+                                                                       MaxWidth="260"/>
                                                         </StackPanel>
                                                     </Button.ToolTip>
                                                     <Button.ContextMenu>

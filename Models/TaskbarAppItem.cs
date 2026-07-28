@@ -16,6 +16,10 @@ public sealed class TaskbarAppItem
     public bool IsPinned => PinnedLaunches.Count > 0;
     public bool IsRunning => RunningTask != null;
     public bool IsActive => RunningTask?.IsActive == true;
+    public bool CanLaunchNewInstance =>
+        !string.IsNullOrWhiteSpace(LaunchItem?.LaunchTarget)
+        || !string.IsNullOrWhiteSpace(ApplicationUserModelId)
+        || !string.IsNullOrWhiteSpace(ExecutablePath);
     public bool CanPin => IsPinned
         || !string.IsNullOrWhiteSpace(RunningTask?.ApplicationUserModelId)
         || !string.IsNullOrWhiteSpace(RunningTask?.ExecutablePath);
@@ -35,12 +39,20 @@ public sealed class TaskbarAppItem
                     : "未运行";
     public string AccessibleName =>
         $"{DisplayName}，{StatusSummary}";
-    public string InteractionHint =>
-        WindowCount > 1
-            ? "左键打开窗口列表，右键管理应用"
-            : IsRunning
-                ? "左键切换或最小化，右键管理应用"
-                : "左键启动，右键管理应用";
+    public string InteractionHint
+    {
+        get
+        {
+            string primaryAction = WindowCount > 1
+                ? "左键打开窗口列表，右键管理应用"
+                : IsRunning
+                    ? "左键切换或最小化，右键管理应用"
+                    : "左键启动，右键管理应用";
+            return CanLaunchNewInstance
+                ? $"{primaryAction}；Shift+左键或中键启动新实例"
+                : primaryAction;
+        }
+    }
 
     public AppLaunchItem? CreateLaunchItem()
     {

@@ -414,10 +414,18 @@ public sealed class XamlResourceContractTests
         string root = FindRepositoryRoot();
         string publisher = File.ReadAllText(
             Path.Combine(root, "scripts", "publish-github-release.ps1"));
+        string packager = File.ReadAllText(
+            Path.Combine(root, "scripts", "package-release.ps1"));
 
         Assert.Contains("make_latest = 'true'", publisher);
         Assert.Contains("/releases/latest", publisher);
         Assert.Contains("'releases.win.json'", publisher);
+        Assert.Contains(
+            "New-Object System.Text.UTF8Encoding($true)",
+            packager);
+        Assert.Contains(
+            "release-notes-utf8.md",
+            packager);
         Assert.Contains("'RELEASES'", publisher);
         Assert.Contains("-full\\.nupkg", publisher);
     }
@@ -521,6 +529,12 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains(
             "AutomationProperties.HelpText=\"{Binding InteractionHint}\"",
+            mainWindow);
+        Assert.Contains(
+            "PreviewMouseDown=\"TaskbarApp_PreviewMouseDown\"",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding InteractionHint}\"",
             mainWindow);
         Assert.Contains(
             "AutomationProperties.Name=\"开始\"",
@@ -742,6 +756,10 @@ public sealed class XamlResourceContractTests
         Assert.Contains("SystemManagementTool.TerminalAdministrator", mainWindow);
         Assert.Contains("SystemManagementTool.TaskManager", mainWindow);
         Assert.Contains("TaskbarApp_Click", mainWindow);
+        Assert.Contains("TaskbarApp_PreviewMouseDown", mainWindow);
+        Assert.Contains("MouseButton.Middle", codeBehind);
+        Assert.Contains("Keyboard.Modifiers", codeBehind);
+        Assert.Contains("LaunchNewTaskbarAppCommand.Execute(task)", codeBehind);
         Assert.Contains("PopulateTaskbarAppContextMenu", codeBehind);
         Assert.Contains("CloseWindowCommand", codeBehind);
         Assert.Contains("CloseTaskCommand", codeBehind);

@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.9.64',
+    [string]$Version = '0.9.65',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -23,7 +23,8 @@ $publishDir = [IO.Path]::GetFullPath(
     (Join-Path $projectRoot "artifacts\release\publish\win-x64\$Version"))
 $packageDir = [IO.Path]::GetFullPath((Join-Path $projectRoot 'artifacts\release\packages'))
 $manifest = Join-Path $projectRoot '.config\dotnet-tools.json'
-$releaseNotes = Join-Path $projectRoot 'packaging\release-notes.md'
+$releaseNotesSource = Join-Path $projectRoot 'packaging\release-notes.md'
+$releaseNotes = Join-Path $projectRoot 'artifacts\release\release-notes-utf8.md'
 $projectFile = Join-Path $projectRoot 'FocusPanel.csproj'
 $numericVersion = $Version.Split('-')[0]
 
@@ -59,6 +60,16 @@ if ($CleanPackages) {
 elseif (-not (Test-Path -LiteralPath $packageDir)) {
     New-Item -ItemType Directory -Path $packageDir | Out-Null
 }
+
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$utf8WithBom = New-Object System.Text.UTF8Encoding($true)
+$releaseNotesText = [IO.File]::ReadAllText(
+    $releaseNotesSource,
+    $utf8NoBom)
+[IO.File]::WriteAllText(
+    $releaseNotes,
+    $releaseNotesText,
+    $utf8WithBom)
 
 Write-Host "Publishing FocusPanel $Version (win-x64, self-contained)..."
 & $PublishDotnetPath publish $projectFile `

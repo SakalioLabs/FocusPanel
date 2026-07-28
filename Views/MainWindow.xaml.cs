@@ -528,6 +528,15 @@ public partial class MainWindow : Window
         if (sender is not Button { DataContext: TaskbarAppItem task } button)
             return;
 
+        TaskbarAppClickAction action = TaskbarAppClickPolicy.FromLeftClick(
+            Keyboard.Modifiers.HasFlag(ModifierKeys.Shift),
+            task.CanLaunchNewInstance);
+        if (action == TaskbarAppClickAction.LaunchNewInstance)
+        {
+            _viewModel.LaunchNewTaskbarAppCommand.Execute(task);
+            return;
+        }
+
         if (task.WindowCount <= 1)
         {
             _viewModel.ActivateTaskbarAppCommand.Execute(task);
@@ -536,6 +545,26 @@ public partial class MainWindow : Window
 
         PopulateTaskbarWindowList(button, task);
         OpenContextMenu(button);
+    }
+
+    private void TaskbarApp_PreviewMouseDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Middle
+            || sender is not Button { DataContext: TaskbarAppItem task })
+        {
+            return;
+        }
+
+        if (TaskbarAppClickPolicy.FromMiddleClick(
+                task.CanLaunchNewInstance)
+            == TaskbarAppClickAction.LaunchNewInstance)
+        {
+            _viewModel.LaunchNewTaskbarAppCommand.Execute(task);
+        }
+
+        e.Handled = true;
     }
 
     private void TaskbarApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)

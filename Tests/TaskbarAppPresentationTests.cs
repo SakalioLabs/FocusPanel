@@ -20,7 +20,7 @@ public sealed class TaskbarAppPresentationTests
             "编辑器，正在使用 · 2 个窗口",
             item.AccessibleName);
         Assert.Equal(
-            "左键打开窗口列表，右键管理应用",
+            "左键打开窗口列表，右键管理应用；Shift+左键或中键启动新实例",
             item.InteractionHint);
     }
 
@@ -35,7 +35,7 @@ public sealed class TaskbarAppPresentationTests
             "正在运行 · 1 个窗口",
             item.StatusSummary);
         Assert.Equal(
-            "左键切换或最小化，右键管理应用",
+            "左键切换或最小化，右键管理应用；Shift+左键或中键启动新实例",
             item.InteractionHint);
     }
 
@@ -45,6 +45,12 @@ public sealed class TaskbarAppPresentationTests
         var item = new TaskbarAppItem
         {
             DisplayName = "编辑器",
+            LaunchItem = new AppLaunchItem
+            {
+                DisplayName = "编辑器",
+                LaunchKind = AppLaunchKind.Executable,
+                LaunchTarget = @"C:\Apps\Editor.exe"
+            },
             PinnedLaunches = new[]
             {
                 new AppLaunchItem
@@ -65,7 +71,33 @@ public sealed class TaskbarAppPresentationTests
             "编辑器，已固定 · 未运行",
             item.AccessibleName);
         Assert.Equal(
-            "左键启动，右键管理应用",
+            "左键启动，右键管理应用；Shift+左键或中键启动新实例",
+            item.InteractionHint);
+    }
+
+    [Fact]
+    public void ProtectedRunningApplication_DoesNotPromiseNewInstance()
+    {
+        var item = new TaskbarAppItem
+        {
+            DisplayName = "受保护应用",
+            RunningTask = new WindowTaskItem
+            {
+                AppKey = "protected",
+                IdentityKey = "temporary:protected",
+                DisplayName = "受保护应用",
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(1),
+                        "受保护窗口")
+                }
+            }
+        };
+
+        Assert.False(item.CanLaunchNewInstance);
+        Assert.Equal(
+            "左键切换或最小化，右键管理应用",
             item.InteractionHint);
     }
 
@@ -110,6 +142,8 @@ public sealed class TaskbarAppPresentationTests
                 AppKey = "editor",
                 IdentityKey = "exe:editor",
                 DisplayName = "编辑器",
+                ExecutablePath =
+                    @"C:\Apps\Editor.exe",
                 IsActive = active,
                 Windows = windows
             }
