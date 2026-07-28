@@ -437,6 +437,53 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TaskImageFolder_UsesModernShellPickerBoundary()
+    {
+        string root = FindRepositoryRoot();
+        string tasks = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "TasksViewModel.cs"));
+        string picker = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ShellFolderPickerService.cs"));
+
+        Assert.DoesNotContain(
+            "FolderBrowserDialog",
+            tasks);
+        Assert.DoesNotContain(
+            "System.Windows.Forms.DialogResult",
+            tasks);
+        Assert.Contains(
+            "new ShellFolderPickerService()",
+            tasks);
+        Assert.Contains(
+            "FolderSelectionPolicy.Resolve(result)",
+            tasks);
+        Assert.Contains(
+            "PickFolders",
+            picker);
+        Assert.Contains(
+            "ForceFileSystem",
+            picker);
+        Assert.Contains(
+            "SHCreateItemFromParsingName",
+            picker);
+        Assert.Contains(
+            "FileSystemPath",
+            picker);
+        Assert.Contains(
+            "dialog.Show(ownerHandle)",
+            picker);
+        Assert.Contains(
+            "FocusDialogInteractionLease.Enter(",
+            picker);
+    }
+
+    [Fact]
     public void MainShell_HasOnlyOneTopLevelRoundedOutline()
     {
         string root = FindRepositoryRoot();

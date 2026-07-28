@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#11151d"/>
+      <stop offset="1" stop-color="#232a38"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000" flood-opacity=".4"/>
+    </filter>
+  </defs>
+  <rect width="1180" height="500" rx="28" fill="url(#bg)"/>
+  <text x="52" y="62" fill="#f5f7fb" font-family="Segoe UI Variable Display,Segoe UI" font-size="28" font-weight="600">Windows Shell 现代文件夹选择器</text>
+  <text x="52" y="94" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="15">任务图片目录使用公开 IFileOpenDialog，不再回退老式 WinForms 树形窗口</text>
+
+  <g transform="translate(62 126)" filter="url(#shadow)">
+    <rect width="760" height="320" rx="18" fill="#f7f8fb"/>
+    <rect width="760" height="54" rx="18" fill="#eef1f6"/>
+    <rect y="36" width="760" height="18" fill="#eef1f6"/>
+    <text x="24" y="34" fill="#18202c" font-family="Segoe UI Variable Text,Segoe UI" font-size="15" font-weight="600">选择任务图片保存位置</text>
+    <text x="716" y="34" fill="#394657" font-family="Segoe Fluent Icons" font-size="14"></text>
+
+    <rect x="20" y="70" width="720" height="40" rx="8" fill="#fff" stroke="#d7dce5"/>
+    <text x="36" y="95" fill="#59677a" font-family="Segoe Fluent Icons" font-size="14"></text>
+    <text x="62" y="95" fill="#283446" font-family="Segoe UI Variable Text,Segoe UI" font-size="13">此电脑  ›  图片  ›  FocusPanel  ›  TaskImages</text>
+
+    <rect x="20" y="126" width="170" height="122" rx="10" fill="#edf4ff"/>
+    <text x="38" y="154" fill="#2f69c7" font-family="Segoe Fluent Icons" font-size="18"></text>
+    <text x="68" y="154" fill="#253246" font-family="Segoe UI Variable Text,Segoe UI" font-size="13">快速访问</text>
+    <text x="68" y="184" fill="#59677a" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">桌面</text>
+    <text x="68" y="210" fill="#59677a" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">文档</text>
+    <text x="68" y="236" fill="#59677a" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">图片</text>
+
+    <g transform="translate(212 126)">
+      <rect width="158" height="96" rx="10" fill="#fff" stroke="#d7dce5"/>
+      <path d="M25 28h39l8 9h57v39H25z" fill="#f6c84c"/>
+      <text x="24" y="89" fill="#253246" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">TaskImages</text>
+      <rect x="174" width="158" height="96" rx="10" fill="#fff" stroke="#d7dce5"/>
+      <path d="M199 28h39l8 9h57v39h-104z" fill="#f6c84c"/>
+      <text x="198" y="89" fill="#253246" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">项目素材</text>
+      <rect x="348" width="158" height="96" rx="10" fill="#fff" stroke="#d7dce5"/>
+      <path d="M373 28h39l8 9h57v39H373z" fill="#f6c84c"/>
+      <text x="372" y="89" fill="#253246" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">归档</text>
+    </g>
+
+    <rect x="520" y="268" width="98" height="40" rx="8" fill="#edf0f5"/>
+    <text x="555" y="293" fill="#283446" font-family="Segoe UI Variable Text,Segoe UI" font-size="13">取消</text>
+    <rect x="630" y="268" width="110" height="40" rx="8" fill="#2879d7"/>
+    <text x="649" y="293" fill="#fff" font-family="Segoe UI Variable Text,Segoe UI" font-size="13" font-weight="600">使用此文件夹</text>
+  </g>
+
+  <g transform="translate(860 146)">
+    <text x="0" y="0" fill="#8f9bad" font-family="Segoe UI Variable Text,Segoe UI" font-size="12">稳定交互语义</text>
+    <g transform="translate(0 28)">
+      <rect width="260" height="62" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="25" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14" font-weight="600">当前目录</text>
+      <text x="18" y="46" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">打开即定位现有保存位置</text>
+    </g>
+    <g transform="translate(0 104)">
+      <rect width="260" height="62" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="25" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14" font-weight="600">取消安全</text>
+      <text x="18" y="46" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">不修改路径，不写入设置</text>
+    </g>
+    <g transform="translate(0 180)">
+      <rect width="260" height="62" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="25" fill="#f5f7fb" font-family="Segoe UI Variable Text,Segoe UI" font-size="14" font-weight="600">上下文保持</text>
+      <text x="18" y="46" fill="#9faabb" font-family="Segoe UI Variable Text,Segoe UI" font-size="11">系统窗口期间 Panel 不缩回</text>
+    </g>
+  </g>
+</svg>

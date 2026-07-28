@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.80 - 2026-07-29
+
+- 移除任务图片保存路径使用的老式 `System.Windows.Forms.FolderBrowserDialog`，改用 Windows Shell 公开的 `IFileOpenDialog` 现代通用文件夹选择器；继续保持 .NET 7，不引入额外 UI 包。
+- 按微软公开接口启用 `FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_NOCHANGEDIR | FOS_DONTADDTORECENT`，用 `SHCreateItemFromParsingName` 定位现有目录，并通过 `SIGDN_FILESYSPATH` 获取选择结果。
+- 选择器使用当前活动 FocusPanel 窗口句柄作为 Owner，标题和确认按钮中文化；仅在应用窗口不可用时回退当前前台句柄。
+- 文件夹选择流程接入 0.9.79 的临时交互租约，系统对话框打开期间 Panel 不会自动缩回，正常选择、取消或 COM 异常均会成对释放。
+- 新增 `IFolderPickerService`、Shell 原生边界、类型化 Selected/Canceled/Failed 结果和纯 `FolderSelectionPolicy`；取消不修改当前路径，失败显示中文原因。
+- 保存新路径失败时立即回滚界面和内存设置到原值，避免界面显示已更改但重启后反弹。
+- 自动测试使用替代 Shell 边界，覆盖请求与 Owner 转发、取消、异常、缺少标题、交互锁、选择/取消/失败决策；契约禁止任务页面重新引入 FolderBrowserDialog。
+- README 新增 Windows Shell 现代文件夹选择器图示。
+
 ## v0.9.79 - 2026-07-29
 
 - 修复 0.9.78 Fluent 模态窗口成为前台后，主 Panel 收到 `Deactivated` 并可能在 220ms 后自动收起的问题；确认过程现在始终保留背后的工作区上下文。

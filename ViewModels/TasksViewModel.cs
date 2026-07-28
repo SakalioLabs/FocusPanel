@@ -135,6 +135,7 @@ public partial class TasksViewModel
     private readonly TaskService _taskService;
     private readonly AppDbContext _context; // Keep context alive
     private readonly SettingsService _settingsService;
+    private readonly IFolderPickerService _folderPickerService;
 
     // Unified Items List (Replaces RootItems and ChildItems)
     [ObservableProperty]
@@ -215,7 +216,15 @@ public partial class TasksViewModel
     private string taskStatusMessage = string.Empty;
 
     public TasksViewModel()
+        : this(new ShellFolderPickerService())
     {
+    }
+
+    internal TasksViewModel(
+        IFolderPickerService folderPickerService)
+    {
+        _folderPickerService =
+            folderPickerService;
         _context = new AppDbContext();
         _taskService = new TaskService(_context);
         _settingsService = new SettingsService();
@@ -552,13 +561,48 @@ public partial class TasksViewModel
     [RelayCommand]
     private void SelectImageSavePath()
     {
-        var dialog = new System.Windows.Forms.FolderBrowserDialog();
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        FolderPickerResult result =
+            _folderPickerService.PickFolder(
+                new FolderPickerRequest(
+                    "选择任务图片保存位置",
+                    ImageSavePath,
+                    "使用此文件夹"));
+        FolderSelectionDecision decision =
+            FolderSelectionPolicy.Resolve(result);
+        if (!decision.ShouldApply
+            && decision.Error == null)
         {
-            ImageSavePath = dialog.SelectedPath;
-            _settingsService.CurrentSettings.ImageSavePath = ImageSavePath;
-            _settingsService.SaveSettings();
+            return;
         }
+
+        if (!decision.ShouldApply
+            || string.IsNullOrWhiteSpace(decision.Path))
+        {
+            FocusDialogService.Show(
+                decision.Error
+                    ?? "Windows 没有返回有效的文件夹路径。",
+                "无法选择文件夹",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
+        }
+
+        string previousPath = ImageSavePath;
+        ImageSavePath = decision.Path;
+        _settingsService.CurrentSettings.ImageSavePath =
+            ImageSavePath;
+        if (_settingsService.SaveSettings())
+            return;
+
+        ImageSavePath = previousPath;
+        _settingsService.CurrentSettings.ImageSavePath =
+            previousPath;
+        FocusDialogService.Show(
+            _settingsService.LastError
+                ?? "无法保存任务图片目录设置。",
+            "设置未保存",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
     }
 
     // --- Image Handling for Markdown ---
