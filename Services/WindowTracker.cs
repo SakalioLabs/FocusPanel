@@ -14,12 +14,8 @@ namespace FocusPanel.Services;
 
 public sealed class WindowTracker : IWindowTracker
 {
-    private const uint EventSystemForeground = 0x0003;
-    private const uint EventObjectShow = 0x8002;
-    private const uint EventObjectHide = 0x8003;
-    private const uint EventObjectNameChange = 0x800C;
     private const uint WineventOutOfContext = 0;
-    private const int ObjidWindow = 0;
+    private const uint WineventSkipOwnProcess = 0x0002;
     private const int GwlStyle = -16;
     private const int GwlExStyle = -20;
     private const long WsCaption = 0x00C00000L;
@@ -54,9 +50,15 @@ public sealed class WindowTracker : IWindowTracker
                 RefreshSnapshot();
         };
 
-        AddHook(EventSystemForeground, EventSystemForeground);
-        AddHook(EventObjectShow, EventObjectHide);
-        AddHook(EventObjectNameChange, EventObjectNameChange);
+        AddHook(
+            WindowTrackingEventPolicy.EventSystemForeground,
+            WindowTrackingEventPolicy.EventSystemForeground);
+        AddHook(
+            WindowTrackingEventPolicy.EventObjectCreate,
+            WindowTrackingEventPolicy.EventObjectHide);
+        AddHook(
+            WindowTrackingEventPolicy.EventObjectNameChange,
+            WindowTrackingEventPolicy.EventObjectNameChange);
         RefreshSnapshot();
     }
 
@@ -227,7 +229,8 @@ public sealed class WindowTracker : IWindowTracker
             _callback,
             0,
             0,
-            WineventOutOfContext);
+            WineventOutOfContext
+            | WineventSkipOwnProcess);
         if (hook != IntPtr.Zero)
             _hooks.Add(hook);
     }
@@ -241,8 +244,12 @@ public sealed class WindowTracker : IWindowTracker
         uint eventThread,
         uint eventTime)
     {
-        if (eventType >= EventObjectShow && idObject != ObjidWindow)
+        if (!WindowTrackingEventPolicy.ShouldQueueRefresh(
+                eventType,
+                idObject))
+        {
             return;
+        }
         if (!WindowTrackingActivityPolicy.ShouldProcessWindowEvent(
                 _trackingActive))
         {

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101925"/>
+      <stop offset="1" stop-color="#203542"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#7bc6ea" stop-opacity=".055"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="13" stdDeviation="19" flood-color="#000" flood-opacity=".27"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="480" rx="30" fill="url(#bg)"/>
+  <circle cx="145" cy="70" r="190" fill="#168bd1" opacity=".14"/>
+  <circle cx="1060" cy="430" r="230" fill="#65c8e8" opacity=".08"/>
+  <text x="70" y="70" fill="#f5f9ff" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="31" font-weight="650">运行应用图标跟随完整窗口生命周期</text>
+  <text x="70" y="108" fill="#afc1d0" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="17">创建即出现 · 标题与前台状态增量刷新 · 销毁即移除 · Panel 自身事件跳过</text>
+
+  <g transform="translate(70 162)" filter="url(#shadow)">
+    <rect width="230" height="210" rx="23" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="115" cy="57" r="29" fill="#248ecb"/>
+    <path d="M99 47h32v23H99zM106 40h18" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+    <text x="115" y="125" text-anchor="middle" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="20" font-weight="600">Windows 窗口</text>
+    <text x="115" y="160" text-anchor="middle" fill="#afc1d0" font-family="Segoe UI, sans-serif" font-size="15">CREATE / SHOW</text>
+    <text x="115" y="185" text-anchor="middle" fill="#afc1d0" font-family="Segoe UI, sans-serif" font-size="15">HIDE / DESTROY</text>
+  </g>
+
+  <path d="M316 267h62" stroke="#69caf3" stroke-width="3"/>
+  <path d="m369 259 12 8-12 8" fill="none" stroke="#69caf3" stroke-width="3"/>
+
+  <g transform="translate(396 138)" filter="url(#shadow)">
+    <rect width="386" height="258" rx="23" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <text x="28" y="44" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">轻量事件过滤</text>
+    <g transform="translate(24 68)">
+      <rect width="338" height="50" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="31" fill="#74cff6" font-family="Segoe UI, sans-serif" font-size="15" font-weight="650">OBJID_WINDOW</text>
+      <text x="153" y="31" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="15">只接收窗口本体</text>
+    </g>
+    <g transform="translate(24 128)">
+      <rect width="338" height="50" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="31" fill="#74cff6" font-family="Segoe UI, sans-serif" font-size="15" font-weight="650">SKIPOWNPROCESS</text>
+      <text x="173" y="31" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="15">跳过 Panel 自身</text>
+    </g>
+    <g transform="translate(24 188)">
+      <rect width="338" height="50" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="31" fill="#74cff6" font-family="Microsoft YaHei UI, sans-serif" font-size="15" font-weight="650">140ms</text>
+      <text x="96" y="31" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="15">合并短时间重复通知</text>
+    </g>
+  </g>
+
+  <path d="M798 267h62" stroke="#69caf3" stroke-width="3"/>
+  <path d="m851 259 12 8-12 8" fill="none" stroke="#69caf3" stroke-width="3"/>
+
+  <g transform="translate(878 162)" filter="url(#shadow)">
+    <rect width="252" height="210" rx="23" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <rect x="88" y="30" width="76" height="76" rx="20" fill="#248ecb"/>
+    <rect x="108" y="50" width="36" height="36" rx="8" fill="#fff" fill-opacity=".9"/>
+    <rect x="115" y="115" width="22" height="5" rx="2.5" fill="#6bd0f6"/>
+    <text x="126" y="154" text-anchor="middle" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="20" font-weight="600">统一应用栏</text>
+    <text x="126" y="185" text-anchor="middle" fill="#afc1d0" font-family="Microsoft YaHei UI, sans-serif" font-size="15">图标及时出现与消失</text>
+  </g>
+</svg>

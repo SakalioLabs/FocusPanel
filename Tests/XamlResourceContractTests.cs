@@ -1346,6 +1346,47 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void WindowTracker_ObservesCompleteTopLevelLifecycle()
+    {
+        string root = FindRepositoryRoot();
+        string tracker = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowTracker.cs"));
+        string policy = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowTrackingEventPolicy.cs"));
+
+        Assert.Contains(
+            "WindowTrackingEventPolicy.EventObjectCreate",
+            tracker);
+        Assert.Contains(
+            "WindowTrackingEventPolicy.EventObjectHide",
+            tracker);
+        Assert.Contains(
+            "WindowTrackingEventPolicy.EventObjectNameChange",
+            tracker);
+        Assert.Contains(
+            "WineventSkipOwnProcess",
+            tracker);
+        Assert.Contains(
+            "WindowTrackingEventPolicy.ShouldQueueRefresh",
+            tracker);
+        Assert.Contains(
+            "EventObjectDestroy = 0x8001",
+            policy);
+        Assert.Contains(
+            "objectId != ObjectIdWindow",
+            policy);
+        Assert.DoesNotContain(
+            "eventType >= EventObjectShow",
+            tracker);
+    }
+
+    [Fact]
     public void AppLaunchFailures_AreContainedAndShownInStatusCenter()
     {
         string root = FindRepositoryRoot();
