@@ -6,6 +6,23 @@ namespace FocusPanel.Tests;
 public sealed class ShellRefreshActivityPolicyTests
 {
     [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    public void RefreshesSnapshotOnlyWhenShellBecomesVisible(
+        bool wasVisible,
+        bool isVisible,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            ShellRefreshActivityPolicy.BecameVisible(
+                wasVisible,
+                isVisible));
+    }
+
+    [Theory]
     [InlineData(false, false, false, false, false, false)]
     [InlineData(false, true, true, false, false, false)]
     [InlineData(true, false, false, true, false, false)]

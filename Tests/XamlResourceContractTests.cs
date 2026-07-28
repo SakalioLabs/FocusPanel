@@ -288,6 +288,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains("ToggleMuteCommand", mainWindow);
         Assert.Contains("IsEnabled=\"{Binding IsAudioAvailable}\"", mainWindow);
         Assert.Contains("Text=\"{Binding AudioStatusText}\"", mainWindow);
+        Assert.Contains("Text=\"{Binding AudioGlyph}\"", mainWindow);
+        Assert.Contains("ToolTip=\"{Binding AudioToggleLabel}\"", mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"{Binding StatusCenterAutomationName}\"",
+            mainWindow);
+        Assert.Contains("ToolTip=\"{Binding AudioSummary}\"", mainWindow);
         Assert.Contains("NetworkDetail", mainWindow);
         Assert.Contains("LockComputerCommand", mainWindow);
         Assert.Contains("SleepComputerCommand", mainWindow);
@@ -1266,6 +1272,15 @@ public sealed class XamlResourceContractTests
 
         Assert.Contains("_viewModel.SetShellVisible(false)", mainWindow);
         Assert.Contains("_viewModel.SetShellVisible(true)", mainWindow);
+        Assert.Contains(
+            "bool becameVisible =",
+            viewModel);
+        Assert.Contains(
+            "if (becameVisible)",
+            viewModel);
+        Assert.Contains(
+            "RefreshSystemStatus();",
+            viewModel);
         Assert.Contains("_windowTracker.SetTrackingActive(isVisible)", viewModel);
         Assert.Contains("ShellRefreshActivityPolicy.GetActivity", viewModel);
         Assert.Contains("if (_trackingActive)", tracker);

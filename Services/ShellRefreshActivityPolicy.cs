@@ -7,6 +7,11 @@ internal readonly record struct ShellRefreshActivity(
 
 internal static class ShellRefreshActivityPolicy
 {
+    internal static bool BecameVisible(
+        bool wasVisible,
+        bool isVisible)
+        => !wasVisible && isVisible;
+
     internal static ShellRefreshActivity GetActivity(
         bool isShellVisible,
         bool isStatusCenterOpen,

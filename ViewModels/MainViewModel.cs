@@ -139,12 +139,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool disableHotZoneInFullscreen = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AudioGlyph))]
+    [NotifyPropertyChangedFor(nameof(AudioSummary))]
+    [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private float masterVolume;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AudioGlyph))]
+    [NotifyPropertyChangedFor(nameof(AudioSummary))]
+    [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isMuted;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AudioGlyph))]
+    [NotifyPropertyChangedFor(nameof(AudioSummary))]
+    [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isAudioAvailable;
 
     [ObservableProperty]
@@ -274,6 +286,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             : "没有找到匹配的应用";
     public bool IsAppSearchStatusVisible =>
         SearchResults.Count == 0;
+    public string AudioGlyph =>
+        GetAudioPresentation().Glyph;
+    public string AudioSummary =>
+        GetAudioPresentation().Summary;
+    public string AudioToggleLabel =>
+        GetAudioPresentation().ToggleLabel;
+    public string StatusCenterAutomationName =>
+        $"状态中心，{AudioSummary}";
     public ObservableCollection<CalendarDayItem> CalendarDays
     {
         get;
@@ -289,10 +309,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void SetShellVisible(bool isVisible)
     {
+        bool becameVisible =
+            ShellRefreshActivityPolicy.BecameVisible(
+                _isShellVisible,
+                isVisible);
         _isShellVisible = isVisible;
         _windowTracker.SetTrackingActive(isVisible);
-        if (isVisible)
+        if (becameVisible)
+        {
             CurrentTime = DateTime.Now;
+            RefreshSystemStatus();
+        }
         UpdateRefreshActivity();
     }
 
@@ -1091,6 +1118,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         BatteryPercent = _systemStatus.BatteryPercent;
         IsCharging = _systemStatus.IsCharging;
     }
+
+    private AudioStatusPresentation GetAudioPresentation()
+        => AudioStatusPresentationComposer.Compose(
+            IsAudioAvailable,
+            MasterVolume,
+            IsMuted);
 
     private void RestoreConfirmedAudioState(
         float volume,

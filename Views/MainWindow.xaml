@@ -343,8 +343,10 @@
                                     <Button Style="{StaticResource FocusIconButton}"
                                             Command="{Binding ToggleMuteCommand}"
                                             IsEnabled="{Binding IsAudioAvailable}"
-                                            ToolTip="静音">
-                                        <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE767;"/>
+                                            ToolTip="{Binding AudioToggleLabel}"
+                                            AutomationProperties.Name="{Binding AudioToggleLabel}">
+                                        <TextBlock Style="{StaticResource FocusIconText}"
+                                                   Text="{Binding AudioGlyph}"/>
                                     </Button>
                                     <Slider Grid.Column="1" Margin="8,0,14,0" Minimum="0" Maximum="1"
                                             IsEnabled="{Binding IsAudioAvailable}"
@@ -790,13 +792,13 @@
                                     Click="StatusCenterButton_Click"
                                     PreviewMouseWheel="VolumeButton_PreviewMouseWheel"
                                     MouseRightButtonUp="VolumeButton_MouseRightButtonUp"
-                                    AutomationProperties.Name="状态中心"
+                                    AutomationProperties.Name="{Binding StatusCenterAutomationName}"
                                     AutomationProperties.HelpText="鼠标滚轮调节音量，右键静音"
-                                    ToolTip="状态中心">
+                                    ToolTip="{Binding AudioSummary}">
                                 <TextBlock>
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
-                                            <Setter Property="Text" Value="&#xE95D;"/>
+                                            <Setter Property="Text" Value="{Binding AudioGlyph}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding HasReplacementWarning}" Value="True">
                                                     <Setter Property="Foreground" Value="{DynamicResource FocusDangerBrush}"/>
