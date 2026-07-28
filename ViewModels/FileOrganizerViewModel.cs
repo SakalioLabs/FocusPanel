@@ -296,10 +296,20 @@ public partial class FileOrganizerViewModel : ObservableObject
 
                 // 2. Load Data
                 var dbPartitions = context.DesktopPartitions.OrderBy(p => p.OrderIndex).ToList();
-                var dbPrefs = context.DesktopFilePreferences.ToList(); 
+                var dbPrefs = context.DesktopFilePreferences.ToList();
+                var preferencesByName = dbPrefs
+                    .GroupBy(
+                        item => item.FilePath,
+                        StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => group.Last(),
+                        StringComparer.OrdinalIgnoreCase);
 
                 // 3. Create Partition ViewModels
-                var partitionMap = new Dictionary<string, PartitionViewModel>();
+                var partitionMap =
+                    new Dictionary<string, PartitionViewModel>(
+                        StringComparer.OrdinalIgnoreCase);
                 
                 if (IsPersonalizedView)
                 {
@@ -317,7 +327,9 @@ public partial class FileOrganizerViewModel : ObservableObject
 
                 foreach (var file in allFiles)
                 {
-                    var pref = dbPrefs.FirstOrDefault(p => p.FilePath == file.Name);
+                    preferencesByName.TryGetValue(
+                        file.Name,
+                        out DesktopFilePreference? pref);
 
                     // 已收纳的文件（IsHiddenFromDesktop=true）显示在对应分区
                     // 未收纳的文件如果没有分区则显示在 Unsorted
@@ -352,24 +364,20 @@ public partial class FileOrganizerViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            // Fallback or log
             System.Diagnostics.Debug.WriteLine("BuildPartitions Error: " + ex.Message);
+            // Keep the last valid visual tree. A transient database read
+            // failure must not look like every collection disappeared.
+            return;
         }
 
         // 6. Update ObservableCollections
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            PartitionsCol1.Clear();
-            PartitionsCol2.Clear();
-            AllPartitions.Clear();
-
-            // Distribute based on explicit ColumnIndex
-            foreach (var vm in viewModels)
-            {
-                AllPartitions.Add(vm);
-                if (vm.ColumnIndex == 0) PartitionsCol1.Add(vm);
-                else PartitionsCol2.Add(vm);
-            }
+            PartitionCollectionSynchronizer.Synchronize(
+                AllPartitions,
+                PartitionsCol1,
+                PartitionsCol2,
+                viewModels);
         });
         
         // Auto-select

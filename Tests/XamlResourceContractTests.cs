@@ -689,6 +689,48 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void DesktopOrganizer_RefreshesPartitionsWithoutClearingVisualTree()
+    {
+        string root = FindRepositoryRoot();
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+        string synchronizer = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "PartitionCollectionSynchronizer.cs"));
+
+        Assert.Contains(
+            "PartitionCollectionSynchronizer.Synchronize",
+            viewModel);
+        Assert.DoesNotContain(
+            "PartitionsCol1.Clear()",
+            viewModel);
+        Assert.DoesNotContain(
+            "PartitionsCol2.Clear()",
+            viewModel);
+        Assert.DoesNotContain(
+            "AllPartitions.Clear()",
+            viewModel);
+        Assert.Contains(
+            "destination.Move(",
+            synchronizer);
+        Assert.Contains(
+            "private bool isExpanded = true",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "PartitionViewModel.cs")));
+        Assert.DoesNotContain(
+            "current.IsExpanded =",
+            synchronizer);
+    }
+
+    [Fact]
     public void WindowClosing_UsesWmCloseWithoutProcessTermination()
     {
         string root = FindRepositoryRoot();

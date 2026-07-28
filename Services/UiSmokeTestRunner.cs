@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -62,6 +64,9 @@ internal static class UiSmokeTestRunner
                 {
                     DisplayName = "FocusPanel"
                 },
+                results,
+                failures);
+            CheckPartitionRefreshScroll(
                 results,
                 failures);
             if (!string.IsNullOrWhiteSpace(
@@ -192,6 +197,99 @@ internal static class UiSmokeTestRunner
         catch (Exception ex)
         {
             failures.Add($"界面 {name} 加载失败：{ex}");
+        }
+    }
+
+    private static void CheckPartitionRefreshScroll(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var all =
+                new ObservableCollection<
+                    PartitionViewModel>();
+            var left =
+                new ObservableCollection<
+                    PartitionViewModel>();
+            var right =
+                new ObservableCollection<
+                    PartitionViewModel>();
+            for (int index = 0; index < 30; index++)
+            {
+                var partition =
+                    new PartitionViewModel(
+                        $"收纳盒 {index + 1}")
+                    {
+                        IsCustom = true,
+                        ColumnIndex = 0
+                    };
+                all.Add(partition);
+                left.Add(partition);
+            }
+
+            var items = new ItemsControl
+            {
+                ItemsSource = left,
+                DisplayMemberPath =
+                    nameof(PartitionViewModel.Name)
+            };
+            var viewer = new ScrollViewer
+            {
+                Width = 280,
+                Height = 90,
+                Content = items,
+                VerticalScrollBarVisibility =
+                    ScrollBarVisibility.Auto
+            };
+            var size = new Size(280, 90);
+            viewer.Measure(size);
+            viewer.Arrange(new Rect(size));
+            viewer.UpdateLayout();
+            viewer.ScrollToVerticalOffset(80);
+            viewer.UpdateLayout();
+            double before =
+                viewer.VerticalOffset;
+            if (before <= 0)
+            {
+                failures.Add(
+                    "分区刷新滚动验证未建立有效偏移");
+                return;
+            }
+
+            var desired =
+                Enumerable.Range(1, 30)
+                    .Select(index =>
+                        new PartitionViewModel(
+                            $"收纳盒 {index}")
+                        {
+                            IsCustom = true,
+                            ColumnIndex = 0
+                        })
+                    .ToList();
+            PartitionCollectionSynchronizer
+                .Synchronize(
+                    all,
+                    left,
+                    right,
+                    desired);
+            viewer.UpdateLayout();
+
+            if (Math.Abs(
+                    viewer.VerticalOffset
+                    - before) > 0.1)
+            {
+                failures.Add(
+                    "分区差量刷新改变了滚动偏移");
+                return;
+            }
+            results.Add(
+                "PASS 分区差量刷新保持滚动偏移");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"分区滚动稳定性验证失败：{ex}");
         }
     }
 
