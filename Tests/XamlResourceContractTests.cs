@@ -1305,6 +1305,135 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void Typography_UsesOneSemanticHierarchyAcrossPrimarySurfaces()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string viewsRoot = Path.Combine(
+            root,
+            "Views");
+        string[] primaryViews =
+        {
+            "MainWindow.xaml",
+            "DashboardView.xaml",
+            "FileOrganizerView.xaml",
+            "TasksView.xaml",
+            "PomodoroView.xaml",
+            "OkrView.xaml",
+            "AIAssistantView.xaml",
+            "CalendarPanelView.xaml",
+            "TaskDetailWindow.xaml",
+            "PomodoroFloatingWindow.xaml"
+        };
+        string primaryContent = string.Join(
+            Environment.NewLine,
+            primaryViews.Select(
+                file => File.ReadAllText(
+                    Path.Combine(
+                        viewsRoot,
+                        file))));
+        string[] typographyKeys =
+        {
+            "FocusTextBase",
+            "FocusPageTitleText",
+            "FocusSectionTitleText",
+            "FocusEmptyStateTitleText",
+            "FocusCardTitleText",
+            "FocusBodyText",
+            "FocusSecondaryBodyText",
+            "FocusCaptionText",
+            "FocusMetaText",
+            "FocusMetricText",
+            "FocusDisplayText"
+        };
+
+        foreach (string key in typographyKeys)
+        {
+            Assert.Contains(
+                $"x:Key=\"{key}\"",
+                theme);
+        }
+
+        Assert.Contains(
+            "Style=\"{StaticResource FocusPageTitleText}\"",
+            primaryContent);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusSectionTitleText}\"",
+            primaryContent);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusCardTitleText}\"",
+            primaryContent);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusBodyText}\"",
+            primaryContent);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusCaptionText}\"",
+            primaryContent);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusMetaText}\"",
+            primaryContent);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusMetricText}\"",
+            primaryContent);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusDisplayText}\"",
+            primaryContent);
+
+        XNamespace presentation =
+            "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var directTextSizes = new List<string>();
+        foreach (string path in Directory.GetFiles(
+                     viewsRoot,
+                     "*.xaml"))
+        {
+            XDocument document = XDocument.Load(path);
+            foreach (XElement textBlock in document
+                         .Descendants(
+                             presentation
+                             + "TextBlock")
+                         .Where(element =>
+                             element.Attribute(
+                                 "FontSize") != null))
+            {
+                bool isIcon =
+                    ((string?)textBlock.Attribute(
+                        "Style"))?.Contains(
+                        "FocusIconText",
+                        StringComparison.Ordinal)
+                    == true
+                    || textBlock
+                        .Descendants(
+                            presentation
+                            + "Style")
+                        .Any(style =>
+                            ((string?)style.Attribute(
+                                "BasedOn"))?.Contains(
+                                "FocusIconText",
+                                StringComparison.Ordinal)
+                            == true);
+                if (!isIcon)
+                {
+                    directTextSizes.Add(
+                        $"{Path.GetFileName(path)}:"
+                        + $"{(string?)textBlock.Attribute("Text")}"
+                        + $"={textBlock.Attribute("FontSize")?.Value}");
+                }
+            }
+        }
+
+        Assert.True(
+            directTextSizes.Count <= 3,
+            "仍有非图标文字绕过语义字体层级："
+            + string.Join(
+                ", ",
+                directTextSizes));
+    }
+
+    [Fact]
     public void CheckBoxes_UseOneRoundedDynamicTheme()
     {
         string root = FindRepositoryRoot();

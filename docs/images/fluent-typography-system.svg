@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="520" viewBox="0 0 1180 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111821"/>
+      <stop offset="1" stop-color="#1d2733"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+
+  <rect width="1180" height="520" rx="32" fill="url(#bg)"/>
+  <text x="62" y="72" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="30" font-weight="700">统一 Fluent 字体层级</text>
+  <text x="62" y="106" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="17">页面不再各自猜字号 · 标题、正文、说明、元信息与数据展示由语义样式统一控制</text>
+
+  <g transform="translate(62 146)" filter="url(#shadow)">
+    <rect width="516" height="310" rx="22" fill="#222c38" stroke="#fff" stroke-opacity=".12"/>
+    <text x="28" y="42" fill="#9fd5ff" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="13" font-weight="600">INFORMATION HIERARCHY</text>
+
+    <text x="28" y="92" fill="#f5f7ff" font-family="Segoe UI Variable Display, Microsoft YaHei" font-size="28" font-weight="600">页面标题 · 28</text>
+    <text x="28" y="137" fill="#f5f7ff" font-family="Segoe UI Variable Display, Microsoft YaHei" font-size="18" font-weight="600">章节标题 · 18</text>
+    <text x="28" y="177" fill="#f5f7ff" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="15" font-weight="600">卡片标题 · 15</text>
+    <text x="28" y="215" fill="#f5f7ff" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="13">正文用于任务、消息与操作说明 · 13</text>
+    <text x="28" y="251" fill="#aeb5c8" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="12">说明文字弱化但保持清晰 · 12</text>
+    <text x="28" y="283" fill="#aeb5c8" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="11">时间、数量与同步状态等元信息 · 11</text>
+  </g>
+
+  <g transform="translate(610 146)" filter="url(#shadow)">
+    <rect width="508" height="310" rx="22" fill="#eef3f8" stroke="#172130" stroke-opacity=".12"/>
+    <text x="28" y="42" fill="#006fc4" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="13" font-weight="600">DISPLAY &amp; METRICS</text>
+
+    <g transform="translate(28 68)">
+      <rect width="205" height="190" rx="18" fill="#fff"/>
+      <text x="20" y="34" fill="#667085" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="12">今日专注</text>
+      <text x="20" y="88" fill="#172130" font-family="Segoe UI Variable Display, Microsoft YaHei" font-size="42" font-weight="600">50</text>
+      <text x="20" y="116" fill="#667085" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="12">分钟 · 2 轮</text>
+      <rect x="20" y="146" width="165" height="6" rx="3" fill="#d9e2ec"/>
+      <rect x="20" y="146" width="118" height="6" rx="3" fill="#168bd5"/>
+      <text x="20" y="176" fill="#667085" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="11">指标使用 Display 字体</text>
+    </g>
+
+    <g transform="translate(253 68)">
+      <rect width="227" height="190" rx="18" fill="#172130"/>
+      <text x="20" y="34" fill="#aeb5c8" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="12">专注计时</text>
+      <text x="113" y="110" text-anchor="middle" fill="#f5f7ff" font-family="Segoe UI Variable Display, Microsoft YaHei" font-size="54" font-weight="600">25:00</text>
+      <text x="113" y="147" text-anchor="middle" fill="#aeb5c8" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="12">展示字号保留呼吸感</text>
+    </g>
+
+    <text x="28" y="286" fill="#667085" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="12">深色、浅色与高对比度只替换主题画刷，不改变信息层级</text>
+  </g>
+</svg>

@@ -34,9 +34,99 @@
     <CornerRadius x:Key="FocusCardCornerRadius">10</CornerRadius>
     <CornerRadius x:Key="FocusControlCornerRadius">8</CornerRadius>
 
-    <Style TargetType="TextBlock">
+    <Style x:Key="FocusTextBase"
+           TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
         <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
+    </Style>
+    <Style TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}"/>
+
+    <Style x:Key="FocusPageTitleText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontFamily"
+                Value="Segoe UI Variable Display"/>
+        <Setter Property="FontSize" Value="28"/>
+        <Setter Property="FontWeight"
+                Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="FocusSectionTitleText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontFamily"
+                Value="Segoe UI Variable Display"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight"
+                Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="FocusEmptyStateTitleText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontFamily"
+                Value="Segoe UI Variable Display"/>
+        <Setter Property="FontSize" Value="22"/>
+        <Setter Property="FontWeight"
+                Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="FocusCardTitleText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight"
+                Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="FocusBodyText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <Style x:Key="FocusSecondaryBodyText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusBodyText}">
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusMutedTextBrush}"/>
+    </Style>
+
+    <Style x:Key="FocusCaptionText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusMutedTextBrush}"/>
+    </Style>
+
+    <Style x:Key="FocusMetaText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusMutedTextBrush}"/>
+    </Style>
+
+    <Style x:Key="FocusMetricText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontFamily"
+                Value="Segoe UI Variable Display"/>
+        <Setter Property="FontSize" Value="28"/>
+        <Setter Property="FontWeight"
+                Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="FocusDisplayText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource FocusTextBase}">
+        <Setter Property="FontFamily"
+                Value="Segoe UI Variable Display"/>
+        <Setter Property="FontSize" Value="64"/>
+        <Setter Property="FontWeight"
+                Value="SemiBold"/>
     </Style>
 
     <Style x:Key="FocusIconText" TargetType="TextBlock">

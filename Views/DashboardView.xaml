@@ -11,16 +11,15 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel>
                     <TextBlock Text="{Binding Greeting}"
-                               FontSize="28"
-                               FontWeight="SemiBold"/>
+                               Style="{StaticResource FocusPageTitleText}"/>
                     <StackPanel Margin="0,6,0,0"
                                 Orientation="Horizontal">
                         <TextBlock Text="{Binding DateText}"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                         <TextBlock Text=" · "
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                         <TextBlock Text="{Binding StatusText}"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                     </StackPanel>
                 </StackPanel>
                 <Button Grid.Column="1"
@@ -36,27 +35,23 @@
                         Margin="0,0,8,0">
                     <StackPanel>
                         <TextBlock Text="待办任务"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                         <TextBlock Text="{Binding OpenTaskCount}"
                                    Margin="0,5,0,0"
-                                   FontSize="28"
-                                   FontWeight="SemiBold"/>
+                                   Style="{StaticResource FocusMetricText}"/>
                         <TextBlock Text="项仍需推进"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource FocusCard}"
                         Margin="0,0,8,0">
                     <StackPanel>
                         <TextBlock Text="今日专注"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                         <TextBlock Text="{Binding FocusMinutesToday}"
                                    Margin="0,5,0,0"
-                                   FontSize="28"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock FontSize="12"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}">
+                                   Style="{StaticResource FocusMetricText}"/>
+                        <TextBlock Style="{StaticResource FocusCaptionText}">
                             <Run Text="分钟 · "/>
                             <Run Text="{Binding FocusSessionCountToday}"/>
                             <Run Text=" 轮"/>
@@ -67,27 +62,23 @@
                         Margin="0,0,8,0">
                     <StackPanel>
                         <TextBlock Text="进行中 OKR"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                         <TextBlock Text="{Binding ActiveOkrCount}"
                                    Margin="0,5,0,0"
-                                   FontSize="28"
-                                   FontWeight="SemiBold"/>
+                                   Style="{StaticResource FocusMetricText}"/>
                         <TextBlock Text="个目标"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource FocusCard}">
                     <StackPanel>
                         <TextBlock Text="已收纳"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                         <TextBlock Text="{Binding CollectedItemCount}"
                                    Margin="0,5,0,0"
-                                   FontSize="28"
-                                   FontWeight="SemiBold"/>
+                                   Style="{StaticResource FocusMetricText}"/>
                         <TextBlock Text="个桌面项目"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                     </StackPanel>
                 </Border>
             </UniformGrid>
@@ -108,12 +99,10 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="下一步"
-                                           FontSize="18"
-                                           FontWeight="SemiBold"/>
+                                           Style="{StaticResource FocusSectionTitleText}"/>
                                 <TextBlock Text="优先展示进行中和最近创建的任务"
                                            Margin="0,3,0,0"
-                                           FontSize="12"
-                                           Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                           Style="{StaticResource FocusCaptionText}"/>
                             </StackPanel>
                             <Button Grid.Column="1"
                                     Style="{StaticResource FocusSecondaryButton}"
@@ -140,10 +129,9 @@
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Title}"
                                                            TextTrimming="CharacterEllipsis"
-                                                           FontWeight="SemiBold"/>
+                                                           Style="{StaticResource FocusCardTitleText}"/>
                                                 <TextBlock Margin="0,3,0,0"
-                                                           FontSize="12"
-                                                           Foreground="{DynamicResource FocusMutedTextBrush}">
+                                                           Style="{StaticResource FocusCaptionText}">
                                                     <Run Text="{Binding ProjectName}"/>
                                                     <Run Text=" · "/>
                                                     <Run Text="{Binding Status}"/>
@@ -167,7 +155,8 @@
                                    Text="暂无未完成任务，今天可以从新建一项开始。"
                                    Foreground="{DynamicResource FocusMutedTextBrush}">
                             <TextBlock.Style>
-                                <Style TargetType="TextBlock">
+                                <Style TargetType="TextBlock"
+                                       BasedOn="{StaticResource FocusCaptionText}">
                                     <Setter Property="Visibility"
                                             Value="Visible"/>
                                     <Style.Triggers>
@@ -194,12 +183,10 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="目标进展"
-                                           FontSize="18"
-                                           FontWeight="SemiBold"/>
+                                           Style="{StaticResource FocusSectionTitleText}"/>
                                 <TextBlock Text="最近更新的进行中目标"
                                            Margin="0,3,0,0"
-                                           FontSize="12"
-                                           Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                           Style="{StaticResource FocusCaptionText}"/>
                             </StackPanel>
                             <Button Grid.Column="1"
                                     Style="{StaticResource FocusSecondaryButton}"
@@ -221,6 +208,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding Name}"
+                                                       Style="{StaticResource FocusBodyText}"
                                                        TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Grid.Column="1"
                                                        Margin="10,0,0,0"
@@ -243,7 +231,8 @@
                                    Text="还没有进行中的 OKR。"
                                    Foreground="{DynamicResource FocusMutedTextBrush}">
                             <TextBlock.Style>
-                                <Style TargetType="TextBlock">
+                                <Style TargetType="TextBlock"
+                                       BasedOn="{StaticResource FocusCaptionText}">
                                     <Setter Property="Visibility"
                                             Value="Visible"/>
                                     <Style.Triggers>
@@ -269,11 +258,10 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="快速开始"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"/>
+                                   Style="{StaticResource FocusSectionTitleText}"/>
                         <TextBlock Text="把概览变成行动，不在首页堆叠更多信息。"
                                    Margin="0,3,0,0"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                     </StackPanel>
                     <WrapPanel Grid.Column="1">
                         <Button Style="{StaticResource FocusSecondaryButton}"

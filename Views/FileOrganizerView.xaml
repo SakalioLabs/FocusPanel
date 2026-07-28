@@ -182,7 +182,7 @@
                     </Border>
                     <TextBlock Grid.Row="1"
                                Text="{Binding DisplayName}"
-                               FontSize="12"
+                               Style="{StaticResource FocusCaptionText}"
                                Foreground="{DynamicResource FocusTextBrush}"
                                TextAlignment="Center"
                                TextTrimming="CharacterEllipsis"
@@ -218,8 +218,7 @@
                            SnapsToDevicePixels="True"/>
                     <TextBlock Grid.Column="1"
                                Text="{Binding DisplayName}"
-                               FontSize="13"
-                               Foreground="{DynamicResource FocusTextBrush}"
+                               Style="{StaticResource FocusBodyText}"
                                TextTrimming="CharacterEllipsis"
                                VerticalAlignment="Center"
                                Margin="8,0,0,0"/>
@@ -228,7 +227,7 @@
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center"
                                Foreground="{DynamicResource FocusDangerBrush}"
-                               FontSize="11"
+                               Style="{StaticResource FocusMetaText}"
                                Visibility="{Binding NeedsRecovery, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 </Grid>
             </Border>
@@ -289,9 +288,7 @@
                                         VerticalAlignment="Center"
                                         Margin="8,0,0,0">
                                 <TextBlock Text="{Binding Name}"
-                                           FontSize="14"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource FocusTextBrush}"
+                                           Style="{StaticResource FocusCardTitleText}"
                                            VerticalAlignment="Center"/>
                                 <Border Background="{DynamicResource FocusHoverBrush}"
                                         CornerRadius="{StaticResource FocusControlCornerRadius}"
@@ -299,7 +296,7 @@
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Files.Count}"
-                                               FontSize="11"
+                                               Style="{StaticResource FocusMetaText}"
                                                Foreground="{DynamicResource FocusAccentBrush}"/>
                                 </Border>
                             </StackPanel>
@@ -435,9 +432,7 @@
                                FontSize="18"
                                Foreground="{DynamicResource FocusAccentBrush}"/>
                     <TextBlock Text="&#x6536;&#x7EB3;&#x76D2;"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource FocusTextBrush}"
+                               Style="{StaticResource FocusCardTitleText}"
                                VerticalAlignment="Center"
                                Margin="8,0,0,0"/>
                 </StackPanel>
@@ -458,7 +453,9 @@
                                Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
                                 <StackPanel Width="220">
-                                    <TextBlock Text="&#x89C6;&#x56FE;&#x6A21;&#x5F0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
+                                    <TextBlock Text="&#x89C6;&#x56FE;&#x6A21;&#x5F0F;"
+                                               Margin="0,0,0,8"
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                                         <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                      IsChecked="{Binding IsListView, Converter={StaticResource InverseBoolConverter}}"
@@ -469,7 +466,9 @@
                                                      Content="&#x5217;&#x8868;"/>
                                     </StackPanel>
 
-                                    <TextBlock Text="&#x9762;&#x677F;&#x56FE;&#x6807;&#x5927;&#x5C0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
+                                    <TextBlock Text="&#x9762;&#x677F;&#x56FE;&#x6807;&#x5927;&#x5C0F;"
+                                               Margin="0,0,0,8"
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                                         <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                      Content="&#x5C0F;"
@@ -490,7 +489,9 @@
                                                      CommandParameter="1.2"/>
                                     </StackPanel>
 
-                                    <TextBlock Text="&#x5206;&#x7EC4;&#x65B9;&#x5F0F;" FontSize="12" Opacity="0.65" Margin="0,0,0,8"/>
+                                    <TextBlock Text="&#x5206;&#x7EC4;&#x65B9;&#x5F0F;"
+                                               Margin="0,0,0,8"
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <RadioButton Style="{StaticResource OrganizerChoiceChipStyle}"
                                                  IsChecked="{Binding IsPersonalizedView}"
                                                  Command="{Binding ToggleViewCommand}"
@@ -528,7 +529,9 @@
                                Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
                                 <StackPanel Width="210" FocusManager.FocusedElement="{Binding ElementName=PartitionNameBox}">
-                                    <TextBlock Text="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                    <TextBlock Text="&#x65B0;&#x5EFA;&#x6536;&#x7EB3;&#x76D2;"
+                                               Margin="0,0,0,10"
+                                               Style="{StaticResource FocusCardTitleText}"/>
                                     <TextBox x:Name="PartitionNameBox"
                                              Text="{Binding NewPartitionName, UpdateSourceTrigger=PropertyChanged}"
                                              Style="{StaticResource FocusSearchBox}"
@@ -566,7 +569,9 @@
                                Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
                                 <StackPanel Width="170">
-                                    <TextBlock Text="&#x4FEE;&#x590D;&#x5DE5;&#x5177;" FontSize="12" Opacity="0.65" Margin="0,0,0,10"/>
+                                    <TextBlock Text="&#x4FEE;&#x590D;&#x5DE5;&#x5177;"
+                                               Margin="0,0,0,10"
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <Button Command="{Binding RescueCommand}"
                                             Style="{StaticResource FocusSecondaryButton}"
                                             HorizontalContentAlignment="Left"
@@ -627,12 +632,11 @@
 
             <TextBlock HorizontalAlignment="Center"
                        VerticalAlignment="Center"
-                       FontSize="14"
-                       Opacity="0.45"
                        TextAlignment="Center"
-                       Foreground="{DynamicResource FocusTextBrush}">
+                       Foreground="{DynamicResource FocusMutedTextBrush}">
                 <TextBlock.Style>
-                    <Style TargetType="TextBlock">
+                    <Style TargetType="TextBlock"
+                           BasedOn="{StaticResource FocusSecondaryBodyText}">
                         <Setter Property="Visibility" Value="Collapsed"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding AllPartitions.Count}" Value="0">
@@ -656,8 +660,7 @@
                     Style="{StaticResource PopupPanelStyle}">
                 <StackPanel>
                     <TextBlock Text="&#x91CD;&#x547D;&#x540D;&#x6536;&#x7EB3;&#x76D2;"
-                               FontSize="16"
-                               FontWeight="SemiBold"
+                               Style="{StaticResource FocusSectionTitleText}"
                                Margin="0,0,0,14"/>
                     <TextBox x:Name="RenameTextBox"
                              Text="{Binding RenamePartitionName, UpdateSourceTrigger=PropertyChanged}"

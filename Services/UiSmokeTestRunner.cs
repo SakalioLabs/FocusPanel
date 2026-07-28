@@ -32,6 +32,17 @@ internal static class UiSmokeTestRunner
         "FocusWarningTextBrush",
         "FocusOverlayBrush",
         "FocusEdgeIndicatorBrush",
+        "FocusTextBase",
+        "FocusPageTitleText",
+        "FocusSectionTitleText",
+        "FocusEmptyStateTitleText",
+        "FocusCardTitleText",
+        "FocusBodyText",
+        "FocusSecondaryBodyText",
+        "FocusCaptionText",
+        "FocusMetaText",
+        "FocusMetricText",
+        "FocusDisplayText",
         "FocusContextMenu",
         "FocusMenuItem",
         "FocusMenuSeparator",
@@ -100,6 +111,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentListBox(
+                results,
+                failures);
+            CheckFluentTypography(
                 results,
                 failures);
             CheckFluentCheckBox(
@@ -940,6 +954,124 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"Fluent 列表加载失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentTypography(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            TextBlock CreateText(
+                string key,
+                string text)
+            {
+                return new TextBlock
+                {
+                    Text = text,
+                    Style =
+                        (Style)Application.Current
+                            .FindResource(key)
+                };
+            }
+
+            TextBlock page = CreateText(
+                "FocusPageTitleText",
+                "AI 助手");
+            TextBlock section = CreateText(
+                "FocusSectionTitleText",
+                "状态中心");
+            TextBlock card = CreateText(
+                "FocusCardTitleText",
+                "软件更新");
+            TextBlock body = CreateText(
+                "FocusBodyText",
+                "正文");
+            TextBlock secondary = CreateText(
+                "FocusSecondaryBodyText",
+                "辅助正文");
+            TextBlock caption = CreateText(
+                "FocusCaptionText",
+                "说明");
+            TextBlock meta = CreateText(
+                "FocusMetaText",
+                "元信息");
+            TextBlock metric = CreateText(
+                "FocusMetricText",
+                "28");
+            TextBlock display = CreateText(
+                "FocusDisplayText",
+                "25:00");
+
+            var panel = new StackPanel
+            {
+                Children =
+                {
+                    page,
+                    section,
+                    card,
+                    body,
+                    secondary,
+                    caption,
+                    meta,
+                    metric,
+                    display
+                }
+            };
+            panel.Measure(
+                new Size(
+                    640,
+                    480));
+            panel.Arrange(
+                new Rect(
+                    0,
+                    0,
+                    640,
+                    Math.Max(
+                        240,
+                        panel.DesiredSize.Height)));
+            panel.UpdateLayout();
+
+            Brush muted =
+                (Brush)Application.Current.FindResource(
+                    "FocusMutedTextBrush");
+            if (page.FontSize != 28
+                || section.FontSize != 18
+                || card.FontSize != 15
+                || body.FontSize != 13
+                || caption.FontSize != 12
+                || meta.FontSize != 11
+                || metric.FontSize != 28
+                || display.FontSize != 64
+                || page.FontWeight
+                    != FontWeights.SemiBold
+                || !string.Equals(
+                    page.FontFamily.Source,
+                    "Segoe UI Variable Display",
+                    StringComparison.Ordinal)
+                || !ReferenceEquals(
+                    secondary.Foreground,
+                    muted)
+                || !ReferenceEquals(
+                    caption.Foreground,
+                    muted)
+                || !ReferenceEquals(
+                    meta.Foreground,
+                    muted))
+            {
+                failures.Add(
+                    "Fluent 字体层级的字号、字重、字体或辅助文字主题不一致");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 页面、章节、正文、说明与指标字体层级");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 字体层级加载失败：{ex}");
         }
     }
 

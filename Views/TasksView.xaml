@@ -51,12 +51,10 @@
             <StackPanel Grid.Column="1"
                         VerticalAlignment="Center">
                 <TextBlock Text="{Binding CurrentParentItem.Title, TargetNullValue='任务项目'}"
-                           FontSize="25"
-                           FontWeight="SemiBold"/>
+                           Style="{StaticResource FocusPageTitleText}"/>
                 <TextBlock Text="{Binding CurrentViewItems.Count, StringFormat={}{0} 个项目}"
                            Margin="0,3,0,0"
-                           Foreground="{DynamicResource FocusMutedTextBrush}"
-                           FontSize="12"/>
+                           Style="{StaticResource FocusCaptionText}"/>
             </StackPanel>
 
             <Border Grid.Column="2"
@@ -89,7 +87,7 @@
         <TextBlock Grid.Row="2"
                    Text="{Binding TaskStatusMessage}"
                    Foreground="{DynamicResource FocusDangerBrush}"
-                   FontSize="12"
+                   Style="{StaticResource FocusCaptionText}"
                    TextWrapping="Wrap"/>
 
         <Grid Grid.Row="4">
@@ -139,10 +137,10 @@
                                             Margin="12,0"
                                             VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Title}"
-                                               FontSize="15"
                                                TextTrimming="CharacterEllipsis">
                                         <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
+                                            <Style TargetType="TextBlock"
+                                                   BasedOn="{StaticResource FocusCardTitleText}">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsCompleted}" Value="True">
                                                         <Setter Property="TextDecorations" Value="Strikethrough"/>
@@ -154,8 +152,7 @@
                                     </TextBlock>
                                     <TextBlock Text="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}"
                                                Margin="0,2,0,0"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"
-                                               FontSize="11"/>
+                                               Style="{StaticResource FocusMetaText}"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2"
@@ -235,15 +232,13 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding DisplayHeader}"
-                                                       FontSize="14"
-                                                       FontWeight="SemiBold"/>
+                                                       Style="{StaticResource FocusCardTitleText}"/>
                                             <Border Grid.Column="1"
                                                     Padding="7,2"
                                                     Background="{DynamicResource FocusSurfaceStrongBrush}"
                                                     CornerRadius="8">
                                                 <TextBlock Text="{Binding Tasks.Count}"
-                                                           Foreground="{DynamicResource FocusMutedTextBrush}"
-                                                           FontSize="11"/>
+                                                           Style="{StaticResource FocusMetaText}"/>
                                             </Border>
                                         </Grid>
 
@@ -258,13 +253,12 @@
                                                                 CornerRadius="{StaticResource FocusControlCornerRadius}">
                                                             <StackPanel>
                                                                 <TextBlock Text="{Binding Title}"
-                                                                           FontWeight="SemiBold"
+                                                                           Style="{StaticResource FocusCardTitleText}"
                                                                            TextWrapping="Wrap"
                                                                            MaxHeight="42"/>
                                                                 <TextBlock Text="{Binding CreatedAt, StringFormat={}{0:MM-dd HH:mm}}"
                                                                            Margin="0,4,0,7"
-                                                                           Foreground="{DynamicResource FocusMutedTextBrush}"
-                                                                           FontSize="10"/>
+                                                                           Style="{StaticResource FocusMetaText}"/>
                                                                 <Grid>
                                                                     <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="Auto"/>
@@ -353,12 +347,10 @@
                             Margin="0,0,0,14">
                         <StackPanel>
                             <TextBlock Text="Markdown 图片"
-                                       FontSize="17"
-                                       FontWeight="SemiBold"/>
+                                       Style="{StaticResource FocusSectionTitleText}"/>
                             <TextBlock Text="插入到任务长文本中的图片会复制到此目录。"
                                        Margin="0,4,0,10"
-                                       Foreground="{DynamicResource FocusMutedTextBrush}"
-                                       FontSize="12"/>
+                                       Style="{StaticResource FocusCaptionText}"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -378,12 +370,10 @@
                     <Border Style="{StaticResource FocusCard}">
                         <StackPanel>
                             <TextBlock Text="自定义字段"
-                                       FontSize="17"
-                                       FontWeight="SemiBold"/>
+                                       Style="{StaticResource FocusSectionTitleText}"/>
                             <TextBlock Text="字段应用于当前项目；在根目录配置时作为全局字段。"
                                        Margin="0,4,0,12"
-                                       Foreground="{DynamicResource FocusMutedTextBrush}"
-                                       FontSize="12"/>
+                                       Style="{StaticResource FocusCaptionText}"/>
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -412,8 +402,7 @@
                                         Visibility="{Binding IsFieldTypeSelect, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <TextBlock Text="选项"
                                            Margin="2,0,0,5"
-                                           Foreground="{DynamicResource FocusMutedTextBrush}"
-                                           FontSize="12"/>
+                                           Style="{StaticResource FocusCaptionText}"/>
                                 <TextBox Text="{Binding NewFieldOptions}"
                                          ToolTip="用逗号或换行分隔多个选项"/>
                             </StackPanel>
@@ -429,11 +418,10 @@
                                             </Grid.ColumnDefinitions>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Name}"
-                                                           FontWeight="SemiBold"/>
+                                                           Style="{StaticResource FocusCardTitleText}"/>
                                                 <TextBlock Text="{Binding TypeDisplay}"
                                                            Margin="0,2,0,0"
-                                                           Foreground="{DynamicResource FocusMutedTextBrush}"
-                                                           FontSize="11"/>
+                                                           Style="{StaticResource FocusMetaText}"/>
                                             </StackPanel>
                                             <Button Grid.Column="1"
                                                     Width="34"

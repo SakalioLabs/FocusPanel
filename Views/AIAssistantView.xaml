@@ -17,11 +17,10 @@
             </Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="AI 助手"
-                           FontSize="28"
-                           FontWeight="SemiBold"/>
+                           Style="{StaticResource FocusPageTitleText}"/>
                 <TextBlock Text="{Binding StatusText}"
                            Margin="0,5,0,0"
-                           Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                           Style="{StaticResource FocusSecondaryBodyText}"/>
             </StackPanel>
             <StackPanel Grid.Column="1"
                         Orientation="Horizontal">
@@ -54,10 +53,9 @@
                 </Grid.RowDefinitions>
                 <StackPanel Grid.ColumnSpan="3">
                     <TextBlock Text="OpenAI API 配置"
-                               FontSize="16"
-                               FontWeight="SemiBold"/>
+                               Style="{StaticResource FocusSectionTitleText}"/>
                     <TextBlock Margin="0,4,0,12"
-                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                               Style="{StaticResource FocusCaptionText}"
                                TextWrapping="Wrap"
                                Text="API Key 使用 Windows DPAPI 加密，仅当前 Windows 用户可解密；不会显示或写入日志。ChatGPT 订阅不等同于 API Key。"/>
                 </StackPanel>
@@ -91,7 +89,7 @@
                             Command="{Binding ClearApiKeyCommand}"/>
                     <TextBlock Margin="14,0,0,0"
                                VerticalAlignment="Center"
-                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                               Style="{StaticResource FocusCaptionText}"
                                Text="更换 Key 时直接输入新值并保存；留空只更新模型。"/>
                 </StackPanel>
             </Grid>
@@ -116,13 +114,14 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding Sender}"
-                                                       FontWeight="SemiBold"/>
+                                                       Style="{StaticResource FocusCardTitleText}"/>
                                             <TextBlock Text="{Binding TimeText}"
                                                        Margin="8,0,0,0"
-                                                       Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                                       Style="{StaticResource FocusMetaText}"/>
                                         </StackPanel>
                                         <TextBlock Text="{Binding Content}"
                                                    Margin="0,7,0,0"
+                                                   Style="{StaticResource FocusBodyText}"
                                                    TextWrapping="Wrap"
                                                    LineHeight="21"
                                                    IsHyphenationEnabled="False"/>
@@ -166,14 +165,13 @@
                 <TextBlock Text="把下一步想清楚"
                            Margin="0,12,0,0"
                            HorizontalAlignment="Center"
-                           FontSize="22"
-                           FontWeight="SemiBold"/>
+                           Style="{StaticResource FocusEmptyStateTitleText}"/>
                 <TextBlock Text="AI 默认看不到你的 FocusPanel 数据；只有打开下方授权开关后，才会随问题发送精简摘要。"
                            Width="460"
                            Margin="0,8,0,0"
+                           Style="{StaticResource FocusSecondaryBodyText}"
                            TextAlignment="Center"
-                           TextWrapping="Wrap"
-                           Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                           TextWrapping="Wrap"/>
                 <WrapPanel Margin="0,18,0,0"
                            HorizontalAlignment="Center">
                     <Button Style="{StaticResource FocusSecondaryButton}"

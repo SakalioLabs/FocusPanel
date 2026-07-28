@@ -16,22 +16,12 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <Style x:Key="OkrSectionTitle"
-               TargetType="TextBlock">
-            <Setter Property="FontSize"
-                    Value="17"/>
-            <Setter Property="FontWeight"
-                    Value="SemiBold"/>
-            <Setter Property="Foreground"
-                    Value="{DynamicResource FocusTextBrush}"/>
-        </Style>
+               TargetType="TextBlock"
+               BasedOn="{StaticResource FocusSectionTitleText}"/>
 
         <Style x:Key="OkrCaption"
-               TargetType="TextBlock">
-            <Setter Property="FontSize"
-                    Value="12"/>
-            <Setter Property="Foreground"
-                    Value="{DynamicResource FocusMutedTextBrush}"/>
-        </Style>
+               TargetType="TextBlock"
+               BasedOn="{StaticResource FocusCaptionText}"/>
     </UserControl.Resources>
 
     <Grid Margin="22,18,22,22">
@@ -56,13 +46,11 @@
                                FontSize="24"
                                Margin="0,0,10,0"/>
                     <TextBlock Text="目标与关键结果"
-                               FontSize="24"
-                               FontWeight="SemiBold"/>
+                               Style="{StaticResource FocusPageTitleText}"/>
                 </StackPanel>
                 <TextBlock Text="本地管理目标，按需与飞书 OKR 双向同步"
                            Margin="34,4,0,0"
-                           Foreground="{DynamicResource FocusMutedTextBrush}"
-                           FontSize="12"/>
+                           Style="{StaticResource FocusCaptionText}"/>
             </StackPanel>
 
             <StackPanel Grid.Column="1"
@@ -111,12 +99,11 @@
                             VerticalAlignment="Center">
                     <TextBlock Text="{Binding SyncStatusText}"
                                TextTrimming="CharacterEllipsis"
-                               FontWeight="SemiBold"/>
+                               Style="{StaticResource FocusCardTitleText}"/>
                     <TextBlock Text="{Binding LastSyncResultText}"
                                Margin="0,3,0,0"
-                               Foreground="{DynamicResource FocusMutedTextBrush}"
                                TextTrimming="CharacterEllipsis"
-                               FontSize="11"/>
+                               Style="{StaticResource FocusMetaText}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2"
                             VerticalAlignment="Center">
@@ -126,7 +113,7 @@
                     <TextBlock Text="{Binding LastSyncTime, StringFormat='{}{0:MM-dd HH:mm}', TargetNullValue='—'}"
                                Margin="0,3,0,0"
                                HorizontalAlignment="Right"
-                               FontSize="12"/>
+                               Style="{StaticResource FocusCaptionText}"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -251,7 +238,7 @@
                         <StackPanel Grid.Column="1"
                                     Margin="12,0">
                             <TextBlock Text="当前仅使用本地 OKR"
-                                       FontWeight="SemiBold"/>
+                                       Style="{StaticResource FocusCardTitleText}"/>
                             <TextBlock Text="可以正常创建和管理；配置飞书后再进行双向同步。"
                                        Margin="0,3,0,0"
                                        Style="{StaticResource OkrCaption}"/>
@@ -319,7 +306,7 @@
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="还没有目标"
                                    Margin="0,10,0,0"
-                                   FontWeight="SemiBold"
+                                   Style="{StaticResource FocusCardTitleText}"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="在上方创建第一个目标，数据会先安全保存在本机。"
                                    Margin="0,4,0,0"
@@ -340,8 +327,7 @@
                                         </Grid.ColumnDefinitions>
                                         <StackPanel>
                                             <TextBlock Text="{Binding Name}"
-                                                       FontSize="16"
-                                                       FontWeight="SemiBold"
+                                                       Style="{StaticResource FocusCardTitleText}"
                                                        TextTrimming="CharacterEllipsis"/>
                                             <StackPanel Orientation="Horizontal"
                                                         Margin="0,4,0,0">

@@ -20,12 +20,10 @@
 
             <StackPanel>
                 <TextBlock Text="专注计时"
-                           FontSize="24"
-                           FontWeight="SemiBold"/>
+                           Style="{StaticResource FocusPageTitleText}"/>
                 <TextBlock Text="保持节奏，完成后 FocusPanel 会通过声音和通知提醒你。"
                            Margin="0,5,0,0"
-                           Foreground="{DynamicResource FocusMutedTextBrush}"
-                           FontSize="13"/>
+                           Style="{StaticResource FocusSecondaryBodyText}"/>
             </StackPanel>
 
             <Border Grid.Row="2"
@@ -45,19 +43,15 @@
                     <StackPanel HorizontalAlignment="Center">
                         <TextBlock Text="{Binding StatusMessage}"
                                    HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"
-                                   FontSize="14"/>
+                                   Style="{StaticResource FocusSecondaryBodyText}"/>
                         <TextBlock Text="{Binding TimerDisplay}"
                                    Margin="0,5,0,0"
                                    HorizontalAlignment="Center"
-                                   FontFamily="Segoe UI Variable Display"
-                                   FontSize="64"
-                                   FontWeight="SemiBold"/>
+                                   Style="{StaticResource FocusDisplayText}"/>
                         <TextBlock Text="{Binding ElapsedDisplay}"
                                    Margin="0,2,0,0"
                                    HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"
-                                   FontSize="12"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                     </StackPanel>
 
                     <ProgressBar Grid.Row="2"
@@ -129,13 +123,11 @@
                     <StackPanel HorizontalAlignment="Center">
                         <TextBlock Text="{Binding CompletedPomodoros}"
                                    HorizontalAlignment="Center"
-                                   FontSize="25"
-                                   FontWeight="SemiBold"
+                                   Style="{StaticResource FocusMetricText}"
                                    Foreground="{DynamicResource FocusAccentBrightBrush}"/>
                         <TextBlock Text="已完成轮次"
                                    Margin="0,3,0,0"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"
-                                   FontSize="12"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                     </StackPanel>
 
                     <Border Grid.Column="1"
@@ -145,13 +137,11 @@
                                 HorizontalAlignment="Center">
                         <TextBlock Text="{Binding TotalFocusMinutes, StringFormat={}{0:0.#}}"
                                    HorizontalAlignment="Center"
-                                   FontSize="25"
-                                   FontWeight="SemiBold"
+                                   Style="{StaticResource FocusMetricText}"
                                    Foreground="{DynamicResource FocusAccentBrightBrush}"/>
                         <TextBlock Text="累计专注分钟"
                                    Margin="0,3,0,0"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}"
-                                   FontSize="12"/>
+                                   Style="{StaticResource FocusCaptionText}"/>
                     </StackPanel>
                 </Grid>
             </Border>

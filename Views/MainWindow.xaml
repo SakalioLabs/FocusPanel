@@ -98,8 +98,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="{Binding CurrentSectionTitle}"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"/>
+                                       Style="{StaticResource FocusSectionTitleText}"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <Button Style="{StaticResource FocusIconButton}"
@@ -135,7 +134,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Text="启动应用" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="启动应用"
+                                       Style="{StaticResource FocusSectionTitleText}"/>
                             <Grid Grid.Row="1" Margin="0,14,0,12">
                                 <TextBox x:Name="SearchBox"
                                          Style="{StaticResource FocusSearchBox}"
@@ -147,10 +147,10 @@
                                 <TextBlock Text="输入应用名称"
                                            Margin="16,0"
                                            VerticalAlignment="Center"
-                                           Foreground="{DynamicResource FocusMutedTextBrush}"
                                            IsHitTestVisible="False">
                                     <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
+                                        <Style TargetType="TextBlock"
+                                               BasedOn="{StaticResource FocusSecondaryBodyText}">
                                             <Setter Property="Visibility" Value="Collapsed"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
@@ -244,7 +244,8 @@
                             Visibility="{Binding IsFocusCenterOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
-                                <TextBlock Text="Focus 中心" FontSize="19" FontWeight="SemiBold"/>
+                                <TextBlock Text="Focus 中心"
+                                           Style="{StaticResource FocusSectionTitleText}"/>
                                 <Button Margin="0,14,0,0"
                                         Height="50"
                                         Style="{StaticResource FocusPrimaryButton}"
@@ -261,13 +262,12 @@
                                     <StackPanel>
                                         <TextBlock Text="{Binding AvailableUpdateVersion, StringFormat=可更新到 v{0}}"
                                                    HorizontalAlignment="Center"
-                                                   FontWeight="SemiBold"
+                                                   Style="{StaticResource FocusCardTitleText}"
                                                    Foreground="{DynamicResource FocusAccentBrightBrush}"/>
                                         <TextBlock Text="打开设置一键安装"
                                                    Margin="0,3,0,0"
                                                    HorizontalAlignment="Center"
-                                                   FontSize="12"
-                                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                                   Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Margin="0,14,0,10" Style="{StaticResource FocusSecondaryButton}"
@@ -301,8 +301,11 @@
                             Visibility="{Binding IsStatusCenterOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
-                                <TextBlock Text="状态中心" FontSize="19" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding ReplacementStatus}" Margin="0,5,0,12" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                <TextBlock Text="状态中心"
+                                           Style="{StaticResource FocusSectionTitleText}"/>
+                                <TextBlock Text="{Binding ReplacementStatus}"
+                                           Margin="0,5,0,12"
+                                           Style="{StaticResource FocusSecondaryBodyText}"/>
                                 <TextBlock Text="{Binding ReplacementError}" Margin="0,0,0,10"
                                            Foreground="{DynamicResource FocusDangerBrush}" TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding SystemActionMessage}"
@@ -322,8 +325,10 @@
                                                VerticalAlignment="Center"
                                                AutomationProperties.Name="{Binding NetworkSummary}"/>
                                     <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding NetworkDisplayName}" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding NetworkDetail}" Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                        <TextBlock Text="{Binding NetworkDisplayName}"
+                                                   Style="{StaticResource FocusCardTitleText}"/>
+                                        <TextBlock Text="{Binding NetworkDetail}"
+                                                   Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
                                     <Button Grid.Column="2" Style="{StaticResource FocusSecondaryButton}" Content="快捷设置" Command="{Binding OpenQuickSettingsCommand}"/>
                                 </Grid>
@@ -414,16 +419,18 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
                           <StackPanel Margin="0,0,4,0">
-                            <TextBlock Text="系统与恢复" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="系统与恢复"
+                                       Style="{StaticResource FocusSectionTitleText}"/>
                             <TextBlock Text="紧急恢复：Ctrl + Alt + Shift + F10"
                                        Margin="0,6,0,16"
-                                       Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                       Style="{StaticResource FocusCaptionText}"/>
                              <Border Style="{StaticResource FocusCard}" Margin="0,0,0,12">
                                  <StackPanel>
-                                     <TextBlock Text="侧边任务栏完整替代" FontWeight="SemiBold"/>
+                                     <TextBlock Text="侧边任务栏完整替代"
+                                                Style="{StaticResource FocusCardTitleText}"/>
                                     <TextBlock Margin="0,4,0,10"
                                                Text="{Binding ReplacementStatus}"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <TextBlock Margin="0,0,0,10"
                                                Text="{Binding ReplacementError}"
                                                TextWrapping="Wrap"
@@ -452,10 +459,11 @@
                              </Border>
                             <Border Style="{StaticResource FocusCard}" Margin="0,0,0,12">
                                 <StackPanel>
-                                    <TextBlock Text="外观与交互" FontWeight="SemiBold"/>
+                                    <TextBlock Text="外观与交互"
+                                               Style="{StaticResource FocusCardTitleText}"/>
                                     <TextBlock Text="主题"
                                                Margin="0,10,0,5"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <ComboBox SelectedValuePath="Tag"
                                               SelectedValue="{Binding ThemeMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                         <ComboBoxItem Content="跟随系统" Tag="System"/>
@@ -471,11 +479,10 @@
                                     <TextBlock Margin="24,5,0,0"
                                                Text="{Binding StartupStatus}"
                                                TextWrapping="Wrap"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <TextBlock Margin="0,10,0,0"
                                                Text="主动唤出：Ctrl + Alt + Space"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <Border x:Name="ProtectedFilesWarning"
                                             Margin="0,12,0,0"
                                             Padding="10"
@@ -497,10 +504,11 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="软件更新" FontWeight="SemiBold"/>
+                                        <TextBlock Text="软件更新"
+                                                   Style="{StaticResource FocusCardTitleText}"/>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding CurrentAppVersion, StringFormat=v{0}}"
-                                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                                   Style="{StaticResource FocusMetaText}"/>
                                     </Grid>
                                     <Grid Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions>
@@ -509,7 +517,7 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock VerticalAlignment="Center"
                                                    Text="更新源"
-                                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                                   Style="{StaticResource FocusCaptionText}"/>
                                         <TextBlock Grid.Column="1"
                                                    Margin="12,0,0,0"
                                                    HorizontalAlignment="Right"
@@ -519,7 +527,7 @@
                                     <TextBlock Margin="0,6,0,10"
                                                Text="{Binding UpdateStatus}"
                                                TextWrapping="Wrap"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <ProgressBar Height="5"
                                                  Margin="0,0,0,10"
                                                  Minimum="0"
@@ -572,7 +580,9 @@
                             BorderThickness="1"
                             Visibility="{Binding IsPowerMenuOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <StackPanel>
-                            <TextBlock Text="电源" FontSize="18" FontWeight="SemiBold" Margin="4,0,0,10"/>
+                            <TextBlock Text="电源"
+                                       Margin="4,0,0,10"
+                                       Style="{StaticResource FocusSectionTitleText}"/>
                             <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="锁定" Command="{Binding LockComputerCommand}"/>
                             <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="睡眠" Command="{Binding SleepComputerCommand}"/>
                             <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="重启…" Command="{Binding RestartComputerCommand}"/>
@@ -659,10 +669,12 @@
                                                     </Button.Style>
                                                     <Button.ToolTip>
                                                         <StackPanel>
-                                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
-                                                            <TextBlock Text="{Binding StatusSummary}" Opacity="0.65"/>
+                                                            <TextBlock Text="{Binding DisplayName}"
+                                                                       Style="{StaticResource FocusCardTitleText}"/>
+                                                            <TextBlock Text="{Binding StatusSummary}"
+                                                                       Style="{StaticResource FocusMetaText}"/>
                                                             <TextBlock Text="{Binding InteractionHint}"
-                                                                       Foreground="{DynamicResource FocusMutedTextBrush}"
+                                                                       Style="{StaticResource FocusCaptionText}"
                                                                        TextWrapping="Wrap"
                                                                        MaxWidth="260"/>
                                                         </StackPanel>
@@ -877,12 +889,10 @@
                             </Border>
                             <TextBlock Text="启用 FocusPanel 侧边任务栏"
                                        Margin="0,22,0,10"
-                                       FontSize="28"
-                                       FontWeight="SemiBold"/>
+                                       Style="{StaticResource FocusPageTitleText}"/>
                             <TextBlock TextWrapping="Wrap"
-                                       FontSize="14"
+                                       Style="{StaticResource FocusSecondaryBodyText}"
                                        LineHeight="23"
-                                       Foreground="{DynamicResource FocusMutedTextBrush}"
                                        Text="FocusPanel 先通过 Windows AppBar 自动隐藏释放工作区，再隐藏主屏原生任务栏。守护器只验证状态，不反复改写工作区；异常、退出或紧急快捷键会恢复原设置。Win+A、Win+N、Win+Space 等系统入口仍可使用。"/>
                             <CheckBox Content="随 Windows 启动 FocusPanel"
                                       Margin="0,20,0,0"
