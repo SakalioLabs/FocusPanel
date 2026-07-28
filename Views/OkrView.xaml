@@ -3,286 +3,614 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:materialDesign="clr-namespace:FocusPanel.Controls"
              xmlns:vm="clr-namespace:FocusPanel.ViewModels"
              xmlns:converters="clr-namespace:FocusPanel.Converters"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:OkrViewModel}"
-             d:DesignHeight="700" d:DesignWidth="800">
+             d:DesignHeight="760"
+             d:DesignWidth="720">
     <UserControl.Resources>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
-        <converters:ProgressToColorConverter x:Key="ProgressToColorConverter"/>
         <converters:SyncStatusToIconConverter x:Key="SyncStatusToIconConverter"/>
         <converters:SyncStatusToTooltipConverter x:Key="SyncStatusToTooltipConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <Style x:Key="OkrSectionTitle"
+               TargetType="TextBlock">
+            <Setter Property="FontSize"
+                    Value="17"/>
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource FocusTextBrush}"/>
+        </Style>
+
+        <Style x:Key="OkrCaption"
+               TargetType="TextBlock">
+            <Setter Property="FontSize"
+                    Value="12"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource FocusMutedTextBrush}"/>
+        </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+    <Grid Margin="22,18,22,22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <Grid Grid.Row="0" Margin="0,0,0,12">
+        <Grid Grid.Row="0"
+              Margin="2,0,2,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE9D9;"
+                               Style="{StaticResource FocusIconText}"
+                               Foreground="{DynamicResource FocusAccentBrightBrush}"
+                               FontSize="24"
+                               Margin="0,0,10,0"/>
+                    <TextBlock Text="目标与关键结果"
+                               FontSize="24"
+                               FontWeight="SemiBold"/>
+                </StackPanel>
+                <TextBlock Text="本地管理目标，按需与飞书 OKR 双向同步"
+                           Margin="34,4,0,0"
+                           Foreground="{DynamicResource FocusMutedTextBrush}"
+                           FontSize="12"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal">
+                <Button Content="立即同步"
+                        Style="{StaticResource FocusPrimaryButton}"
+                        MinWidth="104"
+                        Command="{Binding SyncNowCommand}"
+                        IsEnabled="{Binding IsSyncing, Converter={StaticResource InverseBoolConverter}}"/>
+                <Button Width="44"
+                        Height="44"
+                        Margin="8,0,0,0"
+                        Style="{StaticResource FocusIconButton}"
+                        Command="{Binding ToggleSettingsCommand}"
+                        ToolTip="飞书同步设置">
+                    <TextBlock Text="&#xE713;"
+                               Style="{StaticResource FocusIconText}"
+                               FontSize="18"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Style="{StaticResource FocusCard}"
+                Margin="0,0,0,14">
+            <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="Target" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock Text="OKR Goals" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+
+                <Border Width="38"
+                        Height="38"
+                        CornerRadius="12"
+                        Background="{DynamicResource FocusSurfaceStrongBrush}">
+                    <TextBlock Text="&#xE895;"
+                               Style="{StaticResource FocusIconText}"
+                               Foreground="{DynamicResource FocusAccentBrightBrush}"
+                               FontSize="17"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1"
+                            Margin="12,0"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SyncStatusText}"
+                               TextTrimming="CharacterEllipsis"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding LastSyncResultText}"
+                               Margin="0,3,0,0"
+                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                               TextTrimming="CharacterEllipsis"
+                               FontSize="11"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="Sync Now" Command="{Binding SyncNowCommand}"
-                            IsEnabled="{Binding IsSyncing, Converter={StaticResource InverseBoolConverter}}"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            materialDesign:ButtonAssist.CornerRadius="12"
-                            Margin="0,0,8,0"/>
-                    <Button Command="{Binding ToggleSettingsCommand}"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            ToolTip="Settings">
-                        <materialDesign:PackIcon Kind="Cog" Width="20" Height="20"/>
-                    </Button>
+                <StackPanel Grid.Column="2"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="上次同步"
+                               HorizontalAlignment="Right"
+                               Style="{StaticResource OkrCaption}"/>
+                    <TextBlock Text="{Binding LastSyncTime, StringFormat='{}{0:MM-dd HH:mm}', TargetNullValue='—'}"
+                               Margin="0,3,0,0"
+                               HorizontalAlignment="Right"
+                               FontSize="12"/>
                 </StackPanel>
             </Grid>
+        </Border>
 
-            <!-- Status Bar -->
-            <Border Grid.Row="1" Margin="0,0,0,12" Padding="8" CornerRadius="{StaticResource FocusControlCornerRadius}"
-                    Background="{DynamicResource MaterialDesignDivider}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Status: " FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding SyncStatusText}" TextTrimming="CharacterEllipsis"/>
+        <ScrollViewer Grid.Row="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <Border Style="{StaticResource FocusCard}"
+                        Margin="0,0,0,14"
+                        Visibility="{Binding ShowSettings, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="飞书同步设置"
+                                           Style="{StaticResource OkrSectionTitle}"/>
+                                <TextBlock Text="凭据仅保存在本机配置中；清除凭据不会删除本地 OKR。"
+                                           Margin="0,4,0,0"
+                                           Style="{StaticResource OkrCaption}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Width="36"
+                                    Height="36"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding ToggleSettingsCommand}"
+                                    ToolTip="关闭设置">
+                                <TextBlock Text="&#xE711;"
+                                           Style="{StaticResource FocusIconText}"/>
+                            </Button>
+                        </Grid>
+
+                        <TextBlock Text="App ID"
+                                   Margin="2,0,0,5"
+                                   Style="{StaticResource OkrCaption}"/>
+                        <TextBox Text="{Binding SettingsAppId, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="飞书开放平台应用 App ID"/>
+
+                        <TextBlock Text="App Secret"
+                                   Margin="2,10,0,5"
+                                   Style="{StaticResource OkrCaption}"/>
+                        <PasswordBox x:Name="SettingsAppSecretBox"
+                                     Style="{StaticResource FocusPasswordBox}"
+                                     ToolTip="为安全起见，已保存的密钥不会回显"/>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="180"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="自动同步间隔"
+                                           Margin="2,0,0,5"
+                                           Style="{StaticResource OkrCaption}"/>
+                                <TextBlock Text="修改后立即保存"
+                                           Style="{StaticResource OkrCaption}"/>
+                            </StackPanel>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding SyncIntervalOptions}"
+                                      SelectedItem="{Binding SyncIntervalMinutes}"
+                                      Style="{StaticResource FocusComboBox}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StringFormat={}{0} 分钟}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+
+                        <TextBlock Text="{Binding SettingsValidationMessage}"
+                                   Margin="2,10,0,0"
+                                   TextWrapping="Wrap">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock"
+                                       BasedOn="{StaticResource OkrCaption}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SettingsValidationSuccess}"
+                                                     Value="True">
+                                            <Setter Property="Foreground"
+                                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SettingsValidationSuccess}"
+                                                     Value="False">
+                                            <Setter Property="Foreground"
+                                                    Value="{DynamicResource FocusDangerBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0,12,0,0">
+                            <Button Content="验证并保存"
+                                    Style="{StaticResource FocusPrimaryButton}"
+                                    Command="{Binding ValidateAndSaveCredentialsCommand}"/>
+                            <Button Content="清除凭据"
+                                    Margin="8,0,0,0"
+                                    Style="{StaticResource FocusSecondaryButton}"
+                                    Command="{Binding ClearCredentialsCommand}"/>
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="Last sync: " Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                        <TextBlock Text="{Binding LastSyncTime, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                        <TextBlock Text=" | " Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                        <TextBlock Text="{Binding LastSyncResultText}" Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                   TextTrimming="CharacterEllipsis" MaxWidth="500"/>
+                </Border>
+
+                <Border Style="{StaticResource FocusCard}"
+                        Margin="0,0,0,14"
+                        Visibility="{Binding IsConfigured, Converter={StaticResource InverseBoolConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="&#xE946;"
+                                   Style="{StaticResource FocusIconText}"
+                                   Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                   FontSize="20"
+                                   VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1"
+                                    Margin="12,0">
+                            <TextBlock Text="当前仅使用本地 OKR"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Text="可以正常创建和管理；配置飞书后再进行双向同步。"
+                                       Margin="0,3,0,0"
+                                       Style="{StaticResource OkrCaption}"/>
+                        </StackPanel>
+                        <Button Grid.Column="2"
+                                Content="配置飞书"
+                                Style="{StaticResource FocusSecondaryButton}"
+                                Command="{Binding ToggleSettingsCommand}"/>
+                    </Grid>
+                </Border>
+
+                <ProgressBar Height="4"
+                             Margin="0,0,0,14"
+                             IsIndeterminate="True"
+                             Style="{StaticResource FocusLinearProgress}"
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
+
+                <Border Style="{StaticResource FocusCard}"
+                        Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="新建目标"
+                                   Style="{StaticResource OkrSectionTitle}"/>
+                        <TextBlock Text="先写清想达成的结果，再用可量化的关键结果跟踪。"
+                                   Margin="0,4,0,12"
+                                   Style="{StaticResource OkrCaption}"/>
+
+                        <TextBox Text="{Binding NewObjectiveName, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="目标名称"/>
+                        <TextBox Text="{Binding NewObjectiveNote, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,8,0,0"
+                                 Height="64"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalContentAlignment="Top"
+                                 ToolTip="目标说明（可选）"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding NewObjectivePeriod, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="周期，例如 2026 Q3"/>
+                            <Button Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    Content="创建目标"
+                                    Style="{StaticResource FocusPrimaryButton}"
+                                    Command="{Binding AddObjectiveCommand}"/>
+                        </Grid>
                     </StackPanel>
-                </Grid>
-            </Border>
+                </Border>
 
-            <!-- Settings Panel -->
-            <Border Grid.Row="2" Visibility="{Binding ShowSettings, Converter={StaticResource BoolToVis}}"
-                    Margin="0,0,0,12" Padding="16" CornerRadius="{StaticResource FocusCardCornerRadius}"
-                    Background="{DynamicResource MaterialDesignCardBackground}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                <TextBlock Text="目标"
+                           Margin="2,0,0,10"
+                           Style="{StaticResource OkrSectionTitle}"/>
 
-                    <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Feishu Configuration" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
-
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="App ID:" VerticalAlignment="Center" Margin="0,4"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SettingsAppId, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0,4" materialDesign:HintAssist.Hint="Feishu App ID"/>
-
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="App Secret:" VerticalAlignment="Center" Margin="0,4"/>
-                    <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="SettingsAppSecretBox"
-                                 materialDesign:HintAssist.Hint="Feishu App Secret" Margin="0,4"/>
-
-                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="Validate &amp; Save" Command="{Binding ValidateAndSaveCredentialsCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="12" Margin="0,0,8,0"/>
-                        <Button Content="Clear Credentials" Command="{Binding ClearCredentialsCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="12"/>
+                <Border Style="{StaticResource FocusCard}"
+                        Margin="0,0,0,14"
+                        Visibility="{Binding HasObjectives, Converter={StaticResource InverseBoolConverter}}">
+                    <StackPanel HorizontalAlignment="Center"
+                                Margin="0,24">
+                        <TextBlock Text="&#xE9D9;"
+                                   Style="{StaticResource FocusIconText}"
+                                   Foreground="{DynamicResource FocusMutedTextBrush}"
+                                   FontSize="30"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="还没有目标"
+                                   Margin="0,10,0,0"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="在上方创建第一个目标，数据会先安全保存在本机。"
+                                   Margin="0,4,0,0"
+                                   Style="{StaticResource OkrCaption}"/>
                     </StackPanel>
+                </Border>
 
-                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SettingsValidationMessage}"
-                               Margin="0,8,0,0" FontWeight="SemiBold">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SettingsValidationSuccess}" Value="True">
-                                        <Setter Property="Foreground" Value="Green"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding SettingsValidationSuccess}" Value="False">
-                                        <Setter Property="Foreground" Value="Red"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-
-                    <!-- Sync interval -->
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Sync Interval:" VerticalAlignment="Center" Margin="0,8"/>
-                    <ComboBox Grid.Row="5" Grid.Column="1" Margin="0,8" Width="120" HorizontalAlignment="Left"
-                              ItemsSource="{Binding SyncIntervalOptions}"
-                              SelectedItem="{Binding SyncIntervalMinutes}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Path=., StringFormat='{}{0} min'}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </Grid>
-            </Border>
-
-            <!-- Main Content -->
-            <StackPanel Grid.Row="3">
-                <!-- Not Configured Placeholder -->
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Visibility="{Binding IsConfigured, Converter={StaticResource InverseBoolConverter}}">
-                    <materialDesign:PackIcon Kind="Target" Width="48" Height="48"
-                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                             HorizontalAlignment="Center"/>
-                    <TextBlock Text="Feishu OKR Not Configured" FontSize="18" HorizontalAlignment="Center" Margin="0,8"/>
-                    <TextBlock Text="Click the gear icon to set up your Feishu app credentials."
-                               Foreground="{DynamicResource MaterialDesignBodyLight}"
-                               HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Loading -->
-                <ProgressBar IsIndeterminate="True" Width="200" Height="4"
-                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
-                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                <!-- OKR List -->
-                <ItemsControl ItemsSource="{Binding Objectives}"
-                              Visibility="{Binding IsConfigured, Converter={StaticResource BoolToVis}}">
+                <ItemsControl ItemsSource="{Binding Objectives}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="0,0,0,8" Padding="12" CornerRadius="{StaticResource FocusCardCornerRadius}"
-                                    Background="{DynamicResource MaterialDesignCardBackground}">
+                            <Border Style="{StaticResource FocusCard}"
+                                    Margin="0,0,0,12">
                                 <StackPanel>
-                                    <!-- Objective Header -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <!-- Progress Bar -->
-                                        <ProgressBar Grid.Column="0" Grid.RowSpan="2"
-                                                     Width="80" Height="6" Minimum="0" Maximum="100"
-                                                     Value="{Binding Progress}"
-                                                     Margin="0,0,12,0" VerticalAlignment="Center"/>
-
-                                        <!-- Info -->
-                                        <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Text="{Binding Progress, StringFormat='{}{0:F0}%'}" FontSize="13"
-                                                       Foreground="{DynamicResource MaterialDesignBodyLight}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontSize="16"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Orientation="Horizontal"
+                                                        Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding Period, StringFormat='周期：{0}', TargetNullValue='未设置周期'}"
+                                                           Style="{StaticResource OkrCaption}"/>
+                                                <TextBlock Text="  ·  "
+                                                           Style="{StaticResource OkrCaption}"/>
+                                                <TextBlock Text="{Binding KeyResults.Count, StringFormat='{}{0} 个关键结果'}"
+                                                           Style="{StaticResource OkrCaption}"/>
+                                                <TextBlock Text="  "
+                                                           Style="{StaticResource OkrCaption}"/>
+                                                <TextBlock Text="{Binding SyncStatus, Converter={StaticResource SyncStatusToIconConverter}}"
+                                                           FontFamily="Segoe Fluent Icons"
+                                                           Foreground="{DynamicResource FocusMutedTextBrush}"
+                                                           ToolTip="{Binding SyncStatus, Converter={StaticResource SyncStatusToTooltipConverter}}"/>
+                                            </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
-                                            <TextBlock Text="{Binding Period, StringFormat='Period: {0}'}" FontSize="12"
-                                                       Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,12,0"/>
-                                            <TextBlock Text="{Binding Weight, StringFormat='Weight: {0:F1}'}" FontSize="12"
-                                                       Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,12,0"/>
-                                            <materialDesign:PackIcon Kind="{Binding SyncStatus, Converter={StaticResource SyncStatusToIconConverter}}"
-                                                                     Width="14" Height="14" VerticalAlignment="Center"
-                                                                     Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                        </StackPanel>
-
+                                        <Button Grid.Column="1"
+                                                Content="管理"
+                                                Style="{StaticResource FocusSecondaryButton}"
+                                                MinWidth="72"
+                                                Command="{Binding DataContext.SelectObjectiveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Click="ManageObjective_Click"/>
                                     </Grid>
 
-                                    <!-- Key Results -->
-                                    <StackPanel Margin="24,8,0,0">
-                                        <ItemsControl ItemsSource="{Binding KeyResults}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Margin="0,0,0,4" Padding="8" CornerRadius="{StaticResource FocusControlCornerRadius}"
-                                                            Background="{DynamicResource MaterialDesignDivider}">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="100"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="54"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ProgressBar Height="7"
+                                                     Minimum="0"
+                                                     Maximum="100"
+                                                     Value="{Binding Progress}"
+                                                     Style="{StaticResource FocusLinearProgress}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Progress, StringFormat='{}{0:F0}%'}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center"
+                                                   FontWeight="SemiBold"/>
+                                    </Grid>
 
-                                                            <StackPanel Grid.Column="0">
-                                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
-                                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                                    <TextBlock FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                                               Text="{Binding CurrentValue, StringFormat='Current: {0:F0}'}"/>
-                                                                    <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                                                    <TextBlock FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                                               Text="{Binding StartValue, StringFormat='{}{0:F0}'}"/>
-                                                                    <TextBlock Text=" -> " FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                                                    <TextBlock FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                                               Text="{Binding TargetValue, StringFormat='{}{0:F0}'}"/>
-                                                                    <TextBlock Text=" " FontSize="12"/>
-                                                                    <TextBlock FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                                               Text="{Binding Unit}"/>
-                                                                </StackPanel>
-                                                            </StackPanel>
+                                    <TextBlock Text="{Binding Note}"
+                                               Margin="0,9,0,0"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Note}"
+                                                                 Value="{x:Null}">
+                                                        <Setter Property="Visibility"
+                                                                Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Note}"
+                                                                 Value="">
+                                                        <Setter Property="Visibility"
+                                                                Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
 
-                                                            <ProgressBar Grid.Column="1" Height="6" Minimum="0" Maximum="100"
-                                                                         Value="{Binding Progress}"
-                                                                         Foreground="{Binding Progress, Converter={StaticResource ProgressToColorConverter}}"
-                                                                         Margin="8,0" VerticalAlignment="Center"/>
-
-                                                            <Button Grid.Column="2"
-                                                                    Style="{StaticResource MaterialDesignIconButton}"
-                                                                    ToolTip="Delete this KR"
-                                                                    Command="{Binding DataContext.DeleteKeyResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                    CommandParameter="{Binding}">
-                                                                <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"
-                                                                                         Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                                            </Button>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
+                                    <ItemsControl ItemsSource="{Binding KeyResults}"
+                                                  Margin="0,10,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                                        CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                                        Padding="11,9"
+                                                        Margin="0,0,0,6">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="92"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Name}"
+                                                                       FontWeight="SemiBold"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Margin="0,3,0,0"
+                                                                       Style="{StaticResource OkrCaption}">
+                                                                <Run Text="{Binding CurrentValue, StringFormat={}{0:G}}"/>
+                                                                <Run Text=" / "/>
+                                                                <Run Text="{Binding TargetValue, StringFormat={}{0:G}}"/>
+                                                                <Run Text="{Binding Unit}"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding Progress, StringFormat='{}{0:F0}%'}"
+                                                                   HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                                                   FontWeight="SemiBold"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <!-- Add Objective -->
-                <Border Margin="0,12,0,0" Padding="12" CornerRadius="{StaticResource FocusCardCornerRadius}"
-                        Background="{DynamicResource MaterialDesignCardBackground}">
+                <Border x:Name="ObjectiveEditor"
+                        Style="{StaticResource FocusCard}"
+                        Margin="0,2,0,0"
+                        Visibility="{Binding IsObjectiveSelected, Converter={StaticResource BoolToVis}}">
                     <StackPanel>
-                        <TextBlock Text="New Objective" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                        <TextBox Text="{Binding NewObjectiveName, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="Objective name" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding NewObjectiveNote, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="Notes (optional)" Margin="0,0,0,4" TextWrapping="Wrap" AcceptsReturn="True" Height="60"/>
-                        <Grid Margin="0,0,0,8">
+                        <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Text="{Binding NewObjectivePeriod, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="Period (e.g., 2026 Q2)" Margin="0,0,8,0"/>
-                            <Button Grid.Column="2" Content="Add Objective" Command="{Binding AddObjectiveCommand}"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    materialDesign:ButtonAssist.CornerRadius="12"/>
+                            <StackPanel>
+                                <TextBlock Text="管理目标"
+                                           Style="{StaticResource OkrSectionTitle}"/>
+                                <TextBlock Text="{Binding SelectedObjective.Name}"
+                                           Margin="0,3,0,0"
+                                           Style="{StaticResource OkrCaption}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Width="36"
+                                    Height="36"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Command="{Binding SelectObjectiveCommand}"
+                                    ToolTip="关闭管理面板">
+                                <TextBlock Text="&#xE711;"
+                                           Style="{StaticResource FocusIconText}"/>
+                            </Button>
                         </Grid>
+
+                        <TextBlock Text="目标名称"
+                                   Margin="2,0,0,5"
+                                   Style="{StaticResource OkrCaption}"/>
+                        <TextBox Text="{Binding SelectedObjective.Name, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Text="目标说明"
+                                   Margin="2,9,0,5"
+                                   Style="{StaticResource OkrCaption}"/>
+                        <TextBox Text="{Binding SelectedObjective.Note, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="62"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalContentAlignment="Top"/>
+                        <TextBlock Text="周期"
+                                   Margin="2,9,0,5"
+                                   Style="{StaticResource OkrCaption}"/>
+                        <TextBox Text="{Binding SelectedObjective.Period, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0,10,0,14">
+                            <Button Content="保存目标"
+                                    Style="{StaticResource FocusPrimaryButton}"
+                                    Command="{Binding UpdateObjectiveCommand}"
+                                    CommandParameter="{Binding SelectedObjective}"/>
+                            <Button Content="删除目标"
+                                    Margin="8,0,0,0"
+                                    Style="{StaticResource FocusSecondaryButton}"
+                                    Command="{Binding DeleteObjectiveCommand}"
+                                    CommandParameter="{Binding SelectedObjective}"/>
+                        </StackPanel>
+
+                        <Border Height="1"
+                                Background="{DynamicResource FocusStrokeBrush}"
+                                Margin="0,0,0,14"/>
+
+                        <TextBlock Text="新增关键结果"
+                                   Style="{StaticResource OkrSectionTitle}"/>
+                        <TextBox Text="{Binding NewKrName, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,10,0,0"
+                                 ToolTip="关键结果名称"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="110"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding NewKrStartValue}"
+                                     Margin="0,0,8,0"
+                                     ToolTip="起始值"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding NewKrTargetValue}"
+                                     Margin="0,0,8,0"
+                                     ToolTip="目标值"/>
+                            <TextBox Grid.Column="2"
+                                     Text="{Binding NewKrUnit}"
+                                     ToolTip="单位"/>
+                        </Grid>
+                        <Button Content="添加关键结果"
+                                Margin="0,8,0,14"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource FocusPrimaryButton}"
+                                Command="{Binding AddKeyResultCommand}"
+                                CommandParameter="{Binding SelectedObjective}"/>
+
+                        <ItemsControl ItemsSource="{Binding SelectedObjective.KeyResults}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Padding="11"
+                                            Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <Grid Margin="0,8,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="90"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Text="{Binding StartValue}"
+                                                         Margin="0,0,6,0"
+                                                         ToolTip="起始值"/>
+                                                <TextBox Grid.Column="1"
+                                                         Text="{Binding CurrentValue}"
+                                                         Margin="0,0,6,0"
+                                                         ToolTip="当前值"/>
+                                                <TextBox Grid.Column="2"
+                                                         Text="{Binding TargetValue}"
+                                                         Margin="0,0,6,0"
+                                                         ToolTip="目标值"/>
+                                                <TextBox Grid.Column="3"
+                                                         Text="{Binding Unit}"
+                                                         ToolTip="单位"/>
+                                            </Grid>
+                                            <Grid Margin="0,8,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ProgressBar Height="7"
+                                                             Minimum="0"
+                                                             Maximum="100"
+                                                             Value="{Binding Progress}"
+                                                             Style="{StaticResource FocusLinearProgress}"
+                                                             VerticalAlignment="Center"/>
+                                                <Button Grid.Column="1"
+                                                        Content="保存"
+                                                        Margin="8,0,0,0"
+                                                        Style="{StaticResource FocusSecondaryButton}"
+                                                        MinWidth="68"
+                                                        Command="{Binding DataContext.UpdateKeyResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Grid.Column="2"
+                                                        Width="40"
+                                                        Height="40"
+                                                        Margin="6,0,0,0"
+                                                        Style="{StaticResource FocusIconButton}"
+                                                        Command="{Binding DataContext.DeleteKeyResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="删除关键结果">
+                                                    <TextBlock Text="&#xE74D;"
+                                                               Style="{StaticResource FocusIconText}"
+                                                               Foreground="{DynamicResource FocusDangerBrush}"/>
+                                                </Button>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
             </StackPanel>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace FocusPanel.Views;
 
@@ -16,5 +17,19 @@ public partial class OkrView : UserControl
         {
             vm.SettingsAppSecret = SettingsAppSecretBox.Password;
         }
+    }
+
+    private void ManageObjective_Click(
+        object sender,
+        System.Windows.RoutedEventArgs e)
+    {
+        Dispatcher.BeginInvoke(
+            new System.Action(
+                () =>
+                {
+                    if (ObjectiveEditor.IsVisible)
+                        ObjectiveEditor.BringIntoView();
+                }),
+            DispatcherPriority.Background);
     }
 }

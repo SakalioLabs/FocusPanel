@@ -13,9 +13,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FocusPanel.ViewModels;
 
-public partial class OkrViewModel : ObservableObject, IOkrDataProvider
+public partial class OkrViewModel
+    : ObservableObject, IOkrDataProvider, IDisposable
 {
     private readonly OkrSyncService _syncService;
+    private bool _syncSettingsReady;
+    private bool _disposed;
 
     [ObservableProperty]
     private ObservableCollection<OkrObjective> objectives = new();
@@ -51,7 +54,7 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
     private bool isSyncing;
 
     [ObservableProperty]
-    private string syncStatusText = string.Empty;
+    private string syncStatusText = "正在准备 OKR 工作区…";
 
     [ObservableProperty]
     private bool isConfigured;
@@ -63,7 +66,7 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
     private DateTime? lastSyncTime;
 
     [ObservableProperty]
-    private string lastSyncResultText = string.Empty;
+    private string lastSyncResultText = "尚未同步";
 
     [ObservableProperty]
     private bool showSettings;
@@ -81,6 +84,7 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
     private bool settingsValidationSuccess;
 
     public List<int> SyncIntervalOptions { get; } = new() { 5, 15, 30, 60 };
+    public bool HasObjectives => Objectives.Count > 0;
 
     partial void OnSelectedObjectiveChanged(OkrObjective? value)
     {
@@ -98,38 +102,100 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
         IsConfigured = _syncService.IsConfigured;
         SyncIntervalMinutes = _syncService.GetSyncIntervalMinutes();
         LastSyncTime = _syncService.GetLastSyncTime();
+        _syncSettingsReady = true;
 
         if (IsConfigured)
         {
-            LoadObjectivesCommand.Execute(null);
+            SyncStatusText = "已连接飞书 OKR";
+            _ = LoadObjectives();
             _syncService.StartAutoSync();
         }
         else
         {
-            SyncStatusText = "Feishu credentials not configured. Click Settings to set up.";
+            SyncStatusText =
+                "尚未配置飞书凭据；本地 OKR 仍可创建和管理。";
+        }
+    }
+
+    partial void OnSyncIntervalMinutesChanged(
+        int value)
+    {
+        if (!_syncSettingsReady
+            || value < 1)
+        {
+            return;
+        }
+
+        try
+        {
+            _syncService.SetSyncIntervalMinutes(value);
+            SettingsValidationMessage =
+                $"自动同步间隔已设为 {value} 分钟。";
+            SettingsValidationSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            SettingsValidationMessage =
+                $"无法保存同步间隔：{ex.Message}";
+            SettingsValidationSuccess = false;
         }
     }
 
     private void OnSyncProgress(string message)
     {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            SyncStatusText = message;
-        });
+        DispatchToUi(() =>
+            SyncStatusText = message);
     }
 
     private void OnSyncCompleted(OkrSyncResult result)
     {
-        Application.Current.Dispatcher.Invoke(async () =>
+        DispatchToUi(() =>
+            _ = HandleSyncCompletedAsync(result));
+    }
+
+    private void DispatchToUi(Action action)
+    {
+        if (_disposed)
+            return;
+
+        System.Windows.Threading.Dispatcher? dispatcher =
+            Application.Current?.Dispatcher;
+        if (dispatcher == null
+            || dispatcher.HasShutdownStarted
+            || dispatcher.HasShutdownFinished)
         {
-            IsSyncing = false;
-            LastSyncTime = _syncService.GetLastSyncTime();
-            LastSyncResultText = result.Success ? $"OK: {result.Message}" : $"Error: {result.Message}";
-            if (result.ObjectivesPulled > 0 || result.KeyResultsPulled > 0)
+            return;
+        }
+
+        if (dispatcher.CheckAccess())
+        {
+            if (!_disposed)
+                action();
+            return;
+        }
+
+        dispatcher.BeginInvoke(
+            new Action(() =>
             {
-                await LoadObjectives();
-            }
-        });
+                if (!_disposed)
+                    action();
+            }));
+    }
+
+    private async Task HandleSyncCompletedAsync(
+        OkrSyncResult result)
+    {
+        IsSyncing = false;
+        LastSyncTime = _syncService.GetLastSyncTime();
+        LastSyncResultText = result.Success
+            ? $"同步成功：{result.Message}"
+            : $"同步失败：{result.Message}";
+        SyncStatusText = LastSyncResultText;
+        if (result.ObjectivesPulled > 0
+            || result.KeyResultsPulled > 0)
+        {
+            await LoadObjectives();
+        }
     }
 
     // --- Data Loading ---
@@ -140,29 +206,31 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
         IsLoading = true;
         try
         {
-            await Task.Run(() =>
-            {
-                using var context = new AppDbContext();
-                context.EnsureSchema();
-                var items = context.OkrObjectives
-                    .Include(o => o.KeyResults)
+            using var context = new AppDbContext();
+            context.EnsureSchema();
+            List<OkrObjective> items =
+                await context.OkrObjectives
+                    .AsNoTracking()
+                    .Include(o =>
+                        o.KeyResults.Where(
+                            result =>
+                                !result.IsDeleted))
                     .Where(o => !o.IsDeleted)
                     .OrderByDescending(o => o.CreatedAt)
-                    .ToList();
+                    .ToListAsync();
 
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    Objectives.Clear();
-                    foreach (var item in items)
-                    {
-                        Objectives.Add(item);
-                    }
-                });
-            });
+            Objectives.Clear();
+            foreach (OkrObjective item in items)
+                Objectives.Add(item);
+            OnPropertyChanged(nameof(HasObjectives));
+            SyncStatusText = IsConfigured
+                ? $"已加载 {items.Count} 个目标，等待同步。"
+                : $"本地共有 {items.Count} 个目标。";
         }
         catch (Exception ex)
         {
-            SyncStatusText = $"Error loading OKRs: {ex.Message}";
+            SyncStatusText =
+                $"无法加载 OKR：{ex.Message}";
         }
         finally
         {
@@ -175,7 +243,11 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
     [RelayCommand]
     private async Task AddObjective()
     {
-        if (string.IsNullOrWhiteSpace(NewObjectiveName)) return;
+        if (string.IsNullOrWhiteSpace(NewObjectiveName))
+        {
+            SyncStatusText = "请先填写目标名称。";
+            return;
+        }
 
         var obj = new OkrObjective
         {
@@ -188,17 +260,26 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
             UpdatedAt = DateTime.Now
         };
 
-        using (var context = new AppDbContext())
+        try
         {
+            using var context = new AppDbContext();
             context.EnsureSchema();
             context.OkrObjectives.Add(obj);
             await context.SaveChangesAsync();
-        }
 
-        Objectives.Insert(0, obj);
-        NewObjectiveName = string.Empty;
-        NewObjectiveNote = string.Empty;
-        NewObjectivePeriod = string.Empty;
+            Objectives.Insert(0, obj);
+            OnPropertyChanged(nameof(HasObjectives));
+            SelectedObjective = obj;
+            NewObjectiveName = string.Empty;
+            NewObjectiveNote = string.Empty;
+            NewObjectivePeriod = string.Empty;
+            SyncStatusText = "目标已保存到本地。";
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText =
+                $"无法创建目标：{ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -207,32 +288,44 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
         if (obj == null) return;
 
         var result = MessageBox.Show(
-            $"Delete objective '{obj.Name}' and all its key results?",
-            "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            $"确定删除“{obj.Name}”及其全部关键结果吗？",
+            "确认删除目标",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
 
         if (result != MessageBoxResult.Yes) return;
 
-        Objectives.Remove(obj);
-
-        using (var context = new AppDbContext())
+        try
         {
+            using var context = new AppDbContext();
             context.EnsureSchema();
             var dbObj = await context.OkrObjectives.FindAsync(obj.Id);
-            if (dbObj != null)
-            {
-                if (dbObj.SyncStatus == OkrSyncStatus.LocalCreated || dbObj.FeishuObjectiveId == null)
-                {
-                    context.OkrObjectives.Remove(dbObj);
-                }
-                else
-                {
-                    dbObj.SyncStatus = OkrSyncStatus.LocalDeleted;
-                }
-                await context.SaveChangesAsync();
-            }
-        }
+            if (dbObj == null)
+                throw new InvalidOperationException(
+                    "数据库中找不到该目标。");
 
-        SelectedObjective = null;
+            if (dbObj.SyncStatus == OkrSyncStatus.LocalCreated
+                || dbObj.FeishuObjectiveId == null)
+            {
+                context.OkrObjectives.Remove(dbObj);
+            }
+            else
+            {
+                dbObj.SyncStatus =
+                    OkrSyncStatus.LocalDeleted;
+            }
+            await context.SaveChangesAsync();
+
+            Objectives.Remove(obj);
+            OnPropertyChanged(nameof(HasObjectives));
+            SelectedObjective = null;
+            SyncStatusText = "目标已删除。";
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText =
+                $"无法删除目标：{ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -244,20 +337,28 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
         if (obj.SyncStatus == OkrSyncStatus.Synced)
             obj.SyncStatus = OkrSyncStatus.LocalModified;
 
-        using (var context = new AppDbContext())
+        try
         {
+            using var context = new AppDbContext();
             context.EnsureSchema();
             var dbObj = await context.OkrObjectives.FindAsync(obj.Id);
-            if (dbObj != null)
-            {
-                dbObj.Name = obj.Name;
-                dbObj.Note = obj.Note;
-                dbObj.Period = obj.Period;
-                dbObj.Weight = obj.Weight;
-                dbObj.UpdatedAt = obj.UpdatedAt;
-                dbObj.SyncStatus = obj.SyncStatus;
-                await context.SaveChangesAsync();
-            }
+            if (dbObj == null)
+                throw new InvalidOperationException(
+                    "数据库中找不到该目标。");
+
+            dbObj.Name = obj.Name;
+            dbObj.Note = obj.Note;
+            dbObj.Period = obj.Period;
+            dbObj.Weight = obj.Weight;
+            dbObj.UpdatedAt = obj.UpdatedAt;
+            dbObj.SyncStatus = obj.SyncStatus;
+            await context.SaveChangesAsync();
+            SyncStatusText = "目标信息已保存。";
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText =
+                $"无法保存目标：{ex.Message}";
         }
     }
 
@@ -272,7 +373,13 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
     [RelayCommand]
     private async Task AddKeyResult(OkrObjective? obj)
     {
-        if (obj == null || string.IsNullOrWhiteSpace(NewKrName)) return;
+        if (obj == null
+            || string.IsNullOrWhiteSpace(NewKrName))
+        {
+            SyncStatusText =
+                "请选择目标并填写关键结果名称。";
+            return;
+        }
 
         var kr = new OkrKeyResult
         {
@@ -286,20 +393,55 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now
         };
+        kr.Progress =
+            OkrProgressCalculator
+                .CalculateKeyResultProgress(
+                    kr.StartValue,
+                    kr.CurrentValue,
+                    kr.TargetValue);
 
-        using (var context = new AppDbContext())
+        try
         {
+            double objectiveProgress =
+                OkrProgressCalculator
+                    .CalculateObjectiveProgress(
+                        obj.KeyResults.Append(kr));
+            OkrSyncStatus objectiveSyncStatus =
+                obj.SyncStatus == OkrSyncStatus.Synced
+                    ? OkrSyncStatus.LocalModified
+                    : obj.SyncStatus;
+
+            using var context = new AppDbContext();
             context.EnsureSchema();
             context.Set<OkrKeyResult>().Add(kr);
-            await context.SaveChangesAsync();
-        }
+            OkrObjective? storedObjective =
+                await context.OkrObjectives
+                    .FindAsync(obj.Id);
+            if (storedObjective == null)
+                throw new InvalidOperationException(
+                    "数据库中找不到所属目标。");
 
-        obj.KeyResults.Add(kr);
-        RecalculateObjectiveProgress(obj);
-        NewKrName = string.Empty;
-        NewKrStartValue = 0;
-        NewKrTargetValue = 100;
-        NewKrUnit = "%";
+            storedObjective.Progress =
+                objectiveProgress;
+            storedObjective.SyncStatus =
+                objectiveSyncStatus;
+            storedObjective.UpdatedAt = DateTime.Now;
+            await context.SaveChangesAsync();
+
+            obj.KeyResults.Add(kr);
+            obj.Progress = objectiveProgress;
+            obj.SyncStatus = objectiveSyncStatus;
+            NewKrName = string.Empty;
+            NewKrStartValue = 0;
+            NewKrTargetValue = 100;
+            NewKrUnit = "%";
+            SyncStatusText = "关键结果已添加。";
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText =
+                $"无法添加关键结果：{ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -308,29 +450,81 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
         if (kr == null) return;
 
         var parent = Objectives.FirstOrDefault(o => o.KeyResults.Contains(kr));
-        parent?.KeyResults.Remove(kr);
+        MessageBoxResult confirmation =
+            MessageBox.Show(
+                $"确定删除关键结果“{kr.Name}”吗？",
+                "确认删除关键结果",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+            return;
 
-        using (var context = new AppDbContext())
+        if (parent == null)
         {
-            context.EnsureSchema();
-            var dbKr = await context.Set<OkrKeyResult>().FindAsync(kr.Id);
-            if (dbKr != null)
-            {
-                if (dbKr.SyncStatus == OkrSyncStatus.LocalCreated || dbKr.FeishuKrId == null)
-                {
-                    context.Set<OkrKeyResult>().Remove(dbKr);
-                }
-                else
-                {
-                    dbKr.SyncStatus = OkrSyncStatus.LocalDeleted;
-                    dbKr.IsDeleted = true;
-                    dbKr.UpdatedAt = DateTime.Now;
-                }
-                await context.SaveChangesAsync();
-            }
+            SyncStatusText =
+                "找不到关键结果所属的目标。";
+            return;
         }
 
-        if (parent != null) RecalculateObjectiveProgress(parent);
+        try
+        {
+            double objectiveProgress =
+                OkrProgressCalculator
+                    .CalculateObjectiveProgress(
+                        parent.KeyResults.Where(
+                            result =>
+                                !ReferenceEquals(
+                                    result,
+                                    kr)));
+            OkrSyncStatus objectiveSyncStatus =
+                parent.SyncStatus
+                    == OkrSyncStatus.Synced
+                    ? OkrSyncStatus.LocalModified
+                    : parent.SyncStatus;
+
+            using var context = new AppDbContext();
+            context.EnsureSchema();
+            var dbKr = await context.Set<OkrKeyResult>().FindAsync(kr.Id);
+            if (dbKr == null)
+                throw new InvalidOperationException(
+                    "数据库中找不到该关键结果。");
+
+            if (dbKr.SyncStatus == OkrSyncStatus.LocalCreated
+                || dbKr.FeishuKrId == null)
+            {
+                context.Set<OkrKeyResult>().Remove(dbKr);
+            }
+            else
+            {
+                dbKr.SyncStatus =
+                    OkrSyncStatus.LocalDeleted;
+                dbKr.IsDeleted = true;
+                dbKr.UpdatedAt = DateTime.Now;
+            }
+
+            OkrObjective? storedObjective =
+                await context.OkrObjectives
+                    .FindAsync(parent.Id);
+            if (storedObjective == null)
+                throw new InvalidOperationException(
+                    "数据库中找不到所属目标。");
+            storedObjective.Progress =
+                objectiveProgress;
+            storedObjective.SyncStatus =
+                objectiveSyncStatus;
+            storedObjective.UpdatedAt = DateTime.Now;
+            await context.SaveChangesAsync();
+
+            parent.KeyResults.Remove(kr);
+            parent.Progress = objectiveProgress;
+            parent.SyncStatus = objectiveSyncStatus;
+            SyncStatusText = "关键结果已删除。";
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText =
+                $"无法删除关键结果：{ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -339,47 +533,80 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
         if (kr == null || string.IsNullOrWhiteSpace(kr.Name)) return;
 
         kr.UpdatedAt = DateTime.Now;
-        kr.Progress = kr.TargetValue > 0 ? (kr.CurrentValue - kr.StartValue) / (kr.TargetValue - kr.StartValue) * 100 : 0;
-        kr.Progress = Math.Max(0, Math.Min(100, kr.Progress));
+        kr.Progress =
+            OkrProgressCalculator
+                .CalculateKeyResultProgress(
+                    kr.StartValue,
+                    kr.CurrentValue,
+                    kr.TargetValue);
 
         if (kr.SyncStatus == OkrSyncStatus.Synced)
             kr.SyncStatus = OkrSyncStatus.LocalModified;
 
-        using (var context = new AppDbContext())
+        OkrObjective? parent =
+            Objectives.FirstOrDefault(
+                objective =>
+                    objective.Id
+                    == kr.ObjectiveId);
+        if (parent == null)
         {
-            context.EnsureSchema();
-            var dbKr = await context.Set<OkrKeyResult>().FindAsync(kr.Id);
-            if (dbKr != null)
-            {
-                dbKr.Name = kr.Name;
-                dbKr.CurrentValue = kr.CurrentValue;
-                dbKr.StartValue = kr.StartValue;
-                dbKr.TargetValue = kr.TargetValue;
-                dbKr.Unit = kr.Unit;
-                dbKr.Weight = kr.Weight;
-                dbKr.Progress = kr.Progress;
-                dbKr.UpdatedAt = kr.UpdatedAt;
-                dbKr.SyncStatus = kr.SyncStatus;
-                await context.SaveChangesAsync();
-            }
+            SyncStatusText =
+                "找不到关键结果所属的目标。";
+            return;
         }
 
-        var parent = Objectives.FirstOrDefault(o => o.Id == kr.ObjectiveId);
-        if (parent != null) RecalculateObjectiveProgress(parent);
-    }
+        double objectiveProgress =
+            OkrProgressCalculator
+                .CalculateObjectiveProgress(
+                    parent.KeyResults);
+        OkrSyncStatus objectiveSyncStatus =
+            parent.SyncStatus
+                == OkrSyncStatus.Synced
+                ? OkrSyncStatus.LocalModified
+                : parent.SyncStatus;
 
-    private void RecalculateObjectiveProgress(OkrObjective obj)
-    {
-        var activeKrs = obj.KeyResults.Where(k => !k.IsDeleted).ToList();
-        if (activeKrs.Count == 0) return;
+        try
+        {
+            using var context = new AppDbContext();
+            context.EnsureSchema();
+            var dbKr = await context.Set<OkrKeyResult>().FindAsync(kr.Id);
+            if (dbKr == null)
+                throw new InvalidOperationException(
+                    "数据库中找不到该关键结果。");
 
-        double totalWeight = activeKrs.Sum(k => k.Weight);
-        obj.Progress = totalWeight > 0
-            ? activeKrs.Sum(k => k.Progress * k.Weight) / totalWeight
-            : activeKrs.Average(k => k.Progress);
+            dbKr.Name = kr.Name;
+            dbKr.CurrentValue = kr.CurrentValue;
+            dbKr.StartValue = kr.StartValue;
+            dbKr.TargetValue = kr.TargetValue;
+            dbKr.Unit = kr.Unit;
+            dbKr.Weight = kr.Weight;
+            dbKr.Progress = kr.Progress;
+            dbKr.UpdatedAt = kr.UpdatedAt;
+            dbKr.SyncStatus = kr.SyncStatus;
 
-        if (obj.SyncStatus == OkrSyncStatus.Synced)
-            obj.SyncStatus = OkrSyncStatus.LocalModified;
+            OkrObjective? storedObjective =
+                await context.OkrObjectives
+                    .FindAsync(parent.Id);
+            if (storedObjective == null)
+                throw new InvalidOperationException(
+                    "数据库中找不到所属目标。");
+            storedObjective.Progress =
+                objectiveProgress;
+            storedObjective.SyncStatus =
+                objectiveSyncStatus;
+            storedObjective.UpdatedAt = DateTime.Now;
+            await context.SaveChangesAsync();
+
+            parent.Progress = objectiveProgress;
+            parent.SyncStatus = objectiveSyncStatus;
+            SyncStatusText =
+                "关键结果进度已保存。";
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText =
+                $"无法保存关键结果：{ex.Message}";
+        }
     }
 
     // --- Sync ---
@@ -389,29 +616,25 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
     {
         if (IsSyncing) return;
         IsSyncing = true;
-        SyncStatusText = "Starting sync...";
+        SyncStatusText = "正在同步飞书 OKR…";
         try
         {
             var result = await _syncService.SyncAsync();
             if (!result.Success)
             {
                 IsSyncing = false;
-                LastSyncResultText = $"Error: {result.Message}";
+                LastSyncResultText =
+                    $"同步失败：{result.Message}";
             }
         }
         catch (Exception ex)
         {
             IsSyncing = false;
-            LastSyncResultText = $"Error: {ex.Message}";
-            SyncStatusText = $"Sync error: {ex.Message}";
+            LastSyncResultText =
+                $"同步失败：{ex.Message}";
+            SyncStatusText =
+                $"同步异常：{ex.Message}";
         }
-    }
-
-    [RelayCommand]
-    private void SetSyncInterval(int minutes)
-    {
-        SyncIntervalMinutes = minutes;
-        _syncService.SetSyncIntervalMinutes(minutes);
     }
 
     // --- Settings ---
@@ -422,11 +645,23 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
         ShowSettings = !ShowSettings;
         if (ShowSettings)
         {
-            var auth = new FeishuAuthService();
-            SettingsAppId = auth.GetAppId() ?? string.Empty;
-            SettingsAppSecret = auth.GetAppSecret() ?? string.Empty;
-            SettingsValidationMessage = string.Empty;
-            SettingsValidationSuccess = false;
+            try
+            {
+                var auth = new FeishuAuthService();
+                SettingsAppId =
+                    auth.GetAppId()
+                    ?? string.Empty;
+                SettingsAppSecret = string.Empty;
+                SettingsValidationMessage =
+                    string.Empty;
+                SettingsValidationSuccess = false;
+            }
+            catch (Exception ex)
+            {
+                SettingsValidationMessage =
+                    $"无法读取飞书设置：{ex.Message}";
+                SettingsValidationSuccess = false;
+            }
         }
     }
 
@@ -435,27 +670,46 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
     {
         if (string.IsNullOrWhiteSpace(SettingsAppId) || string.IsNullOrWhiteSpace(SettingsAppSecret))
         {
-            SettingsValidationMessage = "App ID and App Secret are required.";
+            SettingsValidationMessage =
+                "App ID 和 App Secret 均不能为空。";
             SettingsValidationSuccess = false;
             return;
         }
 
-        SettingsValidationMessage = "Validating...";
-        var auth = new FeishuAuthService();
-        var valid = await auth.ValidateCredentialsAsync(SettingsAppId.Trim(), SettingsAppSecret.Trim());
+        try
+        {
+            SettingsValidationMessage =
+                "正在验证飞书凭据…";
+            var auth = new FeishuAuthService();
+            bool valid =
+                await auth.ValidateCredentialsAsync(
+                    SettingsAppId.Trim(),
+                    SettingsAppSecret.Trim());
 
-        if (valid)
-        {
-            auth.SaveCredentials(SettingsAppId.Trim(), SettingsAppSecret.Trim());
-            SettingsValidationMessage = "Credentials validated and saved.";
-            SettingsValidationSuccess = true;
-            IsConfigured = true;
-            await LoadObjectives();
-            _syncService.StartAutoSync();
+            if (valid)
+            {
+                auth.SaveCredentials(
+                    SettingsAppId.Trim(),
+                    SettingsAppSecret.Trim());
+                SettingsAppSecret = string.Empty;
+                SettingsValidationMessage =
+                    "凭据验证成功并已安全保存。";
+                SettingsValidationSuccess = true;
+                IsConfigured = true;
+                await LoadObjectives();
+                _syncService.StartAutoSync();
+            }
+            else
+            {
+                SettingsValidationMessage =
+                    "验证失败，请检查 App ID、App Secret 和应用权限。";
+                SettingsValidationSuccess = false;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            SettingsValidationMessage = "Validation failed. Check your App ID and App Secret.";
+            SettingsValidationMessage =
+                $"无法保存飞书凭据：{ex.Message}";
             SettingsValidationSuccess = false;
         }
     }
@@ -463,16 +717,37 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
     [RelayCommand]
     private void ClearCredentials()
     {
-        var auth = new FeishuAuthService();
-        auth.ClearCredentials();
-        IsConfigured = false;
-        SettingsAppId = string.Empty;
-        SettingsAppSecret = string.Empty;
-        SettingsValidationMessage = "Credentials removed.";
-        SettingsValidationSuccess = false;
-        ShowSettings = false;
-        _syncService.StopAutoSync();
-        Objectives.Clear();
+        MessageBoxResult confirmation =
+            MessageBox.Show(
+                "确定清除飞书凭据并停止自动同步吗？本地 OKR 数据不会删除。",
+                "清除飞书凭据",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            var auth = new FeishuAuthService();
+            auth.ClearCredentials();
+            IsConfigured = false;
+            SettingsAppId = string.Empty;
+            SettingsAppSecret = string.Empty;
+            SettingsValidationMessage =
+                "飞书凭据已清除，本地 OKR 数据已保留。";
+            SettingsValidationSuccess = true;
+            ShowSettings = false;
+            _syncService.StopAutoSync();
+            Objectives.Clear();
+            OnPropertyChanged(nameof(HasObjectives));
+            _ = LoadObjectives();
+        }
+        catch (Exception ex)
+        {
+            SettingsValidationMessage =
+                $"无法清除飞书凭据：{ex.Message}";
+            SettingsValidationSuccess = false;
+        }
     }
 
     // --- Helpers ---
@@ -567,5 +842,16 @@ public partial class OkrViewModel : ObservableObject, IOkrDataProvider
         var task = _syncService.SyncAsync();
         task.Wait();
         return task.Result;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _syncService.ProgressChanged -= OnSyncProgress;
+        _syncService.SyncCompleted -= OnSyncCompleted;
+        _syncService.Dispose();
     }
 }

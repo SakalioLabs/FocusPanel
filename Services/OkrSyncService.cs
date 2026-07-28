@@ -107,14 +107,22 @@ public class OkrSyncService : IDisposable
     {
         if (!_authService.IsConfigured)
         {
-            var notConfigured = new OkrSyncResult { Success = false, Message = "Feishu credentials not configured." };
+            var notConfigured = new OkrSyncResult
+            {
+                Success = false,
+                Message = "尚未配置飞书凭据。"
+            };
             SyncCompleted?.Invoke(notConfigured);
             return notConfigured;
         }
 
         if (!TryStartSync())
         {
-            var inProgress = new OkrSyncResult { Success = false, Message = "Sync already in progress." };
+            var inProgress = new OkrSyncResult
+            {
+                Success = false,
+                Message = "已有同步任务正在进行。"
+            };
             SyncCompleted?.Invoke(inProgress);
             return inProgress;
         }
@@ -122,7 +130,7 @@ public class OkrSyncService : IDisposable
         var result = new OkrSyncResult();
         try
         {
-            Report("Getting user ID...");
+            Report("正在获取飞书用户信息…");
             var userId = await _apiService.GetCurrentUserIdAsync();
             if (string.IsNullOrEmpty(userId))
             {
@@ -131,7 +139,8 @@ public class OkrSyncService : IDisposable
             }
             if (string.IsNullOrEmpty(userId))
             {
-                result.Message = "Could not determine Feishu user ID. Please ensure the app has OKR permissions.";
+                result.Message =
+                    "无法获取飞书用户 ID，请确认应用已开通 OKR 权限。";
                 result.Errors.Add(result.Message);
                 Report(result.Message);
                 SyncCompleted?.Invoke(result);
@@ -142,18 +151,18 @@ public class OkrSyncService : IDisposable
             logContext.EnsureSchema();
 
             // 1. PULL: Fetch from Feishu
-            Report("Pulling objectives from Feishu...");
+            Report("正在从飞书拉取目标…");
             var serverObjectives = await _apiService.GetObjectivesAsync(userId);
             await PullObjectives(serverObjectives, userId, result, logContext);
 
             // 2. PUSH: Push local changes
-            Report("Pushing local changes...");
+            Report("正在向飞书提交本地更改…");
             await PushChanges(result, logContext);
 
             result.Success = result.Errors.Count == 0;
             result.Message = result.Errors.Count == 0
-                ? $"Synced: {result.ObjectivesPulled} objectives, {result.KeyResultsPulled} KRs pulled; {result.ObjectivesPushed} objectives, {result.KeyResultsPushed} KRs pushed."
-                : $"Sync completed with {result.Errors.Count} errors.";
+                ? $"同步完成：拉取 {result.ObjectivesPulled} 个目标、{result.KeyResultsPulled} 个关键结果；提交 {result.ObjectivesPushed} 个目标、{result.KeyResultsPushed} 个关键结果。"
+                : $"同步完成，但有 {result.Errors.Count} 个错误。";
 
             SetLastSyncTime(DateTime.Now);
             Report(result.Message);
@@ -162,13 +171,13 @@ public class OkrSyncService : IDisposable
         {
             result.Message = ex.Message;
             result.Errors.Add(ex.Message);
-            Report($"API error: {ex.Message}");
+            Report($"飞书 API 错误：{ex.Message}");
         }
         catch (Exception ex)
         {
             result.Message = ex.Message;
             result.Errors.Add(ex.Message);
-            Report($"Sync error: {ex.Message}");
+            Report($"同步异常：{ex.Message}");
         }
         finally
         {

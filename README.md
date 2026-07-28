@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.38 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.39 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.38 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.39 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -71,12 +71,16 @@ Focus 中心只放 FocusPanel 的业务模块；状态中心只放设备状态�
 - 任务模块使用统一 Fluent 表面，保留项目/子任务、列表和自定义字段语义；看板会按状态生成真实列，任务可前后移动、进入详情、进入子任务或删除。
 - 任务详情使用 Windows 11 原生 DWM 毛玻璃窗口；关闭模块或切换数据上下文时同步解除订阅并关闭详情，避免重复窗口和失效对象残留。
 - 番茄钟提供 25/45/60 分钟预设、准确剩余进度、暂停/继续、完成声音和托盘通知；悬浮计时器使用与主壳一致的 Windows 原生毛玻璃，不创建全屏覆盖层。
-- 保留番茄钟完成会话统计、飞书 OKR 双向同步、AI 入口、数据库备份与恢复。
+- OKR 使用本地优先工作流：未配置飞书也能创建、编辑和删除目标与关键结果；配置凭据后可双向同步，修改同步间隔会立即持久化。
+- 关键结果支持正向或反向目标，进度限制在 `0–100%`；目标总进度按正权重计算，新增、更新和删除会与数据库中的总进度一次提交。
+- 保留番茄钟完成会话统计、AI 入口、数据库备份与恢复。
 - 新增固定应用持久化；`PinnedApps` 表由现有 `EnsureSchema()` 机制创建，不改动原业务表内容。
 
 ![桌面收纳流程](docs/images/desktop-organizer-flow.svg)
 
 ![任务列表、真实看板与毛玻璃详情](docs/images/task-workspace.svg)
+
+![本地优先 OKR 与飞书同步](docs/images/okr-local-sync.svg)
 
 ![番茄钟与原生毛玻璃悬浮计时器](docs/images/pomodoro-focus.svg)
 
@@ -140,7 +144,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.38 `
+  -Version 0.9.39 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -149,7 +153,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.38-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.39-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -166,7 +170,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.38 `
+  -Version 0.9.39 `
   -Dotnet8Path dotnet
 ```
 

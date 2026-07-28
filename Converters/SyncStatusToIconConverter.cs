@@ -9,14 +9,16 @@ public class SyncStatusToIconConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not OkrSyncStatus status) return "HelpCircle";
+        if (value is not OkrSyncStatus status)
+            return "\uE946";
+
         return status switch
         {
-            OkrSyncStatus.Synced => "CheckCircle",
-            OkrSyncStatus.LocalCreated => "CloudUpload",
-            OkrSyncStatus.LocalModified => "Pencil",
-            OkrSyncStatus.LocalDeleted => "Delete",
-            _ => "HelpCircle"
+            OkrSyncStatus.Synced => "\uE73E",
+            OkrSyncStatus.LocalCreated => "\uE898",
+            OkrSyncStatus.LocalModified => "\uE70F",
+            OkrSyncStatus.LocalDeleted => "\uE74D",
+            _ => "\uE946"
         };
     }
 
@@ -28,14 +30,16 @@ public class SyncStatusToTooltipConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not OkrSyncStatus status) return "Unknown";
+        if (value is not OkrSyncStatus status)
+            return "未知同步状态";
+
         return status switch
         {
-            OkrSyncStatus.Synced => "Synced with Feishu",
-            OkrSyncStatus.LocalCreated => "New locally (pending push)",
-            OkrSyncStatus.LocalModified => "Modified locally (pending push)",
-            OkrSyncStatus.LocalDeleted => "Deleted locally (pending push)",
-            _ => "Unknown"
+            OkrSyncStatus.Synced => "已与飞书同步",
+            OkrSyncStatus.LocalCreated => "本地新建，等待提交",
+            OkrSyncStatus.LocalModified => "本地已修改，等待提交",
+            OkrSyncStatus.LocalDeleted => "本地已删除，等待提交",
+            _ => "未知同步状态"
         };
     }
 

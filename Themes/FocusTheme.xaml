@@ -208,6 +208,36 @@
 
     <Style TargetType="TextBox" BasedOn="{StaticResource FocusSearchBox}"/>
 
+    <Style x:Key="FocusPasswordBox"
+           TargetType="PasswordBox">
+        <Setter Property="MinHeight" Value="44"/>
+        <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource FocusStrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FocusVisualStyle"
+                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="PasswordBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="FocusCard" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>

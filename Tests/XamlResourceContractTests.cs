@@ -702,6 +702,94 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void OkrModule_UsesFluentLocalFirstWorkflowAndReleasesSyncLifecycle()
+    {
+        string root = FindRepositoryRoot();
+        string view = File.ReadAllText(
+            Path.Combine(root, "Views", "OkrView.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "OkrViewModel.cs"));
+        string viewCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "OkrView.xaml.cs"));
+        string mainViewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        string syncService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "OkrSyncService.cs"));
+
+        Assert.DoesNotContain(
+            "materialDesign:",
+            view,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(
+            "MaterialDesign",
+            view,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "目标与关键结果",
+            view);
+        Assert.Contains(
+            "本地 OKR",
+            view);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusCard}\"",
+            view);
+        Assert.Contains(
+            "AddKeyResultCommand",
+            view);
+        Assert.Contains(
+            "UpdateKeyResultCommand",
+            view);
+        Assert.Contains(
+            "DeleteKeyResultCommand",
+            view);
+        Assert.Contains(
+            "SelectedObjective.KeyResults",
+            view);
+        Assert.Contains(
+            "ObjectiveEditor.BringIntoView",
+            viewCode);
+        Assert.Contains(
+            "OnSyncIntervalMinutesChanged",
+            viewModel);
+        Assert.Contains(
+            "storedObjective.Progress",
+            viewModel);
+        Assert.Contains(
+            "CalculateObjectiveProgress",
+            viewModel);
+        Assert.Contains(
+            "!result.IsDeleted",
+            viewModel);
+        Assert.Contains(
+            "DispatchToUi",
+            viewModel);
+        Assert.Contains(
+            "IOkrDataProvider, IDisposable",
+            viewModel);
+        Assert.Contains(
+            "_syncService.ProgressChanged -= OnSyncProgress",
+            viewModel);
+        Assert.Contains(
+            "_okrViewModel?.Dispose()",
+            mainViewModel);
+        Assert.Contains(
+            "正在从飞书拉取目标",
+            syncService);
+    }
+
+    [Fact]
     public void Organizer_UsesOneSurfaceHierarchyAndExposesAutoOrganize()
     {
         string root = FindRepositoryRoot();
