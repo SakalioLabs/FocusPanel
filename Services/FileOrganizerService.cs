@@ -30,9 +30,9 @@ public class FileOrganizerService
     /// <summary>旧版本仓库，仅用于兼容已经被移动的项目。</summary>
     private readonly string _storageRoot;
     private readonly IDesktopItemVisibilityService _visibility;
-    private FileSystemWatcher _desktopWatcher;
+    private FileSystemWatcher _desktopWatcher = null!;
     private FileSystemWatcher? _commonDesktopWatcher;
-    private FileSystemWatcher _storageWatcher;
+    private FileSystemWatcher? _storageWatcher;
 
     /// <summary>All files: desktop visible + stored in .FocusPanel</summary>
     public ObservableCollection<DesktopFile> AllFiles { get; private set; } = new();
@@ -40,9 +40,9 @@ public class FileOrganizerService
     /// <summary>Only desktop-root visible files (not stored)</summary>
     public ObservableCollection<DesktopFile> Files { get; private set; } = new();
 
-    public event Action FilesChanged;
+    public event Action? FilesChanged;
 
-    private System.Threading.Timer _debounceTimer;
+    private System.Threading.Timer? _debounceTimer;
     private readonly SemaphoreSlim _organizeGate = new(1, 1);
     private const int DebounceInterval = 500;
 

@@ -8,17 +8,17 @@ public partial class DesktopFile : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayName))]
-    private string name;
+    private string name = string.Empty;
 
     public string DisplayName => Extension?.ToLower() == ".lnk" 
         ? System.IO.Path.GetFileNameWithoutExtension(Name) 
         : Name;
 
     [ObservableProperty]
-    private string fullPath;
+    private string fullPath = string.Empty;
 
     [ObservableProperty]
-    private string extension;
+    private string extension = string.Empty;
 
     [ObservableProperty]
     private long size;
@@ -27,14 +27,14 @@ public partial class DesktopFile : ObservableObject
     private DateTime createdAt;
 
     [ObservableProperty]
-    private ImageSource icon;
+    private ImageSource? icon;
 
     [ObservableProperty]
-    private string fileType; // e.g. "Image", "Document"
+    private string fileType = string.Empty; // e.g. "Image", "Document"
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Category))]
-    private string customPartition; // User defined partition
+    private string? customPartition; // User defined partition
     
     [ObservableProperty]
     private bool isSelected;
@@ -59,11 +59,11 @@ public partial class DesktopFile : ObservableObject
         {
             var now = DateTime.Now;
             var diff = now.Date - CreatedAt.Date;
-            if (diff.Days == 0) return "Today";
-            if (diff.Days == 1) return "Yesterday";
-            if (diff.Days < 7) return "This Week";
-            if (diff.Days < 30) return "This Month";
-            return "Older";
+            if (diff.Days == 0) return "今天";
+            if (diff.Days == 1) return "昨天";
+            if (diff.Days < 7) return "本周";
+            if (diff.Days < 30) return "本月";
+            return "更早";
         }
     }
 

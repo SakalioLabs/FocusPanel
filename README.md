@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.42 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.43 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.42 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.43 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -148,6 +148,10 @@ dotnet run --project FocusPanel.csproj
 
 数据库位于 `%APPDATA%\FocusPanel\focuspanel.db`。启动备份使用 SQLite 在线备份 API，因此 WAL 中已提交的数据也会进入独立备份文件。恢复时先安全退出当前实例并恢复原生任务栏，再由交接进程等待单实例锁释放；候选备份跨 AppData 与安装目录按时间排序并逐个执行 `PRAGMA quick_check`，最新文件损坏时会回退到更早的有效备份，全部失败则保持当前数据库不动。
 
+普通界面设置位于 `%APPDATA%\FocusPanel\settings.json`，与 Velopack 的只读安装目录和版本目录分离。0.9.43 首次启动会在新文件不存在时读取旧版安装目录中的 `settings.json`，原子复制到新位置，并保留旧文件作为回退；用户自定义图片目录不会被重写，只有旧版默认的安装目录 `Images` 会迁移到 `%APPDATA%\FocusPanel\Images`。设置文件损坏时应用使用安全默认值，保存失败会留下可诊断错误，不会先删除已有配置。
+
+![设置迁移与原子保存](docs/images/settings-migration-safety.svg)
+
 ![数据库安全备份与恢复](docs/images/database-restore-safety.svg)
 
 ## 安装包与一键更新
@@ -157,7 +161,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.42 `
+  -Version 0.9.43 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -166,7 +170,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.42-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.43-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -183,7 +187,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.42 `
+  -Version 0.9.43 `
   -Dotnet8Path dotnet
 ```
 

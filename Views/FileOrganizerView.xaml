@@ -585,11 +585,6 @@
                                             HorizontalContentAlignment="Left"
                                             Padding="8"
                                             Content="&#x6062;&#x590D;&#x684C;&#x9762;"/>
-                                    <Button Command="{Binding SmartRescueCommand}"
-                                            Style="{StaticResource FocusSecondaryButton}"
-                                            HorizontalContentAlignment="Left"
-                                            Padding="8"
-                                            Content="&#x667A;&#x80FD;&#x5206;&#x7EC4;"/>
                                 </StackPanel>
                             </Border>
                         </Popup>

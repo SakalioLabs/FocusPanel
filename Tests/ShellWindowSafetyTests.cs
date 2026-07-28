@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Windows;
 using System.Threading;
 using FocusPanel.Services;
@@ -13,12 +14,28 @@ public sealed class ShellWindowSafetyTests
     public void DesktopOverlayWindow_IsNotPartOfApplicationAssembly()
     {
         Assert.Null(typeof(EdgeHotZoneMonitor).Assembly.GetType("FocusPanel.Views.DesktopOverlayWindow"));
+        Assert.Null(typeof(EdgeHotZoneMonitor).Assembly.GetType("FocusPanel.ViewModels.DesktopOverlayViewModel"));
+        Assert.Null(typeof(EdgeHotZoneMonitor).Assembly.GetType("FocusPanel.ViewModels.DesktopDropRequest"));
     }
 
     [Fact]
     public void EdgeHotZoneMonitor_DoesNotCreateAWindowSurface()
     {
         Assert.False(typeof(Window).IsAssignableFrom(typeof(EdgeHotZoneMonitor)));
+    }
+
+    [Fact]
+    public void FileOrganizer_DoesNotExposeRemovedSmartRescueAction()
+    {
+        string projectRoot = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..", "..", "..", ".."));
+        string view = File.ReadAllText(Path.Combine(
+            projectRoot,
+            "Views",
+            "FileOrganizerView.xaml"));
+
+        Assert.DoesNotContain("SmartRescueCommand", view);
     }
 
     [Fact]

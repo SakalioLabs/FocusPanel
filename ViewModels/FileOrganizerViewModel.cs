@@ -33,22 +33,22 @@ public partial class FileOrganizerViewModel : ObservableObject
     private string currentViewMode = "Personalized"; // "Personalized" or "Timeline"
     
     [ObservableProperty]
-    private string newPartitionName;
+    private string newPartitionName = string.Empty;
     
     // Rename Support
     [ObservableProperty]
     private bool isRenameDialogOpen;
     
     [ObservableProperty]
-    private string renamePartitionName;
+    private string renamePartitionName = string.Empty;
     
-    private PartitionViewModel _partitionToRename;
+    private PartitionViewModel? _partitionToRename;
 
     [ObservableProperty]
-    private PartitionViewModel selectedPartition;
+    private PartitionViewModel? selectedPartition;
     
     [ObservableProperty]
-    private DesktopFile selectedFile;
+    private DesktopFile? selectedFile;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(OrganizeButtonText))]
@@ -233,7 +233,8 @@ public partial class FileOrganizerViewModel : ObservableObject
     public double CardHeight => 120 * IconScale;
     public double IconImageSize => 48 * IconScale;
 
-    public string OrganizeButtonText => IsDesktopHidden ? "Show Desktop" : "Hide Desktop";
+    public string OrganizeButtonText =>
+        IsDesktopHidden ? "显示桌面图标" : "隐藏桌面图标";
     public string OrganizeButtonIcon => IsDesktopHidden ? "Eye" : "EyeOff";
 
     public FileOrganizerViewModel()
@@ -382,11 +383,11 @@ public partial class FileOrganizerViewModel : ObservableObject
     {
         return groupName switch
         {
-            "Today" => 0,
-            "Yesterday" => 1,
-            "This Week" => 2,
-            "This Month" => 3,
-            "Older" => 4,
+            "今天" => 0,
+            "昨天" => 1,
+            "本周" => 2,
+            "本月" => 3,
+            "更早" => 4,
             _ => 5
         };
     }
@@ -487,38 +488,6 @@ public partial class FileOrganizerViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SmartRescue()
-    {
-        // 1. Ask user for confirmation
-        var result = System.Windows.MessageBox.Show(
-            "Smart Rescue will analyze all files in 'FocusPanel_Recovered' and group them by Time Sessions (4h gap) and Name Similarity.\n\nThis is designed to restore project context.\n\nContinue?", 
-            "Smart Rescue", 
-            System.Windows.MessageBoxButton.YesNo, 
-            System.Windows.MessageBoxImage.Question);
-
-        if (result != System.Windows.MessageBoxResult.Yes) return;
-
-        // 2. Run Smart Organizer
-        var smartOrganizer = new SmartOrganizerService();
-        
-        // TODO: Bind progress to UI if needed, for now just run
-        string recoveredPath = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.Desktop), 
-            "FocusPanel_Recovered");
-            
-        if (!System.IO.Directory.Exists(recoveredPath))
-        {
-            System.Windows.MessageBox.Show("No 'FocusPanel_Recovered' folder found on Desktop.");
-            return;
-        }
-
-        await smartOrganizer.OrganizeByRelevance(recoveredPath);
-        await Refresh();
-        BuildPartitions();
-        System.Windows.MessageBox.Show("Smart Organization Complete! The panel has been refreshed.");
-    }
-    
-    [RelayCommand]
     private void OpenPartitionFolder(PartitionViewModel partition)
     {
         if (partition == null) return;
@@ -531,7 +500,7 @@ public partial class FileOrganizerViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CreatePartition(string name = null)
+    private void CreatePartition(string? name = null)
     {
         string partitionName = name ?? NewPartitionName;
         
@@ -558,7 +527,7 @@ public partial class FileOrganizerViewModel : ObservableObject
     }
     
     [RelayCommand]
-    private void OpenRenameDialog(PartitionViewModel partition)
+    private void OpenRenameDialog(PartitionViewModel? partition)
     {
         if (partition == null) return;
         _partitionToRename = partition;
@@ -612,13 +581,13 @@ public partial class FileOrganizerViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void DeletePartition(PartitionViewModel partition)
+    private void DeletePartition(PartitionViewModel? partition)
     {
         if (partition == null) return;
 
         var result = System.Windows.MessageBox.Show(
-            $"Delete partition \"{partition.Name}\"?\nFiles in this partition will become unorganized but remain on desktop.",
-            "Delete Partition",
+            $"确定删除分区“{partition.Name}”吗？\n分区内文件会变为未分类，但仍保留在桌面。",
+            "删除分区",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
@@ -642,7 +611,7 @@ public partial class FileOrganizerViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SelectFile(DesktopFile file)
+    private void SelectFile(DesktopFile? file)
     {
         if (file == null) return;
         if (SelectedFile != null && SelectedFile != file) SelectedFile.IsSelected = false;
@@ -650,7 +619,7 @@ public partial class FileOrganizerViewModel : ObservableObject
         SelectedFile.IsSelected = true;
     }
 
-    public void ToggleFileSelection(DesktopFile file)
+    public void ToggleFileSelection(DesktopFile? file)
     {
         if (file == null) return;
         file.IsSelected = !file.IsSelected;

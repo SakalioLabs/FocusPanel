@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eaf3ff"/>
+      <stop offset="1" stop-color="#f7f3ff"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#172554" flood-opacity=".13"/>
+    </filter>
+    <style>
+      .title { font: 700 34px "Segoe UI","Microsoft YaHei",sans-serif; fill: #172554; }
+      .subtitle { font: 400 18px "Segoe UI","Microsoft YaHei",sans-serif; fill: #52627a; }
+      .card-title { font: 700 22px "Segoe UI","Microsoft YaHei",sans-serif; fill: #172554; }
+      .body { font: 400 17px "Segoe UI","Microsoft YaHei",sans-serif; fill: #52627a; }
+      .path { font: 600 16px Consolas,"Microsoft YaHei",monospace; fill: #244171; }
+      .badge { font: 600 15px "Segoe UI","Microsoft YaHei",sans-serif; fill: white; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="620" rx="36" fill="url(#bg)"/>
+  <text x="70" y="78" class="title">设置跟着用户走，不再跟着安装目录走</text>
+  <text x="70" y="112" class="subtitle">0.9.43 自动迁移旧配置，并用原子写入保护每次保存</text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="170" width="300" height="300" rx="26" fill="#ffffff" fill-opacity=".88"/>
+    <rect x="450" y="170" width="300" height="300" rx="26" fill="#ffffff" fill-opacity=".88"/>
+    <rect x="830" y="170" width="300" height="300" rx="26" fill="#ffffff" fill-opacity=".88"/>
+  </g>
+
+  <rect x="94" y="194" width="74" height="30" rx="15" fill="#64748b"/>
+  <text x="112" y="215" class="badge">旧版</text>
+  <text x="94" y="265" class="card-title">发现旧设置</text>
+  <text x="94" y="307" class="path">安装目录\settings.json</text>
+  <text x="94" y="350" class="body">仅在新位置没有设置时读取</text>
+  <text x="94" y="380" class="body">迁移后保留原文件作为回退</text>
+  <text x="94" y="410" class="body">不会删除或覆盖旧配置</text>
+
+  <rect x="474" y="194" width="74" height="30" rx="15" fill="url(#accent)"/>
+  <text x="492" y="215" class="badge">迁移</text>
+  <text x="474" y="265" class="card-title">规范化与保护</text>
+  <text x="474" y="307" class="body">保留用户自定义图片目录</text>
+  <text x="474" y="340" class="body">旧默认 Images 转到 AppData</text>
+  <text x="474" y="373" class="body">空值与比例落入安全范围</text>
+  <text x="474" y="406" class="body">损坏文件回退到默认设置</text>
+
+  <rect x="854" y="194" width="74" height="30" rx="15" fill="#0f766e"/>
+  <text x="872" y="215" class="badge">新版</text>
+  <text x="854" y="265" class="card-title">原子保存</text>
+  <text x="854" y="307" class="path">%APPDATA%\FocusPanel</text>
+  <text x="854" y="337" class="path">settings.json</text>
+  <text x="854" y="380" class="body">先写同目录临时文件</text>
+  <text x="854" y="410" class="body">完成后一次替换正式设置</text>
+
+  <path d="M385 320 H429" stroke="#5373b7" stroke-width="4" stroke-linecap="round"/>
+  <path d="M419 307 L433 320 L419 333" fill="none" stroke="#5373b7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M765 320 H809" stroke="#5373b7" stroke-width="4" stroke-linecap="round"/>
+  <path d="M799 307 L813 320 L799 333" fill="none" stroke="#5373b7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="70" y="510" width="1060" height="64" rx="20" fill="#172554" fill-opacity=".92"/>
+  <circle cx="105" cy="542" r="12" fill="#34d399"/>
+  <text x="132" y="549" class="badge">升级不丢配置 · 安装目录只读也能保存 · 失败可诊断 · 不触碰业务数据库</text>
+</svg>

@@ -59,7 +59,7 @@ public static class IconHelper
         [PreserveSig] int GetIcon(int i, int flags, ref IntPtr picon);
     }
 
-    public static ImageSource GetIcon(string path, bool large = true)
+    public static ImageSource? GetIcon(string path, bool large = true)
     {
         // 生成缓存键
         string cacheKey = $"{path}_{large}";
@@ -76,7 +76,7 @@ public static class IconHelper
         // Try to resolve shortcut target to get clean icon without overlay
         if (System.IO.Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase))
         {
-            string target = ResolveShortcut(path);
+            string? target = ResolveShortcut(path);
             if (!string.IsNullOrEmpty(target) && (System.IO.File.Exists(target) || System.IO.Directory.Exists(target)))
             {
                 path = target;
@@ -157,7 +157,7 @@ public static class IconHelper
         return icon;
     }
 
-    private static ImageSource TryGetShellImageListIcon(string path)
+    private static ImageSource? TryGetShellImageListIcon(string path)
     {
         try
         {
@@ -227,15 +227,22 @@ public static class IconHelper
         }
     }
 
-    private static string ResolveShortcut(string shortcutPath)
+    private static string? ResolveShortcut(string shortcutPath)
     {
         // Simple WScript resolution using dynamic to avoid reference
         try
         {
-            Type shellType = Type.GetTypeFromProgID("WScript.Shell");
-            dynamic shell = Activator.CreateInstance(shellType);
+            Type? shellType =
+                Type.GetTypeFromProgID("WScript.Shell");
+            if (shellType == null)
+                return null;
+            object? shellInstance =
+                Activator.CreateInstance(shellType);
+            if (shellInstance == null)
+                return null;
+            dynamic shell = shellInstance;
             dynamic shortcut = shell.CreateShortcut(shortcutPath);
-            return shortcut.TargetPath;
+            return shortcut.TargetPath as string;
         }
         catch
         {
