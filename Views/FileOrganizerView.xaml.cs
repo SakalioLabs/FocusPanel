@@ -4,10 +4,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using FocusPanel.Helpers;
 using FocusPanel.Models;
+using FocusPanel.Services;
 using FocusPanel.ViewModels;
 
 namespace FocusPanel.Views;
@@ -16,8 +16,9 @@ public partial class FileOrganizerView : UserControl
 {
     private readonly DispatcherTimer _autoScrollTimer;
     private double _scrollSpeed;
-    private ScrollViewer? _scrollViewer;
     private bool _isDragOverOrganizer;
+    private Point? _fileDragStartPoint;
+    private DesktopFile? _fileDragCandidate;
     private int _transientInteractionDepth;
     private MainWindow? _transientInteractionOwner;
 
@@ -31,13 +32,26 @@ public partial class FileOrganizerView : UserControl
 
     private void AutoScrollTimer_Tick(object? sender, EventArgs e)
     {
-        if (!_isDragOverOrganizer || _scrollViewer == null || _scrollSpeed == 0)
+        if (!_isDragOverOrganizer || Mouse.LeftButton != MouseButtonState.Pressed)
         {
             StopAutoScroll();
             return;
         }
 
-        _scrollViewer.ScrollToVerticalOffset(_scrollViewer.VerticalOffset + _scrollSpeed);
+        Point pointer = Mouse.GetPosition(OrganizerScrollViewer);
+        _scrollSpeed = OrganizerDragInteractionPolicy.GetAutoScrollStep(
+            pointer.Y,
+            OrganizerScrollViewer.ViewportHeight,
+            OrganizerScrollViewer.VerticalOffset,
+            OrganizerScrollViewer.ScrollableHeight);
+        if (_scrollSpeed == 0)
+        {
+            _autoScrollTimer.Stop();
+            return;
+        }
+
+        OrganizerScrollViewer.ScrollToVerticalOffset(
+            OrganizerScrollViewer.VerticalOffset + _scrollSpeed);
     }
 
     private void FileCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -46,11 +60,14 @@ public partial class FileOrganizerView : UserControl
         {
             if (Keyboard.Modifiers == ModifierKeys.Control)
             {
+                ClearFileDragCandidate();
                 vm.ToggleFileSelection(file);
                 e.Handled = true;
             }
             else
             {
+                _fileDragCandidate = file;
+                _fileDragStartPoint = e.GetPosition(this);
                 vm.SelectFileCommand.Execute(file);
             }
         }
@@ -58,76 +75,66 @@ public partial class FileOrganizerView : UserControl
 
     private async void FileCard_MouseMove(object sender, MouseEventArgs e)
     {
-        if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement card && card.DataContext is DesktopFile file)
+        if (e.LeftButton != MouseButtonState.Pressed
+            || _fileDragStartPoint is not Point dragStart
+            || sender is not FrameworkElement card
+            || card.DataContext is not DesktopFile file
+            || !ReferenceEquals(file, _fileDragCandidate))
         {
-            if (DataContext is FileOrganizerViewModel vm)
-            {
-                vm.SelectedFile = file;
-                var data = new DataObject();
-                data.SetData(typeof(DesktopFile), file);
-                var shell = Window.GetWindow(this) as MainWindow;
-                shell?.BeginDesktopFileDrag();
-                try
-                {
-                    DragDrop.DoDragDrop(card, data, DragDropEffects.Move);
+            return;
+        }
 
-                    if (file.IsHidden && DesktopHelper.IsCursorOverDesktop())
-                    {
-                        await vm.RestoreDraggedFileToDesktop(file);
-                    }
-                }
-                finally
+        Point current = e.GetPosition(this);
+        if (!OrganizerDragInteractionPolicy.HasExceededDragThreshold(
+                dragStart.X,
+                dragStart.Y,
+                current.X,
+                current.Y,
+                SystemParameters.MinimumHorizontalDragDistance,
+                SystemParameters.MinimumVerticalDragDistance))
+        {
+            return;
+        }
+
+        ClearFileDragCandidate();
+        if (DataContext is FileOrganizerViewModel vm)
+        {
+            vm.SelectedFile = file;
+            var data = new DataObject();
+            data.SetData(typeof(DesktopFile), file);
+            var shell = Window.GetWindow(this) as MainWindow;
+            shell?.BeginDesktopFileDrag();
+            try
+            {
+                DragDrop.DoDragDrop(card, data, DragDropEffects.Move);
+
+                if (file.IsHidden && DesktopHelper.IsCursorOverDesktop())
                 {
-                    StopAutoScroll();
-                    shell?.EndDesktopFileDrag();
+                    await vm.RestoreDraggedFileToDesktop(file);
                 }
+            }
+            finally
+            {
+                StopAutoScroll();
+                shell?.EndDesktopFileDrag();
             }
         }
     }
 
     private void Partition_DragOver(object sender, DragEventArgs e)
     {
-        _isDragOverOrganizer = true;
-        // ... (Existing logic) ...
-        
-        // Auto-scroll logic
-        if (_scrollViewer == null)
+        if (!IsSupportedOrganizerDrag(e.Data))
         {
-             _scrollViewer = FindVisualChild<ScrollViewer>(this);
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
         }
 
-        if (_scrollViewer != null)
-        {
-            Point position = e.GetPosition(_scrollViewer);
-            double height = _scrollViewer.ActualHeight;
-            double tolerance = 60; // Activation area height
-
-            if (position.Y < tolerance)
-            {
-                _scrollSpeed = -10; // Scroll up
-                if (!_autoScrollTimer.IsEnabled) _autoScrollTimer.Start();
-            }
-            else if (position.Y > height - tolerance)
-            {
-                _scrollSpeed = 10; // Scroll down
-                if (!_autoScrollTimer.IsEnabled) _autoScrollTimer.Start();
-            }
-            else
-            {
-                _scrollSpeed = 0;
-                _autoScrollTimer.Stop();
-            }
-        }
-        
-        // ... (Rest of visual feedback logic) ...
-        // This is necessary to allow drop
         e.Effects = DragDropEffects.Move;
         e.Handled = true;
-        
-        // Visual Feedback for Insertion
+
         if (e.Data.GetData(typeof(PartitionViewModel)) is PartitionViewModel source && sender is Border border)
         {
-             // Determine top or bottom half
              Point p = e.GetPosition(border);
              bool isBottom = p.Y > (border.ActualHeight / 2);
              
@@ -146,20 +153,65 @@ public partial class FileOrganizerView : UserControl
         }
     }
     
-    // Helper to find ScrollViewer
-    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    private void Organizer_PreviewDragOver(object sender, DragEventArgs e)
     {
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        if (!IsSupportedOrganizerDrag(e.Data))
         {
-            DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-            if (child is T typedChild)
-                return typedChild;
-
-            T? childOfChild = FindVisualChild<T>(child);
-            if (childOfChild != null)
-                return childOfChild;
+            StopAutoScroll();
+            return;
         }
-        return null;
+
+        _isDragOverOrganizer = true;
+        Point pointer = e.GetPosition(OrganizerScrollViewer);
+        UpdateAutoScroll(pointer.Y);
+    }
+
+    private void Organizer_PreviewDragLeave(object sender, DragEventArgs e)
+    {
+        Point pointer = e.GetPosition(this);
+        if (pointer.X < 0
+            || pointer.X >= ActualWidth
+            || pointer.Y < 0
+            || pointer.Y >= ActualHeight)
+        {
+            StopAutoScroll();
+        }
+    }
+
+    private void Organizer_PreviewDrop(object sender, DragEventArgs e)
+        => StopAutoScroll();
+
+    private void FileDrag_PreviewMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e)
+        => ClearFileDragCandidate();
+
+    private void UpdateAutoScroll(double pointerY)
+    {
+        _scrollSpeed = OrganizerDragInteractionPolicy.GetAutoScrollStep(
+            pointerY,
+            OrganizerScrollViewer.ViewportHeight,
+            OrganizerScrollViewer.VerticalOffset,
+            OrganizerScrollViewer.ScrollableHeight);
+        if (_scrollSpeed == 0)
+        {
+            _autoScrollTimer.Stop();
+        }
+        else if (!_autoScrollTimer.IsEnabled)
+        {
+            _autoScrollTimer.Start();
+        }
+    }
+
+    private static bool IsSupportedOrganizerDrag(IDataObject data)
+        => data.GetDataPresent(typeof(DesktopFile))
+            || data.GetDataPresent(typeof(PartitionViewModel))
+            || data.GetDataPresent(DataFormats.FileDrop);
+
+    private void ClearFileDragCandidate()
+    {
+        _fileDragCandidate = null;
+        _fileDragStartPoint = null;
     }
 
     private void Partition_DragEnter(object sender, DragEventArgs e)
@@ -175,21 +227,12 @@ public partial class FileOrganizerView : UserControl
     private void Partition_DragLeave(object sender, DragEventArgs e)
     {
         if (sender is Border border)
-        {
             RestorePartitionChrome(border);
-        }
-        
-        // Stop scroll if leaving the container (optional, but safer)
-        // However, DragLeave fires when entering children too, so we can't blindly stop.
     }
     
-    private void UserControl_DragLeave(object sender, DragEventArgs e)
-    {
-        StopAutoScroll();
-    }
-
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
+        ClearFileDragCandidate();
         StopAutoScroll();
         ReleaseTransientInteractions();
     }

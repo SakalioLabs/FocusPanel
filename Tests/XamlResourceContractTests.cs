@@ -383,7 +383,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void OrganizerAutoScroll_StopsOnDropLeaveAndUnload()
+    public void OrganizerDrag_UsesNamedViewportAndStopsOnEveryExitPath()
     {
         string root = FindRepositoryRoot();
         string organizer = File.ReadAllText(
@@ -391,8 +391,24 @@ public sealed class XamlResourceContractTests
         string codeBehind = File.ReadAllText(
             Path.Combine(root, "Views", "FileOrganizerView.xaml.cs"));
 
-        Assert.Contains("DragLeave=\"UserControl_DragLeave\"", organizer);
+        Assert.Contains("x:Name=\"OrganizerScrollViewer\"", organizer);
+        Assert.Contains("PreviewDragOver=\"Organizer_PreviewDragOver\"", organizer);
+        Assert.Contains("PreviewDragLeave=\"Organizer_PreviewDragLeave\"", organizer);
+        Assert.Contains("PreviewDrop=\"Organizer_PreviewDrop\"", organizer);
+        Assert.Contains(
+            "PreviewMouseLeftButtonUp=\"FileDrag_PreviewMouseLeftButtonUp\"",
+            organizer);
         Assert.Contains("Unloaded=\"UserControl_Unloaded\"", organizer);
+        Assert.Contains(
+            "OrganizerDragInteractionPolicy.HasExceededDragThreshold",
+            codeBehind);
+        Assert.Contains(
+            "OrganizerDragInteractionPolicy.GetAutoScrollStep",
+            codeBehind);
+        Assert.Contains(
+            "Mouse.LeftButton != MouseButtonState.Pressed",
+            codeBehind);
+        Assert.DoesNotContain("FindVisualChild<ScrollViewer>", codeBehind);
         Assert.Contains("private void StopAutoScroll()", codeBehind);
         Assert.Contains("private async void Partition_Drop", codeBehind);
         Assert.Contains("private void Column_Drop", codeBehind);

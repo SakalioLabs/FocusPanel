@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.28 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.29 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.28 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.29 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -12,6 +12,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 点击搜索、桌面收纳、任务、番茄钟、OKR、AI 等入口后，工作区从右向左展开到约 `720px`。
 - 离开约 `300ms` 自动收起；搜索框或编辑控件持有焦点时保持展开，`Esc` 可关闭。
 - 应用右键菜单、多窗口列表和桌面收纳的视图/新建/修复弹层打开时会锁住 Panel；菜单关闭并且鼠标离开后才恢复自动收起。
+- 桌面文件卡片只有移动距离超过 Windows 系统拖拽阈值后才开始拖动；靠近主内容区上下边缘时平滑滚动，移回中部、离开、取消、释放或完成放置后立即停止。
 - 独占或无边框全屏应用前台时默认停用鼠标热区。
 - 全局主动唤出：`Ctrl+Alt+Space`。
 - 固定应用与运行应用按 Windows AppUserModelID 或可执行路径合并为单一任务栏图标；固定项保持用户顺序，未固定运行项保持本次运行中的稳定顺序。
@@ -122,7 +123,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.28 `
+  -Version 0.9.29 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -131,7 +132,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.28-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.29-full.nupkg`：完整更新包。
 - `releases.win.json`、`assets.win.json` 和 `RELEASES`：更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -148,7 +149,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.28 `
+  -Version 0.9.29 `
   -Dotnet8Path dotnet
 ```
 

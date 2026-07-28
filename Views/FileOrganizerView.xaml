@@ -7,7 +7,11 @@
              xmlns:vm="clr-namespace:FocusPanel.ViewModels"
              xmlns:converters="clr-namespace:FocusPanel.Converters"
              mc:Ignorable="d"
-             DragLeave="UserControl_DragLeave"
+             AllowDrop="True"
+             PreviewDragOver="Organizer_PreviewDragOver"
+             PreviewDragLeave="Organizer_PreviewDragLeave"
+             PreviewDrop="Organizer_PreviewDrop"
+             PreviewMouseLeftButtonUp="FileDrag_PreviewMouseLeftButtonUp"
              Unloaded="UserControl_Unloaded"
              d:DataContext="{d:DesignInstance Type=vm:FileOrganizerViewModel}"
              d:DesignHeight="700"
@@ -539,7 +543,8 @@
         </Border>
 
         <Grid Grid.Row="1">
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
+            <ScrollViewer x:Name="OrganizerScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
                           Padding="14"
                           PreviewMouseLeftButtonDown="ContentArea_PreviewMouseLeftButtonDown">
                 <Grid>
