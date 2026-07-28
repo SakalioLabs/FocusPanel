@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -495,7 +496,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        PopulateTaskbarAppContextMenu(button, task);
+        PopulateTaskbarWindowList(button, task);
         OpenContextMenu(button);
     }
 
@@ -533,8 +534,17 @@ public partial class MainWindow : Window
         {
             var windowMenu = new MenuItem
             {
-                Header = string.IsNullOrWhiteSpace(window.Title) ? task.DisplayName : window.Title
+                Header = CreateWindowTitle(
+                    window,
+                    task.DisplayName),
+                IsCheckable = true,
+                IsChecked = window.IsActive
             };
+            AutomationProperties.SetName(
+                windowMenu,
+                GetWindowAccessibleName(
+                    window,
+                    task.DisplayName));
             windowMenu.Items.Add(new MenuItem
             {
                 Header = "切换到此窗口",
@@ -563,6 +573,70 @@ public partial class MainWindow : Window
 
         button.ContextMenu = menu;
     }
+
+    private void PopulateTaskbarWindowList(
+        Button button,
+        TaskbarAppItem task)
+    {
+        ContextMenu menu =
+            button.ContextMenu ?? new ContextMenu();
+        menu.Items.Clear();
+
+        foreach (WindowReference window in task.Windows)
+        {
+            var windowItem = new MenuItem
+            {
+                Header = CreateWindowTitle(
+                    window,
+                    task.DisplayName),
+                IsCheckable = true,
+                IsChecked = window.IsActive,
+                Command =
+                    _viewModel.ActivateWindowCommand,
+                CommandParameter = window
+            };
+            AutomationProperties.SetName(
+                windowItem,
+                GetWindowAccessibleName(
+                    window,
+                    task.DisplayName));
+            menu.Items.Add(windowItem);
+        }
+
+        button.ContextMenu = menu;
+    }
+
+    private static TextBlock CreateWindowTitle(
+        WindowReference window,
+        string fallback) =>
+        new()
+        {
+            Text = GetWindowTitle(
+                window,
+                fallback),
+            MaxWidth = 340,
+            TextTrimming =
+                TextTrimming.CharacterEllipsis
+        };
+
+    private static string GetWindowAccessibleName(
+        WindowReference window,
+        string fallback)
+    {
+        string title = GetWindowTitle(
+            window,
+            fallback);
+        return window.IsActive
+            ? $"当前窗口，{title}"
+            : title;
+    }
+
+    private static string GetWindowTitle(
+        WindowReference window,
+        string fallback) =>
+        string.IsNullOrWhiteSpace(window.Title)
+            ? fallback
+            : window.Title;
 
     private void OpenContextMenu(Button button)
     {

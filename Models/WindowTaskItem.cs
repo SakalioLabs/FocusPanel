@@ -21,4 +21,7 @@ public partial class WindowTaskItem : ObservableObject
     private bool isActive;
 }
 
-public sealed record WindowReference(IntPtr Handle, string Title);
+public sealed record WindowReference(
+    IntPtr Handle,
+    string Title,
+    bool IsActive = false);

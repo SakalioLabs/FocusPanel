@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101925"/>
+      <stop offset="1" stop-color="#203542"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#7bc6ea" stop-opacity=".055"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="13" stdDeviation="19" flood-color="#000" flood-opacity=".27"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="500" rx="30" fill="url(#bg)"/>
+  <circle cx="140" cy="70" r="190" fill="#168bd1" opacity=".14"/>
+  <circle cx="1060" cy="450" r="235" fill="#65c8e8" opacity=".08"/>
+  <text x="70" y="70" fill="#f5f9ff" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="31" font-weight="650">多窗口应用一层直达</text>
+  <text x="70" y="108" fill="#afc1d0" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="17">左键直接选择窗口 · 当前窗口清晰标记 · 右键保留完整管理能力</text>
+
+  <g transform="translate(72 145)" filter="url(#shadow)">
+    <rect width="126" height="280" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="63" cy="42" r="20" fill="#fff" fill-opacity=".08"/>
+    <path d="M54 33h18v18H54z" fill="#fff" fill-opacity=".9"/>
+    <rect x="39" y="86" width="48" height="48" rx="13" fill="#268fcb"/>
+    <path d="M51 98h24v24H51z" fill="#fff" fill-opacity=".9"/>
+    <rect x="54" y="140" width="18" height="4" rx="2" fill="#6bd0f6"/>
+    <circle cx="63" cy="190" r="20" fill="#fff" fill-opacity=".08"/>
+    <circle cx="63" cy="242" r="20" fill="#fff" fill-opacity=".08"/>
+    <text x="63" y="268" text-anchor="middle" fill="#afc1d0" font-family="Segoe UI, sans-serif" font-size="12">2 windows</text>
+  </g>
+
+  <path d="M215 270h66" stroke="#69caf3" stroke-width="3"/>
+  <path d="m272 262 12 8-12 8" fill="none" stroke="#69caf3" stroke-width="3"/>
+  <text x="220" y="248" fill="#74cff6" font-family="Microsoft YaHei UI, sans-serif" font-size="15">左键</text>
+
+  <g transform="translate(302 136)" filter="url(#shadow)">
+    <rect width="420" height="298" rx="23" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <text x="28" y="43" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">选择窗口</text>
+    <g transform="translate(24 67)">
+      <rect width="372" height="82" rx="14" fill="#258fc9" fill-opacity=".34" stroke="#69caf3" stroke-opacity=".42"/>
+      <circle cx="28" cy="41" r="11" fill="#69caf3"/>
+      <path d="m23 41 4 4 7-9" fill="none" stroke="#102432" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="54" y="34" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="17" font-weight="600">项目计划 – 编辑器</text>
+      <text x="54" y="58" fill="#a9d8ee" font-family="Microsoft YaHei UI, sans-serif" font-size="14">当前窗口 · 列表状态实时更新</text>
+    </g>
+    <g transform="translate(24 161)">
+      <rect width="372" height="82" rx="14" fill="#fff" fill-opacity=".06"/>
+      <circle cx="28" cy="41" r="11" fill="none" stroke="#afc1d0" stroke-opacity=".5" stroke-width="2"/>
+      <text x="54" y="34" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="17" font-weight="600">会议记录 – 编辑器</text>
+      <text x="54" y="58" fill="#afc1d0" font-family="Microsoft YaHei UI, sans-serif" font-size="14">点击直接切换，无二级菜单</text>
+    </g>
+    <text x="28" y="278" fill="#afc1d0" font-family="Microsoft YaHei UI, sans-serif" font-size="14">超长标题在 340px 后省略，读屏仍读取完整名称</text>
+  </g>
+
+  <path d="M741 270h64" stroke="#69caf3" stroke-width="3"/>
+  <path d="m796 262 12 8-12 8" fill="none" stroke="#69caf3" stroke-width="3"/>
+  <text x="746" y="248" fill="#74cff6" font-family="Microsoft YaHei UI, sans-serif" font-size="15">右键</text>
+
+  <g transform="translate(826 154)" filter="url(#shadow)">
+    <rect width="304" height="262" rx="23" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <text x="26" y="42" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">应用管理</text>
+    <text x="28" y="82" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="16">启动新实例</text>
+    <text x="28" y="116" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="16">固定 / 取消固定</text>
+    <line x1="24" y1="138" x2="280" y2="138" stroke="#fff" stroke-opacity=".12"/>
+    <text x="28" y="171" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="16">逐窗口切换与关闭</text>
+    <text x="28" y="205" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="16">关闭所有窗口</text>
+    <text x="28" y="238" fill="#afc1d0" font-family="Microsoft YaHei UI, sans-serif" font-size="14">管理操作不挤入左键高频路径</text>
+  </g>
+</svg>

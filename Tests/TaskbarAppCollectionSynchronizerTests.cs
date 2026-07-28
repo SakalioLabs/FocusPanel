@@ -76,6 +76,58 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         Assert.Equal(new[] { NotifyCollectionChangedAction.Move }, actions);
     }
 
+    [Fact]
+    public void ActiveWindowChange_ReplacesOnlyItsApplication()
+    {
+        TaskbarAppItem first =
+            MultiWindowApp(
+                "exe:c:\\editor.exe",
+                firstWindowActive: true);
+        TaskbarAppItem second =
+            RunningApp(
+                "exe:c:\\other.exe",
+                "其他",
+                3,
+                false);
+        var items =
+            new ObservableCollection<TaskbarAppItem>
+            {
+                first,
+                second
+            };
+        var actions =
+            new List<NotifyCollectionChangedAction>();
+        items.CollectionChanged +=
+            (_, args) => actions.Add(args.Action);
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[]
+            {
+                MultiWindowApp(
+                    "exe:c:\\editor.exe",
+                    firstWindowActive: false),
+                RunningApp(
+                    "exe:c:\\other.exe",
+                    "其他",
+                    3,
+                    false)
+            });
+
+        Assert.NotSame(first, items[0]);
+        Assert.Same(second, items[1]);
+        Assert.False(
+            items[0].Windows[0].IsActive);
+        Assert.True(
+            items[0].Windows[1].IsActive);
+        Assert.Equal(
+            new[]
+            {
+                NotifyCollectionChangedAction.Replace
+            },
+            actions);
+    }
+
     private static TaskbarAppItem App(string identity, string name) => new()
     {
         IdentityKey = identity,
@@ -99,4 +151,31 @@ public sealed class TaskbarAppCollectionSynchronizerTests
             Windows = new[] { new WindowReference(new IntPtr(handle), name) }
         }
     };
+
+    private static TaskbarAppItem MultiWindowApp(
+        string identity,
+        bool firstWindowActive) =>
+        new()
+        {
+            IdentityKey = identity,
+            DisplayName = "编辑器",
+            RunningTask = new WindowTaskItem
+            {
+                AppKey = identity,
+                IdentityKey = identity,
+                DisplayName = "编辑器",
+                IsActive = true,
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(1),
+                        "文档一",
+                        firstWindowActive),
+                    new WindowReference(
+                        new IntPtr(2),
+                        "文档二",
+                        !firstWindowActive)
+                }
+            }
+        };
 }

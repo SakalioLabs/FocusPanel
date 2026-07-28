@@ -719,6 +719,55 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void MultiWindowLeftClick_OpensDirectWindowList()
+    {
+        string root = FindRepositoryRoot();
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        string tracker = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowTracker.cs"));
+        string synchronizer = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "TaskbarAppCollectionSynchronizer.cs"));
+
+        Assert.Contains(
+            "PopulateTaskbarWindowList(button, task);",
+            codeBehind);
+        Assert.Contains(
+            "PopulateTaskbarAppContextMenu(button, task);",
+            codeBehind);
+        Assert.Contains(
+            "_viewModel.ActivateWindowCommand",
+            codeBehind);
+        Assert.Contains(
+            "CommandParameter = window",
+            codeBehind);
+        Assert.Contains(
+            "IsChecked = window.IsActive",
+            codeBehind);
+        Assert.Contains(
+            "TextTrimming.CharacterEllipsis",
+            codeBehind);
+        Assert.Contains(
+            "当前窗口，",
+            codeBehind);
+        Assert.Contains(
+            "item.IsActive))",
+            tracker);
+        Assert.Contains(
+            "left.IsActive == right.IsActive",
+            synchronizer);
+    }
+
+    [Fact]
     public void SearchAndTaskbar_UseTheSameNonBlankIconPresenter()
     {
         string root = FindRepositoryRoot();

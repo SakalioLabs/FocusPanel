@@ -179,7 +179,13 @@ public sealed class WindowTracker : IWindowTracker
                     DisplayName = first.ProcessName,
                     ExecutablePath = resolvedExecutable,
                     Icon = resolvedExecutable == null ? null : IconHelper.GetIcon(resolvedExecutable),
-                    Windows = group.Select(item => new WindowReference(item.Handle, item.Title)).ToList(),
+                    Windows = group
+                        .Select(item =>
+                            new WindowReference(
+                                item.Handle,
+                                item.Title,
+                                item.IsActive))
+                        .ToList(),
                     IsActive = group.Any(item => item.IsActive)
                 };
             })
