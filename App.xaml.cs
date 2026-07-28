@@ -45,13 +45,22 @@ public partial class App : Application
         // Check for restore flag
         if (e.Args.Contains("--restore"))
         {
-            if (backupService.RestoreLatestBackup())
+            if (backupService.TryRestoreLatestBackup(
+                    out string restoreMessage))
             {
-                MessageBox.Show("Database restored successfully.", "Restore Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(
+                    restoreMessage,
+                    "数据库恢复完成",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
             else
             {
-                MessageBox.Show("Failed to restore database from backup.", "Restore Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    restoreMessage,
+                    "数据库恢复失败",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
         else
@@ -90,9 +99,15 @@ public partial class App : Application
         if (!dbInitSuccess)
         {
             // Try to recover
-            if (backupService.ArchiveCorruptedDatabase() && backupService.RestoreLatestBackup())
+            if (backupService.ArchiveCorruptedDatabase()
+                && backupService.TryRestoreLatestBackup(
+                    out string recoveryMessage))
             {
-                MessageBox.Show("Database corruption detected. Restored from latest backup.", "Database Restored", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(
+                    $"检测到数据库异常。{recoveryMessage}",
+                    "数据库已恢复",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
                 try
                 {
                     using (var context = new AppDbContext())

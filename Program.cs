@@ -13,6 +13,21 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (args.Length >= 2
+            && string.Equals(
+                args[0],
+                "--restore-after-exit",
+                StringComparison.OrdinalIgnoreCase)
+            && int.TryParse(
+                args[1],
+                out int restoreParentProcessId))
+        {
+            Environment.ExitCode =
+                RestoreRestartCoordinator.Run(
+                    restoreParentProcessId);
+            return;
+        }
+
         if (args.Length > 0
             && string.Equals(args[0], DesktopVisibilityElevatedHelper.Command, StringComparison.OrdinalIgnoreCase))
         {

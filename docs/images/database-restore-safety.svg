@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440">
+  <defs><linearGradient id="bg" x1="0" x2="1"><stop stop-color="#0f172a"/><stop offset="1" stop-color="#1e1b4b"/></linearGradient></defs>
+  <rect width="1200" height="440" rx="28" fill="url(#bg)"/>
+  <text x="60" y="66" fill="#f8fafc" font-size="30" font-family="Segoe UI, Microsoft YaHei" font-weight="700">数据库恢复：退出交接 + 逐个验证</text>
+  <text x="60" y="100" fill="#94a3b8" font-size="16" font-family="Segoe UI, Microsoft YaHei">不与正在运行的实例争用数据库，不把“最新文件”误当成“有效备份”。</text>
+  <g font-family="Segoe UI, Microsoft YaHei" text-anchor="middle">
+    <g transform="translate(55 140)"><rect width="210" height="112" rx="20" fill="#1e293b"/><text x="105" y="44" fill="#93c5fd" font-size="17">用户确认恢复</text><text x="105" y="76" fill="#64748b" font-size="13">启动交接进程</text></g>
+    <text x="294" y="201" fill="#64748b" font-size="28">→</text>
+    <g transform="translate(325 140)"><rect width="230" height="112" rx="20" fill="#312e81"/><text x="115" y="42" fill="#c7d2fe" font-size="17">恢复任务栏并退出</text><text x="115" y="74" fill="#a5b4fc" font-size="13">释放互斥锁与数据库</text></g>
+    <text x="584" y="201" fill="#64748b" font-size="28">→</text>
+    <g transform="translate(615 140)"><rect width="230" height="112" rx="20" fill="#164e63"/><text x="115" y="42" fill="#a5f3fc" font-size="17">合并并排序备份</text><text x="115" y="74" fill="#67e8f9" font-size="13">AppData + 本地目录</text></g>
+    <text x="874" y="201" fill="#64748b" font-size="28">→</text>
+    <g transform="translate(905 140)"><rect width="240" height="112" rx="20" fill="#14532d"/><text x="120" y="42" fill="#bbf7d0" font-size="17">SQLite quick_check</text><text x="120" y="74" fill="#86efac" font-size="13">有效才进入暂存恢复</text></g>
+  </g>
+  <path d="M1025 267 C1025 320 820 320 820 267" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="7 7"/>
+  <text x="922" y="310" text-anchor="middle" fill="#fbbf24" font-size="14" font-family="Segoe UI, Microsoft YaHei">损坏则尝试更早备份</text>
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <rect x="260" y="345" width="300" height="54" rx="16" fill="#14532d"/><text x="410" y="378" text-anchor="middle" fill="#bbf7d0" font-size="16">成功：原子替换并清理旧 sidecar</text>
+    <rect x="640" y="345" width="300" height="54" rx="16" fill="#7f1d1d"/><text x="790" y="378" text-anchor="middle" fill="#fecaca" font-size="16">全部失败：当前数据库保持不动</text>
+  </g>
+</svg>

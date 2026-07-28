@@ -367,6 +367,44 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void DatabaseRestore_UsesExitHandoffAndValidatedBackups()
+    {
+        string root = FindRepositoryRoot();
+        string program = File.ReadAllText(
+            Path.Combine(root, "Program.cs"));
+        string app = File.ReadAllText(
+            Path.Combine(root, "App.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+        string backupService = File.ReadAllText(
+            Path.Combine(root, "Services", "DatabaseBackupService.cs"));
+
+        Assert.Contains("--restore-after-exit", program);
+        Assert.Contains("--restore-after-exit", viewModel);
+        Assert.Contains(
+            "RestoreRestartCoordinator.Run",
+            program);
+        Assert.Contains(
+            "RequestClose?.Invoke();",
+            viewModel);
+        Assert.Contains(
+            "TryRestoreLatestBackup",
+            app);
+        Assert.Contains(
+            "PRAGMA quick_check",
+            backupService);
+        Assert.Contains(
+            "File.Move(",
+            backupService);
+        Assert.DoesNotContain(
+            "ProcessStartInfo(executable, \"--restore\")",
+            viewModel);
+        Assert.DoesNotContain(
+            "Application.Current.Shutdown();",
+            viewModel);
+    }
+
+    [Fact]
     public void ShellAutoHide_WaitsForMenusPopupsAndMouseCapture()
     {
         string root = FindRepositoryRoot();

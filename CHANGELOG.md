@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.36 - 2026-07-28
+
+- 修复设置页数据库恢复被单实例互斥拦截的问题：新增 `--restore-after-exit <parentPid>` 交接模式，先等待当前 FocusPanel 完整退出，再启动真正的 `--restore` 实例。
+- 恢复请求改走主窗口 `ForceClose` 生命周期，退出前仍会恢复原生任务栏、停止热区与计时器并释放数据库/窗口资源，不再从 ViewModel 直接调用 `Application.Shutdown()`。
+- AppData 与安装目录的备份统一合并并按 `LastWriteTimeUtc` 排序，不再无条件优先 AppData 中可能更旧的文件。
+- 每个候选备份和复制后的暂存文件都执行 SQLite `PRAGMA quick_check`；最新备份损坏时自动尝试更早的有效备份，全部失败时保留当前数据库不动并显示具体原因。
+- 启动备份改用 SQLite 在线 `BackupDatabase`，能包含 WAL 中已经提交但尚未检查点的数据；输出统一切回 DELETE journal 并清理备份旁的 WAL/SHM，形成独立可恢复文件。
+- 数据库替换先写入同目录随机暂存文件并校验，再覆盖目标；成功后删除旧数据库的 WAL/SHM，损坏数据库归档时同时保留其 sidecar 供排查。
+- 新增 15 项恢复交接、备份选择、损坏回退、当前库保护、sidecar 清理、双目录备份与 WAL 数据测试；消除 `DatabaseBackupService` 原有的 2 条 Nullable 警告。
+
 ## v0.9.35 - 2026-07-28
 
 - 重建“随 Windows 启动”服务：启用时使用 `CreateSubKey` 获取或创建 Run 键，不再假设注册表键必然存在并直接空引用。

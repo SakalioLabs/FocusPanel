@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.35 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.36 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.35 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.36 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -123,7 +123,9 @@ dotnet run --project FocusPanel.csproj
 - .NET 7 SDK
 - 仓库没有 `.sln` 文件，直接构建 `FocusPanel.csproj`
 
-数据库位于 `%APPDATA%\FocusPanel\focuspanel.db`。启动时会执行 `EnsureSchema()`；数据库损坏时会归档损坏文件并尝试恢复最新滚动备份。`--restore` 参数可从最新备份恢复。
+数据库位于 `%APPDATA%\FocusPanel\focuspanel.db`。启动备份使用 SQLite 在线备份 API，因此 WAL 中已提交的数据也会进入独立备份文件。恢复时先安全退出当前实例并恢复原生任务栏，再由交接进程等待单实例锁释放；候选备份跨 AppData 与安装目录按时间排序并逐个执行 `PRAGMA quick_check`，最新文件损坏时会回退到更早的有效备份，全部失败则保持当前数据库不动。
+
+![数据库安全备份与恢复](docs/images/database-restore-safety.svg)
 
 ## 安装包与一键更新
 
@@ -132,7 +134,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.35 `
+  -Version 0.9.36 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -141,7 +143,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.35-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.36-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -158,7 +160,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.35 `
+  -Version 0.9.36 `
   -Dotnet8Path dotnet
 ```
 

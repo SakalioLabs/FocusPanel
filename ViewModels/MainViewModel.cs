@@ -671,8 +671,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
             string executable = Environment.ProcessPath
                 ?? Process.GetCurrentProcess().MainModule?.FileName
                 ?? throw new InvalidOperationException("无法定位 FocusPanel 可执行文件。");
-            Process.Start(new ProcessStartInfo(executable, "--restore") { UseShellExecute = true });
-            Application.Current.Shutdown();
+            string arguments =
+                $"--restore-after-exit {Environment.ProcessId}";
+            _ = Process.Start(
+                new ProcessStartInfo(
+                    executable,
+                    arguments)
+                {
+                    UseShellExecute = true
+                })
+                ?? throw new InvalidOperationException(
+                    "无法启动数据库恢复交接进程。");
+            RequestClose?.Invoke();
         }
         catch (Exception ex)
         {
