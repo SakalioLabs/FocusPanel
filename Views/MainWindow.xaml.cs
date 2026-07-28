@@ -38,6 +38,7 @@ public partial class MainWindow :
     private readonly ShellCoordinator _coordinator;
     private readonly MainViewModel _viewModel;
     private readonly DispatcherTimer _autoHideTimer;
+    private readonly FocusToastManager _toastManager;
     private EdgeHotZoneMonitor? _hotZoneMonitor;
     private EdgeIndicatorWindow? _edgeIndicator;
     private HwndSource? _windowSource;
@@ -62,6 +63,7 @@ public partial class MainWindow :
         InitializeComponent();
         DataContext = _viewModel;
         MyNotifyIcon.Icon = SystemIcons.Application;
+        _toastManager = new FocusToastManager(this);
 
         _viewModel.RequestClose += ForceClose;
         _viewModel.RequestEnableReplacement += EnableTaskbarReplacement;
@@ -130,20 +132,47 @@ public partial class MainWindow :
 
     private void ViewModel_UpdateAvailable(AppUpdateInfo update)
     {
-        MyNotifyIcon.ShowBalloonTip(
-            "FocusPanel 更新可用",
-            $"GitHub 已发布 v{update.Version}，打开设置即可一键安装。",
-            Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+        _toastManager.Enqueue(
+            new FocusToastNotification(
+                "update-available",
+                "FocusPanel 更新可用",
+                $"GitHub 已发布 v{update.Version}，可在设置中一键安装。",
+                "\uE895",
+                FocusToastKind.Information,
+                "打开更新",
+                OpenUpdateSettings));
     }
 
     private void ViewModel_PomodoroCompleted(
         int durationMinutes)
     {
         SystemSounds.Asterisk.Play();
-        MyNotifyIcon.ShowBalloonTip(
-            "专注完成",
-            $"本轮 {durationMinutes} 分钟专注已完成，休息一下吧。",
-            Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+        _toastManager.Enqueue(
+            new FocusToastNotification(
+                "pomodoro-completed",
+                "专注完成",
+                $"本轮 {durationMinutes} 分钟专注已完成，休息一下吧。",
+                "\uE823",
+                FocusToastKind.Success,
+                "查看专注",
+                OpenPomodoroWorkspace));
+    }
+
+    private void OpenUpdateSettings()
+    {
+        _hiddenToTray = false;
+        ExpandSidebar();
+        CloseOverlayPanels();
+        _viewModel.IsSettingsOpen = true;
+        Activate();
+    }
+
+    private void OpenPomodoroWorkspace()
+    {
+        _hiddenToTray = false;
+        ExpandSidebar();
+        _viewModel.NavigateCommand.Execute("Pomodoro");
+        Activate();
     }
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -869,6 +898,7 @@ public partial class MainWindow :
         {
             e.Cancel = true;
             _hiddenToTray = true;
+            _toastManager.DismissAll();
             _hotZoneMonitor?.Stop();
             HideShell();
             DesktopHelper.ToggleDesktopIcons(true);
@@ -891,6 +921,7 @@ public partial class MainWindow :
         _hotZoneMonitor = null;
         _edgeIndicator?.Close();
         _edgeIndicator = null;
+        _toastManager.Dispose();
         _coordinator.Taskbar.ReplacementStopped -= Taskbar_ReplacementStopped;
         _viewModel.UpdateAvailable -= ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted -=
@@ -923,6 +954,7 @@ public partial class MainWindow :
         Dispatcher.BeginInvoke(() =>
         {
             PositionAtPrimaryRightEdge();
+            _toastManager.Reposition();
             _hotZoneMonitor?.RefreshDisplayBounds();
             _edgeIndicator?.Reposition();
         });

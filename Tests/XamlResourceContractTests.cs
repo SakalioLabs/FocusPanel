@@ -792,7 +792,8 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Update.LanLocation", viewModel);
         Assert.Contains("TimeSpan.FromHours(6)", viewModel);
         Assert.Contains("CheckForUpdatesInBackgroundAsync", windowCode);
-        Assert.Contains("ShowBalloonTip", windowCode);
+        Assert.Contains("FocusToastManager", windowCode);
+        Assert.DoesNotContain("ShowBalloonTip", windowCode);
     }
 
     [Fact]
@@ -2308,7 +2309,10 @@ public sealed class XamlResourceContractTests
             "SystemSounds.Asterisk.Play()",
             mainWindow);
         Assert.Contains(
-            "MyNotifyIcon.ShowBalloonTip",
+            "_toastManager.Enqueue",
+            mainWindow);
+        Assert.DoesNotContain(
+            "ShowBalloonTip",
             mainWindow);
     }
 
@@ -2766,6 +2770,71 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "ReportTaskbarActionFailure(",
             viewModel);
+    }
+
+    [Fact]
+    public void RuntimeNotifications_UseNoActivateNativeFluentToasts()
+    {
+        string root = FindRepositoryRoot();
+        string toastXaml = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FocusToastWindow.xaml"));
+        string toastCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FocusToastWindow.xaml.cs"));
+        string manager = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FocusToastManager.cs"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "ShowActivated=\"False\"",
+            toastXaml);
+        Assert.Contains(
+            "ShowInTaskbar=\"False\"",
+            toastXaml);
+        Assert.Contains(
+            "FocusShellTintBrush",
+            toastXaml);
+        Assert.Contains(
+            "FocusCardTitleText",
+            toastXaml);
+        Assert.DoesNotContain(
+            "CornerRadius=",
+            toastXaml.Split(
+                "<Grid>",
+                StringSplitOptions.None)[0]);
+        Assert.Contains(
+            "WsExNoActivate",
+            toastCode);
+        Assert.Contains(
+            "WindowBackdropService.Apply(this)",
+            toastCode);
+        Assert.Contains(
+            "DispatcherTimer",
+            manager);
+        Assert.Contains(
+            "SystemParameters.ClientAreaAnimation",
+            manager);
+        Assert.Contains(
+            "_toastManager.Enqueue",
+            mainWindow);
+        Assert.Contains(
+            "_toastManager.DismissAll()",
+            mainWindow);
+        Assert.DoesNotContain(
+            "ShowBalloonTip",
+            mainWindow);
     }
 
     private static HashSet<string> ReadDefinedKeys(params string[] paths)

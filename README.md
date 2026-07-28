@@ -116,6 +116,12 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 ![Windows 现代图片选择器](docs/images/modern-image-picker.svg)
 
+### 无激活原生通知
+
+更新可用和番茄钟完成不再依赖 Explorer 托盘气泡，而由 FocusPanel 在 Panel 左侧显示单层 Fluent Toast。通知复用 Windows 11 DWM 原生圆角与 Desktop Acrylic；显示时不激活窗口、不打断当前输入，鼠标悬停会暂停自动关闭。更新通知可直接进入设置页，专注完成通知可直接回到番茄钟；托盘图标只保留恢复原生任务栏与安全退出能力。
+
+![FocusPanel 无激活原生毛玻璃通知](docs/images/native-focus-toast.svg)
+
 ### 两个中心
 
 Focus 中心只放 FocusPanel 的业务模块；状态中心只放设备状态、Windows 公开入口与任务栏恢复信息。两个中心与搜索、日历、设置、电源弹层互斥，按 `Esc` 可关闭。

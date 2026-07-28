@@ -95,6 +95,7 @@ internal static class UiSmokeTestRunner
             CheckSurface("AIAssistantView", () => new AIAssistantView(), results, failures);
             CheckSurface("TaskDetailWindow", () => new TaskDetailWindow(), results, failures);
             CheckSurface("FocusDialogWindow", () => new FocusDialogWindow(), results, failures);
+            CheckSurface("FocusToastWindow", () => new FocusToastWindow(), results, failures);
             CheckSurface("PomodoroFloatingWindow", () => new PomodoroFloatingWindow(), results, failures);
             CheckSurface("EdgeIndicatorWindow", () => new EdgeIndicatorWindow(), results, failures);
             CheckSurface("CalendarPanelView", () => new CalendarPanelView(), results, failures);

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.82 - 2026-07-29
+
+- 将“发现更新”和“番茄钟完成”从 Explorer 托盘气泡迁移为 FocusPanel 自有的无激活 Fluent Toast；隐藏原生任务栏或 Explorer 通知宿主异常时，核心通知仍然可见。
+- Toast 复用 Windows 11 DWM 原生圆角与 Desktop Acrylic，外层只有一块毛玻璃表面；透明效果、高对比度、远程桌面或 DWM 不可用时继续沿用现有不透明主题降级。
+- Toast 使用 `WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW`，显示和自动消失不会抢走当前应用的键盘焦点；悬停时暂停计时，离开后继续自动关闭。
+- 更新通知可直接打开设置与更新区域，专注完成通知可直接展开番茄钟工作区；用户主动点击后才激活 Panel。
+- 新增稳定 FIFO 通知队列，相同类型当前通知不会重复堆叠，等待队列中的同类通知只更新内容且不改变顺序。
+- 关闭到托盘、正常退出和显示器布局变化分别完成通知清理、资源释放与位置重算；托盘图标仅保留显示、恢复原生任务栏和安全退出菜单。
+- 新增队列顺序、去重、替换和清理测试，以及无激活、DWM 背景、语义字体和禁止 `ShowBalloonTip` 的界面契约；全量 489 项测试与 UI 冒烟通过。
+- README 新增无激活原生毛玻璃通知图示。
+
 ## v0.9.81 - 2026-07-29
 
 - 将任务长文本“插入图片”从 ViewModel 直接创建 `Microsoft.Win32.OpenFileDialog` 改为可替换的 `IFilePickerService` 与 `WindowsFilePickerService`，系统 UI 边界不再混入业务逻辑。
