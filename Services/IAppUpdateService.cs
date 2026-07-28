@@ -9,6 +9,9 @@ public interface IAppUpdateService : IDisposable
 {
     string CurrentVersion { get; }
     bool CanUpdate { get; }
+    AppUpdateSourceConfiguration SourceConfiguration { get; }
+    string SourceDescription { get; }
+    bool TryConfigure(AppUpdateSourceConfiguration configuration, out string? error);
     Task<AppUpdateInfo?> CheckForUpdateAsync(CancellationToken cancellationToken = default);
     Task DownloadUpdateAsync(
         IProgress<int>? progress = null,

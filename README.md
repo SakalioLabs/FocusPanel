@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.24 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.25 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.24 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.25 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -80,7 +80,7 @@ Focus 中心只放 FocusPanel 的业务模块；状态中心只放设备状态�
 | 数据库 | SQLite / EF Core 7 |
 | 托盘 | Hardcodet.NotifyIcon.Wpf |
 | 系统集成 | Win32 / DWM / AppBar / Core Audio / Shell |
-| 安装与更新 | Velopack 1.2 / GitHub Releases |
+| 安装与更新 | Velopack 1.2 / GitHub Releases / 局域网 HTTP 或共享目录 |
 
 ## 项目结构
 
@@ -120,7 +120,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.24 `
+  -Version 0.9.25 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -129,22 +129,47 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.24-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.25-full.nupkg`：完整更新包。
 - `releases.win.json`、`assets.win.json` 和 `RELEASES`：更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
-安装版和 Velopack 便携版会在“设置与恢复 → 软件更新”中显示当前版本。点击“一键检查并安装更新”后，FocusPanel 会从项目的 GitHub Releases 检查版本，显示更新说明，下载更新包，备份数据库，恢复原任务栏设置，然后重启安装。
+安装版和 Velopack 便携版会在“设置与恢复 → 软件更新”中显示当前版本。更新来源可以选择项目的 GitHub Releases，也可以选择局域网 HTTP 地址或 Windows 共享目录。来源按设备保存一次，之后点击“一键检查并安装更新”即可显示更新说明、下载更新包、备份数据库、恢复原任务栏设置，然后重启安装。
 
 ![一键更新流程](docs/images/one-click-update.svg)
 
 源码直接运行的开发版不会原地覆盖自身，设置页会提示先安装 `Setup.exe`。
+
+### 局域网多设备更新
+
+先在一台打包机上生成发布包，再把当前版本发布到共享目录：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\scripts\publish-lan-update.ps1 `
+  -Destination '\\192.168.1.10\FocusPanelUpdates' `
+  -Version 0.9.25
+```
+
+脚本先复制完整包、差分包和安装程序，最后复制 `releases.win.json`/`RELEASES` 清单，避免其他设备在文件尚未就绪时发现新版本。目标目录不会被清空，便于保留旧版本和支持差分升级。
+
+在其他设备中打开“Focus 中心 → 设置 → 软件更新”，选择“局域网更新源”，填写下列任一种地址并点击“保存来源”：
+
+- Windows 共享目录：`\\192.168.1.10\FocusPanelUpdates`
+- 静态 HTTP 目录：`http://192.168.1.10:8088/`
+- 本机绝对目录：`D:\FocusPanelUpdates`（适合移动硬盘或离线测试）
+
+每台设备只需配置一次。之后都可使用同一个“一键检查并安装更新”按钮；共享目录需要客户端 Windows 账户具备读取权限，HTTP 服务器只需静态托管该目录中的文件。
+
+仅应在可信局域网中使用 HTTP；跨不可信网络请使用 HTTPS，并为正式安装包配置代码签名。共享目录建议给客户端只读权限，只有发布机账户保留写入权限。
+
+![局域网一键更新](docs/images/lan-update-flow.svg)
 
 将生成的包上传为 GitHub Release 草稿：
 
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.24 `
+  -Version 0.9.25 `
   -Dotnet8Path dotnet
 ```
 

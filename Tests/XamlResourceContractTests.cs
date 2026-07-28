@@ -178,6 +178,22 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void Settings_ExposesGitHubAndLanOneClickUpdateSources()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
+        string viewModel = File.ReadAllText(Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.Contains("Tag=\"GitHub\"", mainWindow);
+        Assert.Contains("Tag=\"Lan\"", mainWindow);
+        Assert.Contains("LanUpdateSource", mainWindow);
+        Assert.Contains("SaveUpdateSourceCommand", mainWindow);
+        Assert.Contains("CheckAndInstallUpdateCommand", mainWindow);
+        Assert.Contains("Update.SourceMode", viewModel);
+        Assert.Contains("Update.LanLocation", viewModel);
+    }
+
+    [Fact]
     public void CompactDock_HasExactlySixFixedEntriesAndOneApplicationList()
     {
         string root = FindRepositoryRoot();

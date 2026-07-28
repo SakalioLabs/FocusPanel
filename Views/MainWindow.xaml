@@ -356,13 +356,16 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"
                             Margin="0,0,14,8"
+                            MaxHeight="760"
                             Padding="20"
                             CornerRadius="{StaticResource FocusCardCornerRadius}"
                             Background="{DynamicResource FocusSurfaceStrongBrush}"
                             BorderBrush="{DynamicResource FocusStrokeBrush}"
                             BorderThickness="1"
                             Visibility="{Binding IsSettingsOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <StackPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                          <StackPanel Margin="0,0,4,0">
                             <TextBlock Text="系统与恢复" FontSize="18" FontWeight="SemiBold"/>
                             <TextBlock Text="紧急恢复：Ctrl + Alt + Shift + F10"
                                        Margin="0,6,0,16"
@@ -443,6 +446,48 @@
                                                    Text="{Binding CurrentAppVersion, StringFormat=v{0}}"
                                                    Foreground="{DynamicResource FocusMutedTextBrush}"/>
                                     </Grid>
+                                    <TextBlock Margin="0,10,0,5"
+                                               Text="更新来源"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    <ComboBox SelectedValuePath="Tag"
+                                              SelectedValue="{Binding UpdateSourceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <ComboBoxItem Content="GitHub Releases（互联网）" Tag="GitHub"/>
+                                        <ComboBoxItem Content="局域网更新源（HTTP 或共享目录）" Tag="Lan"/>
+                                    </ComboBox>
+                                    <StackPanel Margin="0,8,0,0">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding UpdateSourceMode}" Value="Lan">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <TextBox Style="{StaticResource FocusSearchBox}"
+                                                 Text="{Binding LanUpdateSource, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="例如 http://192.168.1.10:8088/ 或 \\主机\FocusPanelUpdates"/>
+                                        <TextBlock Margin="2,6,0,0"
+                                                   Text="支持 HTTP/HTTPS 地址、UNC 共享目录和本机绝对目录。"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    </StackPanel>
+                                    <Grid Margin="0,9,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock VerticalAlignment="Center"
+                                                   Text="{Binding UpdateSourceDescription}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                        <Button Grid.Column="1"
+                                                Margin="8,0,0,0"
+                                                Style="{StaticResource FocusSecondaryButton}"
+                                                Content="保存来源"
+                                                Command="{Binding SaveUpdateSourceCommand}"/>
+                                    </Grid>
                                     <TextBlock Margin="0,6,0,10"
                                                Text="{Binding UpdateStatus}"
                                                TextWrapping="Wrap"
@@ -477,7 +522,8 @@
                                     Foreground="{DynamicResource FocusDangerBrush}"
                                     Content="退出 FocusPanel"
                                     Command="{Binding CloseAppCommand}"/>
-                        </StackPanel>
+                          </StackPanel>
+                        </ScrollViewer>
                     </Border>
 
                     <!-- Power overlay -->
