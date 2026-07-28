@@ -563,9 +563,7 @@ public partial class MainWindow : Window
     private void VolumeButton_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         float step = e.Delta > 0 ? 0.05f : -0.05f;
-        _viewModel.MasterVolume = Math.Clamp(_viewModel.MasterVolume + step, 0f, 1f);
-        if (_viewModel.MasterVolume > 0 && _viewModel.IsMuted)
-            _viewModel.IsMuted = false;
+        _viewModel.AdjustMasterVolume(step);
         e.Handled = true;
     }
 

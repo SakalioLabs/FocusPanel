@@ -42,6 +42,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private OkrViewModel? _okrViewModel;
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
+    private float _confirmedMasterVolume;
+    private bool _confirmedMuted;
     private bool _updatingStartupState;
     private string? _lastNotifiedUpdateVersion;
     private bool _isShellVisible;
@@ -141,6 +143,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool isMuted;
+
+    [ObservableProperty]
+    private bool isAudioAvailable;
+
+    [ObservableProperty]
+    private string audioStatusText =
+        "正在读取音频设备…";
 
     [ObservableProperty]
     private bool isNetworkAvailable;
@@ -317,14 +326,72 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnMasterVolumeChanged(float value)
     {
-        if (!_updatingAudioState)
-            _systemStatus.MasterVolume = value;
+        if (_updatingAudioState)
+            return;
+
+        TryApplyMasterVolume(value);
     }
 
     partial void OnIsMutedChanged(bool value)
     {
-        if (!_updatingAudioState)
-            _systemStatus.IsMuted = value;
+        if (_updatingAudioState)
+            return;
+
+        TryApplyMuted(value);
+    }
+
+    private bool TryApplyMasterVolume(float value)
+    {
+        AudioControlResult<float> result =
+            AudioControlPolicy.Apply(
+                Math.Clamp(value, 0f, 1f),
+                _confirmedMasterVolume,
+                _systemStatus.TrySetMasterVolume);
+        if (result.Succeeded)
+        {
+            _confirmedMasterVolume = result.EffectiveValue;
+            IsAudioAvailable = true;
+            AudioStatusText = string.Empty;
+            SystemActionMessage = string.Empty;
+            RestoreConfirmedAudioState(
+                _confirmedMasterVolume,
+                _confirmedMuted);
+            return true;
+        }
+
+        RestoreConfirmedAudioState(
+            result.EffectiveValue,
+            _confirmedMuted);
+        ReportAudioFailure(
+            "无法调整音量。请检查默认音频输出设备，或使用 Win+A。");
+        return false;
+    }
+
+    private bool TryApplyMuted(bool value)
+    {
+        AudioControlResult<bool> result =
+            AudioControlPolicy.Apply(
+                value,
+                _confirmedMuted,
+                _systemStatus.TrySetMuted);
+        if (result.Succeeded)
+        {
+            _confirmedMuted = result.EffectiveValue;
+            IsAudioAvailable = true;
+            AudioStatusText = string.Empty;
+            SystemActionMessage = string.Empty;
+            RestoreConfirmedAudioState(
+                _confirmedMasterVolume,
+                _confirmedMuted);
+            return true;
+        }
+
+        RestoreConfirmedAudioState(
+            _confirmedMasterVolume,
+            result.EffectiveValue);
+        ReportAudioFailure(
+            "无法切换静音。请检查默认音频输出设备，或使用 Win+A。");
+        return false;
     }
 
     partial void OnThemeModeChanged(string value)
@@ -631,7 +698,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ToggleMute() => IsMuted = !IsMuted;
+    private void ToggleMute() =>
+        TryApplyMuted(!_confirmedMuted);
+
+    public void AdjustMasterVolume(float step)
+    {
+        float requested = Math.Clamp(
+            _confirmedMasterVolume + step,
+            0f,
+            1f);
+        if (TryApplyMasterVolume(requested)
+            && requested > 0
+            && _confirmedMuted)
+        {
+            TryApplyMuted(false);
+        }
+    }
 
     [RelayCommand]
     private void OpenQuickSettings()
@@ -987,10 +1069,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void RefreshSystemStatus()
     {
-        _updatingAudioState = true;
-        MasterVolume = _systemStatus.MasterVolume;
-        IsMuted = _systemStatus.IsMuted;
-        _updatingAudioState = false;
+        AudioStatusSnapshot audio =
+            _systemStatus.GetAudioStatus();
+        IsAudioAvailable = audio.IsAvailable;
+        AudioStatusText = audio.IsAvailable
+            ? string.Empty
+            : "未检测到可用的音频输出设备";
+        if (audio.IsAvailable)
+        {
+            RestoreConfirmedAudioState(
+                audio.MasterVolume,
+                audio.IsMuted);
+        }
 
         IsNetworkAvailable = _systemStatus.IsNetworkAvailable;
         NetworkDisplayName = _systemStatus.NetworkDisplayName;
@@ -1000,6 +1090,37 @@ public partial class MainViewModel : ObservableObject, IDisposable
         HasBattery = _systemStatus.HasBattery;
         BatteryPercent = _systemStatus.BatteryPercent;
         IsCharging = _systemStatus.IsCharging;
+    }
+
+    private void RestoreConfirmedAudioState(
+        float volume,
+        bool muted)
+    {
+        _confirmedMasterVolume = Math.Clamp(
+            volume,
+            0f,
+            1f);
+        _confirmedMuted = muted;
+        _updatingAudioState = true;
+        try
+        {
+            MasterVolume = _confirmedMasterVolume;
+            IsMuted = _confirmedMuted;
+        }
+        finally
+        {
+            _updatingAudioState = false;
+        }
+    }
+
+    private void ReportAudioFailure(string message)
+    {
+        IsAudioAvailable = false;
+        AudioStatusText =
+            "默认音频输出设备暂时不可用";
+        SystemActionMessage = message;
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
     }
 
     private void ApplyStartupPreference(bool enable)

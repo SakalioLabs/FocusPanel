@@ -335,13 +335,27 @@
                                     <Button Grid.Column="2" Style="{StaticResource FocusSecondaryButton}" Content="快捷设置" Command="{Binding OpenQuickSettingsCommand}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/></Grid.ColumnDefinitions>
-                                    <Button Style="{StaticResource FocusIconButton}" Command="{Binding ToggleMuteCommand}" ToolTip="静音">
+                                    <Button Style="{StaticResource FocusIconButton}"
+                                            Command="{Binding ToggleMuteCommand}"
+                                            IsEnabled="{Binding IsAudioAvailable}"
+                                            ToolTip="静音">
                                         <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE767;"/>
                                     </Button>
                                     <Slider Grid.Column="1" Margin="8,0,14,0" Minimum="0" Maximum="1"
+                                            IsEnabled="{Binding IsAudioAvailable}"
                                             Value="{Binding MasterVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                     <TextBlock Grid.Column="2" Text="{Binding MasterVolume, StringFormat={}{0:P0}}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="1"
+                                               Grid.ColumnSpan="3"
+                                               Margin="4,5,0,0"
+                                               Text="{Binding AudioStatusText}"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                                               TextWrapping="Wrap"/>
                                 </Grid>
                                 <Grid Visibility="{Binding HasBattery, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>

@@ -27,91 +27,88 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    public float MasterVolume
+    public AudioStatusSnapshot GetAudioStatus()
     {
-        get
+        IAudioEndpointVolume? endpoint = null;
+        try
         {
-            IAudioEndpointVolume? endpoint = null;
-            try
+            endpoint = GetDefaultAudioEndpoint();
+            if (endpoint == null)
+                return AudioStatusSnapshot.Unavailable;
+
+            int volumeResult =
+                endpoint.GetMasterVolumeLevelScalar(
+                    out float volume);
+            int muteResult = endpoint.GetMute(out bool muted);
+            if (!HResultSucceeded(volumeResult)
+                || !HResultSucceeded(muteResult))
             {
-                endpoint = GetDefaultAudioEndpoint();
-                if (endpoint == null)
-                    return 0;
-                endpoint.GetMasterVolumeLevelScalar(out float volume);
-                return volume;
+                return AudioStatusSnapshot.Unavailable;
             }
-            catch
-            {
-                return 0;
-            }
-            finally
-            {
-                ReleaseComObject(endpoint);
-            }
+
+            return new AudioStatusSnapshot(
+                true,
+                Math.Clamp(volume, 0f, 1f),
+                muted);
         }
-        set
+        catch
         {
-            IAudioEndpointVolume? endpoint = null;
-            try
-            {
-                endpoint = GetDefaultAudioEndpoint();
-                if (endpoint == null)
-                    return;
-                Guid context = Guid.Empty;
-                endpoint.SetMasterVolumeLevelScalar(Math.Clamp(value, 0f, 1f), ref context);
-            }
-            catch
-            {
-                // The default endpoint can disappear during device switching.
-            }
-            finally
-            {
-                ReleaseComObject(endpoint);
-            }
+            return AudioStatusSnapshot.Unavailable;
+        }
+        finally
+        {
+            ReleaseComObject(endpoint);
         }
     }
 
-    public bool IsMuted
+    public bool TrySetMasterVolume(float value)
     {
-        get
+        IAudioEndpointVolume? endpoint = null;
+        try
         {
-            IAudioEndpointVolume? endpoint = null;
-            try
-            {
-                endpoint = GetDefaultAudioEndpoint();
-                if (endpoint == null)
-                    return false;
-                endpoint.GetMute(out bool muted);
-                return muted;
-            }
-            catch
-            {
+            endpoint = GetDefaultAudioEndpoint();
+            if (endpoint == null)
                 return false;
-            }
-            finally
-            {
-                ReleaseComObject(endpoint);
-            }
+
+            Guid context = Guid.Empty;
+            int result =
+                endpoint.SetMasterVolumeLevelScalar(
+                    Math.Clamp(value, 0f, 1f),
+                    ref context);
+            return HResultSucceeded(result);
         }
-        set
+        catch
         {
-            IAudioEndpointVolume? endpoint = null;
-            try
-            {
-                endpoint = GetDefaultAudioEndpoint();
-                if (endpoint == null)
-                    return;
-                Guid context = Guid.Empty;
-                endpoint.SetMute(value, ref context);
-            }
-            catch
-            {
-                // The default endpoint can disappear during device switching.
-            }
-            finally
-            {
-                ReleaseComObject(endpoint);
-            }
+            // The default endpoint can disappear during device switching.
+            return false;
+        }
+        finally
+        {
+            ReleaseComObject(endpoint);
+        }
+    }
+
+    public bool TrySetMuted(bool value)
+    {
+        IAudioEndpointVolume? endpoint = null;
+        try
+        {
+            endpoint = GetDefaultAudioEndpoint();
+            if (endpoint == null)
+                return false;
+
+            Guid context = Guid.Empty;
+            return HResultSucceeded(
+                endpoint.SetMute(value, ref context));
+        }
+        catch
+        {
+            // The default endpoint can disappear during device switching.
+            return false;
+        }
+        finally
+        {
+            ReleaseComObject(endpoint);
         }
     }
 
@@ -302,15 +299,34 @@ public sealed class SystemStatusService : ISystemStatusService
         if (_deviceEnumerator == null)
             return null;
 
-        _deviceEnumerator.GetDefaultAudioEndpoint(
+        int deviceResult =
+            _deviceEnumerator.GetDefaultAudioEndpoint(
             EDataFlow.Render,
             ERole.Multimedia,
             out IMMDevice device);
+        if (!HResultSucceeded(deviceResult)
+            || device == null)
+        {
+            return null;
+        }
+
         try
         {
             Guid endpointVolumeId = typeof(IAudioEndpointVolume).GUID;
-            device.Activate(ref endpointVolumeId, Clsctx.All, IntPtr.Zero, out object endpoint);
-            return (IAudioEndpointVolume)endpoint;
+            int activationResult =
+                device.Activate(
+                    ref endpointVolumeId,
+                    Clsctx.All,
+                    IntPtr.Zero,
+                    out object endpoint);
+            if (HResultSucceeded(activationResult)
+                && endpoint is IAudioEndpointVolume volume)
+            {
+                return volume;
+            }
+
+            ReleaseComObject(endpoint);
+            return null;
         }
         finally
         {
@@ -327,6 +343,9 @@ public sealed class SystemStatusService : ISystemStatusService
             .OrderByDescending(item =>
                 item.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
             .FirstOrDefault();
+
+    internal static bool HResultSucceeded(int result) =>
+        result >= 0;
 
     private static IntPtr GetForegroundKeyboardLayout()
     {

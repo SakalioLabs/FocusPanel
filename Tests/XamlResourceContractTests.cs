@@ -286,6 +286,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains("OpenInputSwitcherCommand", mainWindow);
         Assert.Contains("Value=\"{Binding MasterVolume, Mode=TwoWay", mainWindow);
         Assert.Contains("ToggleMuteCommand", mainWindow);
+        Assert.Contains("IsEnabled=\"{Binding IsAudioAvailable}\"", mainWindow);
+        Assert.Contains("Text=\"{Binding AudioStatusText}\"", mainWindow);
         Assert.Contains("NetworkDetail", mainWindow);
         Assert.Contains("LockComputerCommand", mainWindow);
         Assert.Contains("SleepComputerCommand", mainWindow);
@@ -311,11 +313,24 @@ public sealed class XamlResourceContractTests
         Assert.Contains("bool Sleep()", statusContract);
         Assert.Contains("bool Restart()", statusContract);
         Assert.Contains("bool Shutdown()", statusContract);
+        Assert.Contains("AudioStatusSnapshot GetAudioStatus()", statusContract);
+        Assert.Contains("bool TrySetMasterVolume(float value)", statusContract);
+        Assert.Contains("bool TrySetMuted(bool value)", statusContract);
+        Assert.DoesNotContain("float MasterVolume { get; set; }", statusContract);
+        Assert.DoesNotContain("bool IsMuted { get; set; }", statusContract);
 
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
         Assert.Contains("CompleteSystemAction(", viewModel);
         Assert.Contains("IsStatusCenterOpen = true", viewModel);
+        Assert.Contains("AdjustMasterVolume(float step)", viewModel);
+
+        string windowCode = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        Assert.Contains("_viewModel.AdjustMasterVolume(step)", windowCode);
+        Assert.DoesNotContain(
+            "_viewModel.MasterVolume = Math.Clamp",
+            windowCode);
     }
 
     [Fact]
