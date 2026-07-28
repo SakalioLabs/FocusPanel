@@ -615,6 +615,40 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void SearchAndTaskbar_UseTheSameNonBlankIconPresenter()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string presenter = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Controls",
+                "AppIconPresenter.xaml"));
+
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                mainWindow,
+                "<controls:AppIconPresenter").Count);
+        Assert.DoesNotContain(
+            "<Image Source=\"{Binding Icon}\"",
+            mainWindow);
+        Assert.Contains(
+            "DisplayName=\"{Binding DisplayName}\"",
+            mainWindow);
+        Assert.Contains(
+            "Value=\"{x:Null}\"",
+            presenter);
+        Assert.Contains(
+            "FocusSurfaceSoftBrush",
+            presenter);
+        Assert.Contains(
+            "FocusControlCornerRadius",
+            presenter);
+    }
+
+    [Fact]
     public void WindowClosing_UsesWmCloseWithoutProcessTermination()
     {
         string root = FindRepositoryRoot();

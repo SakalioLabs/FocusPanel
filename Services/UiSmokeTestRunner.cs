@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using FocusPanel.Controls;
 using FocusPanel.Models;
 using FocusPanel.ViewModels;
 using FocusPanel.Views;
@@ -55,6 +56,14 @@ internal static class UiSmokeTestRunner
             CheckSurface("PomodoroFloatingWindow", () => new PomodoroFloatingWindow(), results, failures);
             CheckSurface("EdgeIndicatorWindow", () => new EdgeIndicatorWindow(), results, failures);
             CheckSurface("CalendarPanelView", () => new CalendarPanelView(), results, failures);
+            CheckSurface(
+                "AppIconPresenter",
+                () => new AppIconPresenter
+                {
+                    DisplayName = "FocusPanel"
+                },
+                results,
+                failures);
             if (!string.IsNullOrWhiteSpace(
                     dashboardSnapshotPath))
             {

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:FocusPanel.Views"
+        xmlns:controls="clr-namespace:FocusPanel.Controls"
         xmlns:vm="clr-namespace:FocusPanel.ViewModels"
         xmlns:services="clr-namespace:FocusPanel.Services"
         mc:Ignorable="d"
@@ -205,7 +206,9 @@
                                                         <ColumnDefinition Width="36"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <Image Source="{Binding Icon}" Width="30" Height="30"/>
+                                                    <controls:AppIconPresenter
+                                                        Icon="{Binding Icon}"
+                                                        DisplayName="{Binding DisplayName}"/>
                                                     <TextBlock Grid.Column="1"
                                                                Text="{Binding DisplayName}"
                                                                Margin="10,0"
@@ -614,7 +617,9 @@
                                                         <ContextMenu Opened="TransientContextMenu_Opened"
                                                                      Closed="TransientContextMenu_Closed"/>
                                                     </Button.ContextMenu>
-                                                    <Image Source="{Binding Icon}" Width="30" Height="30"/>
+                                                    <controls:AppIconPresenter
+                                                        Icon="{Binding Icon}"
+                                                        DisplayName="{Binding DisplayName}"/>
                                                 </Button>
                                                 <Ellipse Width="6"
                                                          Height="6"

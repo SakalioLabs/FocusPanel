@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1722"/>
+      <stop offset="1" stop-color="#1d2b38"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#91b8d8" stop-opacity=".06"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="520" rx="30" fill="url(#bg)"/>
+  <circle cx="170" cy="70" r="180" fill="#087ccb" opacity=".15"/>
+  <circle cx="970" cy="460" r="220" fill="#55b7dd" opacity=".10"/>
+
+  <text x="72" y="74" fill="#f4f8ff" font-family="Segoe UI Variable, sans-serif" font-size="32" font-weight="650">应用图标始终可识别</text>
+  <text x="72" y="112" fill="#aebccc" font-family="Segoe UI Variable, sans-serif" font-size="17">真实图标优先 · Shell 加载失败时按名称稳定降级 · 搜索与任务栏保持一致</text>
+
+  <g transform="translate(72 156)" filter="url(#shadow)">
+    <rect width="720" height="286" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <text x="28" y="42" fill="#f4f8ff" font-family="Segoe UI Variable, sans-serif" font-size="18" font-weight="600">应用搜索</text>
+    <g transform="translate(24 66)">
+      <rect width="672" height="58" rx="12" fill="#fff" fill-opacity=".065"/>
+      <rect x="14" y="12" width="34" height="34" rx="8" fill="#2e8cca"/>
+      <path d="M24 22h14v14H24z" fill="#fff" opacity=".9"/>
+      <text x="64" y="36" fill="#f4f8ff" font-family="Segoe UI Variable, sans-serif" font-size="17">文件资源管理器</text>
+      <text x="550" y="36" fill="#80c8f3" font-family="Segoe UI Variable, sans-serif" font-size="14">真实图标</text>
+    </g>
+    <g transform="translate(24 132)">
+      <rect width="672" height="58" rx="12" fill="#fff" fill-opacity=".025"/>
+      <rect x="14" y="12" width="34" height="34" rx="8" fill="#fff" fill-opacity=".10"/>
+      <text x="31" y="36" text-anchor="middle" fill="#66bdf2" font-family="Segoe UI Variable, sans-serif" font-size="16" font-weight="650">F</text>
+      <text x="64" y="36" fill="#f4f8ff" font-family="Segoe UI Variable, sans-serif" font-size="17">FocusPanel Tools</text>
+      <text x="539" y="36" fill="#aebccc" font-family="Segoe UI Variable, sans-serif" font-size="14">英文降级</text>
+    </g>
+    <g transform="translate(24 198)">
+      <rect width="672" height="58" rx="12" fill="#fff" fill-opacity=".025"/>
+      <rect x="14" y="12" width="34" height="34" rx="8" fill="#fff" fill-opacity=".10"/>
+      <text x="31" y="36" text-anchor="middle" fill="#66bdf2" font-family="Microsoft YaHei UI, sans-serif" font-size="15" font-weight="650">微</text>
+      <text x="64" y="36" fill="#f4f8ff" font-family="Microsoft YaHei UI, sans-serif" font-size="17">微信</text>
+      <text x="539" y="36" fill="#aebccc" font-family="Microsoft YaHei UI, sans-serif" font-size="14">中文降级</text>
+    </g>
+  </g>
+
+  <g transform="translate(848 126)" filter="url(#shadow)">
+    <rect width="112" height="336" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="56" cy="46" r="20" fill="#fff" fill-opacity=".08"/>
+    <path d="M48 38h16v16H48z" fill="#fff" opacity=".88"/>
+    <circle cx="56" cy="102" r="20" fill="#fff" fill-opacity=".08"/>
+    <path d="m51 97 4-4 8 8-4 4zM49 107l7-7" stroke="#fff" stroke-width="2" fill="none"/>
+    <rect x="36" y="139" width="40" height="40" rx="10" fill="#2e8cca"/>
+    <path d="M47 150h18v18H47z" fill="#fff" opacity=".9"/>
+    <rect x="36" y="191" width="40" height="40" rx="10" fill="#fff" fill-opacity=".10"/>
+    <text x="56" y="217" text-anchor="middle" fill="#66bdf2" font-family="Segoe UI Variable, sans-serif" font-size="18" font-weight="650">F</text>
+    <rect x="36" y="243" width="40" height="40" rx="10" fill="#fff" fill-opacity=".10"/>
+    <text x="56" y="269" text-anchor="middle" fill="#66bdf2" font-family="Microsoft YaHei UI, sans-serif" font-size="17" font-weight="650">微</text>
+  </g>
+
+  <g transform="translate(988 184)">
+    <line x1="0" y1="78" x2="48" y2="78" stroke="#66bdf2" stroke-width="2"/>
+    <circle cx="0" cy="78" r="4" fill="#66bdf2"/>
+    <text x="58" y="58" fill="#f4f8ff" font-family="Segoe UI Variable, sans-serif" font-size="17" font-weight="600">同一组件</text>
+    <text x="58" y="84" fill="#aebccc" font-family="Segoe UI Variable, sans-serif" font-size="14">搜索与任务栏</text>
+    <text x="58" y="106" fill="#aebccc" font-family="Segoe UI Variable, sans-serif" font-size="14">不会出现空白按钮</text>
+  </g>
+</svg>

@@ -1,0 +1,48 @@
+<UserControl x:Class="FocusPanel.Controls.AppIconPresenter"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root"
+             Width="30"
+             Height="30"
+             Focusable="False"
+             IsHitTestVisible="False">
+    <Grid>
+        <Border Background="{DynamicResource FocusSurfaceSoftBrush}"
+                CornerRadius="{StaticResource FocusControlCornerRadius}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Icon, ElementName=Root}"
+                                     Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBlock x:Name="FallbackTextBlock"
+                       Text="A"
+                       FontFamily="Segoe UI Variable Display"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource FocusAccentBrightBrush}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+        </Border>
+        <Image Source="{Binding Icon, ElementName=Root}"
+               Stretch="Uniform"
+               RenderOptions.BitmapScalingMode="HighQuality">
+            <Image.Style>
+                <Style TargetType="Image">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Icon, ElementName=Root}"
+                                     Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Image.Style>
+        </Image>
+    </Grid>
+</UserControl>
