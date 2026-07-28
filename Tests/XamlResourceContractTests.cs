@@ -119,10 +119,28 @@ public sealed class XamlResourceContractTests
 
         string codeBehind = File.ReadAllText(
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string backdropService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowBackdropService.cs"));
         Assert.DoesNotContain("SetWindowRgn", codeBehind);
         Assert.DoesNotContain("CreateRoundRectRgn", codeBehind);
-        Assert.Contains("DwmcpRound", codeBehind);
-        Assert.Contains("DwmsbtTransientWindow", codeBehind);
+        Assert.Contains(
+            "WindowBackdropService.Apply",
+            codeBehind);
+        Assert.DoesNotContain(
+            "SetWindowRgn",
+            backdropService);
+        Assert.DoesNotContain(
+            "CreateRoundRectRgn",
+            backdropService);
+        Assert.Contains(
+            "DwmcpRound",
+            backdropService);
+        Assert.Contains(
+            "DwmsbtTransientWindow",
+            backdropService);
     }
 
     [Fact]
@@ -506,18 +524,108 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "MainWindow.xaml"));
         string codeBehind = File.ReadAllText(
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string backdropService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowBackdropService.cs"));
         string theme = File.ReadAllText(
             Path.Combine(root, "Themes", "FocusTheme.xaml"));
 
         Assert.Contains(
             "Background=\"{DynamicResource FocusShellTintBrush}\"",
             mainWindow);
-        Assert.Contains("DwmsbtTransientWindow", codeBehind);
-        Assert.Contains("backdropResult == 0", codeBehind);
+        Assert.Contains(
+            "WindowBackdropService.Apply",
+            codeBehind);
+        Assert.Contains(
+            "DwmsbtTransientWindow",
+            backdropService);
+        Assert.Contains(
+            "backdropResult == 0",
+            backdropService);
         Assert.Contains(
             "ThemeService.SetNativeBackdropActive(backdropActive)",
-            codeBehind);
+            backdropService);
         Assert.Contains("FocusShellTintBrush", theme);
+    }
+
+    [Fact]
+    public void Pomodoro_UsesAccurateCountdownAndNoFullscreenOverlay()
+    {
+        string root = FindRepositoryRoot();
+        string view = File.ReadAllText(
+            Path.Combine(root, "Views", "PomodoroView.xaml"));
+        string floating = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "PomodoroFloatingWindow.xaml"));
+        string manager = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "PomodoroWindowManager.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "PomodoroViewModel.cs"));
+        string mainViewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.DoesNotContain(
+            "materialDesign:",
+            view,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "FocusLinearProgress",
+            view);
+        Assert.Contains(
+            "FocusLinearProgress",
+            floating);
+        Assert.Contains(
+            "WindowBackdropService.Apply",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "PomodoroFloatingWindow.xaml.cs")));
+        Assert.DoesNotContain(
+            "ScreenBorderWindow",
+            manager);
+        Assert.False(
+            File.Exists(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "ScreenBorderWindow.xaml")));
+        Assert.Contains(
+            "_countdown.Tick()",
+            viewModel);
+        Assert.Contains(
+            "SessionCompleted?.Invoke",
+            viewModel);
+        Assert.Contains(
+            "PomodoroCompleted?.Invoke",
+            mainViewModel);
+        Assert.Contains(
+            "ViewModel_PomodoroCompleted",
+            mainWindow);
+        Assert.Contains(
+            "SystemSounds.Asterisk.Play()",
+            mainWindow);
+        Assert.Contains(
+            "MyNotifyIcon.ShowBalloonTip",
+            mainWindow);
     }
 
     [Fact]

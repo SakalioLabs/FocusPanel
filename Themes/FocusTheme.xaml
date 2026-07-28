@@ -158,6 +158,30 @@
         <Setter Property="Padding" Value="14"/>
     </Style>
 
+    <Style x:Key="FocusLinearProgress"
+           TargetType="ProgressBar">
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusAccentBrightBrush}"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusSurfaceStrongBrush}"/>
+        <Setter Property="BorderThickness"
+                Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid>
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4"/>
+                        <Border x:Name="PART_Indicator"
+                                HorizontalAlignment="Left"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="4"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="MaterialDesignIconButton" TargetType="ButtonBase">
         <Setter Property="Width" Value="44"/>
         <Setter Property="Height" Value="44"/>
@@ -210,10 +234,6 @@
     <Style x:Key="MaterialDesignSubtitle2TextBlock" TargetType="TextBlock">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-    </Style>
-    <Style x:Key="MaterialDesignCircularProgressBar" TargetType="ProgressBar">
-        <Setter Property="Foreground" Value="{DynamicResource FocusAccentBrush}"/>
-        <Setter Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
     </Style>
     <Style x:Key="MaterialDesignMenuItem" TargetType="MenuItem">
         <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>

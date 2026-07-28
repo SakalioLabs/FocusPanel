@@ -1,12 +1,12 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using FocusPanel.Helpers;
@@ -24,13 +24,6 @@ public partial class MainWindow : Window
     private const double ExpandedWidth = 720;
     private const double ScreenMargin = 12;
     private const double CompactTaskbarScrollStep = 46;
-    private const int DwmaUseImmersiveDarkMode = 20;
-    private const int DwmaWindowCornerPreference = 33;
-    private const int DwmaBorderColor = 34;
-    private const int DwmaSystemBackdropType = 38;
-    private const int DwmcpRound = 2;
-    private const int DwmsbtNone = 1;
-    private const int DwmsbtTransientWindow = 3;
     private const int SwShowNoActivate = 4;
     private const int WmHotkey = 0x0312;
     private const int SummonHotkeyId = 0x4650;
@@ -71,6 +64,8 @@ public partial class MainWindow : Window
         _viewModel.RequestDisableReplacement += DisableTaskbarReplacement;
         _viewModel.RequestApplyUpdate += ApplyDownloadedUpdate;
         _viewModel.UpdateAvailable += ViewModel_UpdateAvailable;
+        _viewModel.PomodoroCompleted +=
+            ViewModel_PomodoroCompleted;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
         _coordinator.Taskbar.ReplacementStopped += Taskbar_ReplacementStopped;
 
@@ -137,6 +132,16 @@ public partial class MainWindow : Window
             Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
     }
 
+    private void ViewModel_PomodoroCompleted(
+        int durationMinutes)
+    {
+        SystemSounds.Asterisk.Play();
+        MyNotifyIcon.ShowBalloonTip(
+            "专注完成",
+            $"本轮 {durationMinutes} 分钟专注已完成，休息一下吧。",
+            Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+    }
+
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
     {
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
@@ -152,61 +157,9 @@ public partial class MainWindow : Window
 
     private void ApplyDwmBackdrop()
     {
-        IntPtr hwnd = new WindowInteropHelper(this).Handle;
-        if (hwnd == IntPtr.Zero)
-            return;
-
-        // DWM owns both the single outer silhouette and the acrylic backdrop.
-        // No WPF or GDI region is layered on top of this outline.
-        int cornerPreference = DwmcpRound;
-        NativeMethods.DwmSetWindowAttribute(
-            hwnd,
-            DwmaWindowCornerPreference,
-            ref cornerPreference,
-            sizeof(int));
-
-        int borderColor = unchecked((int)0xFFFFFFFE);
-        NativeMethods.DwmSetWindowAttribute(
-            hwnd,
-            DwmaBorderColor,
-            ref borderColor,
-            sizeof(int));
-
-        bool useDark = ThemeService.IsDarkTheme;
-        int darkMode = useDark ? 1 : 0;
-        NativeMethods.DwmSetWindowAttribute(
-            hwnd,
-            DwmaUseImmersiveDarkMode,
-            ref darkMode,
-            sizeof(int));
-
-        int backdrop = ThemeService.CanUseTransparency
-            ? DwmsbtTransientWindow
-            : DwmsbtNone;
-        bool backdropActive = false;
-        if (backdrop == DwmsbtTransientWindow)
-        {
-            var margins = new NativeMethods.Margins(-1, -1, -1, -1);
-            int frameResult = NativeMethods.DwmExtendFrameIntoClientArea(hwnd, ref margins);
-            int backdropResult = NativeMethods.DwmSetWindowAttribute(
-                hwnd,
-                DwmaSystemBackdropType,
-                ref backdrop,
-                sizeof(int));
-            backdropActive = frameResult == 0 && backdropResult == 0;
-        }
-        else
-        {
-            NativeMethods.DwmSetWindowAttribute(
-                hwnd,
-                DwmaSystemBackdropType,
-                ref backdrop,
-                sizeof(int));
-        }
-
-        if (HwndSource.FromHwnd(hwnd) is HwndSource source)
-            source.CompositionTarget.BackgroundColor = Colors.Transparent;
-        ThemeService.SetNativeBackdropActive(backdropActive);
+        WindowBackdropService.Apply(
+            this,
+            updateThemeState: true);
     }
 
     private void EnsureHotZoneMonitor()
@@ -776,6 +729,8 @@ public partial class MainWindow : Window
         _edgeIndicator = null;
         _coordinator.Taskbar.ReplacementStopped -= Taskbar_ReplacementStopped;
         _viewModel.UpdateAvailable -= ViewModel_UpdateAvailable;
+        _viewModel.PomodoroCompleted -=
+            ViewModel_PomodoroCompleted;
         _viewModel.Dispose();
         _coordinator.Dispose();
     }
@@ -941,29 +896,6 @@ public partial class MainWindow : Window
 
     private static class NativeMethods
     {
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct Margins
-        {
-            internal int Left;
-            internal int Right;
-            internal int Top;
-            internal int Bottom;
-
-            internal Margins(int left, int right, int top, int bottom)
-            {
-                Left = left;
-                Right = right;
-                Top = top;
-                Bottom = bottom;
-            }
-        }
-
-        [DllImport("dwmapi.dll", PreserveSig = true)]
-        internal static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
-
-        [DllImport("dwmapi.dll", PreserveSig = true)]
-        internal static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref Margins margins);
-
         [DllImport("user32.dll")]
         internal static extern uint GetDpiForWindow(IntPtr hwnd);
 

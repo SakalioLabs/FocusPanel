@@ -8,7 +8,6 @@ namespace FocusPanel.Services
     public static class PomodoroWindowManager
     {
         private static PomodoroFloatingWindow? _floatingWindow;
-        private static ScreenBorderWindow? _borderWindow;
 
         public static void OpenWindows(PomodoroViewModel viewModel)
         {
@@ -26,17 +25,6 @@ namespace FocusPanel.Services
                     _floatingWindow.DataContext = viewModel;
                     if (!_floatingWindow.IsVisible) _floatingWindow.Show();
                 }
-
-                if (_borderWindow == null)
-                {
-                    _borderWindow = new ScreenBorderWindow();
-                    _borderWindow.Closed += (s, e) => _borderWindow = null;
-                    _borderWindow.Show();
-                }
-                else
-                {
-                    if (!_borderWindow.IsVisible) _borderWindow.Show();
-                }
             });
         }
 
@@ -46,9 +34,6 @@ namespace FocusPanel.Services
             {
                 _floatingWindow?.Close();
                 _floatingWindow = null;
-
-                _borderWindow?.Close();
-                _borderWindow = null;
             });
         }
     }

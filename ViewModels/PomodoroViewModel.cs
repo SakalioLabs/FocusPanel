@@ -1,163 +1,265 @@
+using System;
+using System.Linq;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Windows.Threading;
-using FocusPanel.Services;
 using FocusPanel.Data;
 using FocusPanel.Models;
-using System.Linq;
+using FocusPanel.Services;
 
 namespace FocusPanel.ViewModels;
 
-public partial class PomodoroViewModel : ObservableObject
+public sealed class PomodoroCompletedEventArgs : EventArgs
 {
-    private DispatcherTimer _timer;
-    private TimeSpan _timeRemaining;
-    private TimeSpan _totalTime;
+    public PomodoroCompletedEventArgs(int durationMinutes)
+    {
+        DurationMinutes = durationMinutes;
+    }
+
+    public int DurationMinutes { get; }
+}
+
+public partial class PomodoroViewModel
+    : ObservableObject, IDisposable
+{
+    private readonly DispatcherTimer _timer;
+    private readonly PomodoroCountdown _countdown;
+    private DateTime? _sessionStartedAt;
+    private bool _disposed;
 
     [ObservableProperty]
     private string timerDisplay = "25:00";
 
     [ObservableProperty]
-    private string statusMessage = "Ready to Focus";
+    private string elapsedDisplay = "已专注 00:00";
+
+    [ObservableProperty]
+    private string statusMessage = "准备专注 · 25 分钟";
 
     [ObservableProperty]
     private double progress = 100;
 
     [ObservableProperty]
-    private int completedPomodoros = 0;
+    private int completedPomodoros;
 
     [ObservableProperty]
-    private double totalFocusMinutes = 0;
+    private double totalFocusMinutes;
 
     [ObservableProperty]
     private bool isRunning;
 
+    [ObservableProperty]
+    private int selectedDurationMinutes = 25;
+
     public PomodoroViewModel()
     {
-        _totalTime = TimeSpan.FromMinutes(25);
-        _timeRemaining = _totalTime;
-        _timer = new DispatcherTimer();
-        _timer.Interval = TimeSpan.FromSeconds(1);
+        _countdown =
+            new PomodoroCountdown(
+                TimeSpan.FromMinutes(
+                    SelectedDurationMinutes));
+        _timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
         _timer.Tick += Timer_Tick;
-        UpdateDisplay();
+        SyncCountdownState();
         LoadStats();
     }
+
+    public event EventHandler<PomodoroCompletedEventArgs>?
+        SessionCompleted;
+
+    public bool CanStart => !IsRunning;
+    public bool CanPause => IsRunning;
+    public bool CanChangeDuration =>
+        !IsRunning
+        && (!_countdown.HasElapsed
+            || _countdown.IsCompleted);
 
     private void LoadStats()
     {
         try
         {
-            using (var context = new AppDbContext())
-            {
-                // Ensure schema exists just in case viewmodel loads before app (unlikely but safe)
-                context.EnsureSchema();
-                
-                CompletedPomodoros = context.PomodoroSessions.Count(s => s.Status == "Completed");
-                TotalFocusMinutes = context.PomodoroSessions
-                    .Where(s => s.Status == "Completed")
-                    .ToList() // Client evaluation for Sum might be needed if SQLite doesn't support Sum on int? No, Sum works. But safer to materialize if empty.
-                    .Sum(s => s.DurationMinutes);
-            }
+            using var context = new AppDbContext();
+            context.EnsureSchema();
+            CompletedPomodoros =
+                context.PomodoroSessions.Count(
+                    session =>
+                        session.Status == "Completed");
+            TotalFocusMinutes =
+                context.PomodoroSessions
+                    .Where(
+                        session =>
+                            session.Status == "Completed")
+                    .Select(
+                        session =>
+                            (double)session.DurationMinutes)
+                    .DefaultIfEmpty()
+                    .Sum();
         }
-        catch { }
+        catch
+        {
+            StatusMessage =
+                "统计暂时不可用，计时仍可正常使用";
+        }
     }
 
-    private void SaveSession(int durationMinutes, string status)
+    private bool SaveCompletedSession(
+        int durationMinutes)
     {
         try
         {
-            using (var context = new AppDbContext())
-            {
-                context.PomodoroSessions.Add(new PomodoroSession
+            DateTime endedAt = DateTime.Now;
+            using var context = new AppDbContext();
+            context.PomodoroSessions.Add(
+                new PomodoroSession
                 {
-                    StartTime = DateTime.Now.AddMinutes(-durationMinutes),
-                    EndTime = DateTime.Now,
+                    StartTime =
+                        _sessionStartedAt
+                        ?? endedAt.AddMinutes(
+                            -durationMinutes),
+                    EndTime = endedAt,
                     DurationMinutes = durationMinutes,
-                    Status = status
+                    Status = "Completed"
                 });
-                context.SaveChanges();
-            }
+            context.SaveChanges();
+            return true;
         }
-        catch { }
-    }
-
-    private void Timer_Tick(object? sender, EventArgs e)
-    {
-        if (_timeRemaining.TotalSeconds > 0)
+        catch
         {
-            _timeRemaining = _timeRemaining.Subtract(TimeSpan.FromSeconds(1));
-            UpdateDisplay();
-        }
-        else
-        {
-            StopTimer();
-            StatusMessage = "Time's up!";
-            
-            int duration = (int)_totalTime.TotalMinutes;
-            SaveSession(duration, "Completed");
-            
-            CompletedPomodoros++;
-            TotalFocusMinutes += duration;
-            // TODO: Play sound or notify
+            return false;
         }
     }
 
-    private void UpdateDisplay()
+    private void Timer_Tick(
+        object? sender,
+        EventArgs e)
     {
-        TimerDisplay = _timeRemaining.ToString(@"mm\:ss");
-        // Update progress logic if needed
+        bool completed = _countdown.Tick();
+        SyncCountdownState();
+        if (!completed)
+            return;
+
+        _timer.Stop();
+        int durationMinutes =
+            SelectedDurationMinutes;
+        bool saved =
+            SaveCompletedSession(durationMinutes);
+        CompletedPomodoros++;
+        TotalFocusMinutes += durationMinutes;
+        StatusMessage = saved
+            ? $"本轮 {durationMinutes} 分钟专注已完成"
+            : "本轮已完成，但统计记录保存失败";
+        _sessionStartedAt = null;
+        CloseOverlayWindows();
+        SessionCompleted?.Invoke(
+            this,
+            new PomodoroCompletedEventArgs(
+                durationMinutes));
+    }
+
+    private void SyncCountdownState()
+    {
+        TimeSpan remaining =
+            TimeSpan.FromSeconds(
+                _countdown.RemainingSeconds);
+        TimeSpan elapsed =
+            TimeSpan.FromSeconds(
+                _countdown.ElapsedSeconds);
+        TimerDisplay =
+            FormatDuration(remaining);
+        ElapsedDisplay =
+            $"已专注 {FormatDuration(elapsed)}";
+        Progress =
+            _countdown.ProgressPercent;
+        IsRunning =
+            _countdown.IsRunning;
+        OnPropertyChanged(nameof(CanStart));
+        OnPropertyChanged(nameof(CanPause));
+        OnPropertyChanged(
+            nameof(CanChangeDuration));
+    }
+
+    private static string FormatDuration(
+        TimeSpan value)
+        => value.TotalHours >= 1
+            ? value.ToString(@"hh\:mm\:ss")
+            : value.ToString(@"mm\:ss");
+
+    [RelayCommand]
+    private void SetDuration(string? minutesText)
+    {
+        if (!CanChangeDuration
+            || !int.TryParse(
+                minutesText,
+                out int minutes)
+            || minutes is < 1 or > 180)
+        {
+            return;
+        }
+
+        SelectedDurationMinutes = minutes;
+        _countdown.Configure(
+            TimeSpan.FromMinutes(minutes));
+        StatusMessage =
+            $"准备专注 · {minutes} 分钟";
+        SyncCountdownState();
     }
 
     [RelayCommand]
     private void Start()
     {
-        if (!IsRunning)
-        {
-            _timer.Start();
-            IsRunning = true;
-            StatusMessage = "Focusing...";
-            // Open floating windows here
-            OpenOverlayWindows();
-        }
+        if (IsRunning)
+            return;
+
+        if (_countdown.IsCompleted)
+            _countdown.Reset();
+        _sessionStartedAt ??= DateTime.Now;
+        _countdown.Start();
+        _timer.Start();
+        StatusMessage = "正在专注";
+        SyncCountdownState();
+        OpenOverlayWindows();
     }
 
     [RelayCommand]
     private void Pause()
     {
-        if (IsRunning)
-        {
-            _timer.Stop();
-            IsRunning = false;
-            StatusMessage = "Paused";
-        }
+        if (!IsRunning)
+            return;
+
+        _timer.Stop();
+        _countdown.Pause();
+        StatusMessage = "已暂停，可随时继续";
+        SyncCountdownState();
     }
 
     [RelayCommand]
     private void Reset()
     {
         _timer.Stop();
-        IsRunning = false;
-        _timeRemaining = _totalTime;
-        UpdateDisplay();
-        StatusMessage = "Ready to Focus";
-        CloseOverlayWindows();
-    }
-
-    private void StopTimer()
-    {
-        _timer.Stop();
-        IsRunning = false;
+        _countdown.Reset();
+        _sessionStartedAt = null;
+        StatusMessage =
+            $"准备专注 · {SelectedDurationMinutes} 分钟";
+        SyncCountdownState();
         CloseOverlayWindows();
     }
 
     private void OpenOverlayWindows()
-    {
-        PomodoroWindowManager.OpenWindows(this);
-    }
+        => PomodoroWindowManager.OpenWindows(this);
 
-    private void CloseOverlayWindows()
+    private static void CloseOverlayWindows()
+        => PomodoroWindowManager.CloseWindows();
+
+    public void Dispose()
     {
-        PomodoroWindowManager.CloseWindows();
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _timer.Stop();
+        _timer.Tick -= Timer_Tick;
+        CloseOverlayWindows();
     }
 }

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".42"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="520" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="28" font-weight="700">番茄钟 · 专注过程</text>
+  <text x="54" y="92" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="15">准确倒计时、原生毛玻璃悬浮窗与非打扰式完成提醒</text>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="128" width="520" height="326" rx="22" fill="#253047" fill-opacity=".82" stroke="#ffffff" stroke-opacity=".12"/>
+    <text x="90" y="171" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="15">正在专注</text>
+    <text x="90" y="250" fill="#f8fafc" font-family="Segoe UI Variable Display, Segoe UI, sans-serif" font-size="70" font-weight="650">24:18</text>
+    <text x="90" y="282" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="14">已专注 00:42</text>
+    <rect x="90" y="310" width="448" height="8" rx="4" fill="#111827"/>
+    <rect x="90" y="310" width="435" height="8" rx="4" fill="url(#accent)"/>
+    <rect x="90" y="350" width="142" height="48" rx="12" fill="#2563eb"/>
+    <text x="161" y="380" text-anchor="middle" fill="#fff" font-family="Segoe UI, sans-serif" font-size="15" font-weight="600">开始 / 继续</text>
+    <rect x="244" y="350" width="96" height="48" rx="12" fill="#ffffff" fill-opacity=".08"/>
+    <text x="292" y="380" text-anchor="middle" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="15">暂停</text>
+    <rect x="352" y="350" width="96" height="48" rx="12" fill="#ffffff" fill-opacity=".08"/>
+    <text x="400" y="380" text-anchor="middle" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="15">重置</text>
+  </g>
+
+  <path d="M610 284h74" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7"/>
+  <path d="M674 275l12 9-12 9" fill="none" stroke="#64748b" stroke-width="2"/>
+
+  <g filter="url(#shadow)">
+    <rect x="716" y="158" width="430" height="128" rx="22" fill="#e2e8f0" fill-opacity=".13" stroke="#ffffff" stroke-opacity=".18"/>
+    <text x="748" y="202" fill="#f8fafc" font-family="Segoe UI Variable Display, Segoe UI, sans-serif" font-size="34" font-weight="650">24:18</text>
+    <text x="748" y="227" fill="#cbd5e1" font-family="Segoe UI, sans-serif" font-size="13">正在专注</text>
+    <circle cx="1028" cy="217" r="22" fill="#ffffff" fill-opacity=".08"/>
+    <text x="1028" y="224" text-anchor="middle" fill="#f8fafc" font-family="Segoe Fluent Icons, Segoe UI" font-size="17">Ⅱ</text>
+    <circle cx="1082" cy="217" r="22" fill="#ffffff" fill-opacity=".08"/>
+    <rect x="1076" y="211" width="12" height="12" rx="2" fill="#fb7185"/>
+    <rect x="748" y="258" width="366" height="5" rx="3" fill="#111827"/>
+    <rect x="748" y="258" width="355" height="5" rx="3" fill="url(#accent)"/>
+  </g>
+
+  <g>
+    <rect x="716" y="328" width="430" height="126" rx="18" fill="#0b1223" fill-opacity=".7" stroke="#ffffff" stroke-opacity=".1"/>
+    <circle cx="758" cy="369" r="18" fill="#2563eb"/>
+    <path d="M750 369l6 6 11-13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="790" y="365" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="16" font-weight="600">专注完成</text>
+    <text x="790" y="390" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="14">系统提示音 + FocusPanel 托盘通知</text>
+    <text x="748" y="427" fill="#64748b" font-family="Segoe UI, sans-serif" font-size="12">不抢焦点 · 不覆盖屏幕 · 自动保存完成会话</text>
+  </g>
+</svg>

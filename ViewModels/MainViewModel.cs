@@ -240,6 +240,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action? RequestApplyUpdate;
     public event Action<AppUpdateInfo>? UpdateAvailable;
     public event Action<string>? WorkspaceRequested;
+    public event Action<int>? PomodoroCompleted;
 
     partial void OnSearchQueryChanged(string value)
     {
@@ -319,7 +320,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 CurrentSectionTitle = "任务";
                 break;
             case "Pomodoro":
-                _pomodoroViewModel ??= new PomodoroViewModel();
+                if (_pomodoroViewModel == null)
+                {
+                    _pomodoroViewModel =
+                        new PomodoroViewModel();
+                    _pomodoroViewModel.SessionCompleted +=
+                        PomodoroViewModel_SessionCompleted;
+                }
                 CurrentViewModel = _pomodoroViewModel;
                 CurrentSectionTitle = "番茄钟";
                 break;
@@ -822,6 +829,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     private void OnWindowSnapshotChanged(object? sender, EventArgs e) => RefreshTaskbarApps();
+    private void PomodoroViewModel_SessionCompleted(
+        object? sender,
+        PomodoroCompletedEventArgs e)
+        => PomodoroCompleted?.Invoke(
+            e.DurationMinutes);
+
     private void OnCatalogChanged(object? sender, EventArgs e)
     {
         RefreshTaskbarApps();
@@ -984,5 +997,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _updateCheckTimer.Stop();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
+        if (_pomodoroViewModel != null)
+        {
+            _pomodoroViewModel.SessionCompleted -=
+                PomodoroViewModel_SessionCompleted;
+            _pomodoroViewModel.Dispose();
+        }
     }
 }
