@@ -474,65 +474,143 @@
     <Style TargetType="ComboBoxItem"
            BasedOn="{StaticResource FocusComboBoxItem}"/>
 
-    <Style x:Key="FocusSearchBox" TargetType="TextBox">
+    <Style x:Key="FocusTextBox" TargetType="TextBox">
         <Setter Property="MinHeight" Value="44"/>
         <Setter Property="Padding" Value="14,8"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
         <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
         <Setter Property="CaretBrush" Value="{DynamicResource FocusAccentBrightBrush}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource FocusAccentBrush}"/>
+        <Setter Property="SelectionTextBrush" Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="SelectionOpacity" Value="0.72"/>
         <Setter Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border Background="{TemplateBinding Background}"
+                    <Border x:Name="TextInputChrome"
+                            Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             Padding="{TemplateBinding Padding}"
-                            CornerRadius="{StaticResource FocusControlCornerRadius}">
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            SnapsToDevicePixels="True">
                         <ScrollViewer x:Name="PART_ContentHost"
                                       Margin="0"
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter TargetName="TextInputChrome"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource FocusAccentBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin"
+                                 Value="True">
+                            <Setter TargetName="TextInputChrome"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                            <Setter TargetName="TextInputChrome"
+                                    Property="BorderThickness"
+                                    Value="2"/>
+                        </Trigger>
+                        <Trigger Property="IsReadOnly"
+                                 Value="True">
+                            <Setter TargetName="TextInputChrome"
+                                    Property="Background"
+                                    Value="{DynamicResource FocusSurfaceBrush}"/>
+                            <Setter TargetName="TextInputChrome"
+                                    Property="Opacity"
+                                    Value="0.78"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="TextInputChrome"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <Style TargetType="TextBox" BasedOn="{StaticResource FocusSearchBox}"/>
+    <Style x:Key="FocusSearchBox"
+           TargetType="TextBox"
+           BasedOn="{StaticResource FocusTextBox}"/>
+    <Style TargetType="TextBox"
+           BasedOn="{StaticResource FocusTextBox}"/>
 
     <Style x:Key="FocusPasswordBox"
            TargetType="PasswordBox">
         <Setter Property="MinHeight" Value="44"/>
         <Setter Property="Padding" Value="14,8"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
         <Setter Property="Foreground"
                 Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="CaretBrush"
+                Value="{DynamicResource FocusAccentBrightBrush}"/>
+        <Setter Property="SelectionBrush"
+                Value="{DynamicResource FocusAccentBrush}"/>
+        <Setter Property="SelectionTextBrush"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="SelectionOpacity"
+                Value="0.72"/>
         <Setter Property="Background"
                 Value="{DynamicResource FocusSurfaceSoftBrush}"/>
         <Setter Property="BorderBrush"
                 Value="{DynamicResource FocusStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FocusVisualStyle"
-                Value="{StaticResource FocusRoundedKeyboardVisual}"/>
+                Value="{x:Null}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="PasswordBox">
-                    <Border Background="{TemplateBinding Background}"
+                    <Border x:Name="PasswordInputChrome"
+                            Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             Padding="{TemplateBinding Padding}"
-                            CornerRadius="{StaticResource FocusControlCornerRadius}">
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            SnapsToDevicePixels="True">
                         <ScrollViewer x:Name="PART_ContentHost"
                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver"
+                                 Value="True">
+                            <Setter TargetName="PasswordInputChrome"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource FocusAccentBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin"
+                                 Value="True">
+                            <Setter TargetName="PasswordInputChrome"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource FocusAccentBrightBrush}"/>
+                            <Setter TargetName="PasswordInputChrome"
+                                    Property="BorderThickness"
+                                    Value="2"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled"
+                                 Value="False">
+                            <Setter TargetName="PasswordInputChrome"
+                                    Property="Opacity"
+                                    Value="0.38"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType="PasswordBox"
+           BasedOn="{StaticResource FocusPasswordBox}"/>
 
     <Style x:Key="FocusCard" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>

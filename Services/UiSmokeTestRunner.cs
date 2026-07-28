@@ -35,7 +35,10 @@ internal static class UiSmokeTestRunner
         "FocusCheckBox",
         "FocusScrollBar",
         "FocusSlider",
-        "FocusLinearProgress"
+        "FocusLinearProgress",
+        "FocusTextBox",
+        "FocusSearchBox",
+        "FocusPasswordBox"
     };
 
     public static int Run(
@@ -93,6 +96,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentSliderAndProgress(
+                results,
+                failures);
+            CheckFluentTextInputs(
                 results,
                 failures);
             CheckPartitionRefreshScroll(
@@ -970,6 +976,129 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"Fluent 滑块和进度条加载失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentTextInputs(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var textBox = new TextBox
+            {
+                Width = 280,
+                Text = "深色主题输入",
+                Style =
+                    (Style)Application.Current.FindResource(
+                        "FocusTextBox")
+            };
+            textBox.ApplyTemplate();
+            textBox.Measure(new Size(320, 80));
+            textBox.Arrange(new Rect(0, 0, 280, 44));
+            textBox.SelectAll();
+            textBox.UpdateLayout();
+
+            if (textBox.Template.FindName(
+                    "TextInputChrome",
+                    textBox) is not Border textChrome
+                || textBox.Template.FindName(
+                    "PART_ContentHost",
+                    textBox) is not ScrollViewer
+                || textChrome.CornerRadius.TopLeft <= 0
+                || textBox.SelectionLength !=
+                    textBox.Text.Length)
+            {
+                failures.Add(
+                    "Fluent 文本框缺少圆角单表面、内容宿主或文本选择");
+                return;
+            }
+
+            if (!ReferenceEquals(
+                    textBox.CaretBrush,
+                    Application.Current.FindResource(
+                        "FocusAccentBrightBrush"))
+                || !ReferenceEquals(
+                    textBox.SelectionBrush,
+                    Application.Current.FindResource(
+                        "FocusAccentBrush"))
+                || !ReferenceEquals(
+                    textBox.SelectionTextBrush,
+                    Application.Current.FindResource(
+                        "FocusTextBrush"))
+                || textBox.SelectionOpacity < 0.7
+                || textBox.FontFamily.Source !=
+                    "Segoe UI Variable Text"
+                || textBox.MinHeight < 44)
+            {
+                failures.Add(
+                    "Fluent 文本框未应用动态光标、选择色、字体或点击高度");
+                return;
+            }
+
+            textBox.IsReadOnly = true;
+            textBox.UpdateLayout();
+            if (!ReferenceEquals(
+                    textChrome.Background,
+                    Application.Current.FindResource(
+                        "FocusSurfaceBrush"))
+                || textChrome.Opacity > 0.8)
+            {
+                failures.Add(
+                    "Fluent 文本框未显示明确只读状态");
+                return;
+            }
+
+            var passwordBox = new PasswordBox
+            {
+                Width = 280,
+                Password = "focus-panel",
+                Style =
+                    (Style)Application.Current.FindResource(
+                        "FocusPasswordBox")
+            };
+            passwordBox.ApplyTemplate();
+            passwordBox.Measure(new Size(320, 80));
+            passwordBox.Arrange(new Rect(0, 0, 280, 44));
+            passwordBox.UpdateLayout();
+            if (passwordBox.Template.FindName(
+                    "PasswordInputChrome",
+                    passwordBox) is not Border passwordChrome
+                || passwordChrome.CornerRadius.TopLeft <= 0
+                || !ReferenceEquals(
+                    passwordBox.CaretBrush,
+                    Application.Current.FindResource(
+                        "FocusAccentBrightBrush"))
+                || !ReferenceEquals(
+                    passwordBox.SelectionBrush,
+                    Application.Current.FindResource(
+                        "FocusAccentBrush"))
+                || !ReferenceEquals(
+                    passwordBox.SelectionTextBrush,
+                    Application.Current.FindResource(
+                        "FocusTextBrush")))
+            {
+                failures.Add(
+                    "Fluent 密码框缺少圆角表面或动态输入选择主题");
+                return;
+            }
+
+            passwordBox.IsEnabled = false;
+            passwordBox.UpdateLayout();
+            if (passwordChrome.Opacity > 0.4)
+            {
+                failures.Add(
+                    "Fluent 密码框未显示明确禁用状态");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 文本与密码输入选择、只读和禁用状态");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 输入控件加载失败：{ex}");
         }
     }
 

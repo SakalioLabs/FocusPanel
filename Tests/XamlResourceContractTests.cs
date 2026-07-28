@@ -261,7 +261,7 @@ public sealed class XamlResourceContractTests
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
         XElement textBoxStyle = XDocument.Load(themePath)
             .Descendants(presentation + "Style")
-            .Single(element => (string?)element.Attribute(x + "Key") == "FocusSearchBox");
+            .Single(element => (string?)element.Attribute(x + "Key") == "FocusTextBox");
         var setters = textBoxStyle.Elements(presentation + "Setter").ToList();
 
         Assert.Contains(setters, setter =>
@@ -273,6 +273,81 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "VerticalAlignment=\"{TemplateBinding VerticalContentAlignment}\"",
             theme);
+        Assert.Contains(
+            "x:Name=\"TextInputChrome\"",
+            theme);
+        Assert.Contains(
+            "Property=\"SelectionBrush\"",
+            theme);
+        Assert.Contains(
+            "Property=\"SelectionTextBrush\"",
+            theme);
+        Assert.Contains(
+            "Property=\"IsKeyboardFocusWithin\"",
+            theme);
+        Assert.Contains(
+            "Property=\"IsReadOnly\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{x:Null}\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusSearchBox\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusTextBox}\"",
+            theme);
+    }
+
+    [Fact]
+    public void PasswordBoxes_UseTheSameDynamicInputStates()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string views = string.Join(
+            Environment.NewLine,
+            Directory.GetFiles(
+                    Path.Combine(
+                        root,
+                        "Views"),
+                    "*.xaml")
+                .Select(File.ReadAllText));
+
+        Assert.Contains(
+            "x:Key=\"FocusPasswordBox\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusPasswordBox}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"PasswordInputChrome\"",
+            theme);
+        Assert.Contains(
+            "Property=\"CaretBrush\"",
+            theme);
+        Assert.Contains(
+            "Property=\"SelectionBrush\"",
+            theme);
+        Assert.Contains(
+            "Property=\"SelectionTextBrush\"",
+            theme);
+        Assert.Contains(
+            "Property=\"IsEnabled\"",
+            theme);
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                views,
+                "<PasswordBox").Count);
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                views,
+                "Style=\"\\{StaticResource FocusPasswordBox\\}\"").Count);
     }
 
     [Fact]

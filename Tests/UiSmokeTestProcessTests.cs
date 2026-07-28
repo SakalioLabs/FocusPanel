@@ -55,6 +55,9 @@ public sealed class UiSmokeTestProcessTests
             Assert.Contains(
                 "PASS Fluent 音量滑块与确定/加载进度状态",
                 report);
+            Assert.Contains(
+                "PASS Fluent 文本与密码输入选择、只读和禁用状态",
+                report);
             Assert.Contains("RESULT PASS", report);
         }
         finally
