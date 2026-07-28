@@ -572,8 +572,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (app == null)
             return;
-        _appCatalog.Launch(app);
-        IsSearchOpen = false;
+        if (TryLaunchApp(app))
+            IsSearchOpen = false;
     }
 
     [RelayCommand]
@@ -617,7 +617,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         AppLaunchItem? launch = task?.CreateLaunchItem();
         if (launch != null)
-            _appCatalog.Launch(launch);
+            TryLaunchApp(launch);
     }
 
     [RelayCommand]
@@ -625,7 +625,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         AppLaunchItem? launch = task?.CreateLaunchItem();
         if (launch != null)
-            _appCatalog.Launch(launch);
+            TryLaunchApp(launch);
     }
 
     [RelayCommand]
@@ -1372,6 +1372,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CloseTransientPanels();
         if (!succeeded)
             IsStatusCenterOpen = true;
+    }
+
+    private bool TryLaunchApp(AppLaunchItem app)
+    {
+        bool succeeded = SystemActionExecution.Try(
+            () => _appCatalog.Launch(app));
+        if (succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            return true;
+        }
+
+        SystemActionMessage =
+            $"无法启动“{app.DisplayName}”。应用可能已卸载，"
+            + "或固定目标已经移动；请在搜索中重新固定。";
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
+        return false;
     }
 
     private static void ReplaceCollection<T>(ObservableCollection<T> destination, System.Collections.Generic.IEnumerable<T> source)

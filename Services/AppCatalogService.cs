@@ -141,16 +141,17 @@ public sealed class AppCatalogService : IAppCatalogService
         return results;
     }
 
-    public void Launch(AppLaunchItem app)
+    public bool Launch(AppLaunchItem app)
     {
-        var startInfo = new ProcessStartInfo
+        if (!AppLaunchRequestBuilder.TryBuild(
+                app,
+                out ProcessStartInfo? startInfo)
+            || startInfo == null)
         {
-            FileName = app.LaunchTarget,
-            UseShellExecute = true
-        };
-        if (!string.IsNullOrWhiteSpace(app.Arguments))
-            startInfo.Arguments = app.Arguments;
-        Process.Start(startInfo);
+            return false;
+        }
+
+        return AppLaunchExecution.TryStart(startInfo);
     }
 
     public void SetPinned(AppLaunchItem app, bool pinned)

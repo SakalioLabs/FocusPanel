@@ -1337,6 +1337,57 @@ public sealed class XamlResourceContractTests
             tracker);
     }
 
+    [Fact]
+    public void AppLaunchFailures_AreContainedAndShownInStatusCenter()
+    {
+        string root = FindRepositoryRoot();
+        string contract = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "IAppCatalogService.cs"));
+        string catalog = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "AppCatalogService.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+
+        Assert.Contains(
+            "bool Launch(AppLaunchItem app)",
+            contract);
+        Assert.Contains(
+            "AppLaunchRequestBuilder.TryBuild",
+            catalog);
+        Assert.Contains(
+            "AppLaunchExecution.TryStart",
+            catalog);
+        Assert.Contains(
+            "SystemActionExecution.Try(",
+            viewModel);
+        Assert.Contains(
+            "请在搜索中重新固定",
+            viewModel);
+        Assert.Contains(
+            "IsStatusCenterOpen = true",
+            viewModel);
+        Assert.Contains(
+            "Text=\"{Binding SystemActionMessage}\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.LiveSetting=\"Assertive\"",
+            mainWindow);
+    }
+
     private static HashSet<string> ReadDefinedKeys(params string[] paths)
     {
         var keys = new HashSet<string>(StringComparer.Ordinal);

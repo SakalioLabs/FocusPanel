@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101925"/>
+      <stop offset="1" stop-color="#203342"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#86c9ed" stop-opacity=".055"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity=".26"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="500" rx="30" fill="url(#bg)"/>
+  <circle cx="155" cy="80" r="190" fill="#168cd3" opacity=".14"/>
+  <circle cx="1040" cy="440" r="230" fill="#65c7e8" opacity=".08"/>
+  <text x="70" y="70" fill="#f5f9ff" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="31" font-weight="650">统一应用栏的可靠启动链路</text>
+  <text x="70" y="108" fill="#aec0d0" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="17">按真实目标类型启动 · 固定项失效不闪退 · 原因直接回到状态中心</text>
+
+  <g transform="translate(70 155)" filter="url(#shadow)">
+    <rect width="220" height="230" rx="22" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="110" cy="66" r="30" fill="#238ac8" opacity=".9"/>
+    <path d="M96 58h28v20H96zM102 52h16" stroke="#fff" stroke-width="3" fill="none" stroke-linejoin="round"/>
+    <text x="110" y="130" text-anchor="middle" fill="#f5f9ff" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="20" font-weight="600">应用图标</text>
+    <text x="110" y="165" text-anchor="middle" fill="#aec0d0" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="15">搜索 / 固定 / 运行</text>
+    <text x="110" y="191" text-anchor="middle" fill="#aec0d0" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="15">共用一个启动入口</text>
+  </g>
+
+  <path d="M306 270h68" stroke="#67c8f4" stroke-width="3"/>
+  <path d="m365 262 12 8-12 8" fill="none" stroke="#67c8f4" stroke-width="3"/>
+
+  <g transform="translate(390 135)" filter="url(#shadow)">
+    <rect width="370" height="270" rx="22" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <text x="28" y="42" fill="#f5f9ff" font-family="Microsoft YaHei UI, Segoe UI, sans-serif" font-size="19" font-weight="600">识别启动目标</text>
+    <g transform="translate(24 64)">
+      <rect width="322" height="52" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="32" fill="#7bd0f6" font-family="Segoe UI, sans-serif" font-size="15" font-weight="650">EXE / LNK</text>
+      <text x="124" y="32" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="15">直接 ShellExecute</text>
+    </g>
+    <g transform="translate(24 126)">
+      <rect width="322" height="52" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="32" fill="#7bd0f6" font-family="Segoe UI, sans-serif" font-size="15" font-weight="650">AUMID</text>
+      <text x="124" y="32" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="15">转为 shell:AppsFolder</text>
+    </g>
+    <g transform="translate(24 188)">
+      <rect width="322" height="52" rx="12" fill="#fff" fill-opacity=".07"/>
+      <text x="18" y="32" fill="#7bd0f6" font-family="Segoe UI, sans-serif" font-size="15" font-weight="650">无效目标</text>
+      <text x="124" y="32" fill="#dce8f2" font-family="Microsoft YaHei UI, sans-serif" font-size="15">拒绝执行并返回失败</text>
+    </g>
+  </g>
+
+  <path d="M776 270h68" stroke="#67c8f4" stroke-width="3"/>
+  <path d="m835 262 12 8-12 8" fill="none" stroke="#67c8f4" stroke-width="3"/>
+
+  <g transform="translate(860 155)" filter="url(#shadow)">
+    <rect width="270" height="230" rx="22" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="52" cy="57" r="22" fill="#2f9bd5" opacity=".9"/>
+    <path d="m42 57 7 7 14-16" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="88" y="63" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="18" font-weight="600">成功：打开应用</text>
+    <line x1="24" y1="94" x2="246" y2="94" stroke="#fff" stroke-opacity=".11"/>
+    <circle cx="52" cy="132" r="22" fill="#d15a63" opacity=".9"/>
+    <path d="M45 125l14 14m0-14-14 14" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <text x="88" y="138" fill="#f5f9ff" font-family="Microsoft YaHei UI, sans-serif" font-size="18" font-weight="600">失败：不抛异常</text>
+    <text x="32" y="184" fill="#aec0d0" font-family="Microsoft YaHei UI, sans-serif" font-size="15">状态中心显示卸载或路径移动提示</text>
+    <text x="32" y="208" fill="#aec0d0" font-family="Microsoft YaHei UI, sans-serif" font-size="15">引导重新搜索并固定</text>
+  </g>
+</svg>
