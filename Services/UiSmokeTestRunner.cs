@@ -72,6 +72,9 @@ internal static class UiSmokeTestRunner
             CheckDesktopPathRefreshScroll(
                 results,
                 failures);
+            CheckLargeOrganizerVirtualization(
+                results,
+                failures);
             if (!string.IsNullOrWhiteSpace(
                     dashboardSnapshotPath))
             {
@@ -386,6 +389,165 @@ internal static class UiSmokeTestRunner
             failures.Add(
                 $"路径刷新滚动稳定性验证失败：{ex}");
         }
+    }
+
+    private static void CheckLargeOrganizerVirtualization(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var panelFactory =
+                new FrameworkElementFactory(
+                    typeof(
+                        ViewportVirtualizingPanel));
+            panelFactory.SetValue(
+                ViewportVirtualizingPanel
+                    .ItemWidthProperty,
+                100d);
+            panelFactory.SetValue(
+                ViewportVirtualizingPanel
+                    .ItemHeightProperty,
+                120d);
+            panelFactory.SetValue(
+                ViewportVirtualizingPanel
+                    .ItemSpacingProperty,
+                10d);
+            var source =
+                new ObservableCollection<string>(
+                    Enumerable.Range(1, 1000)
+                        .Select(index =>
+                            $"文件 {index:D4}"));
+            var items = new ItemsControl
+            {
+                ItemsPanel =
+                    new ItemsPanelTemplate(
+                        panelFactory),
+                ItemsSource = source
+            };
+            VirtualizingPanel.SetIsVirtualizing(
+                items,
+                true);
+            VirtualizingPanel
+                .SetVirtualizationMode(
+                    items,
+                    VirtualizationMode.Recycling);
+            var viewer = new ScrollViewer
+            {
+                Width = 350,
+                Height = 220,
+                Content = items,
+                VerticalScrollBarVisibility =
+                    ScrollBarVisibility.Auto
+            };
+            var size = new Size(350, 220);
+            viewer.Measure(size);
+            viewer.Arrange(new Rect(size));
+            viewer.UpdateLayout();
+            ViewportVirtualizingPanel? panel =
+                FindVisualChild<
+                    ViewportVirtualizingPanel>(
+                    items);
+            if (panel == null)
+            {
+                failures.Add(
+                    "大量文件虚拟化验证未找到面板");
+                return;
+            }
+
+            int initialCount =
+                panel.RealizedContainerCount;
+            if (initialCount <= 0
+                || initialCount >= 100)
+            {
+                failures.Add(
+                    $"首屏生成了 {initialCount} 个文件容器");
+                return;
+            }
+
+            viewer.ScrollToVerticalOffset(13000);
+            viewer.UpdateLayout();
+            int scrolledCount =
+                panel.RealizedContainerCount;
+            if (viewer.VerticalOffset <= 0
+                || panel.FirstRealizedIndex <= 0
+                || scrolledCount <= 0
+                || scrolledCount >= 100)
+            {
+                failures.Add(
+                    "滚动后虚拟化状态异常："
+                    + $"offset={viewer.VerticalOffset:F1}, "
+                    + $"first={panel.FirstRealizedIndex}, "
+                    + $"containers={scrolledCount}");
+                return;
+            }
+
+            source.Insert(
+                0,
+                "新增文件");
+            source.RemoveAt(
+                source.Count - 1);
+            viewer.UpdateLayout();
+            int changedCount =
+                panel.RealizedContainerCount;
+            if (changedCount <= 0
+                || changedCount >= 100)
+            {
+                failures.Add(
+                    "集合变化后虚拟化容器数量失效："
+                    + changedCount);
+                return;
+            }
+            viewer.ScrollToTop();
+            viewer.UpdateLayout();
+            int returnedCount =
+                panel.RealizedContainerCount;
+            if (panel.FirstRealizedIndex != 0
+                || returnedCount <= 0
+                || returnedCount >= 100)
+            {
+                failures.Add(
+                    "返回顶部后虚拟化区间未复位："
+                    + $"first={panel.FirstRealizedIndex}, "
+                    + $"containers={returnedCount}");
+                return;
+            }
+            results.Add(
+                $"PASS 1000 项仅生成 "
+                + $"{initialCount}/{scrolledCount}"
+                + $"/{changedCount}/{returnedCount} "
+                + "个可视容器");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"大量文件虚拟化验证失败：{ex}");
+        }
+    }
+
+    private static T? FindVisualChild<T>(
+        DependencyObject parent)
+        where T : DependencyObject
+    {
+        int count =
+            VisualTreeHelper.GetChildrenCount(
+                parent);
+        for (int index = 0;
+             index < count;
+             index++)
+        {
+            DependencyObject child =
+                VisualTreeHelper.GetChild(
+                    parent,
+                    index);
+            if (child is T match)
+                return match;
+            T? descendant =
+                FindVisualChild<T>(child);
+            if (descendant != null)
+                return descendant;
+        }
+        return null;
     }
 
     private static void RenderCalendarSnapshot(

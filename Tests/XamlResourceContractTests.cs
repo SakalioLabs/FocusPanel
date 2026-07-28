@@ -769,6 +769,47 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void DesktopOrganizer_UsesViewportVirtualizationForBothModes()
+    {
+        string root = FindRepositoryRoot();
+        string xaml = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FileOrganizerView.xaml"));
+        string panel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Controls",
+                "ViewportVirtualizingPanel.cs"));
+
+        Assert.Equal(
+            2,
+            CountOccurrences(
+                xaml,
+                "<controls:ViewportVirtualizingPanel"));
+        Assert.Equal(
+            2,
+            CountOccurrences(
+                xaml,
+                "VirtualizingPanel.IsVirtualizing=\"True\""));
+        Assert.Equal(
+            2,
+            CountOccurrences(
+                xaml,
+                "VirtualizingPanel.VirtualizationMode=\"Recycling\""));
+        Assert.DoesNotContain(
+            "<WrapPanel Orientation=\"Horizontal\"/>",
+            xaml);
+        Assert.Contains(
+            "ScrollOwner_ScrollChanged",
+            panel);
+        Assert.Contains(
+            "IRecyclingItemContainerGenerator",
+            panel);
+    }
+
+    [Fact]
     public void WindowClosing_UsesWmCloseWithoutProcessTermination()
     {
         string root = FindRepositoryRoot();
@@ -1194,6 +1235,23 @@ public sealed class XamlResourceContractTests
         }
 
         return keys;
+    }
+
+    private static int CountOccurrences(
+        string source,
+        string value)
+    {
+        int count = 0;
+        int startIndex = 0;
+        while ((startIndex = source.IndexOf(
+                   value,
+                   startIndex,
+                   StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            startIndex += value.Length;
+        }
+        return count;
     }
 
     private static string FindRepositoryRoot()

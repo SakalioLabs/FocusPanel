@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.48 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.49 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.48 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.49 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -91,6 +91,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 - 左右列排序使用 `Move` 更新而非清空重加；同路径文件刷新保留选中状态。数据库瞬时读取失败时保留最后一次有效界面，不把暂时错误显示成“所有收纳盒消失”。
 - 桌面根目录监视器会把 500ms 内重复的创建、写入、删除和重命名通知按路径合并，只读取真正变化的项目；旧仓库变化或监视器缓冲区异常时才安全回退全量扫描。
 - 外部重命名、文件大小和类型变化继续复用原卡片并更新派生文本；已收纳文件外部丢失时保留“需要恢复”入口。退出应用会释放全部桌面监视器和计时器，不留下重复刷新源。
+- 网格和列表模式使用与外层统一滚动条协作的视口虚拟化面板，只创建当前可见行和前后缓冲行的文件卡片；完整集合、滚动范围、双列收纳盒和业务排序不变。
+- 文件卡片容器在滚动时回收复用，图标缩放、窗口宽度、收纳盒折叠和集合变化会重新计算实现区间。1000 项真实 WPF 冒烟中，首屏、中段、集合变化和返回顶部仅存在 `9/12/12/9` 个视觉容器。
 - 任务模块使用统一 Fluent 表面，保留项目/子任务、列表和自定义字段语义；看板会按状态生成真实列，任务可前后移动、进入详情、进入子任务或删除。
 - 任务详情使用 Windows 11 原生 DWM 毛玻璃窗口；关闭模块或切换数据上下文时同步解除订阅并关闭详情，避免重复窗口和失效对象残留。
 - 番茄钟提供 25/45/60 分钟预设、准确剩余进度、暂停/继续、完成声音和托盘通知；悬浮计时器使用与主壳一致的 Windows 原生毛玻璃，不创建全屏覆盖层。
@@ -110,6 +112,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![桌面收纳差量刷新与滚动稳定](docs/images/organizer-stable-refresh.svg)
 
 ![桌面文件监视路径级增量刷新](docs/images/organizer-path-refresh.svg)
+
+![大量桌面文件视口虚拟化](docs/images/organizer-viewport-virtualization.svg)
 
 ![任务列表、真实看板与毛玻璃详情](docs/images/task-workspace.svg)
 
@@ -183,7 +187,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.48 `
+  -Version 0.9.49 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -192,7 +196,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.48-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.49-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -209,7 +213,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.48 `
+  -Version 0.9.49 `
   -Dotnet8Path dotnet
 ```
 

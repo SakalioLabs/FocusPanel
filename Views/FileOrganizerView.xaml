@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:FocusPanel.ViewModels"
              xmlns:converters="clr-namespace:FocusPanel.Converters"
+             xmlns:controls="clr-namespace:FocusPanel.Controls"
              mc:Ignorable="d"
              AllowDrop="True"
              PreviewDragOver="Organizer_PreviewDragOver"
@@ -389,10 +390,17 @@
                                 <Setter Property="ContentTemplate">
                                     <Setter.Value>
                                         <DataTemplate>
-                                            <ItemsControl ItemsSource="{Binding Files}" Margin="6">
+                                            <ItemsControl ItemsSource="{Binding Files}"
+                                                          Margin="6"
+                                                          VirtualizingPanel.IsVirtualizing="True"
+                                                          VirtualizingPanel.VirtualizationMode="Recycling">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
-                                                        <WrapPanel Orientation="Horizontal"/>
+                                                        <controls:ViewportVirtualizingPanel
+                                                            ItemWidth="{Binding Data.CardWidth, Source={StaticResource VmProxy}}"
+                                                            ItemHeight="{Binding Data.CardHeight, Source={StaticResource VmProxy}}"
+                                                            ItemSpacing="10"
+                                                            IsWrapping="True"/>
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
@@ -407,7 +415,17 @@
                                         <Setter Property="ContentTemplate">
                                             <Setter.Value>
                                                 <DataTemplate>
-                                                    <ItemsControl ItemsSource="{Binding Files}" Margin="0,6,0,8">
+                                                    <ItemsControl ItemsSource="{Binding Files}"
+                                                                  Margin="0,6,0,8"
+                                                                  VirtualizingPanel.IsVirtualizing="True"
+                                                                  VirtualizingPanel.VirtualizationMode="Recycling">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <controls:ViewportVirtualizingPanel
+                                                                    ItemHeight="38"
+                                                                    IsWrapping="False"/>
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
                                                         <ItemsControl.ItemTemplate>
                                                             <StaticResource ResourceKey="FileListTemplate"/>
                                                         </ItemsControl.ItemTemplate>
