@@ -246,7 +246,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
-正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES` 和完整更新包。验证失败会中止发布，因此另一台设备只要安装过一次 `Setup.exe`，以后即可在设置页直接完成检查、下载、安装和重启。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载 `FocusPanel-win-Setup.exe` 覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
+正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES` 和完整更新包。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要安装过一次 `Setup.exe`，以后即可在设置页直接完成检查、下载、安装和重启。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载 `FocusPanel-win-Setup.exe` 覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
 
 ![GitHub 静态清单一键更新与手动兜底](docs/images/github-static-update-flow.svg)
 

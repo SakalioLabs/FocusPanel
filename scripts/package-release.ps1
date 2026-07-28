@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.9.68',
+    [string]$Version = '0.9.69',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -24,7 +24,7 @@ $publishDir = [IO.Path]::GetFullPath(
 $packageDir = [IO.Path]::GetFullPath((Join-Path $projectRoot 'artifacts\release\packages'))
 $manifest = Join-Path $projectRoot '.config\dotnet-tools.json'
 $releaseNotesSource = Join-Path $projectRoot 'packaging\release-notes.md'
-$releaseNotes = Join-Path $projectRoot 'artifacts\release\release-notes-utf8.md'
+$releaseNotes = Join-Path $projectRoot 'artifacts\release\release-notes-unicode.md'
 $projectFile = Join-Path $projectRoot 'FocusPanel.csproj'
 $numericVersion = $Version.Split('-')[0]
 
@@ -62,14 +62,14 @@ elseif (-not (Test-Path -LiteralPath $packageDir)) {
 }
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-$utf8WithBom = New-Object System.Text.UTF8Encoding($true)
+$unicodeWithBom = New-Object System.Text.UnicodeEncoding($false, $true)
 $releaseNotesText = [IO.File]::ReadAllText(
     $releaseNotesSource,
     $utf8NoBom)
 [IO.File]::WriteAllText(
     $releaseNotes,
     $releaseNotesText,
-    $utf8WithBom)
+    $unicodeWithBom)
 
 Write-Host "Publishing FocusPanel $Version (win-x64, self-contained)..."
 & $PublishDotnetPath publish $projectFile `
@@ -114,6 +114,30 @@ if (-not [string]::IsNullOrWhiteSpace($SignParams)) {
 & $Dotnet8Path @vpkArguments
 if ($LASTEXITCODE -ne 0) {
     throw "vpk pack failed with exit code $LASTEXITCODE."
+}
+
+$releaseManifest = Join-Path $packageDir 'releases.win.json'
+if (-not (Test-Path -LiteralPath $releaseManifest)) {
+    throw 'Packaging completed without producing releases.win.json.'
+}
+
+$manifestData = Get-Content -LiteralPath $releaseManifest -Raw -Encoding UTF8 |
+    ConvertFrom-Json
+$currentFullAsset = $manifestData.Assets |
+    Where-Object { $_.Version -eq $Version -and $_.Type -eq 'Full' } |
+    Select-Object -First 1
+if ($null -eq $currentFullAsset) {
+    throw "Release manifest does not contain the full package for $Version."
+}
+
+$normalizeNewlines = {
+    param([string]$Text)
+    return ($Text -replace "`r`n?", "`n").TrimEnd()
+}
+$expectedNotes = & $normalizeNewlines $releaseNotesText
+$manifestNotes = & $normalizeNewlines $currentFullAsset.NotesMarkdown
+if ($manifestNotes -cne $expectedNotes) {
+    throw 'Release notes changed while packaging. Refusing to publish a manifest with corrupted text.'
 }
 
 $setup = Get-ChildItem -LiteralPath $packageDir -Filter '*Setup.exe' |

@@ -421,10 +421,16 @@ public sealed class XamlResourceContractTests
         Assert.Contains("/releases/latest", publisher);
         Assert.Contains("'releases.win.json'", publisher);
         Assert.Contains(
-            "New-Object System.Text.UTF8Encoding($true)",
+            "New-Object System.Text.UnicodeEncoding($false, $true)",
             packager);
         Assert.Contains(
-            "release-notes-utf8.md",
+            "release-notes-unicode.md",
+            packager);
+        Assert.Contains(
+            "Release notes changed while packaging",
+            packager);
+        Assert.Contains(
+            "$manifestNotes -cne $expectedNotes",
             packager);
         Assert.Contains("'RELEASES'", publisher);
         Assert.Contains("-full\\.nupkg", publisher);
