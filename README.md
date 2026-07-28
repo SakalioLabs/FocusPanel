@@ -200,7 +200,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
-安装版和 Velopack 便携版统一使用项目的 GitHub Releases，无需在每台设备配置更新地址。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
+安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
+
+正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES` 和完整更新包。验证失败会中止发布，因此另一台设备只要安装过一次 `Setup.exe`，以后即可在设置页直接完成检查、下载、安装和重启。
 
 用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备只需首次安装一次 `FocusPanel-win-Setup.exe`，后续版本均沿用这条更新链。
 

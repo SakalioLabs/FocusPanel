@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.9.50 - 2026-07-28
+
+- 继续以公开 GitHub Releases 作为所有设备唯一的自动更新主源；客户端沿用 Velopack `GithubSource`，无需配置局域网地址、共享目录或访问令牌。
+- 修复发布端可能已上传高版本 Release、但 GitHub `/releases/latest` 仍停留在旧版本的问题；正式发布后通过 GitHub 官方 API 显式设置 `make_latest=true`。
+- 发布脚本设置 Latest 后立即回读验证标签，并检查 `releases.win.json`、`RELEASES` 和当前版本完整更新包；标记或资产不完整时让发布流程失败，不再产生表面成功但客户端无法发现的版本。
+- 草稿发布保持原行为，不会提前改动 Latest；只有正式发布才更新所有安装设备读取的稳定更新入口。
+- 新增发布契约测试，应用与更新服务继续复用现有 Velopack 安装、下载、重启和差分包链路。
+
 ## v0.9.49 - 2026-07-28
 
 - 桌面收纳的网格和列表模式改用项目自有 `ViewportVirtualizingPanel`；不改变双列收纳盒和统一滚动条，只为外层 `ScrollViewer` 当前可见行及前后各一行缓冲生成文件卡片。

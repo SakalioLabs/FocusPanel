@@ -323,6 +323,20 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void ReleasePublishing_MarksAndVerifiesLatestGitHubRelease()
+    {
+        string root = FindRepositoryRoot();
+        string publisher = File.ReadAllText(
+            Path.Combine(root, "scripts", "publish-github-release.ps1"));
+
+        Assert.Contains("make_latest = 'true'", publisher);
+        Assert.Contains("/releases/latest", publisher);
+        Assert.Contains("'releases.win.json'", publisher);
+        Assert.Contains("'RELEASES'", publisher);
+        Assert.Contains("-full\\.nupkg", publisher);
+    }
+
+    [Fact]
     public void UpdateAvailability_IsVisibleFromCompactAndFocusCenters()
     {
         string root = FindRepositoryRoot();
