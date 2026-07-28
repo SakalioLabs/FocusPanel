@@ -546,7 +546,10 @@
                         Margin="10,12,10,12"
                         CornerRadius="0"
                         Background="Transparent"
-                        BorderThickness="0">
+                        BorderThickness="0"
+                        KeyboardNavigation.TabNavigation="Cycle"
+                        KeyboardNavigation.DirectionalNavigation="Cycle"
+                        AutomationProperties.Name="FocusPanel 侧边任务栏">
                     <Grid Margin="0,3">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -560,6 +563,7 @@
                                 Style="{StaticResource FocusIconButton}"
                                 Click="SearchButton_Click"
                                 Command="{Binding ToggleSearchCommand}"
+                                AutomationProperties.Name="搜索应用"
                                 ToolTip="启动应用">
                             <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE721;"/>
                         </Button>
@@ -574,6 +578,7 @@
                                     Background="{DynamicResource FocusSurfaceStrongBrush}"
                                     Visibility="Collapsed"
                                     Click="TaskbarScrollUpButton_Click"
+                                    AutomationProperties.Name="查看上方应用"
                                     ToolTip="查看上方应用">
                                 <TextBlock Style="{StaticResource FocusIconText}"
                                            FontSize="12"
@@ -583,8 +588,10 @@
                             <ScrollViewer x:Name="TaskbarAppsScrollViewer"
                                           VerticalScrollBarVisibility="Hidden"
                                           HorizontalScrollBarVisibility="Disabled"
+                                          Focusable="False"
                                           ScrollChanged="TaskbarAppsScrollViewer_ScrollChanged">
-                                <ItemsControl ItemsSource="{Binding TaskbarApps}">
+                                <ItemsControl ItemsSource="{Binding TaskbarApps}"
+                                              KeyboardNavigation.DirectionalNavigation="Continue">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Grid>
@@ -596,6 +603,8 @@
                                                         DragOver="TaskbarApp_DragOver"
                                                         Drop="TaskbarApp_Drop"
                                                         Click="TaskbarApp_Click"
+                                                        AutomationProperties.Name="{Binding DisplayName}"
+                                                        AutomationProperties.HelpText="{Binding WindowSummary}"
                                                         ContextMenuOpening="TaskbarApp_ContextMenuOpening">
                                                     <Button.ToolTip>
                                                         <StackPanel>
@@ -642,6 +651,7 @@
                                     Background="{DynamicResource FocusSurfaceStrongBrush}"
                                     Visibility="Collapsed"
                                     Click="TaskbarScrollDownButton_Click"
+                                    AutomationProperties.Name="查看下方应用"
                                     ToolTip="查看下方应用">
                                 <TextBlock Style="{StaticResource FocusIconText}"
                                            FontSize="12"
@@ -654,6 +664,8 @@
                             <Button Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Command="{Binding OpenStartMenuCommand}"
+                                    AutomationProperties.Name="开始"
+                                    AutomationProperties.HelpText="按 Enter 打开开始菜单，按 Shift+F10 打开系统管理菜单"
                                     ToolTip="开始 · 右键打开系统管理菜单">
                                 <Button.ContextMenu>
                                     <ContextMenu Opened="TransientContextMenu_Opened"
@@ -724,12 +736,14 @@
                             <Button Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Command="{Binding OpenTaskViewCommand}"
+                                    AutomationProperties.Name="任务视图"
                                     ToolTip="任务视图">
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE7C4;"/>
                             </Button>
                             <Button Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Click="FocusCenterButton_Click"
+                                    AutomationProperties.Name="Focus 中心"
                                     ToolTip="Focus 中心">
                                 <Grid Width="32" Height="32">
                                     <TextBlock Style="{StaticResource FocusIconText}"
@@ -747,6 +761,8 @@
                                     Click="StatusCenterButton_Click"
                                     PreviewMouseWheel="VolumeButton_PreviewMouseWheel"
                                     MouseRightButtonUp="VolumeButton_MouseRightButtonUp"
+                                    AutomationProperties.Name="状态中心"
+                                    AutomationProperties.HelpText="鼠标滚轮调节音量，右键静音"
                                     ToolTip="状态中心">
                                 <TextBlock>
                                     <TextBlock.Style>
@@ -764,6 +780,7 @@
                             <Button Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Click="CalendarPanelButton_Click"
+                                    AutomationProperties.Name="时间与今日任务"
                                     ToolTip="时间与今日任务">
                                 <StackPanel>
                                     <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm}}"

@@ -276,6 +276,38 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void CompactDock_SupportsKeyboardSummonAndAccessibleNavigation()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "KeyboardNavigation.TabNavigation=\"Cycle\"",
+            mainWindow);
+        Assert.Contains(
+            "KeyboardNavigation.DirectionalNavigation=\"Cycle\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"{Binding DisplayName}\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.HelpText=\"{Binding WindowSummary}\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"开始\"",
+            mainWindow);
+        Assert.Contains("private void FocusCompactDock()", codeBehind);
+        Assert.True(
+            codeBehind.Split(
+                "FocusCompactDock();",
+                StringSplitOptions.None).Length - 1 >= 2);
+        Assert.Contains("SearchButton.Focus();", codeBehind);
+    }
+
+    [Fact]
     public void ShellAutoHide_WaitsForMenusPopupsAndMouseCapture()
     {
         string root = FindRepositoryRoot();

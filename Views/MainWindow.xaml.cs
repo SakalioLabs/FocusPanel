@@ -787,6 +787,7 @@ public partial class MainWindow : Window
         _hotZoneMonitor?.Start();
         ExpandSidebar();
         Activate();
+        FocusCompactDock();
     }
 
     public void ForceClose()
@@ -834,10 +835,22 @@ public partial class MainWindow : Window
             _hiddenToTray = false;
             ExpandSidebar();
             Activate();
+            FocusCompactDock();
             handled = true;
         }
 
         return IntPtr.Zero;
+    }
+
+    private void FocusCompactDock()
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (_isExit || !IsVisible)
+                return;
+
+            SearchButton.Focus();
+        }, DispatcherPriority.Input);
     }
 
     private void UpdateEdgeIndicatorVisibility()

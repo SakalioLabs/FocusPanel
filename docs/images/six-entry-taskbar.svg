@@ -10,5 +10,6 @@
     <g transform="translate(775 145)"><rect width="150" height="150" rx="24" fill="#1e293b"/><text x="75" y="64" fill="#5eead4" font-size="34">◎</text><text x="75" y="108" fill="#f8fafc" font-size="18">Focus 中心</text><text x="75" y="132" fill="#64748b" font-size="12">五个业务模块</text></g>
     <g transform="translate(945 145)"><rect width="150" height="150" rx="24" fill="#1e293b"/><text x="75" y="58" fill="#fbbf24" font-size="28">◉ 00:53</text><text x="75" y="102" fill="#f8fafc" font-size="18">状态与时间</text><text x="75" y="132" fill="#64748b" font-size="12">系统控制 · 日历</text></g>
   </g>
-  <text x="600" y="370" text-anchor="middle" fill="#64748b" font-size="14" font-family="Segoe UI, Microsoft YaHei">界面结构示意</text>
+  <text x="600" y="356" text-anchor="middle" fill="#94a3b8" font-size="14" font-family="Segoe UI, Microsoft YaHei">Ctrl + Alt + Space 主动聚焦 · Tab / 方向键循环导航 · Enter 执行 · Shift + F10 打开菜单</text>
+  <text x="600" y="384" text-anchor="middle" fill="#64748b" font-size="13" font-family="Segoe UI, Microsoft YaHei">界面结构示意</text>
 </svg>
