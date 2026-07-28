@@ -134,7 +134,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
 - `FocusPanel-0.9.30-full.nupkg`：完整更新包。
-- `releases.win.json`、`assets.win.json` 和 `RELEASES`：更新清单。
+- `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
 安装版和 Velopack 便携版统一使用项目的 GitHub Releases，无需在每台设备配置更新地址。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
