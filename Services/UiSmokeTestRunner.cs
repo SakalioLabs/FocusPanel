@@ -322,6 +322,12 @@ internal static class UiSmokeTestRunner
             menu.Items.Add(checkedItem);
             menu.Items.Add(new Separator());
             menu.Items.Add(submenu);
+            if (!FocusMenuTheme.Apply(menu))
+            {
+                failures.Add(
+                    "Fluent 菜单无法从应用资源解析运行时样式");
+                return;
+            }
 
             menu.Measure(new Size(420, 800));
             menu.Arrange(
@@ -357,6 +363,27 @@ internal static class UiSmokeTestRunner
             {
                 failures.Add(
                     "Fluent 菜单项缺少高亮或子菜单模板");
+                return;
+            }
+
+            if (!ReferenceEquals(
+                    menu.Style,
+                    Application.Current.FindResource(
+                        "FocusContextMenu"))
+                || !ReferenceEquals(
+                    checkedItem.Style,
+                    Application.Current.FindResource(
+                        "FocusMenuItem"))
+                || !ReferenceEquals(
+                    submenu.Items
+                        .OfType<MenuItem>()
+                        .Single()
+                        .Style,
+                    Application.Current.FindResource(
+                        "FocusMenuItem")))
+            {
+                failures.Add(
+                    "运行时菜单或子菜单未直接应用 Fluent 深浅主题样式");
                 return;
             }
 

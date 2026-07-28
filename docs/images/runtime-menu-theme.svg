@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="480" viewBox="0 0 1120 480">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10141D"/>
+      <stop offset="1" stop-color="#26334A"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#323946" stop-opacity=".96"/>
+      <stop offset="1" stop-color="#1B202A" stop-opacity=".92"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#74C7FF"/>
+    </marker>
+  </defs>
+  <rect width="1120" height="480" rx="28" fill="url(#bg)"/>
+  <text x="52" y="60" fill="#F5F7FF" font-family="Segoe UI Variable Display, Segoe UI" font-size="28" font-weight="600">运行时菜单也必须继承深色主题</text>
+  <text x="52" y="92" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="15">直接解析应用级 Style，避免独立 Popup 在视觉树建立前退回 WPF 系统模板。</text>
+
+  <g transform="translate(58 130)">
+    <rect width="270" height="270" rx="22" fill="#161B24" stroke="#FFFFFF" stroke-opacity=".12"/>
+    <text x="24" y="38" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="13">统一应用栏 · 多窗口</text>
+    <g transform="translate(22 60)">
+      <rect width="226" height="178" rx="16" fill="url(#glass)" stroke="#FFFFFF" stroke-opacity=".14"/>
+      <rect x="8" y="12" width="210" height="46" rx="12" fill="#FFFFFF" fill-opacity=".08"/>
+      <rect x="8" y="64" width="210" height="46" rx="12" fill="#2588C8" fill-opacity=".26"/>
+      <rect x="8" y="116" width="210" height="46" rx="12" fill="#FFFFFF" fill-opacity=".04"/>
+      <rect x="12" y="75" width="3" height="24" rx="2" fill="#74C7FF"/>
+      <g fill="#F5F7FF" font-family="Segoe UI Variable Text, Segoe UI" font-size="14">
+        <text x="26" y="41">release · 文件资源管理器</text>
+        <text x="26" y="93">packages · 文件资源管理器</text>
+        <text x="26" y="145">docs · 文件资源管理器</text>
+      </g>
+    </g>
+  </g>
+
+  <path d="M354 264H485" fill="none" stroke="#74C7FF" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <g transform="translate(506 126)" font-family="Segoe UI Variable Text, Segoe UI">
+    <rect width="556" height="278" rx="22" fill="#FFFFFF" fill-opacity=".06" stroke="#FFFFFF" stroke-opacity=".10"/>
+    <g transform="translate(28 28)">
+      <circle cx="18" cy="18" r="18" fill="#2588C8" fill-opacity=".35"/>
+      <text x="18" y="24" text-anchor="middle" fill="#74C7FF" font-size="17" font-weight="600">1</text>
+      <text x="54" y="16" fill="#F5F7FF" font-size="16" font-weight="600">ContextMenu 直接取得 Style</text>
+      <text x="54" y="38" fill="#AEB5C8" font-size="13">不等待 Popup 接入主窗口视觉树</text>
+    </g>
+    <g transform="translate(28 102)">
+      <circle cx="18" cy="18" r="18" fill="#2588C8" fill-opacity=".35"/>
+      <text x="18" y="24" text-anchor="middle" fill="#74C7FF" font-size="17" font-weight="600">2</text>
+      <text x="54" y="16" fill="#F5F7FF" font-size="16" font-weight="600">递归覆盖菜单项与子菜单</text>
+      <text x="54" y="38" fill="#AEB5C8" font-size="13">自动容器、分隔线也使用同一模板</text>
+    </g>
+    <g transform="translate(28 176)">
+      <circle cx="18" cy="18" r="18" fill="#2588C8" fill-opacity=".35"/>
+      <text x="18" y="24" text-anchor="middle" fill="#74C7FF" font-size="17" font-weight="600">3</text>
+      <text x="54" y="16" fill="#F5F7FF" font-size="16" font-weight="600">颜色继续使用 DynamicResource</text>
+      <text x="54" y="38" fill="#AEB5C8" font-size="13">深浅主题切换即时生效，不重建窗口数据</text>
+    </g>
+  </g>
+</svg>

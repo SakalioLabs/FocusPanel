@@ -693,7 +693,7 @@ public partial class MainWindow :
             });
         }
 
-        ApplyFocusMenuTheme(menu);
+        FocusMenuTheme.Apply(menu);
         button.ContextMenu = menu;
     }
 
@@ -726,37 +726,8 @@ public partial class MainWindow :
             menu.Items.Add(windowItem);
         }
 
-        ApplyFocusMenuTheme(menu);
+        FocusMenuTheme.Apply(menu);
         button.ContextMenu = menu;
-    }
-
-    private void ApplyFocusMenuTheme(ContextMenu menu)
-    {
-        menu.SetResourceReference(
-            FrameworkElement.StyleProperty,
-            "FocusContextMenu");
-
-        foreach (object item in menu.Items)
-            ApplyFocusMenuItemTheme(item);
-    }
-
-    private void ApplyFocusMenuItemTheme(object item)
-    {
-        switch (item)
-        {
-            case MenuItem menuItem:
-                menuItem.SetResourceReference(
-                    FrameworkElement.StyleProperty,
-                    "FocusMenuItem");
-                foreach (object child in menuItem.Items)
-                    ApplyFocusMenuItemTheme(child);
-                break;
-            case Separator separator:
-                separator.SetResourceReference(
-                    FrameworkElement.StyleProperty,
-                    "FocusMenuSeparator");
-                break;
-        }
     }
 
     private static TextBlock CreateWindowTitle(
