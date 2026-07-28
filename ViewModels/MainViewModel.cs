@@ -37,6 +37,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private OkrViewModel? _okrViewModel;
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
+    private bool _updatingStartupState;
     private string? _lastNotifiedUpdateVersion;
     private bool _isShellVisible;
 
@@ -96,6 +97,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool startWithWindows;
+
+    [ObservableProperty]
+    private string startupStatus = string.Empty;
 
     [ObservableProperty]
     private string themeMode = "System";
@@ -178,6 +182,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ? "将自动从 GitHub Releases 检查更新"
             : "当前为开发运行版；安装发布包后可一键更新";
         StartWithWindows = AutoStartupService.IsStartupEnabled();
+        StartupStatus = StartWithWindows
+            ? "已设置为随 Windows 启动"
+            : "当前不会随 Windows 启动";
         bool firstRunAccepted = ReadBooleanConfig(FirstRunAcceptedKey);
         IsReplacementEnabled = ReadBooleanConfig(ReplacementEnabledKey);
         ReplacementStatus = IsReplacementEnabled
@@ -286,8 +293,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnStartWithWindowsChanged(bool value)
     {
-        if (IsReplacementEnabled)
-            AutoStartupService.SetStartup(value);
+        if (_updatingStartupState)
+            return;
+
+        if (!IsReplacementEnabled)
+        {
+            StartupStatus = value
+                ? "启用任务栏替代模式后生效"
+                : "当前不会随 Windows 启动";
+            return;
+        }
+
+        ApplyStartupPreference(value);
     }
 
     [RelayCommand]
@@ -608,7 +625,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ReplacementError = error ?? string.Empty;
         SaveBooleanConfig(FirstRunAcceptedKey, true);
         SaveBooleanConfig(ReplacementEnabledKey, enabled);
-        AutoStartupService.SetStartup(enabled && StartWithWindows);
+        ApplyStartupPreference(enabled && StartWithWindows);
     }
 
     public void MarkReplacementStopped(TaskbarReplacementStopReason reason, string message)
@@ -816,6 +833,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
         HasBattery = _systemStatus.HasBattery;
         BatteryPercent = _systemStatus.BatteryPercent;
         IsCharging = _systemStatus.IsCharging;
+    }
+
+    private void ApplyStartupPreference(bool enable)
+    {
+        if (AutoStartupService.TrySetStartup(
+                enable,
+                out string? error))
+        {
+            StartupStatus = enable
+                ? "已设置为随 Windows 启动"
+                : "当前不会随 Windows 启动";
+            return;
+        }
+
+        StartupStatus = error
+            ?? "无法更新 Windows 启动项。";
+        _updatingStartupState = true;
+        try
+        {
+            StartWithWindows =
+                AutoStartupService.IsStartupEnabled();
+        }
+        finally
+        {
+            _updatingStartupState = false;
+        }
     }
 
     private void RefreshTaskSummary()

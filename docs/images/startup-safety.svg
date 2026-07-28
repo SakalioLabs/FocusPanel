@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop stop-color="#0f172a"/><stop offset="1" stop-color="#172554"/></linearGradient>
+  </defs>
+  <rect width="1200" height="360" rx="28" fill="url(#bg)"/>
+  <text x="60" y="66" fill="#f8fafc" font-size="30" font-family="Segoe UI, Microsoft YaHei" font-weight="700">开机启动：写入后以真实状态为准</text>
+  <text x="60" y="100" fill="#94a3b8" font-size="16" font-family="Segoe UI, Microsoft YaHei">不吞掉失败，不让复选框显示与 Windows 注册表不一致。</text>
+  <g font-family="Segoe UI, Microsoft YaHei" text-anchor="middle">
+    <g transform="translate(55 140)"><rect width="220" height="112" rx="20" fill="#1e293b"/><text x="110" y="48" fill="#93c5fd" font-size="18">用户明确勾选</text><text x="110" y="78" fill="#64748b" font-size="13">设置页 / 首次引导</text></g>
+    <text x="306" y="201" fill="#64748b" font-size="28">→</text>
+    <g transform="translate(335 140)"><rect width="250" height="112" rx="20" fill="#1e293b"/><text x="125" y="45" fill="#f8fafc" font-size="18">定位并引用 EXE</text><text x="125" y="76" fill="#94a3b8" font-size="13">路径带空格也安全</text></g>
+    <text x="616" y="201" fill="#64748b" font-size="28">→</text>
+    <g transform="translate(645 140)"><rect width="230" height="112" rx="20" fill="#164e63"/><text x="115" y="45" fill="#a5f3fc" font-size="18">写入用户 Run 键</text><text x="115" y="76" fill="#67e8f9" font-size="13">缺失时创建</text></g>
+    <text x="906" y="201" fill="#64748b" font-size="28">→</text>
+    <g transform="translate(935 126)"><rect width="210" height="64" rx="18" fill="#14532d"/><text x="105" y="39" fill="#bbf7d0" font-size="16">成功 · 显示已启用</text><rect y="78" width="210" height="64" rx="18" fill="#7f1d1d"/><text x="105" y="117" fill="#fecaca" font-size="16">失败 · 提示并回滚</text></g>
+  </g>
+  <text x="600" y="318" text-anchor="middle" fill="#64748b" font-size="13" font-family="Segoe UI, Microsoft YaHei">仅修改当前用户启动项 · 不写系统级服务 · 不隐藏错误</text>
+</svg>

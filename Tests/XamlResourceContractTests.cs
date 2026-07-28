@@ -341,6 +341,32 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void StartupSetting_ReportsFailureAndRollsBackUiState()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.Contains(
+            "Text=\"{Binding StartupStatus}\"",
+            mainWindow);
+        Assert.Contains(
+            "AutoStartupService.TrySetStartup",
+            viewModel);
+        Assert.Contains(
+            "AutoStartupService.IsStartupEnabled()",
+            viewModel);
+        Assert.Contains(
+            "_updatingStartupState",
+            viewModel);
+        Assert.DoesNotContain(
+            "AutoStartupService.SetStartup",
+            viewModel);
+    }
+
+    [Fact]
     public void ShellAutoHide_WaitsForMenusPopupsAndMouseCapture()
     {
         string root = FindRepositoryRoot();

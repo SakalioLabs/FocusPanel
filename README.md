@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它保留桌面收纳、任务、番茄钟、OKR、AI 和 SQLite 数据，同时提供应用启动、运行窗口管理、系统状态与日期时间入口。
 
-![FocusPanel 0.9.34 总览](docs/images/readme-overview.svg)
+![FocusPanel 0.9.35 总览](docs/images/readme-overview.svg)
 
-> 上图及下方模块图为 0.9.34 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
+> 上图及下方模块图为 0.9.35 界面结构示意，用于说明信息层级和交互关系。实际毛玻璃、背景取样和亮暗色效果由 Windows 11 DWM、透明效果开关及当前壁纸共同决定。
 
 ## 新壳层
 
@@ -45,6 +45,8 @@ Focus 中心只放 FocusPanel 的业务模块；状态中心只放设备状态�
 
 首次启用前会显示安全说明。只有在侧边壳层、热区以及独立恢复守护进程都就绪后，FocusPanel 才会隐藏原任务栏；紧急快捷键注册失败时不会改变任务栏设置。
 
+“随 Windows 启动”只在用户明确勾选后写入当前用户 Run 键。FocusPanel 会创建缺失的注册表键、正确引用带空格的程序路径，并在权限或路径失败时显示原因、回滚复选框；不会静默显示成已启用。
+
 - 紧急恢复：`Ctrl+Alt+Shift+F10`
 - 正常退出、未处理异常、数据库恢复重启：均恢复原任务栏可见性与 AppBar 设置
 - 父进程异常退出：`--taskbar-watchdog` 守护模式负责恢复
@@ -54,6 +56,8 @@ Focus 中心只放 FocusPanel 的业务模块；状态中心只放设备状态�
 遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。完整替代后，Win+A、Win+N、Win+Space 等公开系统快捷入口继续可用；Explorer 的第三方托盘溢出内容属于私有壳层，FocusPanel 不读取其进程内存，也不能保证在原任务栏隐藏时完整复制。
 
 ![任务栏安全状态机](docs/images/taskbar-safety-flow.svg)
+
+![开机启动写入与回滚](docs/images/startup-safety.svg)
 
 ## 桌面收纳与效率模块
 
@@ -128,7 +132,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.34 `
+  -Version 0.9.35 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -137,7 +141,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.34-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.35-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -154,7 +158,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ```powershell
 $env:GITHUB_TOKEN = "仅放在当前终端，不要写入仓库"
 .\scripts\publish-github-release.ps1 `
-  -Version 0.9.34 `
+  -Version 0.9.35 `
   -Dotnet8Path dotnet
 ```
 

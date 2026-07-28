@@ -1,53 +1,129 @@
-using Microsoft.Win32;
 using System;
-using System.Reflection;
+using System.Diagnostics;
+using Microsoft.Win32;
 
-namespace FocusPanel.Services
+namespace FocusPanel.Services;
+
+internal interface IAutoStartupRegistry
 {
-    public static class AutoStartupService
+    string? ReadCommand();
+    void WriteCommand(string command);
+    void DeleteCommand();
+}
+
+internal sealed class WindowsAutoStartupRegistry : IAutoStartupRegistry
+{
+    private const string AppName = "FocusPanel";
+    private const string RunKey =
+        @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+
+    public string? ReadCommand()
     {
-        private const string AppName = "FocusPanel";
+        using RegistryKey? key =
+            Registry.CurrentUser.OpenSubKey(RunKey, writable: false);
+        return key?.GetValue(AppName) as string;
+    }
 
-        public static void SetStartup(bool enable)
+    public void WriteCommand(string command)
+    {
+        using RegistryKey key =
+            Registry.CurrentUser.CreateSubKey(RunKey, writable: true)
+            ?? throw new InvalidOperationException(
+                "Windows 未返回可写的启动项注册表键。");
+        key.SetValue(
+            AppName,
+            command,
+            RegistryValueKind.String);
+    }
+
+    public void DeleteCommand()
+    {
+        using RegistryKey? key =
+            Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
+        key?.DeleteValue(AppName, throwOnMissingValue: false);
+    }
+}
+
+public static class AutoStartupService
+{
+    public static bool TrySetStartup(
+        bool enable,
+        out string? error)
+        => TrySetStartup(
+            enable,
+            new WindowsAutoStartupRegistry(),
+            ResolveExecutablePath(),
+            out error);
+
+    internal static bool TrySetStartup(
+        bool enable,
+        IAutoStartupRegistry registry,
+        string? executablePath,
+        out string? error)
+    {
+        try
         {
-            try
+            if (enable)
             {
-                string runKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
-                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(runKey, true))
+                if (string.IsNullOrWhiteSpace(executablePath))
                 {
-                    if (enable)
-                    {
-                        string location = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
-                        // Use quoting to handle spaces in path
-                        key.SetValue(AppName, $"\"{location}\"");
-                    }
-                    else
-                    {
-                        key.DeleteValue(AppName, false);
-                    }
+                    error = "无法定位 FocusPanel 可执行文件，未写入 Windows 启动项。";
+                    return false;
                 }
+
+                registry.WriteCommand(
+                    BuildStartupCommand(executablePath));
             }
-            catch (Exception ex)
+            else
             {
-                // Handle or log exception
-                System.Diagnostics.Debug.WriteLine($"Error setting startup: {ex.Message}");
+                registry.DeleteCommand();
             }
+
+            error = null;
+            return true;
         }
-
-        public static bool IsStartupEnabled()
+        catch (Exception ex)
         {
-            try
-            {
-                string runKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
-                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(runKey, false))
-                {
-                    return key.GetValue(AppName) != null;
-                }
-            }
-            catch
-            {
-                return false;
-            }
+            error = $"无法更新 Windows 启动项：{ex.Message}";
+            return false;
+        }
+    }
+
+    public static bool IsStartupEnabled()
+        => IsStartupEnabled(new WindowsAutoStartupRegistry());
+
+    internal static bool IsStartupEnabled(
+        IAutoStartupRegistry registry)
+    {
+        try
+        {
+            return !string.IsNullOrWhiteSpace(
+                registry.ReadCommand());
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    internal static string BuildStartupCommand(
+        string executablePath)
+        => $"\"{executablePath.Trim()}\"";
+
+    private static string? ResolveExecutablePath()
+    {
+        if (!string.IsNullOrWhiteSpace(Environment.ProcessPath))
+            return Environment.ProcessPath;
+
+        try
+        {
+            return Process.GetCurrentProcess()
+                .MainModule?
+                .FileName;
+        }
+        catch
+        {
+            return null;
         }
     }
 }
