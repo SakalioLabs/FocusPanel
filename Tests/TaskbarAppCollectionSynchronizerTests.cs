@@ -1,0 +1,102 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using FocusPanel.Models;
+using FocusPanel.Services;
+using Xunit;
+
+namespace FocusPanel.Tests;
+
+public sealed class TaskbarAppCollectionSynchronizerTests
+{
+    [Fact]
+    public void UnchangedSnapshot_PreservesInstancesAndRaisesNoCollectionChanges()
+    {
+        TaskbarAppItem first = App("exe:c:\\one.exe", "一");
+        TaskbarAppItem second = App("exe:c:\\two.exe", "二");
+        var items = new ObservableCollection<TaskbarAppItem> { first, second };
+        int changes = 0;
+        items.CollectionChanged += (_, _) => changes++;
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[]
+            {
+                App("exe:c:\\one.exe", "一"),
+                App("exe:c:\\two.exe", "二")
+            });
+
+        Assert.Same(first, items[0]);
+        Assert.Same(second, items[1]);
+        Assert.Equal(0, changes);
+    }
+
+    [Fact]
+    public void ActiveStateChange_ReplacesOnlyChangedApplication()
+    {
+        TaskbarAppItem first = RunningApp("exe:c:\\one.exe", "一", 1, false);
+        TaskbarAppItem second = RunningApp("exe:c:\\two.exe", "二", 2, false);
+        var items = new ObservableCollection<TaskbarAppItem> { first, second };
+        var actions = new List<NotifyCollectionChangedAction>();
+        items.CollectionChanged += (_, args) => actions.Add(args.Action);
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[]
+            {
+                RunningApp("exe:c:\\one.exe", "一", 1, true),
+                RunningApp("exe:c:\\two.exe", "二", 2, false)
+            });
+
+        Assert.NotSame(first, items[0]);
+        Assert.Same(second, items[1]);
+        Assert.Equal(new[] { NotifyCollectionChangedAction.Replace }, actions);
+    }
+
+    [Fact]
+    public void Reorder_UsesMoveWithoutResettingApplicationList()
+    {
+        TaskbarAppItem first = App("exe:c:\\one.exe", "一");
+        TaskbarAppItem second = App("exe:c:\\two.exe", "二");
+        var items = new ObservableCollection<TaskbarAppItem> { first, second };
+        var actions = new List<NotifyCollectionChangedAction>();
+        items.CollectionChanged += (_, args) => actions.Add(args.Action);
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[]
+            {
+                App("exe:c:\\two.exe", "二"),
+                App("exe:c:\\one.exe", "一")
+            });
+
+        Assert.Same(second, items[0]);
+        Assert.Same(first, items[1]);
+        Assert.Equal(new[] { NotifyCollectionChangedAction.Move }, actions);
+    }
+
+    private static TaskbarAppItem App(string identity, string name) => new()
+    {
+        IdentityKey = identity,
+        DisplayName = name
+    };
+
+    private static TaskbarAppItem RunningApp(
+        string identity,
+        string name,
+        int handle,
+        bool active) => new()
+    {
+        IdentityKey = identity,
+        DisplayName = name,
+        RunningTask = new WindowTaskItem
+        {
+            AppKey = identity,
+            IdentityKey = identity,
+            DisplayName = name,
+            IsActive = active,
+            Windows = new[] { new WindowReference(new IntPtr(handle), name) }
+        }
+    };
+}

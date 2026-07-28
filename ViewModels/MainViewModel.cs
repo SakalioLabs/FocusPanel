@@ -28,6 +28,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly DispatcherTimer _clockTimer;
+    private readonly DispatcherTimer _systemStatusTimer;
+    private readonly DispatcherTimer _taskSummaryTimer;
     private readonly DispatcherTimer _updateCheckTimer;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
@@ -187,17 +189,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         RefreshTaskbarApps();
         RefreshSearchResults();
-        RefreshStatus();
+        RefreshSystemStatus();
+        RefreshTaskSummary();
 
         _windowTracker.SnapshotChanged += OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged += OnCatalogChanged;
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _clockTimer.Tick += (_, _) =>
-        {
-            CurrentTime = DateTime.Now;
-            RefreshStatus();
-        };
+        _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now;
         _clockTimer.Start();
+
+        _systemStatusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _systemStatusTimer.Tick += (_, _) => RefreshSystemStatus();
+        _systemStatusTimer.Start();
+
+        _taskSummaryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _taskSummaryTimer.Tick += (_, _) => RefreshTaskSummary();
+        _taskSummaryTimer.Start();
 
         _updateCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
         _updateCheckTimer.Tick += async (_, _) => await CheckForUpdatesInBackgroundAsync();
@@ -418,6 +425,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool open = !IsCalendarOpen;
         CloseTransientPanels();
         IsCalendarOpen = open;
+        if (open)
+            RefreshTaskSummary();
     }
 
     [RelayCommand]
@@ -434,6 +443,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool open = !IsStatusCenterOpen;
         CloseTransientPanels();
         IsStatusCenterOpen = open;
+        if (open)
+            RefreshSystemStatus();
     }
 
     [RelayCommand]
@@ -738,9 +749,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void RefreshTaskbarApps() => ReplaceCollection(
-        TaskbarApps,
-        _taskbarComposer.Compose(_appCatalog.GetPinned(), _windowTracker.GetSnapshot()));
+    private void RefreshTaskbarApps()
+        => TaskbarAppCollectionSynchronizer.Synchronize(
+            TaskbarApps,
+            _taskbarComposer.Compose(_appCatalog.GetPinned(), _windowTracker.GetSnapshot()));
 
     private void RefreshSearchResults()
     {
@@ -754,7 +766,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RefreshSearchResults();
     }
 
-    private void RefreshStatus()
+    private void RefreshSystemStatus()
     {
         _updatingAudioState = true;
         MasterVolume = _systemStatus.MasterVolume;
@@ -769,7 +781,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         HasBattery = _systemStatus.HasBattery;
         BatteryPercent = _systemStatus.BatteryPercent;
         IsCharging = _systemStatus.IsCharging;
+    }
 
+    private void RefreshTaskSummary()
+    {
         try
         {
             using var context = new AppDbContext();
@@ -849,6 +864,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _clockTimer.Stop();
+        _systemStatusTimer.Stop();
+        _taskSummaryTimer.Stop();
         _updateCheckTimer.Stop();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
