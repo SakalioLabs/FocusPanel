@@ -165,37 +165,15 @@
                                 <ListBox x:Name="SearchResultsList"
                                          ItemsSource="{Binding SearchResults}"
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"
-                                         Background="Transparent"
+                                         Style="{StaticResource FocusListBox}"
                                          Foreground="{DynamicResource FocusTextBrush}"
-                                         BorderThickness="0"
                                          AutomationProperties.Name="应用搜索结果"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.ItemContainerStyle>
-                                        <Style TargetType="ListBoxItem">
+                                        <Style TargetType="ListBoxItem"
+                                               BasedOn="{StaticResource FocusListBoxItem}">
                                             <Setter Property="Padding" Value="0"/>
                                             <Setter Property="Margin" Value="0,3"/>
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource FocusTextBrush}"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="ListBoxItem">
-                                                        <Border x:Name="ItemChrome"
-                                                                Background="{TemplateBinding Background}"
-                                                                CornerRadius="{StaticResource FocusControlCornerRadius}">
-                                                            <ContentPresenter/>
-                                                        </Border>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="ItemChrome" Property="Background" Value="{DynamicResource FocusHoverBrush}"/>
-                                                            </Trigger>
-                                                            <Trigger Property="IsSelected" Value="True">
-                                                                <Setter TargetName="ItemChrome" Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
                                         </Style>
                                     </ListBox.ItemContainerStyle>
                                     <ListBox.ItemTemplate>

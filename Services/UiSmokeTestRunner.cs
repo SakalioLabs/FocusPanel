@@ -38,6 +38,8 @@ internal static class UiSmokeTestRunner
         "FocusToolTip",
         "FocusComboBox",
         "FocusComboBoxItem",
+        "FocusListBox",
+        "FocusListBoxItem",
         "FocusCheckBox",
         "FocusScrollBar",
         "FocusSlider",
@@ -95,6 +97,9 @@ internal static class UiSmokeTestRunner
                 results,
                 failures);
             CheckFluentComboBox(
+                results,
+                failures);
+            CheckFluentListBox(
                 results,
                 failures);
             CheckFluentCheckBox(
@@ -860,6 +865,81 @@ internal static class UiSmokeTestRunner
         {
             failures.Add(
                 $"Fluent 滚动条加载失败：{ex}");
+        }
+    }
+
+    private static void CheckFluentListBox(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        try
+        {
+            var first = new ListBoxItem
+            {
+                Content =
+                    "release · 文件资源管理器"
+            };
+            var selected = new ListBoxItem
+            {
+                Content =
+                    "packages · 文件资源管理器",
+                IsSelected = true
+            };
+            var listBox = new ListBox
+            {
+                Width = 280,
+                Height = 120,
+                Items =
+                {
+                    first,
+                    selected
+                }
+            };
+
+            var size = new Size(280, 120);
+            listBox.Measure(size);
+            listBox.Arrange(new Rect(size));
+            listBox.UpdateLayout();
+            listBox.ApplyTemplate();
+            selected.ApplyTemplate();
+            selected.UpdateLayout();
+            if (selected.Template.FindName(
+                    "ListItemChrome",
+                    selected) is not Border chrome
+                || chrome.CornerRadius.TopLeft <= 0)
+            {
+                failures.Add(
+                    "Fluent 列表项缺少单层圆角选中表面");
+                return;
+            }
+
+            if (!ReferenceEquals(
+                    selected.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush"))
+                || !ReferenceEquals(
+                    chrome.Background,
+                    Application.Current.FindResource(
+                        "FocusAccentSoftBrush"))
+                || !ReferenceEquals(
+                    chrome.BorderBrush,
+                    Application.Current.FindResource(
+                        "FocusAccentBrush"))
+                || selected.FocusVisualStyle != null
+                || selected.MinHeight < 44)
+            {
+                failures.Add(
+                    "Fluent 列表选中态未使用动态前景、强调背景或最小点击区");
+                return;
+            }
+
+            results.Add(
+                "PASS Fluent 列表选中态文字、强调色与点击区");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"Fluent 列表加载失败：{ex}");
         }
     }
 

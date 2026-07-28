@@ -1000,6 +1000,11 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "MainWindow.xaml"));
         string codeBehind = File.ReadAllText(
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
         string viewModel = File.ReadAllText(
             Path.Combine(
                 root,
@@ -1052,11 +1057,14 @@ public sealed class XamlResourceContractTests
                 && (string?)element.Attribute("Foreground")
                     == "{DynamicResource FocusTextBrush}");
         Assert.Contains(
-            "<Trigger Property=\"IsSelected\" Value=\"True\">",
-            mainWindow);
+            "<Trigger Property=\"IsSelected\"",
+            theme);
         Assert.Contains(
-            "Value=\"{DynamicResource FocusSurfaceSoftBrush}\"",
-            mainWindow);
+            "Value=\"True\">",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusAccentSoftBrush}\"",
+            theme);
     }
 
     [Fact]
@@ -1214,6 +1222,86 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain(
             "IsEditable=\"True\"",
             mainWindow);
+    }
+
+    [Fact]
+    public void ListBoxes_UseOneReadableDynamicSelectionTheme()
+    {
+        string root = FindRepositoryRoot();
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string tasks = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "TasksView.xaml"));
+        int listItemStart = theme.IndexOf(
+            "x:Key=\"FocusListBoxItem\"",
+            StringComparison.Ordinal);
+        int listStart = theme.IndexOf(
+            "x:Key=\"FocusListBox\"",
+            listItemStart + 1,
+            StringComparison.Ordinal);
+        Assert.True(
+            listItemStart >= 0
+            && listStart > listItemStart);
+        string listItemTheme = theme[
+            listItemStart..listStart];
+
+        Assert.Contains(
+            "x:Key=\"FocusListBox\"",
+            theme);
+        Assert.Contains(
+            "x:Key=\"FocusListBoxItem\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusListBox}\"",
+            theme);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusListBoxItem}\"",
+            theme);
+        Assert.Contains(
+            "x:Name=\"ListItemChrome\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusAccentSoftBrush}\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusAccentBrush}\"",
+            theme);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusTextBrush}\"",
+            listItemTheme);
+        Assert.Matches(
+            "<Setter Property=\"FocusVisualStyle\""
+            + "\\s+Value=\"\\{x:Null\\}\"/>",
+            listItemTheme);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusListBox}\"",
+            mainWindow);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusListBoxItem}\"",
+            mainWindow);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusListBox}\"",
+            tasks);
+        Assert.Contains(
+            "BasedOn=\"{StaticResource FocusListBoxItem}\"",
+            tasks);
+        Assert.DoesNotContain(
+            "x:Name=\"ItemChrome\"",
+            mainWindow);
+        Assert.DoesNotContain(
+            "x:Name=\"Chrome\"",
+            tasks);
     }
 
     [Fact]

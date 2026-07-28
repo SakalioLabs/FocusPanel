@@ -12,44 +12,10 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
         <Style x:Key="TaskListItemStyle"
-               TargetType="ListBoxItem">
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+               TargetType="ListBoxItem"
+               BasedOn="{StaticResource FocusListBoxItem}">
             <Setter Property="Padding" Value="14,8"/>
             <Setter Property="Margin" Value="0,0,0,6"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FocusVisualStyle"
-                    Value="{StaticResource FocusRoundedKeyboardVisual}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Chrome"
-                                Padding="{TemplateBinding Padding}"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="{StaticResource FocusControlCornerRadius}">
-                            <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Chrome"
-                                        Property="Background"
-                                        Value="{DynamicResource FocusHoverBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Chrome"
-                                        Property="Background"
-                                        Value="{DynamicResource FocusSurfaceSoftBrush}"/>
-                                <Setter TargetName="Chrome"
-                                        Property="BorderBrush"
-                                        Value="{DynamicResource FocusStrokeBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
     </UserControl.Resources>
@@ -152,9 +118,7 @@
                 <ListBox ItemsSource="{Binding CurrentViewItems}"
                          SelectedItem="{Binding SelectedTask}"
                          ItemContainerStyle="{StaticResource TaskListItemStyle}"
-                         HorizontalContentAlignment="Stretch"
-                         Background="Transparent"
-                         BorderThickness="0"
+                         Style="{StaticResource FocusListBox}"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemTemplate>
                         <DataTemplate>

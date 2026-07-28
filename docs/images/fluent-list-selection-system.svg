@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="520" viewBox="0 0 1180 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111821"/>
+      <stop offset="1" stop-color="#1d2733"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+
+  <rect width="1180" height="520" rx="32" fill="url(#bg)"/>
+  <text x="62" y="72" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="30" font-weight="700">统一 Fluent 列表状态</text>
+  <text x="62" y="106" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="17">应用搜索与任务列表共享同一模板 · 主题文字、柔和强调色和键盘焦点不会回退系统默认</text>
+
+  <g transform="translate(62 146)" filter="url(#shadow)">
+    <rect width="512" height="310" rx="22" fill="#222c38" stroke="#fff" stroke-opacity=".12"/>
+    <text x="26" y="40" fill="#f5f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">深色主题</text>
+
+    <g transform="translate(24 60)">
+      <rect width="464" height="54" rx="10" fill="transparent" stroke="transparent"/>
+      <rect x="14" y="13" width="28" height="28" rx="8" fill="#344152"/>
+      <text x="28" y="33" text-anchor="middle" fill="#f5f7ff" font-family="Segoe UI" font-size="13" font-weight="600">F</text>
+      <text x="58" y="33" fill="#f5f7ff" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="15">FocusPanel</text>
+      <text x="412" y="33" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="12">普通</text>
+    </g>
+
+    <g transform="translate(24 122)">
+      <rect width="464" height="54" rx="10" fill="#ffffff" fill-opacity=".08"/>
+      <rect x="14" y="13" width="28" height="28" rx="8" fill="#344152"/>
+      <text x="28" y="33" text-anchor="middle" fill="#f5f7ff" font-family="Segoe UI" font-size="13" font-weight="600">E</text>
+      <text x="58" y="33" fill="#f5f7ff" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="15">文件资源管理器</text>
+      <text x="412" y="33" fill="#aeb5c8" font-family="Segoe UI, Microsoft YaHei" font-size="12">悬停</text>
+    </g>
+
+    <g transform="translate(24 184)">
+      <rect x=".5" y=".5" width="463" height="53" rx="10" fill="#168bd5" fill-opacity=".22" stroke="#168bd5"/>
+      <rect x="14" y="13" width="28" height="28" rx="8" fill="#168bd5"/>
+      <text x="28" y="33" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="13" font-weight="600">P</text>
+      <text x="58" y="33" fill="#f5f7ff" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="15">packages · 文件资源管理器</text>
+      <text x="412" y="33" fill="#9fd5ff" font-family="Segoe UI, Microsoft YaHei" font-size="12">选中</text>
+    </g>
+
+    <g transform="translate(24 246)">
+      <rect x="1" y="1" width="462" height="52" rx="10" fill="#168bd5" fill-opacity=".22" stroke="#69bdf2" stroke-width="2"/>
+      <text x="18" y="33" fill="#f5f7ff" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="15">键盘焦点仍在同一个圆角表面</text>
+      <text x="412" y="33" fill="#9fd5ff" font-family="Segoe UI, Microsoft YaHei" font-size="12">焦点</text>
+    </g>
+  </g>
+
+  <g transform="translate(606 146)" filter="url(#shadow)">
+    <rect width="512" height="310" rx="22" fill="#eef3f8" stroke="#172130" stroke-opacity=".12"/>
+    <text x="26" y="40" fill="#172130" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">浅色主题</text>
+
+    <g transform="translate(24 60)">
+      <rect width="464" height="54" rx="10" fill="#fff"/>
+      <text x="18" y="33" fill="#172130" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="15">普通任务</text>
+      <text x="412" y="33" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="12">普通</text>
+    </g>
+
+    <g transform="translate(24 122)">
+      <rect width="464" height="54" rx="10" fill="#172130" fill-opacity=".06"/>
+      <text x="18" y="33" fill="#172130" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="15">鼠标经过的任务</text>
+      <text x="412" y="33" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="12">悬停</text>
+    </g>
+
+    <g transform="translate(24 184)">
+      <rect x=".5" y=".5" width="463" height="53" rx="10" fill="#006fc4" fill-opacity=".13" stroke="#006fc4"/>
+      <text x="18" y="33" fill="#172130" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="15">当前选中的任务</text>
+      <text x="412" y="33" fill="#006fc4" font-family="Segoe UI, Microsoft YaHei" font-size="12">选中</text>
+    </g>
+
+    <g transform="translate(24 246)">
+      <rect width="464" height="40" rx="10" fill="#172130" fill-opacity=".04"/>
+      <text x="18" y="26" fill="#667085" font-family="Segoe UI Variable Text, Microsoft YaHei" font-size="14">禁用项保持可辨识，但不会伪装成可操作</text>
+      <text x="412" y="26" fill="#667085" font-family="Segoe UI, Microsoft YaHei" font-size="12">38%</text>
+    </g>
+  </g>
+</svg>

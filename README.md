@@ -19,7 +19,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 键盘导航使用统一的 2px Fluent 圆角焦点环，轮廓只在键盘操作时出现，不给鼠标点击增加常驻边框；高对比度模式跟随 Windows 系统高亮色。
 - 固定应用与运行应用按 Windows AppUserModelID 或可执行路径合并为单一任务栏图标；固定项保持用户顺序，未固定运行项保持本次运行中的稳定顺序。
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
-- 搜索结果的列表、启动按钮和标题全部显式使用动态 `FocusTextBrush`；键盘选中使用现有 `FocusSurfaceSoftBrush`，不再落回 WPF 的系统蓝色选择背景，因此深色、浅色及系统强调色变化下都保持可读。
+- 搜索结果和任务列表统一继承全局 Fluent `ListBox/ListBoxItem`：启动按钮与标题显式使用动态 `FocusTextBrush`，选中项使用 `FocusAccentSoftBrush`、强调描边和主题文字，不再落回 WPF 的系统浅蓝选择背景，因此深色、浅色及系统强调色变化下都保持可读。
 - 开始菜单快捷方式、`shell:AppsFolder` 和应用身份解析在可取消的 STA 后台线程构建；Panel 壳层不再等待完整目录扫描才响应鼠标与键盘。
 - 搜索和固定项会先显示名称与首字符占位，再由单一后台队列按需加载真实图标；Shell 图标提供器响应缓慢时不会卡住搜索输入。索引期间显示“正在载入应用目录”，完成但无匹配项时显示明确空状态。
 - 打开搜索后会立即聚焦并全选搜索框；无需离开键盘即可用上下方向键选择结果、回车启动，`Esc` 关闭后焦点返回紧凑栏搜索入口。应用目录在后台补全时会按稳定身份保留当前选择，不会把光标跳回第一项。
@@ -97,6 +97,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![统一 Fluent 选择状态](docs/images/fluent-selection-system.svg)
 
 ![动态状态色令牌](docs/images/fluent-state-tokens.svg)
+
+![统一 Fluent 列表状态](docs/images/fluent-list-selection-system.svg)
 
 ### 两个中心
 
