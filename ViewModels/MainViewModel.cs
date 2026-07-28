@@ -79,6 +79,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string searchQuery = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(AppSearchStatusText))]
+    [NotifyPropertyChangedFor(
+        nameof(IsAppSearchStatusVisible))]
+    private bool isAppCatalogLoading;
+
+    [ObservableProperty]
     private bool isSearchOpen;
 
     [ObservableProperty]
@@ -197,6 +204,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _systemStatus = systemStatus;
         _updateService = updateService;
         _desktopVisibility = new WindowsDesktopItemVisibilityService();
+        IsAppCatalogLoading = _appCatalog.IsIndexing;
 
         CurrentTime = DateTime.Now;
         DisplayedCalendarMonth = new DateTime(
@@ -251,6 +259,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<AppLaunchItem> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+    public string AppSearchStatusText =>
+        IsAppCatalogLoading
+            ? "正在载入应用目录…"
+            : "没有找到匹配的应用";
+    public bool IsAppSearchStatusVisible =>
+        SearchResults.Count == 0;
     public ObservableCollection<CalendarDayItem> CalendarDays
     {
         get;
@@ -931,6 +945,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void RefreshSearchResults()
     {
         ReplaceCollection(SearchResults, _appCatalog.Search(SearchQuery));
+        OnPropertyChanged(
+            nameof(IsAppSearchStatusVisible));
+        OnPropertyChanged(
+            nameof(AppSearchStatusText));
     }
 
     private void OnWindowSnapshotChanged(object? sender, EventArgs e) => RefreshTaskbarApps();
@@ -946,6 +964,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnCatalogChanged(object? sender, EventArgs e)
     {
+        IsAppCatalogLoading = _appCatalog.IsIndexing;
         RefreshTaskbarApps();
         RefreshSearchResults();
     }

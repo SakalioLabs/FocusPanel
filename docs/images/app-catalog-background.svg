@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1722"/>
+      <stop offset="1" stop-color="#1d2b38"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#8fc5e8" stop-opacity=".06"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="500" rx="30" fill="url(#bg)"/>
+  <circle cx="110" cy="40" r="190" fill="#087ccb" opacity=".14"/>
+  <circle cx="1080" cy="470" r="240" fill="#55b7dd" opacity=".09"/>
+  <text x="66" y="66" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="31" font-weight="650">Panel 先响应，应用目录随后就绪</text>
+  <text x="66" y="104" fill="#adbdcc" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="17">目录索引、身份解析和图标读取均不占用 WPF UI 线程</text>
+
+  <g transform="translate(66 148)" filter="url(#shadow)">
+    <rect width="294" height="278" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="46" cy="48" r="20" fill="#1387d0"/>
+    <path d="M38 40h16v16H38z" fill="#fff" opacity=".92"/>
+    <text x="78" y="45" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="18" font-weight="650">WPF UI 线程</text>
+    <text x="78" y="68" fill="#8fd3ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">立即可交互</text>
+    <rect x="24" y="92" width="246" height="48" rx="12" fill="#fff" fill-opacity=".07"/>
+    <text x="44" y="122" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="16">呼出 · 输入 · 点击</text>
+    <rect x="24" y="152" width="246" height="44" rx="12" fill="#fff" fill-opacity=".035"/>
+    <text x="44" y="180" fill="#adbdcc" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">正在载入应用目录…</text>
+    <rect x="24" y="208" width="38" height="38" rx="9" fill="#fff" fill-opacity=".10"/>
+    <text x="43" y="233" text-anchor="middle" fill="#65bdf3" font-family="Segoe UI Variable, sans-serif" font-size="17" font-weight="650">F</text>
+    <text x="76" y="232" fill="#f5f8ff" font-family="Segoe UI Variable, sans-serif" font-size="15">名称与占位先显示</text>
+  </g>
+
+  <g transform="translate(406 148)">
+    <path d="M0 139h74" stroke="#64bdf3" stroke-width="2"/>
+    <path d="m66 132 8 7-8 7" fill="none" stroke="#64bdf3" stroke-width="2"/>
+    <text x="37" y="122" text-anchor="middle" fill="#8fd3ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="13">增量提交</text>
+  </g>
+
+  <g transform="translate(498 148)" filter="url(#shadow)">
+    <rect width="294" height="278" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="46" cy="48" r="20" fill="#fff" fill-opacity=".10"/>
+    <path d="M37 41h18M37 48h18M37 55h12" stroke="#8fd3ff" stroke-width="2"/>
+    <text x="78" y="45" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="18" font-weight="650">目录 STA 线程</text>
+    <text x="78" y="68" fill="#adbdcc" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">可取消 · 新结果优先</text>
+    <g fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">
+      <text x="30" y="116">用户开始菜单</text>
+      <text x="30" y="154">公共开始菜单</text>
+      <text x="30" y="192">shell:AppsFolder</text>
+      <text x="30" y="230">AppUserModelID / 路径身份</text>
+    </g>
+    <g fill="#57c995">
+      <circle cx="264" cy="111" r="5"/>
+      <circle cx="264" cy="149" r="5"/>
+      <circle cx="264" cy="187" r="5"/>
+      <circle cx="264" cy="225" r="5"/>
+    </g>
+  </g>
+
+  <g transform="translate(816 148)">
+    <path d="M0 139h50" stroke="#64bdf3" stroke-width="2"/>
+    <path d="m42 132 8 7-8 7" fill="none" stroke="#64bdf3" stroke-width="2"/>
+  </g>
+
+  <g transform="translate(884 148)" filter="url(#shadow)">
+    <rect width="250" height="278" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="46" cy="48" r="20" fill="#fff" fill-opacity=".10"/>
+    <path d="M38 40h16v16H38z" fill="#8fd3ff" opacity=".9"/>
+    <text x="78" y="45" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="18" font-weight="650">图标 STA 队列</text>
+    <text x="78" y="68" fill="#adbdcc" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">12 项批次</text>
+    <rect x="24" y="96" width="202" height="44" rx="12" fill="#fff" fill-opacity=".055"/>
+    <text x="42" y="124" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">合并重复路径</text>
+    <rect x="24" y="152" width="202" height="44" rx="12" fill="#fff" fill-opacity=".055"/>
+    <text x="42" y="180" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">缓存成功图标</text>
+    <rect x="24" y="208" width="202" height="44" rx="12" fill="#fff" fill-opacity=".055"/>
+    <text x="42" y="236" fill="#f5f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">失败不循环重试</text>
+  </g>
+</svg>

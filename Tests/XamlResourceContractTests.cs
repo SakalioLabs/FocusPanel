@@ -649,6 +649,46 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void AppSearch_ShowsBackgroundLoadingAndEmptyStates()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        string catalog = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "AppCatalogService.cs"));
+
+        Assert.Contains(
+            "x:Name=\"SearchResultsList\"",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding AppSearchStatusText}\"",
+            mainWindow);
+        Assert.Contains(
+            "Visibility=\"{Binding IsAppSearchStatusVisible",
+            mainWindow);
+        Assert.Contains(
+            "正在载入应用目录…",
+            viewModel);
+        Assert.Contains(
+            "没有找到匹配的应用",
+            viewModel);
+        Assert.Contains(
+            "Name = \"FocusPanel.AppCatalog\"",
+            catalog);
+        Assert.Contains(
+            "Name = \"FocusPanel.AppIcons\"",
+            catalog);
+    }
+
+    [Fact]
     public void WindowClosing_UsesWmCloseWithoutProcessTermination()
     {
         string root = FindRepositoryRoot();

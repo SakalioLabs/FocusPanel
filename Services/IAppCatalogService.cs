@@ -7,6 +7,7 @@ namespace FocusPanel.Services;
 public interface IAppCatalogService : IDisposable
 {
     event EventHandler? CatalogChanged;
+    bool IsIndexing { get; }
     IReadOnlyList<AppLaunchItem> Search(string query, int limit = 24);
     IReadOnlyList<AppLaunchItem> GetPinned();
     void Launch(AppLaunchItem app);

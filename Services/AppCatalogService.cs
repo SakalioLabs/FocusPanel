@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows;
+using System.Windows.Media;
 using FocusPanel.Data;
-using FocusPanel.Helpers;
 using FocusPanel.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,65 +16,82 @@ public sealed class AppCatalogService : IAppCatalogService
 {
     private readonly List<AppLaunchItem> _catalog = new();
     private readonly object _catalogLock = new();
+    private readonly object _indexLock = new();
+    private readonly object _iconLock = new();
     private readonly IAppIdentityResolver _identityResolver;
-    private Thread? _shellIndexThread;
+    private readonly IAppCatalogSource _catalogSource;
+    private readonly IAppIconSource _iconSource;
+    private readonly Func<IReadOnlyList<PinnedApp>>
+        _pinnedLoader;
+    private readonly Queue<string> _iconQueue = new();
+    private readonly Dictionary<string, List<AppLaunchItem>>
+        _iconWaiters =
+            new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, ImageSource>
+        _loadedIcons =
+            new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _failedIconKeys =
+        new(StringComparer.OrdinalIgnoreCase);
+    private CancellationTokenSource? _indexCancellation;
+    private volatile bool _isIndexing;
+    private volatile bool _disposed;
+    private bool _iconWorkerRunning;
 
-    public AppCatalogService() : this(new AppIdentityResolver())
+    public AppCatalogService() : this(
+        new AppIdentityResolver(),
+        new WindowsAppCatalogSource(),
+        new WindowsAppIconSource(),
+        LoadPinnedEntities)
     {
     }
 
-    internal AppCatalogService(IAppIdentityResolver identityResolver)
+    internal AppCatalogService(
+        IAppIdentityResolver identityResolver) : this(
+        identityResolver,
+        new WindowsAppCatalogSource(),
+        new WindowsAppIconSource(),
+        LoadPinnedEntities)
+    {
+    }
+
+    internal AppCatalogService(
+        IAppIdentityResolver identityResolver,
+        IAppCatalogSource catalogSource,
+        IAppIconSource iconSource,
+        Func<IReadOnlyList<PinnedApp>> pinnedLoader)
     {
         _identityResolver = identityResolver;
+        _catalogSource = catalogSource;
+        _iconSource = iconSource;
+        _pinnedLoader = pinnedLoader;
         Refresh();
-        StartShellAppsIndex();
     }
 
     public event EventHandler? CatalogChanged;
+    public bool IsIndexing => _isIndexing;
 
     public void Refresh()
     {
-        var candidates = new Dictionary<string, AppLaunchItem>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (string root in GetStartMenuRoots())
+        CancellationTokenSource cancellation;
+        lock (_indexLock)
         {
-            if (!Directory.Exists(root))
-                continue;
-
-            foreach (string shortcut in SafeEnumerateShortcuts(root))
-            {
-                string displayName = Path.GetFileNameWithoutExtension(shortcut);
-                if (string.IsNullOrWhiteSpace(displayName))
-                    continue;
-
-                candidates.TryAdd(
-                    shortcut,
-                    new AppLaunchItem
-                    {
-                        DisplayName = displayName,
-                        LaunchKind = AppLaunchKind.Shortcut,
-                        LaunchTarget = shortcut,
-                        IconKey = shortcut
-                    });
-            }
+            if (_disposed)
+                return;
+            _indexCancellation?.Cancel();
+            cancellation = new CancellationTokenSource();
+            _indexCancellation = cancellation;
+            _isIndexing = true;
         }
 
-        var pinnedKeys = LoadPinnedEntities()
-            .Select(BuildKey)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        foreach (AppLaunchItem app in candidates.Values)
-            EnsureIdentity(app);
-
-        lock (_catalogLock)
+        RaiseCatalogChanged();
+        var thread = new Thread(
+            () => BuildCatalog(cancellation))
         {
-            _catalog.Clear();
-            foreach (var app in candidates.Values.OrderBy(item => item.DisplayName, StringComparer.CurrentCultureIgnoreCase))
-            {
-                app.IsPinned = pinnedKeys.Contains(BuildKey(app));
-                _catalog.Add(app);
-            }
-        }
+            IsBackground = true,
+            Name = "FocusPanel.AppCatalog"
+        };
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
     }
 
     public IReadOnlyList<AppLaunchItem> Search(string query, int limit = 24)
@@ -98,15 +115,15 @@ public sealed class AppCatalogService : IAppCatalogService
             .ThenBy(app => app.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .Take(limit)
             .ToList();
-        foreach (AppLaunchItem item in results)
-            EnsureIcon(item);
+        QueueIconLoads(results);
         return results;
     }
 
     public IReadOnlyList<AppLaunchItem> GetPinned()
     {
-        var entities = LoadPinnedEntities();
-        return entities
+        IReadOnlyList<PinnedApp> entities =
+            _pinnedLoader();
+        List<AppLaunchItem> results = entities
             .OrderBy(item => item.OrderIndex)
             .Select(entity =>
             {
@@ -116,13 +133,12 @@ public sealed class AppCatalogService : IAppCatalogService
                     catalogItem = _catalog.FirstOrDefault(item =>
                         string.Equals(BuildKey(item), BuildKey(entity), StringComparison.OrdinalIgnoreCase));
                 }
-                if (catalogItem != null)
-                    EnsureIcon(catalogItem);
                 AppLaunchItem result = catalogItem ?? ToLaunchItem(entity);
-                EnsureIdentity(result);
                 return result;
             })
             .ToList();
+        QueueIconLoads(results);
+        return results;
     }
 
     public void Launch(AppLaunchItem app)
@@ -185,12 +201,6 @@ public sealed class AppCatalogService : IAppCatalogService
         context.SaveChanges();
     }
 
-    private static IEnumerable<string> GetStartMenuRoots()
-    {
-        yield return Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
-        yield return Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu);
-    }
-
     internal static IEnumerable<string> SafeEnumerateShortcuts(string root)
     {
         var pending = new Stack<string>();
@@ -227,47 +237,6 @@ public sealed class AppCatalogService : IAppCatalogService
         }
     }
 
-    private static IEnumerable<AppLaunchItem> EnumerateShellApps()
-    {
-        object? shellObject = null;
-        try
-        {
-            Type? shellType = Type.GetTypeFromProgID("Shell.Application");
-            if (shellType == null)
-                yield break;
-
-            shellObject = Activator.CreateInstance(shellType);
-            if (shellObject == null)
-                yield break;
-
-            dynamic shell = shellObject;
-            dynamic folder = shell.NameSpace("shell:AppsFolder");
-            if (folder == null)
-                yield break;
-
-            foreach (dynamic item in folder.Items())
-            {
-                string name = item.Name as string ?? string.Empty;
-                string path = item.Path as string ?? string.Empty;
-                if (name.Length == 0 || path.Length == 0)
-                    continue;
-
-                yield return new AppLaunchItem
-                {
-                    DisplayName = name,
-                    LaunchKind = AppLaunchKind.ShellApp,
-                    LaunchTarget = path,
-                    IconKey = path
-                };
-            }
-        }
-        finally
-        {
-            if (shellObject != null && System.Runtime.InteropServices.Marshal.IsComObject(shellObject))
-                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shellObject);
-        }
-    }
-
     private static List<PinnedApp> LoadPinnedEntities()
     {
         using var context = new AppDbContext();
@@ -281,15 +250,9 @@ public sealed class AppCatalogService : IAppCatalogService
         LaunchTarget = entity.LaunchTarget,
         Arguments = entity.Arguments,
         IconKey = entity.IconKey,
-        Icon = IconHelper.GetIcon(entity.IconKey ?? entity.LaunchTarget),
+        IdentityKey = BuildDeferredIdentity(entity),
         IsPinned = true
     };
-
-    private static void EnsureIcon(AppLaunchItem item)
-    {
-        if (item.Icon == null)
-            item.Icon = IconHelper.GetIcon(item.IconKey ?? item.LaunchTarget);
-    }
 
     private void EnsureIdentity(AppLaunchItem item)
     {
@@ -297,46 +260,300 @@ public sealed class AppCatalogService : IAppCatalogService
             item.IdentityKey = _identityResolver.ResolveLaunch(item).Key;
     }
 
-    private void StartShellAppsIndex()
+    private void BuildCatalog(
+        CancellationTokenSource cancellation)
     {
-        _shellIndexThread = new Thread(() =>
+        try
         {
-            List<AppLaunchItem> shellApps;
+            var candidates =
+                new Dictionary<string, AppLaunchItem>(
+                    StringComparer.OrdinalIgnoreCase);
+            AddCandidates(
+                candidates,
+                _catalogSource.EnumerateStartMenuApps(),
+                cancellation.Token);
+            AddCandidates(
+                candidates,
+                _catalogSource.EnumerateShellApps(),
+                cancellation.Token);
+            cancellation.Token.ThrowIfCancellationRequested();
+
+            IReadOnlyList<PinnedApp> pinnedApps;
             try
             {
-                shellApps = EnumerateShellApps().ToList();
-                foreach (AppLaunchItem app in shellApps)
-                    EnsureIdentity(app);
+                pinnedApps = _pinnedLoader();
             }
             catch
             {
-                shellApps = new List<AppLaunchItem>();
+                pinnedApps = Array.Empty<PinnedApp>();
             }
 
-            if (shellApps.Count == 0)
-                return;
-
-            lock (_catalogLock)
+            foreach (PinnedApp pinned in pinnedApps)
             {
-                var existing = _catalog
-                    .Select(item => item.LaunchTarget)
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
-                foreach (AppLaunchItem app in shellApps)
+                cancellation.Token.ThrowIfCancellationRequested();
+                string key = BuildKey(pinned);
+                if (candidates.ContainsKey(key))
+                    continue;
+                try
                 {
-                    if (existing.Add(app.LaunchTarget))
-                        _catalog.Add(app);
+                    AppLaunchItem app = ToLaunchItem(pinned);
+                    EnsureIdentity(app);
+                    candidates.TryAdd(key, app);
+                }
+                catch
+                {
+                    // A stale pin remains launchable through GetPinned,
+                    // even if its identity can no longer be resolved.
+                }
+            }
+            HashSet<string> pinnedKeys = pinnedApps
+                .Select(BuildKey)
+                .ToHashSet(
+                    StringComparer.OrdinalIgnoreCase);
+
+            List<AppLaunchItem> ordered = candidates.Values
+                .OrderBy(
+                    item => item.DisplayName,
+                    StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+            foreach (AppLaunchItem app in ordered)
+                app.IsPinned = pinnedKeys.Contains(BuildKey(app));
+
+            lock (_indexLock)
+            {
+                if (_disposed
+                    || !ReferenceEquals(
+                        _indexCancellation,
+                        cancellation)
+                    || cancellation.IsCancellationRequested)
+                {
+                    return;
+                }
+                lock (_catalogLock)
+                {
+                    _catalog.Clear();
+                    _catalog.AddRange(ordered);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch
+        {
+            // Keep the last valid catalog. The search surface will leave
+            // its loading state instead of blocking the WPF dispatcher.
+        }
+        finally
+        {
+            bool notify = false;
+            lock (_indexLock)
+            {
+                if (!_disposed
+                    && ReferenceEquals(
+                        _indexCancellation,
+                        cancellation))
+                {
+                    _indexCancellation = null;
+                    _isIndexing = false;
+                    notify = true;
+                }
+            }
+            cancellation.Dispose();
+            if (notify)
+                RaiseCatalogChanged();
+        }
+    }
+
+    private void AddCandidates(
+        IDictionary<string, AppLaunchItem> destination,
+        IEnumerable<AppLaunchItem> candidates,
+        CancellationToken cancellationToken)
+    {
+        foreach (AppLaunchItem candidate in candidates)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                EnsureIdentity(candidate);
+                destination.TryAdd(
+                    BuildKey(candidate),
+                    candidate);
+            }
+            catch
+            {
+                // A broken shortcut must not abort the remaining catalog.
+            }
+        }
+    }
+
+    private void QueueIconLoads(
+        IEnumerable<AppLaunchItem> items)
+    {
+        bool startWorker = false;
+        foreach (AppLaunchItem item in items)
+        {
+            if (item.Icon != null)
+                continue;
+            string key =
+                item.IconKey ?? item.LaunchTarget;
+            if (string.IsNullOrWhiteSpace(key))
+                continue;
+
+            ImageSource? cached = null;
+            lock (_iconLock)
+            {
+                if (_disposed)
+                    return;
+                if (_loadedIcons.TryGetValue(key, out cached))
+                {
+                    // Applied below on the caller's thread.
+                }
+                else if (!_failedIconKeys.Contains(key))
+                {
+                    if (!_iconWaiters.TryGetValue(
+                            key,
+                            out List<AppLaunchItem>? waiters))
+                    {
+                        waiters = new List<AppLaunchItem>();
+                        _iconWaiters.Add(key, waiters);
+                        _iconQueue.Enqueue(key);
+                    }
+                    if (!waiters.Contains(item))
+                        waiters.Add(item);
+                    if (!_iconWorkerRunning)
+                    {
+                        _iconWorkerRunning = true;
+                        startWorker = true;
+                    }
                 }
             }
 
-            Application.Current?.Dispatcher.BeginInvoke(() =>
-                CatalogChanged?.Invoke(this, EventArgs.Empty));
-        })
+            if (cached != null)
+                item.Icon = cached;
+        }
+
+        if (startWorker)
+            StartIconWorker();
+    }
+
+    private void StartIconWorker()
+    {
+        var thread = new Thread(LoadQueuedIcons)
         {
             IsBackground = true,
-            Name = "FocusPanel.AppCatalog"
+            Name = "FocusPanel.AppIcons"
         };
-        _shellIndexThread.SetApartmentState(ApartmentState.STA);
-        _shellIndexThread.Start();
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+    }
+
+    private void LoadQueuedIcons()
+    {
+        while (true)
+        {
+            var batch = new List<string>(12);
+            lock (_iconLock)
+            {
+                if (_disposed)
+                {
+                    _iconWorkerRunning = false;
+                    return;
+                }
+                while (batch.Count < 12
+                       && _iconQueue.Count > 0)
+                {
+                    batch.Add(_iconQueue.Dequeue());
+                }
+                if (batch.Count == 0)
+                {
+                    _iconWorkerRunning = false;
+                    return;
+                }
+            }
+
+            var loaded =
+                new List<(
+                    ImageSource Icon,
+                    List<AppLaunchItem> Waiters)>();
+            foreach (string key in batch)
+            {
+                ImageSource? icon = null;
+                try
+                {
+                    icon = _iconSource.Load(key);
+                    icon?.Freeze();
+                }
+                catch
+                {
+                    icon = null;
+                }
+
+                List<AppLaunchItem> waiters;
+                lock (_iconLock)
+                {
+                    if (!_iconWaiters.Remove(
+                            key,
+                            out waiters!))
+                    {
+                        continue;
+                    }
+                    if (icon == null)
+                        _failedIconKeys.Add(key);
+                    else
+                        _loadedIcons[key] = icon;
+                }
+                if (icon != null)
+                    loaded.Add((icon, waiters));
+            }
+
+            if (loaded.Count == 0)
+                continue;
+            Dispatch(() =>
+            {
+                if (_disposed)
+                    return;
+                foreach (var result in loaded)
+                {
+                    foreach (AppLaunchItem item
+                             in result.Waiters)
+                    {
+                        item.Icon = result.Icon;
+                    }
+                }
+                CatalogChanged?.Invoke(
+                    this,
+                    EventArgs.Empty);
+            });
+        }
+    }
+
+    private void RaiseCatalogChanged() =>
+        Dispatch(() =>
+        {
+            if (!_disposed)
+            {
+                CatalogChanged?.Invoke(
+                    this,
+                    EventArgs.Empty);
+            }
+        });
+
+    private static void Dispatch(Action action)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher != null
+            && !dispatcher.CheckAccess())
+        {
+            if (dispatcher.HasShutdownStarted
+                || dispatcher.HasShutdownFinished)
+            {
+                return;
+            }
+            dispatcher.BeginInvoke(action);
+            return;
+        }
+        action();
     }
 
     private static string BuildKey(AppLaunchItem item) =>
@@ -345,8 +562,42 @@ public sealed class AppCatalogService : IAppCatalogService
     private static string BuildKey(PinnedApp item) =>
         $"{(int)item.LaunchKind}|{item.LaunchTarget}|{item.Arguments}";
 
+    private static string BuildDeferredIdentity(
+        PinnedApp item)
+    {
+        string? resolved = item.LaunchKind switch
+        {
+            AppLaunchKind.ShellApp =>
+                AppIdentityResolver.BuildKey(
+                    item.LaunchTarget,
+                    null),
+            AppLaunchKind.Executable =>
+                AppIdentityResolver.BuildKey(
+                    null,
+                    item.LaunchTarget),
+            _ => null
+        };
+        return resolved
+            ?? $"launch:{(int)item.LaunchKind}:"
+            + $"{item.LaunchTarget.Trim().ToLowerInvariant()}:"
+            + $"{item.Arguments?.Trim().ToLowerInvariant() ?? string.Empty}";
+    }
+
     public void Dispose()
     {
-        _shellIndexThread = null;
+        lock (_indexLock)
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
+            _isIndexing = false;
+            _indexCancellation?.Cancel();
+            _indexCancellation = null;
+        }
+        lock (_iconLock)
+        {
+            _iconQueue.Clear();
+            _iconWaiters.Clear();
+        }
     }
 }
