@@ -545,10 +545,26 @@
                             <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE721;"/>
                         </Button>
 
-                        <ScrollViewer Grid.Row="1"
-                                      VerticalScrollBarVisibility="Hidden"
-                                      HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel>
+                        <Grid Grid.Row="1">
+                            <Button x:Name="TaskbarScrollUpButton"
+                                    Panel.ZIndex="2"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Height="28"
+                                    VerticalAlignment="Top"
+                                    Margin="0,2,0,0"
+                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                    Visibility="Collapsed"
+                                    Click="TaskbarScrollUpButton_Click"
+                                    ToolTip="查看上方应用">
+                                <TextBlock Style="{StaticResource FocusIconText}"
+                                           FontSize="12"
+                                           Text="&#xE70E;"/>
+                            </Button>
+
+                            <ScrollViewer x:Name="TaskbarAppsScrollViewer"
+                                          VerticalScrollBarVisibility="Hidden"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          ScrollChanged="TaskbarAppsScrollViewer_ScrollChanged">
                                 <ItemsControl ItemsSource="{Binding TaskbarApps}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -596,9 +612,23 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                            </ScrollViewer>
 
-                            </StackPanel>
-                        </ScrollViewer>
+                            <Button x:Name="TaskbarScrollDownButton"
+                                    Panel.ZIndex="2"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Height="28"
+                                    VerticalAlignment="Bottom"
+                                    Margin="0,0,0,2"
+                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                    Visibility="Collapsed"
+                                    Click="TaskbarScrollDownButton_Click"
+                                    ToolTip="查看下方应用">
+                                <TextBlock Style="{StaticResource FocusIconText}"
+                                           FontSize="12"
+                                           Text="&#xE70D;"/>
+                            </Button>
+                        </Grid>
 
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>

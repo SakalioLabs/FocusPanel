@@ -232,6 +232,29 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void CompactDock_ShowsNavigationWhenApplicationListOverflows()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+
+        Assert.Contains("x:Name=\"TaskbarAppsScrollViewer\"", mainWindow);
+        Assert.Contains("x:Name=\"TaskbarScrollUpButton\"", mainWindow);
+        Assert.Contains("x:Name=\"TaskbarScrollDownButton\"", mainWindow);
+        Assert.Contains(
+            "ScrollChanged=\"TaskbarAppsScrollViewer_ScrollChanged\"",
+            mainWindow);
+        Assert.Contains(
+            "CompactTaskbarScrollPolicy.GetState",
+            codeBehind);
+        Assert.Contains(
+            "TaskbarAppsScrollViewer.ScrollToVerticalOffset",
+            codeBehind);
+    }
+
+    [Fact]
     public void ShellAutoHide_WaitsForMenusPopupsAndMouseCapture()
     {
         string root = FindRepositoryRoot();

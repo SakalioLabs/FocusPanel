@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private const double CompactWidth = 76;
     private const double ExpandedWidth = 720;
     private const double ScreenMargin = 12;
+    private const double CompactTaskbarScrollStep = 46;
     private const int DwmaUseImmersiveDarkMode = 20;
     private const int DwmaWindowCornerPreference = 33;
     private const int DwmaBorderColor = 34;
@@ -427,6 +428,49 @@ public partial class MainWindow : Window
     {
         ExpandSidebar();
         _viewModel.ToggleCalendarCommand.Execute(null);
+    }
+
+    private void TaskbarAppsScrollViewer_ScrollChanged(
+        object sender,
+        ScrollChangedEventArgs e)
+    {
+        UpdateTaskbarOverflowControls();
+    }
+
+    private void TaskbarScrollUpButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        TaskbarAppsScrollViewer.ScrollToVerticalOffset(
+            Math.Max(
+                0,
+                TaskbarAppsScrollViewer.VerticalOffset
+                    - CompactTaskbarScrollStep));
+    }
+
+    private void TaskbarScrollDownButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        TaskbarAppsScrollViewer.ScrollToVerticalOffset(
+            Math.Min(
+                TaskbarAppsScrollViewer.ScrollableHeight,
+                TaskbarAppsScrollViewer.VerticalOffset
+                    + CompactTaskbarScrollStep));
+    }
+
+    private void UpdateTaskbarOverflowControls()
+    {
+        CompactTaskbarScrollState state =
+            CompactTaskbarScrollPolicy.GetState(
+                TaskbarAppsScrollViewer.VerticalOffset,
+                TaskbarAppsScrollViewer.ScrollableHeight);
+        TaskbarScrollUpButton.Visibility = state.CanScrollUp
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        TaskbarScrollDownButton.Visibility = state.CanScrollDown
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
