@@ -54,7 +54,8 @@
                         MenuActivation="LeftOrRightClick"
                         DoubleClickCommand="{Binding ShowWindowCommand}">
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Opened="TransientContextMenu_Opened"
+                <ContextMenu Style="{StaticResource FocusContextMenu}"
+                             Opened="TransientContextMenu_Opened"
                              Closed="TransientContextMenu_Closed">
                     <MenuItem Header="显示 FocusPanel" Command="{Binding ShowWindowCommand}"/>
                     <MenuItem Header="恢复原任务栏设置" Command="{Binding DisableReplacementCommand}"/>
@@ -610,132 +611,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <Button x:Name="SearchButton"
-                                Grid.Row="0"
-                                Tag="CompactFixedEntry"
-                                Style="{StaticResource FocusIconButton}"
-                                Click="SearchButton_Click"
-                                Command="{Binding ToggleSearchCommand}"
-                                AutomationProperties.Name="搜索应用"
-                                ToolTip="启动应用">
-                            <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE721;"/>
-                        </Button>
-
-                        <Grid Grid.Row="1">
-                            <Button x:Name="TaskbarScrollUpButton"
-                                    Panel.ZIndex="2"
-                                    Style="{StaticResource FocusIconButton}"
-                                    Height="28"
-                                    VerticalAlignment="Top"
-                                    Margin="0,2,0,0"
-                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
-                                    Visibility="Collapsed"
-                                    Click="TaskbarScrollUpButton_Click"
-                                    AutomationProperties.Name="查看上方应用"
-                                    ToolTip="查看上方应用">
-                                <TextBlock Style="{StaticResource FocusIconText}"
-                                           FontSize="12"
-                                           Text="&#xE70E;"/>
-                            </Button>
-
-                            <ScrollViewer x:Name="TaskbarAppsScrollViewer"
-                                          VerticalScrollBarVisibility="Hidden"
-                                          HorizontalScrollBarVisibility="Disabled"
-                                          Focusable="False"
-                                          ScrollChanged="TaskbarAppsScrollViewer_ScrollChanged">
-                                <ItemsControl ItemsSource="{Binding TaskbarApps}"
-                                              KeyboardNavigation.DirectionalNavigation="Continue">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid>
-                                                <Button Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        AllowDrop="True"
-                                                        PreviewMouseDown="TaskbarApp_PreviewMouseDown"
-                                                        PreviewMouseLeftButtonDown="TaskbarApp_PreviewMouseLeftButtonDown"
-                                                        PreviewMouseMove="TaskbarApp_PreviewMouseMove"
-                                                        DragOver="TaskbarApp_DragOver"
-                                                        Drop="TaskbarApp_Drop"
-                                                        Click="TaskbarApp_Click"
-                                                        AutomationProperties.Name="{Binding AccessibleName}"
-                                                        AutomationProperties.HelpText="{Binding InteractionHint}"
-                                                        ContextMenuOpening="TaskbarApp_ContextMenuOpening">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button"
-                                                               BasedOn="{StaticResource FocusIconButton}">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                    <Setter Property="Background"
-                                                                            Value="{DynamicResource FocusSurfaceSoftBrush}"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                    <Button.ToolTip>
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding DisplayName}"
-                                                                       Style="{StaticResource FocusCardTitleText}"/>
-                                                            <TextBlock Text="{Binding StatusSummary}"
-                                                                       Style="{StaticResource FocusMetaText}"/>
-                                                            <TextBlock Text="{Binding InteractionHint}"
-                                                                       Style="{StaticResource FocusCaptionText}"
-                                                                       TextWrapping="Wrap"
-                                                                       MaxWidth="260"/>
-                                                        </StackPanel>
-                                                    </Button.ToolTip>
-                                                    <Button.ContextMenu>
-                                                        <ContextMenu Opened="TransientContextMenu_Opened"
-                                                                     Closed="TransientContextMenu_Closed"/>
-                                                    </Button.ContextMenu>
-                                                    <controls:AppIconPresenter
-                                                        Icon="{Binding Icon}"
-                                                        DisplayName="{Binding DisplayName}"/>
-                                                </Button>
-                                                <Border Width="4"
-                                                        CornerRadius="2"
-                                                        Background="{DynamicResource FocusAccentBrightBrush}"
-                                                        HorizontalAlignment="Left"
-                                                        VerticalAlignment="Center"
-                                                        Margin="1,0,0,0"
-                                                        IsHitTestVisible="False"
-                                                        Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Height" Value="12"/>
-                                                            <Setter Property="Opacity" Value="0.58"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                    <Setter Property="Opacity" Value="1"/>
-                                                                    <Setter Property="Height" Value="24"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                </Border>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-
-                            <Button x:Name="TaskbarScrollDownButton"
-                                    Panel.ZIndex="2"
-                                    Style="{StaticResource FocusIconButton}"
-                                    Height="28"
-                                    VerticalAlignment="Bottom"
-                                    Margin="0,0,0,2"
-                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
-                                    Visibility="Collapsed"
-                                    Click="TaskbarScrollDownButton_Click"
-                                    AutomationProperties.Name="查看下方应用"
-                                    ToolTip="查看下方应用">
-                                <TextBlock Style="{StaticResource FocusIconText}"
-                                           FontSize="12"
-                                           Text="&#xE70D;"/>
-                            </Button>
-                        </Grid>
-
-                        <StackPanel Grid.Row="2">
-                            <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
+                        <StackPanel Grid.Row="0">
                             <Button Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Command="{Binding OpenStartMenuCommand}"
@@ -743,7 +619,8 @@
                                     AutomationProperties.HelpText="按 Enter 打开开始菜单，按 Shift+F10 打开系统管理菜单"
                                     ToolTip="开始 · 右键打开系统管理菜单">
                                 <Button.ContextMenu>
-                                    <ContextMenu Opened="TransientContextMenu_Opened"
+                                    <ContextMenu Style="{StaticResource FocusContextMenu}"
+                                                 Opened="TransientContextMenu_Opened"
                                                  Closed="TransientContextMenu_Closed">
                                         <MenuItem Header="安装的应用"
                                                   Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
@@ -808,6 +685,136 @@
                                 </Button.ContextMenu>
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE782;"/>
                             </Button>
+                            <Button x:Name="SearchButton"
+                                    Tag="CompactFixedEntry"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Click="SearchButton_Click"
+                                    Command="{Binding ToggleSearchCommand}"
+                                    AutomationProperties.Name="搜索应用"
+                                    ToolTip="启动应用">
+                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE721;"/>
+                            </Button>
+                            <Border Height="1"
+                                    Margin="11,6"
+                                    Background="{DynamicResource FocusStrokeBrush}"/>
+                        </StackPanel>
+
+                        <Grid Grid.Row="1">
+                            <Button x:Name="TaskbarScrollUpButton"
+                                    Panel.ZIndex="2"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Height="28"
+                                    VerticalAlignment="Top"
+                                    Margin="0,2,0,0"
+                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                    Visibility="Collapsed"
+                                    Click="TaskbarScrollUpButton_Click"
+                                    AutomationProperties.Name="查看上方应用"
+                                    ToolTip="查看上方应用">
+                                <TextBlock Style="{StaticResource FocusIconText}"
+                                           FontSize="12"
+                                           Text="&#xE70E;"/>
+                            </Button>
+
+                            <ScrollViewer x:Name="TaskbarAppsScrollViewer"
+                                          VerticalScrollBarVisibility="Hidden"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          Focusable="False"
+                                          ScrollChanged="TaskbarAppsScrollViewer_ScrollChanged">
+                                <ItemsControl ItemsSource="{Binding TaskbarApps}"
+                                              KeyboardNavigation.DirectionalNavigation="Continue">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Button Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        AllowDrop="True"
+                                                        PreviewMouseDown="TaskbarApp_PreviewMouseDown"
+                                                        PreviewMouseLeftButtonDown="TaskbarApp_PreviewMouseLeftButtonDown"
+                                                        PreviewMouseMove="TaskbarApp_PreviewMouseMove"
+                                                        DragOver="TaskbarApp_DragOver"
+                                                        Drop="TaskbarApp_Drop"
+                                                        Click="TaskbarApp_Click"
+                                                        AutomationProperties.Name="{Binding AccessibleName}"
+                                                        AutomationProperties.HelpText="{Binding InteractionHint}"
+                                                        ContextMenuOpening="TaskbarApp_ContextMenuOpening">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button"
+                                                               BasedOn="{StaticResource FocusIconButton}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                    <Setter Property="Background"
+                                                                            Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <Button.ToolTip>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding DisplayName}"
+                                                                       Style="{StaticResource FocusCardTitleText}"/>
+                                                            <TextBlock Text="{Binding StatusSummary}"
+                                                                       Style="{StaticResource FocusMetaText}"/>
+                                                            <TextBlock Text="{Binding InteractionHint}"
+                                                                       Style="{StaticResource FocusCaptionText}"
+                                                                       TextWrapping="Wrap"
+                                                                       MaxWidth="260"/>
+                                                        </StackPanel>
+                                                    </Button.ToolTip>
+                                                    <Button.ContextMenu>
+                                                        <ContextMenu Style="{StaticResource FocusContextMenu}"
+                                                                     Opened="TransientContextMenu_Opened"
+                                                                     Closed="TransientContextMenu_Closed"/>
+                                                    </Button.ContextMenu>
+                                                    <controls:AppIconPresenter
+                                                        Icon="{Binding Icon}"
+                                                        DisplayName="{Binding DisplayName}"/>
+                                                </Button>
+                                                <Border Width="4"
+                                                        CornerRadius="2"
+                                                        Background="{DynamicResource FocusAccentBrightBrush}"
+                                                        HorizontalAlignment="Left"
+                                                        VerticalAlignment="Center"
+                                                        Margin="1,0,0,0"
+                                                        IsHitTestVisible="False"
+                                                        Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Height" Value="12"/>
+                                                            <Setter Property="Opacity" Value="0.58"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                    <Setter Property="Opacity" Value="1"/>
+                                                                    <Setter Property="Height" Value="24"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <Button x:Name="TaskbarScrollDownButton"
+                                    Panel.ZIndex="2"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Height="28"
+                                    VerticalAlignment="Bottom"
+                                    Margin="0,0,0,2"
+                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                    Visibility="Collapsed"
+                                    Click="TaskbarScrollDownButton_Click"
+                                    AutomationProperties.Name="查看下方应用"
+                                    ToolTip="查看下方应用">
+                                <TextBlock Style="{StaticResource FocusIconText}"
+                                           FontSize="12"
+                                           Text="&#xE70D;"/>
+                            </Button>
+                        </Grid>
+
+                        <StackPanel Grid.Row="2">
+                            <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
                             <Button Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Command="{Binding OpenTaskViewCommand}"

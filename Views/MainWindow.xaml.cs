@@ -79,9 +79,14 @@ public partial class MainWindow :
         _autoHideTimer.Tick += (_, _) =>
         {
             _autoHideTimer.Stop();
+            bool transientSurfaceActive =
+                ShellTransientSurfacePolicy.IsActive(
+                    _transientInteractionDepth > 0,
+                    Mouse.Captured != null,
+                    HasOpenComboBoxDropDown(this));
             bool shouldHide = ShellAutoHidePolicy.ShouldHide(
                 _isDesktopFileDragging,
-                _transientInteractionDepth > 0 || Mouse.Captured != null,
+                transientSurfaceActive,
                 IsCursorInsideShell(),
                 IsInputFocusActive(),
                 _autoHideIgnoresInputFocus);
@@ -397,6 +402,25 @@ public partial class MainWindow :
             _ => ShellKeyboardFocusKind.Command
         };
 
+    private static bool HasOpenComboBoxDropDown(
+        DependencyObject root)
+    {
+        if (root is ComboBox { IsDropDownOpen: true })
+            return true;
+
+        foreach (object child in
+                 LogicalTreeHelper.GetChildren(root))
+        {
+            if (child is DependencyObject dependencyObject
+                && HasOpenComboBoxDropDown(dependencyObject))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void CollapseSidebar_Click(object sender, RoutedEventArgs e)
     {
         CollapseSidebar();
@@ -669,6 +693,7 @@ public partial class MainWindow :
             });
         }
 
+        ApplyFocusMenuTheme(menu);
         button.ContextMenu = menu;
     }
 
@@ -701,7 +726,37 @@ public partial class MainWindow :
             menu.Items.Add(windowItem);
         }
 
+        ApplyFocusMenuTheme(menu);
         button.ContextMenu = menu;
+    }
+
+    private void ApplyFocusMenuTheme(ContextMenu menu)
+    {
+        menu.SetResourceReference(
+            FrameworkElement.StyleProperty,
+            "FocusContextMenu");
+
+        foreach (object item in menu.Items)
+            ApplyFocusMenuItemTheme(item);
+    }
+
+    private void ApplyFocusMenuItemTheme(object item)
+    {
+        switch (item)
+        {
+            case MenuItem menuItem:
+                menuItem.SetResourceReference(
+                    FrameworkElement.StyleProperty,
+                    "FocusMenuItem");
+                foreach (object child in menuItem.Items)
+                    ApplyFocusMenuItemTheme(child);
+                break;
+            case Separator separator:
+                separator.SetResourceReference(
+                    FrameworkElement.StyleProperty,
+                    "FocusMenuSeparator");
+                break;
+        }
     }
 
     private static TextBlock CreateWindowTitle(

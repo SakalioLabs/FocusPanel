@@ -865,6 +865,35 @@ public sealed class XamlResourceContractTests
         string compactDock = mainWindow[dockStart..onboardingStart];
         Assert.Equal(6, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
         Assert.Equal(1, compactDock.Split("ItemsSource=\"{Binding TaskbarApps}\"").Length - 1);
+        int start = compactDock.IndexOf(
+            "Command=\"{Binding OpenStartMenuCommand}\"",
+            StringComparison.Ordinal);
+        int search = compactDock.IndexOf(
+            "x:Name=\"SearchButton\"",
+            StringComparison.Ordinal);
+        int applications = compactDock.IndexOf(
+            "x:Name=\"TaskbarAppsScrollViewer\"",
+            StringComparison.Ordinal);
+        int taskView = compactDock.IndexOf(
+            "Command=\"{Binding OpenTaskViewCommand}\"",
+            StringComparison.Ordinal);
+        int focusCenter = compactDock.IndexOf(
+            "Click=\"FocusCenterButton_Click\"",
+            StringComparison.Ordinal);
+        int statusCenter = compactDock.IndexOf(
+            "Click=\"StatusCenterButton_Click\"",
+            StringComparison.Ordinal);
+        int time = compactDock.IndexOf(
+            "Click=\"CalendarPanelButton_Click\"",
+            StringComparison.Ordinal);
+        Assert.True(
+            start >= 0
+            && start < search
+            && search < applications
+            && applications < taskView
+            && taskView < focusCenter
+            && focusCenter < statusCenter
+            && statusCenter < time);
         Assert.Contains("Click=\"FocusCenterButton_Click\"", compactDock);
         Assert.Contains("Click=\"StatusCenterButton_Click\"", compactDock);
         Assert.DoesNotContain("OpenNotificationOverflow", compactDock);
@@ -1400,6 +1429,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Views",
                 "MainWindow.xaml.cs"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
 
         Assert.Contains(
             "x:Key=\"FocusContextMenu\"",
@@ -1449,6 +1483,26 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "menu.Items.Add(new MenuItem",
             codeBehind);
+        Assert.Equal(
+            3,
+            Regex.Matches(
+                mainWindow,
+                "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);
+        Assert.Contains(
+            "ApplyFocusMenuTheme(menu);",
+            codeBehind);
+        Assert.Contains(
+            "\"FocusContextMenu\"",
+            codeBehind);
+        Assert.Contains(
+            "\"FocusMenuItem\"",
+            codeBehind);
+        Assert.Contains(
+            "\"FocusMenuSeparator\"",
+            codeBehind);
+        Assert.Contains(
+            "<Setter Property=\"FontFamily\" Value=\"Segoe UI Variable Text\"/>",
+            theme);
     }
 
     [Fact]

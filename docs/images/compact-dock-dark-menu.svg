@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#243047"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".06"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#000000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="520" rx="28" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#F5F7FF" font-family="Segoe UI Variable Display, Segoe UI" font-size="28" font-weight="600">紧凑栏顺序与深色弹层</text>
+  <text x="54" y="94" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="15">固定入口围绕稳定的应用区排列；多窗口列表显式绑定同一套动态主题。</text>
+
+  <g transform="translate(64 126)" filter="url(#shadow)">
+    <rect width="92" height="338" rx="22" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".16"/>
+    <g font-family="Segoe Fluent Icons, Segoe UI Symbol" font-size="21" text-anchor="middle" fill="#F5F7FF">
+      <text x="46" y="42"></text>
+      <text x="46" y="86"></text>
+      <text x="46" y="152"></text>
+      <text x="46" y="196"></text>
+      <text x="46" y="240"></text>
+      <text x="46" y="284"></text>
+      <text x="46" y="324">16:29</text>
+    </g>
+    <rect x="16" y="104" width="60" height="112" rx="14" fill="#ffffff" fill-opacity=".08"/>
+    <circle cx="46" cy="130" r="15" fill="#4CA6E8"/>
+    <circle cx="46" cy="174" r="15" fill="#7C8AA5"/>
+  </g>
+
+  <g font-family="Segoe UI Variable Text, Segoe UI" font-size="16">
+    <text x="190" y="166" fill="#F5F7FF">01  开始</text>
+    <text x="190" y="210" fill="#F5F7FF">02  搜索</text>
+    <text x="190" y="266" fill="#4CA6E8" font-weight="600">中部  统一应用列表</text>
+    <text x="190" y="310" fill="#F5F7FF">03  任务视图</text>
+    <text x="190" y="346" fill="#F5F7FF">04  Focus 中心</text>
+    <text x="190" y="382" fill="#F5F7FF">05  状态中心</text>
+    <text x="190" y="418" fill="#F5F7FF">06  时间</text>
+  </g>
+
+  <path d="M410 262 C455 262 458 252 490 252" fill="none" stroke="#4CA6E8" stroke-width="2"/>
+  <circle cx="490" cy="252" r="4" fill="#4CA6E8"/>
+
+  <g transform="translate(500 132)" filter="url(#shadow)">
+    <rect width="548" height="292" rx="18" fill="#20242C" fill-opacity=".96" stroke="#ffffff" stroke-opacity=".14"/>
+    <text x="28" y="44" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="13">文件资源管理器 · 3 个窗口</text>
+    <g font-family="Segoe UI Variable Text, Segoe UI" font-size="16">
+      <rect x="12" y="62" width="524" height="58" rx="12" fill="#ffffff" fill-opacity=".07"/>
+      <rect x="18" y="76" width="3" height="30" rx="2" fill="#4CA6E8"/>
+      <text x="38" y="97" fill="#F5F7FF">release - 文件资源管理器</text>
+      <rect x="12" y="126" width="524" height="58" rx="12" fill="#006FC4" fill-opacity=".34"/>
+      <text x="38" y="161" fill="#F5F7FF">packages - 文件资源管理器</text>
+      <rect x="12" y="190" width="524" height="58" rx="12" fill="transparent"/>
+      <text x="38" y="225" fill="#F5F7FF">docs - 文件资源管理器</text>
+    </g>
+    <text x="28" y="274" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="13">背景、文字、选中态和分隔线随深浅色动态更新</text>
+  </g>
+</svg>

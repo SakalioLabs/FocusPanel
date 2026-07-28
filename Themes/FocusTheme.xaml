@@ -1288,6 +1288,7 @@
     <Style x:Key="FocusContextMenu"
            TargetType="ContextMenu">
         <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground"
                 Value="{DynamicResource FocusTextBrush}"/>
@@ -1319,6 +1320,7 @@
     <Style x:Key="FocusMenuItem"
            TargetType="MenuItem">
         <Setter Property="MinHeight" Value="38"/>
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
         <Setter Property="Padding" Value="10,6"/>
         <Setter Property="Margin" Value="2"/>
         <Setter Property="Foreground"
