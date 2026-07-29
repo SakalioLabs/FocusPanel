@@ -75,9 +75,19 @@ internal sealed class AppIdentityResolver : IAppIdentityResolver
         if (string.IsNullOrWhiteSpace(aumid))
             aumid = _native.GetProcessApplicationUserModelId(processId);
 
-        string key = BuildKey(aumid, executablePath) ?? $"window:{processId}";
+        string key = BuildKey(aumid, executablePath)
+            ?? BuildTemporaryWindowKey(
+                window,
+                processId);
         return new ResolvedAppIdentity(key, NormalizeOptional(aumid), NormalizePath(executablePath));
     }
+
+    internal static string BuildTemporaryWindowKey(
+        IntPtr window,
+        uint processId) =>
+        processId != 0
+            ? $"window:{processId}"
+            : $"window-handle:{window.ToInt64():X}";
 
     internal static string? BuildKey(string? aumid, string? executablePath)
     {

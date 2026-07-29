@@ -2893,9 +2893,23 @@ public sealed class XamlResourceContractTests
             viewModel);
         Assert.Contains("_windowTracker.SetTrackingActive(isVisible)", viewModel);
         Assert.Contains("ShellRefreshActivityPolicy.GetActivity", viewModel);
-        Assert.Contains("if (_trackingActive)", tracker);
+        Assert.Contains(
+            "if (_trackingActive && !_disposed)",
+            tracker);
         Assert.Contains(
             "WindowTrackingActivityPolicy.ShouldProcessWindowEvent",
+            tracker);
+        Assert.Contains(
+            "_snapshotStore.TryRefresh(",
+            tracker);
+        Assert.Contains(
+            "keeping the last valid snapshot",
+            tracker);
+        Assert.Contains(
+            "EventSubscriberIsolation.Publish(",
+            tracker);
+        Assert.Contains(
+            "HasShutdownStarted",
             tracker);
     }
 

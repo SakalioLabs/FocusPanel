@@ -30,6 +30,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 同一运行应用的活动状态、窗口标题和窗口数量改为在原有任务栏项目上原位同步；WPF 不再因前台切换执行集合 `Replace`、销毁按钮并重新创建视觉树，当前应用状态条和工具提示可以平滑更新。
 - 窗口跟踪覆盖 `CREATE / DESTROY / SHOW / HIDE / NAMECHANGE / FOREGROUND` 完整生命周期；新应用窗口创建后及时进入统一应用栏，最后窗口销毁后及时移除，不再依赖下一次偶然的前台或标题事件纠正陈旧图标。
 - WinEvent 只接收 `OBJID_WINDOW` 窗口本体并跳过 FocusPanel 自身进程；按钮、菜单和 Panel 显隐不会触发无意义的完整窗口重扫，短时间重复通知继续合并为一次刷新。
+- 窗口枚举采用最后有效快照提交：`EnumWindows` 整体失败时保留当前应用栏，不把系统瞬时错误显示成“所有运行应用消失”；单个受保护窗口的进程、身份或图标读取失败只降级该项目，不中断其他窗口。
+- `SnapshotChanged` 按订阅者隔离发布，一个界面监听器异常不会阻断其他状态消费者，也不会反向终止窗口枚举。退出时先标记跟踪器失效、停止计时器并解除 WinEvent；已经在途的原生回调会在 Dispatcher 关闭前静默丢弃。
 - Panel 隐藏后暂停完整窗口枚举、时钟、系统状态和任务摘要刷新；右缘热区、全屏抑制、安全恢复和 GitHub 更新检查继续运行。再次唤出时先刷新窗口快照和当前时间，状态中心与日历在打开时即时刷新。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
 - 应用图标支持 Windows 任务栏常用的新实例手势：`Shift+左键` 或鼠标中键直接启动新实例；没有可靠启动目标的受保护窗口不会显示或执行该动作。工具提示和读屏帮助会同步说明当前可用操作。
@@ -83,6 +85,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![任务栏操作结果与失败反馈](docs/images/taskbar-action-feedback.svg)
 
 ![运行应用窗口生命周期跟踪](docs/images/window-lifecycle-tracking.svg)
+
+![运行窗口最后有效快照与异常隔离](docs/images/window-snapshot-resilience.svg)
 
 ![多窗口应用一层直接列表](docs/images/multi-window-direct-list.svg)
 
@@ -307,7 +311,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.95 `
+  -Version 0.9.96 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages

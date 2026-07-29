@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Media;
 using System.Windows.Threading;
 using FocusPanel.Helpers;
 using FocusPanel.Models;
@@ -29,8 +31,10 @@ public sealed class WindowTracker : IWindowTracker
     private readonly List<IntPtr> _hooks = new();
     private readonly IAppIdentityResolver _identityResolver;
     private readonly WindowCommandExecutor _commands;
-    private IReadOnlyList<WindowTaskItem> _snapshot = Array.Empty<WindowTaskItem>();
+    private readonly ResilientSnapshotStore<WindowTaskItem>
+        _snapshotStore = new();
     private volatile bool _trackingActive = true;
+    private volatile bool _disposed;
 
     public WindowTracker() : this(new AppIdentityResolver())
     {
@@ -43,12 +47,8 @@ public sealed class WindowTracker : IWindowTracker
             new WindowsWindowCommandBoundary());
         _callback = OnWinEvent;
         _refreshDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(140) };
-        _refreshDebounce.Tick += (_, _) =>
-        {
-            _refreshDebounce.Stop();
-            if (_trackingActive)
-                RefreshSnapshot();
-        };
+        _refreshDebounce.Tick +=
+            RefreshDebounce_Tick;
 
         AddHook(
             WindowTrackingEventPolicy.EventSystemForeground,
@@ -59,15 +59,19 @@ public sealed class WindowTracker : IWindowTracker
         AddHook(
             WindowTrackingEventPolicy.EventObjectNameChange,
             WindowTrackingEventPolicy.EventObjectNameChange);
-        RefreshSnapshot();
+        RefreshSnapshotSafely();
     }
 
     public event EventHandler? SnapshotChanged;
 
-    public IReadOnlyList<WindowTaskItem> GetSnapshot() => _snapshot;
+    public IReadOnlyList<WindowTaskItem> GetSnapshot() =>
+        _snapshotStore.Current;
 
     public void SetTrackingActive(bool isActive)
     {
+        if (_disposed)
+            return;
+
         bool wasActive = _trackingActive;
         if (wasActive == isActive)
             return;
@@ -78,7 +82,7 @@ public sealed class WindowTracker : IWindowTracker
                 wasActive,
                 isActive))
         {
-            RefreshSnapshot();
+            RefreshSnapshotSafely();
         }
     }
 
@@ -94,6 +98,9 @@ public sealed class WindowTracker : IWindowTracker
 
     public bool IsForegroundFullscreen()
     {
+        if (_disposed)
+            return false;
+
         IntPtr foreground = NativeMethods.GetForegroundWindow();
         if (foreground == IntPtr.Zero || !NativeMethods.GetWindowRect(foreground, out NativeRect rect))
             return false;
@@ -115,53 +122,70 @@ public sealed class WindowTracker : IWindowTracker
             hasStandardFrame);
     }
 
-    private void RefreshSnapshot()
+    private void RefreshDebounce_Tick(
+        object? sender,
+        EventArgs e)
+    {
+        _refreshDebounce.Stop();
+        if (_trackingActive && !_disposed)
+            RefreshSnapshotSafely();
+    }
+
+    private void RefreshSnapshotSafely()
+    {
+        if (_disposed)
+            return;
+
+        if (!_snapshotStore.TryRefresh(
+                CaptureSnapshot,
+                out Exception? failure))
+        {
+            Debug.WriteLine(
+                "Window snapshot refresh failed; "
+                + "keeping the last valid snapshot: "
+                + failure?.Message);
+            return;
+        }
+
+        PublishSnapshotChangedSafely();
+    }
+
+    private IReadOnlyList<WindowTaskItem> CaptureSnapshot()
     {
         var windows = new List<WindowEntry>();
         IntPtr foreground = NativeMethods.GetForegroundWindow();
 
-        NativeMethods.EnumWindows((hwnd, _) =>
+        bool enumerated =
+            NativeMethods.EnumWindows((hwnd, _) =>
         {
-            if (!IsTaskWindow(hwnd))
-                return true;
-
-            NativeMethods.GetWindowThreadProcessId(hwnd, out uint processId);
-            if (processId == Environment.ProcessId)
-                return true;
-
-            string title = GetWindowTitle(hwnd);
-            if (title.Length == 0)
-                return true;
-
-            string? executablePath = null;
-            string processName = title;
             try
             {
-                using Process process = Process.GetProcessById((int)processId);
-                processName = process.ProcessName;
-                executablePath = process.MainModule?.FileName;
+                CaptureWindow(
+                    hwnd,
+                    foreground,
+                    windows);
             }
-            catch
+            catch (Exception ex)
             {
-                // Protected processes still remain usable through their window handle.
+                Debug.WriteLine(
+                    $"Skipping window 0x{hwnd.ToInt64():X}: "
+                    + ex.Message);
             }
 
-            ResolvedAppIdentity identity = _identityResolver.ResolveWindow(
-                hwnd,
-                processId,
-                executablePath);
-            windows.Add(new WindowEntry(
-                hwnd,
-                title,
-                processName,
-                identity.ExecutablePath ?? executablePath,
-                identity.Key,
-                identity.ApplicationUserModelId,
-                hwnd == foreground));
             return true;
         }, IntPtr.Zero);
+        if (!enumerated)
+        {
+            int error = Marshal.GetLastWin32Error();
+            throw error == 0
+                ? new InvalidOperationException(
+                    "Windows 未能枚举顶层窗口。")
+                : new Win32Exception(
+                    error,
+                    "Windows 未能枚举顶层窗口。");
+        }
 
-        _snapshot = windows
+        return windows
             .GroupBy(item => item.IdentityKey, StringComparer.OrdinalIgnoreCase)
             .Select(group =>
             {
@@ -169,6 +193,22 @@ public sealed class WindowTracker : IWindowTracker
                 string? resolvedExecutable = group
                     .Select(item => item.ExecutablePath)
                     .FirstOrDefault(value => value != null);
+                ImageSource? icon = null;
+                if (resolvedExecutable != null)
+                {
+                    try
+                    {
+                        icon = IconHelper.GetIcon(
+                            resolvedExecutable);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(
+                            "Window icon extraction failed: "
+                            + ex.Message);
+                    }
+                }
+
                 return new WindowTaskItem
                 {
                     AppKey = group.Key,
@@ -178,7 +218,7 @@ public sealed class WindowTracker : IWindowTracker
                         .FirstOrDefault(value => value != null),
                     DisplayName = first.ProcessName,
                     ExecutablePath = resolvedExecutable,
-                    Icon = resolvedExecutable == null ? null : IconHelper.GetIcon(resolvedExecutable),
+                    Icon = icon,
                     Windows = group
                         .Select(item =>
                             new WindowReference(
@@ -192,8 +232,85 @@ public sealed class WindowTracker : IWindowTracker
             .OrderByDescending(item => item.IsActive)
             .ThenBy(item => item.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
+    }
 
-        SnapshotChanged?.Invoke(this, EventArgs.Empty);
+    private void CaptureWindow(
+        IntPtr hwnd,
+        IntPtr foreground,
+        ICollection<WindowEntry> windows)
+    {
+        if (!IsTaskWindow(hwnd))
+            return;
+
+        NativeMethods.GetWindowThreadProcessId(
+            hwnd,
+            out uint processId);
+        if (processId == Environment.ProcessId)
+            return;
+
+        string title = GetWindowTitle(hwnd);
+        if (title.Length == 0)
+            return;
+
+        string? executablePath = null;
+        string processName = title;
+        try
+        {
+            using Process process =
+                Process.GetProcessById(
+                    (int)processId);
+            processName = process.ProcessName;
+            executablePath =
+                process.MainModule?.FileName;
+        }
+        catch
+        {
+            // Protected processes remain usable through their window handle.
+        }
+
+        ResolvedAppIdentity identity;
+        try
+        {
+            identity =
+                _identityResolver.ResolveWindow(
+                    hwnd,
+                    processId,
+                    executablePath);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(
+                "Window identity resolution failed: "
+                + ex.Message);
+            identity = new ResolvedAppIdentity(
+                AppIdentityResolver
+                    .BuildTemporaryWindowKey(
+                        hwnd,
+                        processId),
+                null,
+                executablePath);
+        }
+
+        windows.Add(new WindowEntry(
+            hwnd,
+            title,
+            processName,
+            identity.ExecutablePath
+                ?? executablePath,
+            identity.Key,
+            identity.ApplicationUserModelId,
+            hwnd == foreground));
+    }
+
+    private void PublishSnapshotChangedSafely()
+    {
+        EventSubscriberIsolation.Publish(
+            SnapshotChanged,
+            this,
+            ex =>
+                Debug.WriteLine(
+                    "Window snapshot subscriber failed: "
+                    + ex.Message));
     }
 
     private static bool IsTaskWindow(IntPtr hwnd)
@@ -250,6 +367,9 @@ public sealed class WindowTracker : IWindowTracker
         uint eventThread,
         uint eventTime)
     {
+        if (_disposed)
+            return;
+
         if (!WindowTrackingEventPolicy.ShouldQueueRefresh(
                 eventType,
                 idObject))
@@ -264,26 +384,51 @@ public sealed class WindowTracker : IWindowTracker
 
         void RestartDebounce()
         {
-            if (!_trackingActive)
+            if (!_trackingActive
+                || _disposed
+                || _refreshDebounce.Dispatcher
+                    .HasShutdownStarted
+                || _refreshDebounce.Dispatcher
+                    .HasShutdownFinished)
+            {
                 return;
+            }
 
             _refreshDebounce.Stop();
             _refreshDebounce.Start();
         }
 
-        if (_refreshDebounce.Dispatcher.CheckAccess())
+        Dispatcher dispatcher =
+            _refreshDebounce.Dispatcher;
+        if (dispatcher.CheckAccess())
         {
             RestartDebounce();
         }
-        else
+        else if (!dispatcher.HasShutdownStarted
+                 && !dispatcher.HasShutdownFinished)
         {
-            _refreshDebounce.Dispatcher.BeginInvoke(RestartDebounce);
+            try
+            {
+                dispatcher.BeginInvoke(
+                    RestartDebounce);
+            }
+            catch (InvalidOperationException)
+            {
+                // Dispatcher shutdown raced the native WinEvent callback.
+            }
         }
     }
 
     public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _trackingActive = false;
         _refreshDebounce.Stop();
+        _refreshDebounce.Tick -=
+            RefreshDebounce_Tick;
         foreach (IntPtr hook in _hooks)
             NativeMethods.UnhookWinEvent(hook);
         _hooks.Clear();
@@ -319,7 +464,7 @@ public sealed class WindowTracker : IWindowTracker
             uint eventThread,
             uint eventTime);
 
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool EnumWindows(EnumWindowsDelegate callback, IntPtr lParam);
 

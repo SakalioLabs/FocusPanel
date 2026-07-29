@@ -99,6 +99,31 @@ public sealed class AppIdentityResolverTests
         Assert.Equal("window:42", resolver.ResolveWindow(IntPtr.Zero, 42, null).Key);
     }
 
+    [Fact]
+    public void MissingProcessId_IsIsolatedByWindowHandle()
+    {
+        var resolver =
+            new AppIdentityResolver(
+                new FakeNative());
+
+        string first = resolver.ResolveWindow(
+            new IntPtr(0x101),
+            0,
+            null).Key;
+        string second = resolver.ResolveWindow(
+            new IntPtr(0x102),
+            0,
+            null).Key;
+
+        Assert.Equal(
+            "window-handle:101",
+            first);
+        Assert.Equal(
+            "window-handle:102",
+            second);
+        Assert.NotEqual(first, second);
+    }
+
     private sealed class FakeNative : IAppIdentityNative
     {
         internal string? WindowAumid { get; init; }
