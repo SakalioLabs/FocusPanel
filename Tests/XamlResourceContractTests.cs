@@ -924,6 +924,15 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Screen.PrimaryScreen", mainWindow);
         Assert.DoesNotContain("Screen.PrimaryScreen", indicator);
         Assert.DoesNotContain("Screen.PrimaryScreen", hotZone);
+        Assert.DoesNotContain(
+            "DispatcherTimer",
+            hotZone);
+        Assert.Contains(
+            "PeriodicTimer",
+            hotZone);
+        Assert.Contains(
+            "DispatcherPriority.Input",
+            hotZone);
     }
 
     [Fact]

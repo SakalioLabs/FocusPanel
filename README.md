@@ -9,6 +9,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ## 新壳层
 
 - 主屏右缘显示一条 `3px` 白色运行指示条；它完全点击穿透。最后 `12` 个物理像素由无窗口监测器检测，停留约 `100ms` 唤出 `76px` 紧凑应用坞。
+- 右缘监测使用独立后台 `PeriodicTimer` 保持约 `30ms` 物理坐标采样，不再让 WPF Dispatcher 承担高频鼠标与全屏窗口检查；只有热区可用状态变化或达到呼出条件时才回到界面线程，因此工作区加载、布局和展开动画繁忙时仍能准确响应。停止或显示器变化后的旧采样会按代际丢弃，不会迟到误展开。
 - 点击搜索、桌面收纳、任务、番茄钟、OKR、AI 等入口后，工作区从右向左展开到约 `720px`。
 - 离开约 `300ms` 自动收起；只有搜索框、密码框和下拉选择等输入控件持有焦点时保持展开，普通按钮或应用图标焦点不会锁住 Panel，`Esc` 可关闭。
 - 应用右键菜单、多窗口列表、下拉选择和桌面收纳的视图/新建/修复弹层打开时会锁住 Panel；即使 ComboBox Popup 使用独立窗口，展开期间也不会被误判为离开，弹层关闭且鼠标离开后才恢复自动收起。
@@ -90,6 +91,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
 
 ![六入口紧凑任务栏](docs/images/six-entry-taskbar.svg)
+
+![右缘热区后台采样与低频 UI 提交](docs/images/edge-hot-zone-background-sampling.svg)
 
 ![系统入口后台执行与反馈隔离](docs/images/system-action-background-coordinator.svg)
 
@@ -389,7 +392,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.24 `
+  -Version 0.10.25 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -401,7 +404,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：当前用户默认目录的一键首次安装入口；命令行也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win-CustomSetup.exe`：带图形化文件夹选择器的安装入口；在另一台电脑上需要任意自定义目录时优先下载它。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.24-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.25-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
