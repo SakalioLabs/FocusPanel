@@ -175,6 +175,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool disableHotZoneInFullscreen = true;
 
     [ObservableProperty]
+    private string summonShortcutText =
+        "正在注册主动唤出快捷键…";
+
+    [ObservableProperty]
     private string displayTargetMode =
         ShellDisplayTarget.OutermostRightValue;
 
@@ -506,6 +510,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<string>? WorkspaceRequested;
     public event Action<int>? PomodoroCompleted;
     public event Action? DisplayTargetChanged;
+
+    internal void SetSummonShortcutStatus(
+        ShellHotkeyRegistration registration)
+    {
+        SummonShortcutText =
+            registration.DisplayText;
+    }
 
     public void RefreshDisplayTargetOptions()
     {

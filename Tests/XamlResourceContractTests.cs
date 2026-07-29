@@ -1218,6 +1218,22 @@ public sealed class XamlResourceContractTests
                 "FocusCompactDock();",
                 StringSplitOptions.None).Length - 1 >= 2);
         Assert.Contains("SearchButton.Focus();", codeBehind);
+        Assert.Contains(
+            "Text=\"{Binding SummonShortcutText}\"",
+            mainWindow);
+        Assert.Contains(
+            "ShellSummonHotkeyPolicy",
+            codeBehind);
+        Assert.Contains(
+            "SetSummonShortcutStatus(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs")));
+        Assert.DoesNotContain(
+            "Text=\"主动唤出：Ctrl + Alt + Space\"",
+            mainWindow);
     }
 
     [Fact]

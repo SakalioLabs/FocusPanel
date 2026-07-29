@@ -18,8 +18,10 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 桌面拖入、分区收纳和拖出恢复统一经过受观察的异步交互边界：文件属性操作完成前持续持有 Panel，异常会转为可恢复提示，任何成功、失败或提示异常路径都会释放拖拽与自动收起锁。
 - 从 Explorer 发起的外部拖拽与 Panel 自己发起的拖出使用独立会话语义；外部拖拽取消、离开或落下后立即复位，内部拖拽经过子控件时不会被重复 `DragEnter` 误判为外部操作。
 - 独占或无边框全屏应用前台时默认停用鼠标热区。
-- 全局主动唤出：`Ctrl+Alt+Space`。
+- 全局主动唤出优先使用 `Ctrl+Alt+Space`；若被其他程序占用，自动回退 `Ctrl+Shift+Space`。设置页显示本次会话实际注册成功的组合，两者都不可用时仍可使用右缘热区。
 - 主动唤出后焦点落到搜索入口，可使用 Tab、Shift+Tab 或方向键循环浏览紧凑栏，Enter/Space 执行；应用按钮向读屏提供应用名称和窗口摘要，Shift+F10 或菜单键打开右键菜单。
+
+![主动唤出快捷键回退与真实状态](docs/images/summon-hotkey-fallback.svg)
 - 键盘导航使用统一的 2px Fluent 圆角焦点环，轮廓只在键盘操作时出现，不给鼠标点击增加常驻边框；高对比度模式跟随 Windows 系统高亮色。
 - 固定应用与运行应用按 Windows AppUserModelID 或可执行路径合并为单一任务栏图标；固定项保持用户顺序，未固定运行项保持本次运行中的稳定顺序。
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
@@ -413,7 +415,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.32 `
+  -Version 0.10.33 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -424,7 +426,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意绝对目录，随后通过标准 Windows Installer 的 `VELOPACK_INSTALLDIR` 属性强制使用该路径。有可用且空间充足的非系统固定盘时会优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版已装在另一目录，向导会先说明并征得确认，再用旧版官方卸载器移除程序文件并安装到新位置；任务、收纳记录和设置保留在用户 AppData。无需再寻找单独的 CustomSetup。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.32-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.33-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

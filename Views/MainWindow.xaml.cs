@@ -32,9 +32,6 @@ public partial class MainWindow :
     private const int WmHotkey = 0x0312;
     private const int WmDpiChanged = 0x02E0;
     private const int SummonHotkeyId = 0x4650;
-    private const uint ModAlt = 0x0001;
-    private const uint ModControl = 0x0002;
-    private const uint VkSpace = 0x20;
 
     private readonly ShellCoordinator _coordinator;
     private readonly MainViewModel _viewModel;
@@ -220,11 +217,19 @@ public partial class MainWindow :
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
         _windowSource = HwndSource.FromHwnd(hwnd);
         _windowSource?.AddHook(WindowMessageHook);
-        _summonHotkeyRegistered = NativeMethods.RegisterHotKey(
-            hwnd,
-            SummonHotkeyId,
-            ModControl | ModAlt,
-            VkSpace);
+        ShellHotkeyRegistration registration =
+            ShellSummonHotkeyPolicy
+                .RegisterFirstAvailable(
+                    (modifiers, virtualKey) =>
+                        NativeMethods.RegisterHotKey(
+                            hwnd,
+                            SummonHotkeyId,
+                            modifiers,
+                            virtualKey));
+        _summonHotkeyRegistered =
+            registration.IsRegistered;
+        _viewModel.SetSummonShortcutStatus(
+            registration);
         ApplyDwmBackdrop();
     }
 

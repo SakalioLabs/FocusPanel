@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="340" viewBox="0 0 1120 340">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a1322"/><stop offset="1" stop-color="#182a46"/></linearGradient>
+    <filter id="s"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#020617" flood-opacity=".45"/></filter>
+  </defs>
+  <rect width="1120" height="340" rx="28" fill="url(#bg)"/>
+  <text x="52" y="56" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei" font-size="25" font-weight="700">主动唤出有备用键，也会如实显示状态</text>
+  <g filter="url(#s)" font-family="Segoe UI,Microsoft YaHei">
+    <rect x="52" y="92" width="280" height="184" rx="20" fill="#1c2c45" stroke="#4b668c"/>
+    <text x="78" y="128" fill="#bfdbfe" font-size="17" font-weight="600">首选组合</text>
+    <g transform="translate(78 151)" fill="#101c2e" stroke="#52709a">
+      <rect width="58" height="42" rx="10"/><rect x="68" width="48" height="42" rx="10"/><rect x="126" width="116" height="42" rx="10"/>
+    </g>
+    <text x="91" y="178" fill="#f8fafc" font-size="14">Ctrl</text><text x="160" y="178" fill="#f8fafc" font-size="14">Alt</text><text x="231" y="178" fill="#f8fafc" font-size="14">Space</text>
+    <text x="78" y="226" fill="#9fb0c9" font-size="13">注册成功 → 设置页显示并直接使用</text>
+    <text x="78" y="250" fill="#7dd3fc" font-size="13">MOD_NOREPEAT · 长按只触发一次</text>
+    <path d="M348 184h74" stroke="#38bdf8" stroke-width="3"/><path d="M412 175l12 9-12 9" fill="none" stroke="#38bdf8" stroke-width="3"/>
+    <rect x="440" y="92" width="292" height="184" rx="20" fill="#1c2c45" stroke="#4b668c"/>
+    <text x="466" y="128" fill="#bfdbfe" font-size="17" font-weight="600">首选被占用时</text>
+    <g transform="translate(466 151)" fill="#101c2e" stroke="#52709a">
+      <rect width="58" height="42" rx="10"/><rect x="68" width="62" height="42" rx="10"/><rect x="140" width="116" height="42" rx="10"/>
+    </g>
+    <text x="479" y="178" fill="#f8fafc" font-size="14">Ctrl</text><text x="546" y="178" fill="#f8fafc" font-size="14">Shift</text><text x="615" y="178" fill="#f8fafc" font-size="14">Space</text>
+    <text x="466" y="226" fill="#9fb0c9" font-size="13">自动尝试，不要求用户修改配置</text>
+    <text x="466" y="250" fill="#a5f3fc" font-size="13">设置页明确标注“备用”</text>
+    <path d="M748 184h74" stroke="#38bdf8" stroke-width="3"/><path d="M812 175l12 9-12 9" fill="none" stroke="#38bdf8" stroke-width="3"/>
+    <rect x="840" y="92" width="228" height="184" rx="20" fill="#173449" stroke="#22d3ee"/>
+    <text x="866" y="128" fill="#a5f3fc" font-size="17" font-weight="600">两者都不可用</text>
+    <rect x="866" y="151" width="176" height="42" rx="12" fill="#123047" stroke="#0ea5e9"/>
+    <text x="893" y="178" fill="#e0f2fe" font-size="14">使用屏幕右缘热区</text>
+    <text x="866" y="226" fill="#9fb0c9" font-size="13">不抢焦点 · 不拦截点击</text>
+    <text x="866" y="250" fill="#9fb0c9" font-size="13">设置页不再显示错误快捷键</text>
+  </g>
+</svg>

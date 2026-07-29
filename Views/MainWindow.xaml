@@ -525,7 +525,7 @@
                                                TextWrapping="Wrap"
                                                Style="{StaticResource FocusCaptionText}"/>
                                     <TextBlock Margin="0,10,0,0"
-                                               Text="主动唤出：Ctrl + Alt + Space"
+                                               Text="{Binding SummonShortcutText}"
                                                Style="{StaticResource FocusCaptionText}"/>
                                     <Border x:Name="ProtectedFilesWarning"
                                             Margin="0,12,0,0"
