@@ -174,6 +174,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool disableHotZoneInFullscreen = true;
 
     [ObservableProperty]
+    private string displayTargetMode =
+        ShellDisplayTarget.OutermostRightValue;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
@@ -494,6 +498,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<AppUpdateInfo>? UpdateAvailable;
     public event Action<string>? WorkspaceRequested;
     public event Action<int>? PomodoroCompleted;
+    public event Action? DisplayTargetChanged;
 
     internal Task WaitForShellPreferencesAsync() =>
         _shellPreferencesInitialization;
@@ -520,6 +525,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             DisableHotZoneInFullscreen =
                 preferenceSnapshot
                     .DisableHotZoneInFullscreen;
+            DisplayTargetMode =
+                preferenceSnapshot
+                    .DisplayTargetMode;
             IsOnboardingVisible =
                 !preferenceSnapshot
                     .FirstRunAccepted
@@ -644,6 +652,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ShellPreferenceRepository
                     .FullscreenHotZoneKey,
                 value.ToString());
+        }
+    }
+
+    partial void OnDisplayTargetModeChanged(
+        string value)
+    {
+        string normalized =
+            ShellDisplayTarget.NormalizeValue(
+                value);
+        if (!string.Equals(
+                normalized,
+                value,
+                StringComparison.Ordinal))
+        {
+            DisplayTargetMode = normalized;
+            return;
+        }
+
+        DisplayTargetChanged?.Invoke();
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .DisplayTargetModeKey,
+                normalized);
         }
     }
 

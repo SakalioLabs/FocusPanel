@@ -71,6 +71,10 @@ public partial class EdgeIndicatorWindow : Window
     internal bool IsStarting =>
         _isStarting;
 
+    internal ShellDisplayTargetMode
+        TargetMode { get; set; } =
+        ShellDisplayTargetMode.OutermostRight;
+
     private void ShowWithoutActivation()
     {
         if (!IsVisible)
@@ -92,7 +96,8 @@ public partial class EdgeIndicatorWindow : Window
     public void Reposition()
     {
         Rectangle targetBounds =
-            ShellDisplayTarget.GetBounds();
+            ShellDisplayTarget.GetBounds(
+                TargetMode);
         if (targetBounds.Width <= 0
             || targetBounds.Height <= 0)
             return;

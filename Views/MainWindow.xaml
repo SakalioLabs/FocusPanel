@@ -502,6 +502,18 @@
                                         <ComboBoxItem Content="浅色" Tag="Light"/>
                                         <ComboBoxItem Content="深色" Tag="Dark"/>
                                     </ComboBox>
+                                    <TextBlock Text="Panel 所在屏幕"
+                                               Margin="0,12,0,5"
+                                               Style="{StaticResource FocusCaptionText}"/>
+                                    <ComboBox SelectedValuePath="Tag"
+                                              SelectedValue="{Binding DisplayTargetMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <ComboBoxItem Content="最右侧屏幕（避免两屏接缝）" Tag="OutermostRight"/>
+                                        <ComboBoxItem Content="Windows 主屏" Tag="Primary"/>
+                                    </ComboBox>
+                                    <TextBlock Margin="0,5,0,0"
+                                               Text="Panel、右缘热区和运行指示条会一起迁移。"
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <CheckBox Margin="0,12,0,0"
                                               Content="全屏应用前台时停用鼠标热区"
                                               IsChecked="{Binding DisableHotZoneInFullscreen}"/>

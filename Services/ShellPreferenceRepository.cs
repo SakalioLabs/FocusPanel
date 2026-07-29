@@ -12,14 +12,17 @@ internal sealed record ShellPreferenceSnapshot(
     bool FirstRunAccepted,
     bool ReplacementEnabled,
     string ThemeMode,
-    bool DisableHotZoneInFullscreen)
+    bool DisableHotZoneInFullscreen,
+    string DisplayTargetMode)
 {
     internal static ShellPreferenceSnapshot Default { get; } =
         new(
             false,
             false,
             "System",
-            true);
+            true,
+            ShellDisplayTarget
+                .OutermostRightValue);
 }
 
 internal interface IShellPreferenceRepository
@@ -47,13 +50,16 @@ internal sealed class ShellPreferenceRepository
         "Shell.Theme";
     internal const string FullscreenHotZoneKey =
         "Shell.DisableHotZoneInFullscreen";
+    internal const string DisplayTargetModeKey =
+        "Shell.DisplayTargetMode";
 
     private static readonly string[] Keys =
     {
         FirstRunAcceptedKey,
         ReplacementEnabledKey,
         ThemeModeKey,
-        FullscreenHotZoneKey
+        FullscreenHotZoneKey,
+        DisplayTargetModeKey
     };
 
     private readonly object _sync = new();
@@ -250,7 +256,13 @@ internal sealed class ShellPreferenceRepository
             ReadBoolean(
                 values,
                 FullscreenHotZoneKey,
-                true));
+                true),
+            ShellDisplayTarget.NormalizeValue(
+                ReadString(
+                    values,
+                    DisplayTargetModeKey,
+                    ShellDisplayTarget
+                        .OutermostRightValue)));
     }
 
     private static void SaveCore(
@@ -283,7 +295,10 @@ internal sealed class ShellPreferenceRepository
         {
             ThemeMode =
                 NormalizeTheme(
-                    snapshot.ThemeMode)
+                    snapshot.ThemeMode),
+            DisplayTargetMode =
+                ShellDisplayTarget.NormalizeValue(
+                    snapshot.DisplayTargetMode)
         };
 
     private static string NormalizeTheme(

@@ -20,7 +20,8 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         true,
                         "Neon",
-                        false),
+                        false,
+                        "Unsupported"),
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
@@ -33,6 +34,10 @@ public sealed class ShellPreferenceRepositoryTests
             snapshot.ThemeMode);
         Assert.False(
             snapshot.DisableHotZoneInFullscreen);
+        Assert.Equal(
+            ShellDisplayTarget
+                .OutermostRightValue,
+            snapshot.DisplayTargetMode);
     }
 
     [Fact]
@@ -60,7 +65,9 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         false,
                         "Dark",
-                        true);
+                        true,
+                        ShellDisplayTarget
+                            .PrimaryValue);
                 },
                 (_, _) => { });
 
@@ -84,6 +91,9 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.True(snapshot.FirstRunAccepted);
         Assert.False(snapshot.ReplacementEnabled);
         Assert.Equal("Dark", snapshot.ThemeMode);
+        Assert.Equal(
+            ShellDisplayTarget.PrimaryValue,
+            snapshot.DisplayTargetMode);
     }
 
     [Fact]

@@ -56,6 +56,66 @@ public sealed class ShellWindowPlacementTests
     }
 
     [Fact]
+    public void PrimaryMode_SelectsPrimaryInsteadOfRightmostDisplay()
+    {
+        var displays = new List<ShellDisplaySnapshot>
+        {
+            new(new Rectangle(0, 0, 1920, 1080), true),
+            new(new Rectangle(1920, 0, 2560, 1440), false)
+        };
+
+        ShellDisplaySnapshot? target =
+            ShellDisplayTarget.Select(
+                displays,
+                ShellDisplayTargetMode.Primary);
+
+        Assert.NotNull(target);
+        Assert.Equal(displays[0], target.Value);
+    }
+
+    [Fact]
+    public void PrimaryMode_WithoutPrimaryFallsBackToOutermost()
+    {
+        var displays = new List<ShellDisplaySnapshot>
+        {
+            new(new Rectangle(-1920, 0, 1920, 1080), false),
+            new(new Rectangle(0, 0, 2560, 1440), false)
+        };
+
+        ShellDisplaySnapshot? target =
+            ShellDisplayTarget.Select(
+                displays,
+                ShellDisplayTargetMode.Primary);
+
+        Assert.NotNull(target);
+        Assert.Equal(displays[1], target.Value);
+    }
+
+    [Theory]
+    [InlineData(
+        "Primary",
+        "Primary")]
+    [InlineData(
+        "OutermostRight",
+        "OutermostRight")]
+    [InlineData(
+        "unknown",
+        "OutermostRight")]
+    [InlineData(
+        null,
+        "OutermostRight")]
+    public void DisplayTargetMode_ParsesWithSafeFallback(
+        string? value,
+        string expected)
+    {
+        Assert.Equal(
+            expected,
+            ShellDisplayTarget
+                .Parse(value)
+                .ToString());
+    }
+
+    [Fact]
     public void MixedDpiOffsetPrimary_UsesPhysicalScreenOrigin()
     {
         var primary = new Rectangle(

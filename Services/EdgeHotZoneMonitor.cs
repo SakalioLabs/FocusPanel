@@ -31,9 +31,12 @@ public sealed class EdgeHotZoneMonitor : IDisposable
 
     public EdgeHotZoneMonitor(
         IWindowTracker windowTracker,
-        Func<bool>? suppressInFullscreen = null)
+        Func<bool>? suppressInFullscreen = null,
+        Func<Rectangle>? boundsProvider = null)
         : this(
-            () => ShellDisplayTarget.GetBounds(),
+            boundsProvider
+                ?? (() =>
+                    ShellDisplayTarget.GetBounds()),
             () => Forms.Cursor.Position,
             CreateSuppressionProbe(
                 windowTracker,

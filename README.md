@@ -9,6 +9,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ## 新壳层
 
 - 主屏右缘显示一条 `3px` 白色运行指示条；它完全点击穿透。最后 `12` 个物理像素由无窗口监测器检测，停留约 `100ms` 唤出 `76px` 紧凑应用坞。
+- 多显示器可在设置中选择“最右侧屏幕”或“Windows 主屏”。默认最右侧可避开横向相邻屏幕的接缝；切换后 Panel、12px 热区和 3px 指示条使用同一物理边界立即整体迁移，选择会写入现有 Shell 偏好并在下次启动恢复。
 - 右缘监测使用独立后台 `PeriodicTimer` 保持约 `30ms` 物理坐标采样，不再让 WPF Dispatcher 承担高频鼠标与全屏窗口检查；只有热区可用状态变化或达到呼出条件时才回到界面线程，因此工作区加载、布局和展开动画繁忙时仍能准确响应。停止或显示器变化后的旧采样会按代际丢弃，不会迟到误展开。
 - 点击搜索、桌面收纳、任务、番茄钟、OKR、AI 等入口后，工作区从右向左展开到约 `720px`。
 - 离开约 `300ms` 自动收起；只有搜索框、密码框和下拉选择等输入控件持有焦点时保持展开，普通按钮或应用图标焦点不会锁住 Panel，`Esc` 可关闭。
@@ -404,7 +405,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.29 `
+  -Version 0.10.30 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -415,7 +416,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意安装目录，默认值仍为当前用户目录。无需再寻找单独的 CustomSetup。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.29-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.30-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -435,9 +436,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 ## 多显示器右缘定位
 
-0.10.21 起，Panel、12px 物理热区和 3px 运行指示条共同选择虚拟桌面中最外侧的右屏，而不是盲目使用主屏右缘。这样当主屏在左、副屏在右时，呼出位置位于整套显示器的最右边，不再卡在两屏接缝；副屏在左时则仍落在主屏外侧。0.10.27 进一步在移动窗口前直接读取目标显示器的有效 DPI，不再用窗口原来所在屏幕的 DPI 做第一次定位；收到 `WM_DPICHANGED` 后会按同一目标重新锚定。分辨率、主屏或缩放改变时，Panel、热区和指示条会一起重算。
+0.10.21 起，Panel、12px 物理热区和 3px 运行指示条默认共同选择虚拟桌面中最外侧的右屏，而不是盲目使用主屏右缘。这样当主屏在左、副屏在右时，呼出位置位于整套显示器的最右边，不再卡在两屏接缝；副屏在左时则仍落在主屏外侧。0.10.27 进一步在移动窗口前直接读取目标显示器的有效 DPI，不再用窗口原来所在屏幕的 DPI 做第一次定位；收到 `WM_DPICHANGED` 后会按同一目标重新锚定。0.10.30 可在设置中改为 Windows 主屏，适合副屏位于左侧、上下排列或希望 Panel 固定跟随主屏的场景；目标切换、分辨率、主屏或缩放改变时，Panel、热区和指示条都会一起重算。
 
 ![双屏外侧右缘选择](docs/images/multi-monitor-edge-target.svg)
+
+![最右侧屏幕与主屏选择](docs/images/display-target-selection.svg)
 
 将生成的包上传为 GitHub Release 草稿：
 

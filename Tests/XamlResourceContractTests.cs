@@ -908,7 +908,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void ShellSurfaces_ShareOutermostDisplayTarget()
+    public void ShellSurfaces_ShareConfiguredDisplayTarget()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -918,9 +918,11 @@ public sealed class XamlResourceContractTests
         string hotZone = File.ReadAllText(
             Path.Combine(root, "Services", "EdgeHotZoneMonitor.cs"));
 
-        Assert.Contains("ShellDisplayTarget.GetBounds()", mainWindow);
-        Assert.Contains("ShellDisplayTarget.GetBounds()", indicator);
+        Assert.Contains("GetTargetDisplayBounds()", mainWindow);
+        Assert.Contains("TargetMode", indicator);
         Assert.Contains("ShellDisplayTarget.GetBounds()", hotZone);
+        Assert.Contains("DisplayTargetMode", mainWindow);
+        Assert.Contains("RefreshDisplayBounds()", mainWindow);
         Assert.DoesNotContain("Screen.PrimaryScreen", mainWindow);
         Assert.DoesNotContain("Screen.PrimaryScreen", indicator);
         Assert.DoesNotContain("Screen.PrimaryScreen", hotZone);
@@ -3514,6 +3516,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "ShellPreferenceRepository.cs"));
+        string mainXaml = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
 
         Assert.Contains(
             "ShellPreferenceSnapshot preferenceSnapshot",
@@ -3542,6 +3549,24 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Task CompleteAsync()",
             repository);
+        Assert.Contains(
+            "DisplayTargetModeKey",
+            repository);
+        Assert.Contains(
+            "OnDisplayTargetModeChanged(",
+            viewModel);
+        Assert.Contains(
+            "DisplayTargetChanged?.Invoke();",
+            viewModel);
+        Assert.Contains(
+            "SelectedValue=\"{Binding DisplayTargetMode",
+            mainXaml);
+        Assert.Contains(
+            "Tag=\"OutermostRight\"",
+            mainXaml);
+        Assert.Contains(
+            "Tag=\"Primary\"",
+            mainXaml);
 
         string mainWindow = File.ReadAllText(
             Path.Combine(

@@ -91,6 +91,8 @@ public partial class MainWindow :
         _viewModel.UpdateAvailable += ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted +=
             ViewModel_PomodoroCompleted;
+        _viewModel.DisplayTargetChanged +=
+            ViewModel_DisplayTargetChanged;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
         _coordinator.Taskbar.ReplacementStopped += Taskbar_ReplacementStopped;
 
@@ -240,7 +242,8 @@ public partial class MainWindow :
 
         _hotZoneMonitor = new EdgeHotZoneMonitor(
             _coordinator.Windows,
-            () => _viewModel.DisableHotZoneInFullscreen);
+            () => _viewModel.DisableHotZoneInFullscreen,
+            GetTargetDisplayBounds);
         _hotZoneMonitor.OpenRequested += (_, _) => OpenCompactDock();
         _hotZoneMonitor.AvailabilityChanged += isAvailable =>
         {
@@ -252,6 +255,8 @@ public partial class MainWindow :
     private void EnsureEdgeIndicator()
     {
         _edgeIndicator ??= new EdgeIndicatorWindow();
+        _edgeIndicator.TargetMode =
+            GetTargetDisplayMode();
     }
 
     private void PositionAtTargetRightEdge()
@@ -262,7 +267,7 @@ public partial class MainWindow :
     private void ApplyPanelPlacement(double widthDip)
     {
         Rectangle targetBounds =
-            ShellDisplayTarget.GetBounds();
+            GetTargetDisplayBounds();
         if (targetBounds.Width <= 0
             || targetBounds.Height <= 0)
             return;
@@ -1078,6 +1083,8 @@ public partial class MainWindow :
         _viewModel.UpdateAvailable -= ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted -=
             ViewModel_PomodoroCompleted;
+        _viewModel.DisplayTargetChanged -=
+            ViewModel_DisplayTargetChanged;
         HideShell();
     }
 
@@ -1143,6 +1150,23 @@ public partial class MainWindow :
             _edgeIndicator?.Reposition();
         });
     }
+
+    private void ViewModel_DisplayTargetChanged()
+    {
+        EnsureEdgeIndicator();
+        PositionAtTargetRightEdge();
+        _hotZoneMonitor?.RefreshDisplayBounds();
+        _edgeIndicator?.Reposition();
+    }
+
+    private ShellDisplayTargetMode
+        GetTargetDisplayMode() =>
+        ShellDisplayTarget.Parse(
+            _viewModel.DisplayTargetMode);
+
+    private Rectangle GetTargetDisplayBounds() =>
+        ShellDisplayTarget.GetBounds(
+            GetTargetDisplayMode());
 
     private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
     {
