@@ -1202,6 +1202,15 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "TaskbarAppsScrollViewer.ScrollToVerticalOffset",
             codeBehind);
+        Assert.Contains(
+            "PreviewDragOver=\"TaskbarAppsHost_PreviewDragOver\"",
+            mainWindow);
+        Assert.Contains(
+            "CompactTaskbarDragScrollPolicy",
+            codeBehind);
+        Assert.Contains(
+            "BeginTransientInteraction();",
+            codeBehind);
         Assert.Matches(
             @"CompactTaskbarScrollPolicy\s*\.GetRevealOffset",
             codeBehind);

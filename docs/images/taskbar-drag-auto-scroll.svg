@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#17253b"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6ab5ff" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#6ab5ff" stop-opacity=".08"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity=".32"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="560" rx="30" fill="url(#background)"/>
+  <text x="56" y="68" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="600">跨视口拖动，应用栏会跟着走</text>
+  <text x="56" y="102" fill="#9fb0c8" font-family="Segoe UI, Microsoft YaHei" font-size="17">固定排序和运行项自动固定不再受当前可见范围限制</text>
+
+  <g filter="url(#shadow)">
+    <rect x="88" y="136" width="118" height="358" rx="28" fill="#1e2c42" stroke="#3e5270" stroke-width="2"/>
+    <rect x="103" y="151" width="88" height="62" rx="18" fill="url(#edge)"/>
+    <path d="M147 172 l-13 14 h8 v12 h10 v-12 h8z" fill="#d9edff"/>
+    <rect x="115" y="225" width="64" height="64" rx="18" fill="#334967"/>
+    <text x="147" y="266" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="24" font-weight="700">A</text>
+    <rect x="115" y="300" width="64" height="64" rx="18" fill="#334967"/>
+    <text x="147" y="341" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="24" font-weight="700">B</text>
+    <rect x="115" y="375" width="64" height="64" rx="18" fill="#334967"/>
+    <text x="147" y="416" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="24" font-weight="700">C</text>
+    <rect x="103" y="451" width="88" height="28" rx="14" fill="#243a57"/>
+    <circle cx="147" cy="465" r="4" fill="#79baff"/>
+  </g>
+
+  <path d="M470 366 C390 366 326 312 230 225" fill="none" stroke="#78b9ff" stroke-width="5" stroke-linecap="round" stroke-dasharray="10 12"/>
+  <path d="M231 225 l26 3-12 23z" fill="#78b9ff"/>
+
+  <g transform="translate(424 300)" filter="url(#shadow)">
+    <rect width="78" height="78" rx="22" fill="#6d7cff"/>
+    <text x="39" y="50" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="30" font-weight="700">D</text>
+    <path d="M62 55 l20 8-12 6 7 14-8 4-7-14-8 10z" fill="#f7fbff" stroke="#1b2a40" stroke-width="2"/>
+  </g>
+
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <rect x="572" y="150" width="470" height="88" rx="20" fill="#1d2d44" stroke="#3a5274"/>
+    <circle cx="614" cy="194" r="18" fill="#17466f"/>
+    <text x="614" y="201" text-anchor="middle" fill="#9fd0ff" font-size="20">1</text>
+    <text x="650" y="188" fill="#eff6ff" font-size="20" font-weight="600">进入 56px 边缘感应区</text>
+    <text x="650" y="215" fill="#9fb0c8" font-size="15">中部拖动保持静止，不抢夺位置</text>
+
+    <rect x="572" y="254" width="470" height="88" rx="20" fill="#1d2d44" stroke="#3a5274"/>
+    <circle cx="614" cy="298" r="18" fill="#17466f"/>
+    <text x="614" y="305" text-anchor="middle" fill="#9fd0ff" font-size="20">2</text>
+    <text x="650" y="292" fill="#eff6ff" font-size="20" font-weight="600">4–18px 渐进滚动</text>
+    <text x="650" y="319" fill="#9fb0c8" font-size="15">越靠近边缘越快，45ms 稳定节流</text>
+
+    <rect x="572" y="358" width="470" height="88" rx="20" fill="#1d2d44" stroke="#3a5274"/>
+    <circle cx="614" cy="402" r="18" fill="#17466f"/>
+    <text x="614" y="409" text-anchor="middle" fill="#9fd0ff" font-size="20">3</text>
+    <text x="650" y="396" fill="#eff6ff" font-size="20" font-weight="600">放下并持久保存顺序</text>
+    <text x="650" y="423" fill="#9fb0c8" font-size="15">运行项同时固定；取消拖拽则不写入</text>
+  </g>
+
+  <text x="56" y="528" fill="#7f94af" font-family="Segoe UI, Microsoft YaHei" font-size="15">拖拽会话持有 Panel 交互锁，视口滚动时不会自动收起</text>
+</svg>

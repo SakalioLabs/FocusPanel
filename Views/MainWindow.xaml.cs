@@ -56,6 +56,7 @@ public partial class MainWindow :
     private bool _autoHideIgnoresInputFocus;
     private int _transientInteractionDepth;
     private System.Windows.Point _pinnedDragStart;
+    private long _lastTaskbarDragScrollTick = -1;
 
     public MainWindow()
         : this(null)
@@ -1437,10 +1438,69 @@ public partial class MainWindow :
             return;
         }
 
-        DragDrop.DoDragDrop(
-            (DependencyObject)sender,
-            new DataObject(typeof(TaskbarAppItem), app),
-            DragDropEffects.Move);
+        BeginTransientInteraction();
+        _lastTaskbarDragScrollTick = -1;
+        try
+        {
+            DragDrop.DoDragDrop(
+                (DependencyObject)sender,
+                new DataObject(
+                    typeof(TaskbarAppItem),
+                    app),
+                DragDropEffects.Move);
+        }
+        finally
+        {
+            _lastTaskbarDragScrollTick = -1;
+            EndTransientInteraction();
+        }
+    }
+
+    private void TaskbarAppsHost_PreviewDragOver(
+        object sender,
+        DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(
+                typeof(TaskbarAppItem)))
+        {
+            return;
+        }
+
+        long currentTick =
+            Environment.TickCount64;
+        CompactTaskbarScrollState state =
+            CompactTaskbarScrollPolicy.GetState(
+                TaskbarAppsScrollViewer
+                    .VerticalOffset,
+                TaskbarAppsScrollViewer
+                    .ScrollableHeight);
+        CompactTaskbarDragScrollDecision
+            decision =
+                CompactTaskbarDragScrollPolicy
+                    .GetDecision(
+                        TaskbarAppsScrollViewer
+                            .VerticalOffset,
+                        TaskbarAppsScrollViewer
+                            .ScrollableHeight,
+                        e.GetPosition(
+                                TaskbarAppsScrollViewer)
+                            .Y,
+                        TaskbarAppsScrollViewer
+                            .ViewportHeight,
+                        state.CanScrollUp,
+                        state.CanScrollDown,
+                        CompactTaskbarDragScrollPolicy
+                            .IsScrollDue(
+                                _lastTaskbarDragScrollTick,
+                                currentTick));
+        if (!decision.ShouldScroll)
+            return;
+
+        _lastTaskbarDragScrollTick =
+            currentTick;
+        TaskbarAppsScrollViewer
+            .ScrollToVerticalOffset(
+                decision.TargetOffset);
     }
 
     private void TaskbarApp_DragOver(object sender, DragEventArgs e)

@@ -39,6 +39,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 窗口前台状态改变时按应用身份增量更新图标，只替换真正变化的项目，不再清空并重建整条应用栏，因此滚动位置和未变化图标保持稳定。
 - 同一运行应用的活动状态、窗口标题和窗口数量改为在原有任务栏项目上原位同步；WPF 不再因前台切换执行集合 `Replace`、销毁按钮并重新创建视觉树，当前应用状态条和工具提示可以平滑更新。
 - 应用数量超过紧凑栏高度时，切换到可视区外的应用会自动以最小距离滚动到完整可见位置，并为上下悬浮导航各保留 30px 安全区；已经可见的活动图标不移动。触发依据是稳定应用身份，同一应用内部切换窗口、标题变化或用户手动浏览时不会反复抢回滚动位置。
+- 应用栏溢出后，拖动固定项或未固定运行项到可视区上下边缘会渐进自动滚动：越靠近边缘速度越快，离开感应区立即停止，45ms 节流避免高刷新率鼠标导致跳跃。整个拖拽会话持有 Panel 临时交互锁，拖到视口外、取消或放下时不会被自动收起；运行项跨视口放下后仍按原语义自动固定并保存顺序。
 - 窗口跟踪覆盖 `CREATE / DESTROY / SHOW / HIDE / NAMECHANGE / FOREGROUND` 完整生命周期；新应用窗口创建后及时进入统一应用栏，最后窗口销毁后及时移除，不再依赖下一次偶然的前台或标题事件纠正陈旧图标。
 - 顶层窗口枚举、AUMID/进程身份解析和图标提取通过单消费者后台快照执行，不再占用 WPF 界面线程；窗口事件在捕获期间继续到达时只保留一次尾随刷新，并用修订号拒绝旧结果、隐藏后的迟到结果和退出后的回调。
 - WinEvent 只接收 `OBJID_WINDOW` 窗口本体并跳过 FocusPanel 自身进程；按钮、菜单和 Panel 显隐不会触发无意义的完整窗口重扫，短时间重复通知继续合并为一次刷新。
@@ -170,6 +171,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![统一应用栏运行与活动状态](docs/images/taskbar-app-state-feedback.svg)
 
 ![溢出列表中的活动应用自动露出](docs/images/taskbar-active-app-reveal.svg)
+
+![溢出应用栏拖拽自动滚动](docs/images/taskbar-drag-auto-scroll.svg)
 
 ![统一应用栏原位状态同步](docs/images/taskbar-in-place-sync.svg)
 
@@ -430,7 +433,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.38 `
+  -Version 0.10.39 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -441,7 +444,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：统一的图形化首次安装与跨盘迁移入口；双击后可直接输入或浏览到 D/E 盘任意绝对目录。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，完成后反查 Windows 安装记录核对真实路径。有可用且空间充足的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置；超时则停止而不是写回 C 盘。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.38-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.39-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

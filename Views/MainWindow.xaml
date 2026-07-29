@@ -757,7 +757,9 @@
                                     Background="{DynamicResource FocusStrokeBrush}"/>
                         </StackPanel>
 
-                        <Grid Grid.Row="1">
+                        <Grid Grid.Row="1"
+                              AllowDrop="True"
+                              PreviewDragOver="TaskbarAppsHost_PreviewDragOver">
                             <Button x:Name="TaskbarScrollUpButton"
                                     Panel.ZIndex="2"
                                     Style="{StaticResource FocusIconButton}"
