@@ -30,6 +30,26 @@ $githubHeaders = @{
     'X-GitHub-Api-Version' = '2022-11-28'
     'User-Agent' = 'FocusPanel-Release-Publisher'
 }
+$existingRelease = $null
+if ($Publish) {
+    try {
+        $existingRelease = Invoke-RestMethod `
+            -Method Get `
+            -Uri "$apiBaseUrl/releases/tags/$releaseTag" `
+            -Headers $githubHeaders
+    }
+    catch {
+        $statusCode = if ($null -ne $_.Exception.Response) {
+            [int]$_.Exception.Response.StatusCode
+        }
+        else {
+            0
+        }
+        if ($statusCode -ne 404) {
+            throw
+        }
+    }
+}
 
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $packageDir = Join-Path $projectRoot 'artifacts\release\packages'
@@ -57,16 +77,26 @@ if ($Publish) {
     $arguments += @('--publish', 'true')
 }
 
-& $Dotnet8Path @arguments
-if ($LASTEXITCODE -ne 0) {
-    throw "GitHub Release upload failed with exit code $LASTEXITCODE."
+if ($null -eq $existingRelease) {
+    & $Dotnet8Path @arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "GitHub Release upload failed with exit code $LASTEXITCODE."
+    }
+}
+else {
+    Write-Host "Release $releaseTag already exists; repairing and verifying its assets."
 }
 
 if ($Publish) {
-    $release = Invoke-RestMethod `
-        -Method Get `
-        -Uri "$apiBaseUrl/releases/tags/$releaseTag" `
-        -Headers $githubHeaders
+    $release = if ($null -ne $existingRelease) {
+        $existingRelease
+    }
+    else {
+        Invoke-RestMethod `
+            -Method Get `
+            -Uri "$apiBaseUrl/releases/tags/$releaseTag" `
+            -Headers $githubHeaders
+    }
 
     $customInstallerName = 'FocusPanel-win-CustomSetup.exe'
     $customInstallerPath = Join-Path $packageDir $customInstallerName

@@ -7,6 +7,7 @@
 - DPI 不再从 `Shell_TrayWnd` 推断；窗口先用当前 DPI 粗定位到目标屏，再通过微软为 Per-Monitor V2 推荐的 `GetDpiForWindow` 读取目标屏真实 DPI并执行一次精确校正。紧凑/展开尺寸、边距和动画使用承载屏幕缩放，修复混合 100%/150% 缩放下的横向错位。
 - 新增 `FocusPanel-win-CustomSetup.exe`：提供真实的图形化文件夹选择器，确认后调用 Velopack 官方 `Setup.exe --installto`，继续保留原生更新根目录与后续一键更新能力。MSI 说明纠正为当前用户/整机及企业部署，不再误称任意目录选择器。
 - 发布器不再假设 Velopack 会上传自定义扩展资产：标准更新包完成后通过 GitHub Release API 显式上传 `CustomSetup.exe`，同名同大小时幂等跳过、大小不符时精确替换，最后再与完整包、MSI 和清单统一验收。
+- 发布后补传支持幂等续跑：tag 对应 Release 已存在时跳过会拒绝重复发布的 Velopack 上传阶段，直接进入自定义资产修复、Latest 标记和完整验收；只有明确的 404 才创建新 Release，其他 GitHub 响应异常原样中止。
 - 新增左右副屏、相同右边界和物理定位测试，发布契约要求 CustomSetup、MSI 与更新清单同时存在；README 更新安装入口说明，并增加自定义安装和双屏目标屏示意图。
 
 ## v0.10.20 - 2026-07-29

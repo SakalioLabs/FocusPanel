@@ -895,6 +895,12 @@ public sealed class XamlResourceContractTests
             "-InFile $customInstallerPath",
             publisher);
         Assert.Contains(
+            "repairing and verifying its assets",
+            publisher);
+        Assert.Contains(
+            "$statusCode -ne 404",
+            publisher);
+        Assert.Contains(
             "'FocusPanel-win.msi'",
             publisher);
         Assert.Contains("'RELEASES'", publisher);
