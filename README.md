@@ -20,10 +20,13 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 从 Explorer 发起的外部拖拽与 Panel 自己发起的拖出使用独立会话语义；外部拖拽取消、离开或落下后立即复位，内部拖拽经过子控件时不会被重复 `DragEnter` 误判为外部操作。
 - 独占或无边框全屏应用前台时默认停用鼠标热区。
 - 全局主动唤出优先使用 `Ctrl+Alt+Space`；若被其他程序占用，自动回退 `Ctrl+Shift+Space`。设置页显示本次会话实际注册成功的组合，两者都不可用时仍可使用右缘热区。
+- 在设置中明确开启“九槽位全局快速键”且任务栏接管成功后，`Ctrl+Alt+1…9` 可从任意应用直接启动或切换统一应用栏前九个槽位，追加 `Shift` 则启动新实例；此选项默认关闭并写入 Shell 偏好，避免国际键盘的 AltGr 输入被意外占用。顺序始终按 Panel 当前从上到下的固定项与稳定运行项计算，图标工具提示和读屏名称会说明实际槽位。每个组合独立通过公开 `RegisterHotKey` 注册，冲突项留给原程序，设置页显示本次会话真实可用范围；关闭选项、恢复原任务栏、接管异常、更新或退出时立即幂等注销。FocusPanel 不用键盘钩子强抢 Windows 保留的 `Win+数字` 组合，依据见 [RegisterHotKey 文档](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey)。
 - 主动唤出后焦点落到搜索入口，可使用 Tab、Shift+Tab 或方向键循环浏览紧凑栏，Enter/Space 执行；应用按钮向读屏提供应用名称和窗口摘要，Shift+F10 或菜单键打开右键菜单。
 - 搜索、Focus 中心、状态中心、月历、设置和电源打开后都会把焦点送入首个有效内容；按 `Esc` 关闭时再返回原紧凑栏入口。快速切换或自动收起期间的迟到焦点请求会检查窗口生命周期，不会跳到已隐藏控件。
 
 ![主动唤出快捷键回退与真实状态](docs/images/summon-hotkey-fallback.svg)
+
+![九槽位快速应用快捷键与安全生命周期](docs/images/taskbar-slot-hotkeys.svg)
 
 ![工作区固定展开与自动收起生命周期](docs/images/workspace-pin-lifecycle.svg)
 - 键盘导航使用统一的 2px Fluent 圆角焦点环，轮廓只在键盘操作时出现，不给鼠标点击增加常驻边框；高对比度模式跟随 Windows 系统高亮色。
@@ -451,7 +454,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.47 `
+  -Version 0.10.48 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -462,7 +465,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.47-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.48-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

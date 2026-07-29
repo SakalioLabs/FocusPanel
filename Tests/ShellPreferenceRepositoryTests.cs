@@ -11,6 +11,15 @@ namespace FocusPanel.Tests;
 public sealed class ShellPreferenceRepositoryTests
 {
     [Fact]
+    public void Default_DoesNotClaimGlobalNumberShortcuts()
+    {
+        Assert.False(
+            ShellPreferenceSnapshot
+                .Default
+                .EnableTaskbarSlotHotkeys);
+    }
+
+    [Fact]
     public async Task Load_NormalizesUnsupportedTheme()
     {
         using var repository =
@@ -21,6 +30,7 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         "Neon",
                         false,
+                        true,
                         "Unsupported"),
                 (_, _) => { });
 
@@ -34,6 +44,8 @@ public sealed class ShellPreferenceRepositoryTests
             snapshot.ThemeMode);
         Assert.False(
             snapshot.DisableHotZoneInFullscreen);
+        Assert.True(
+            snapshot.EnableTaskbarSlotHotkeys);
         Assert.Equal(
             ShellDisplayTarget
                 .OutermostRightValue,
@@ -51,6 +63,7 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         "System",
                         true,
+                        false,
                         @"device:  \\.\DISPLAY2  "),
                 (_, _) => { });
 
@@ -88,6 +101,7 @@ public sealed class ShellPreferenceRepositoryTests
                         false,
                         "Dark",
                         true,
+                        false,
                         ShellDisplayTarget
                             .PrimaryValue);
                 },

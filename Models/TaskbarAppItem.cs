@@ -20,6 +20,7 @@ public sealed class TaskbarAppItem : ObservableObject
         Array.Empty<AppLaunchItem>();
     private WindowTaskItem? _runningTask;
     private TaskbarDropPlacement? _dropPlacement;
+    private int? _shortcutSlotNumber;
 
     public string IdentityKey { get; init; } = string.Empty;
     public string DisplayName
@@ -81,8 +82,17 @@ public sealed class TaskbarAppItem : ObservableObject
                 : IsPinned
                     ? "已固定 · 未运行"
                     : "未运行";
+    public string ShortcutGestureText =>
+        _shortcutSlotNumber.HasValue
+            ? $"Ctrl+Alt+{_shortcutSlotNumber.Value}"
+            : string.Empty;
+    public bool HasShortcutGesture =>
+        _shortcutSlotNumber.HasValue;
     public string AccessibleName =>
-        $"{DisplayName}，{StatusSummary}";
+        HasShortcutGesture
+            ? $"{DisplayName}，{StatusSummary}，"
+              + $"快速键 {ShortcutGestureText}"
+            : $"{DisplayName}，{StatusSummary}";
     public string InteractionHint
     {
         get
@@ -96,9 +106,13 @@ public sealed class TaskbarAppItem : ObservableObject
                 CanLaunchNewInstance
                 ? $"{primaryAction}；Shift+左键或中键启动新实例"
                 : primaryAction;
-            return IsPinned
+            string hint = IsPinned
                 ? $"{interaction}；Alt+↑/↓调整固定顺序"
                 : interaction;
+            return HasShortcutGesture
+                ? $"{hint}；{ShortcutGestureText} 直接启动或切换，"
+                  + "加 Shift 启动新实例"
+                : hint;
         }
     }
     public bool ShowsDropBefore =>
@@ -107,6 +121,27 @@ public sealed class TaskbarAppItem : ObservableObject
     public bool ShowsDropAfter =>
         _dropPlacement
         == TaskbarDropPlacement.After;
+
+    internal void SetShortcutSlot(
+        int? slotNumber)
+    {
+        if (_shortcutSlotNumber
+            == slotNumber)
+        {
+            return;
+        }
+
+        _shortcutSlotNumber =
+            slotNumber;
+        OnPropertyChanged(
+            nameof(ShortcutGestureText));
+        OnPropertyChanged(
+            nameof(HasShortcutGesture));
+        OnPropertyChanged(
+            nameof(AccessibleName));
+        OnPropertyChanged(
+            nameof(InteractionHint));
+    }
 
     private string ComposeWindowPreview()
     {

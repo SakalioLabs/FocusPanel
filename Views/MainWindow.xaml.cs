@@ -72,6 +72,8 @@ public partial class MainWindow :
     private TaskbarWindowPreviewWindow?
         _taskbarWindowPreview;
     private bool _taskbarPreviewInteractionActive;
+    private TaskbarSlotHotkeySession?
+        _taskbarSlotHotkeySession;
     private string? _lastTaskbarWindowCycleIdentity;
     private IntPtr _lastTaskbarWindowCycleHandle;
     private long _lastTaskbarWindowCycleTick = -1;
@@ -720,6 +722,26 @@ public partial class MainWindow :
         object? sender,
         PropertyChangedEventArgs e)
     {
+        if (e.PropertyName
+            == nameof(
+                MainViewModel
+                    .EnableTaskbarSlotHotkeys))
+        {
+            if (_viewModel
+                    .EnableTaskbarSlotHotkeys
+                && _coordinator.Taskbar
+                    .IsReplacementEnabled)
+            {
+                RegisterTaskbarSlotHotkeys();
+            }
+            else
+            {
+                UnregisterTaskbarSlotHotkeys();
+            }
+
+            return;
+        }
+
         if (e.PropertyName
             != nameof(
                 MainViewModel
@@ -1711,9 +1733,11 @@ public partial class MainWindow :
         if (_coordinator.TryEnableTaskbarReplacement(out string? error))
         {
             _viewModel.MarkReplacementEnabled(true);
+            RegisterTaskbarSlotHotkeys();
             return;
         }
 
+        UnregisterTaskbarSlotHotkeys();
         _viewModel.MarkReplacementStopped(
             TaskbarReplacementStopReason.StartupFailure,
             error ?? "无法启用任务栏替代模式。");
@@ -1726,6 +1750,7 @@ public partial class MainWindow :
 
     private void DisableTaskbarReplacement()
     {
+        UnregisterTaskbarSlotHotkeys();
         _coordinator.RestoreTaskbar();
         _viewModel.MarkReplacementEnabled(false);
     }
@@ -1742,6 +1767,7 @@ public partial class MainWindow :
                 if (_isExit)
                     return;
 
+                UnregisterTaskbarSlotHotkeys();
                 _viewModel.MarkReplacementStopped(stopped.Reason, stopped.Message);
             });
         }
@@ -1779,6 +1805,7 @@ public partial class MainWindow :
 
             _viewModel.UpdateStatus =
                 "备份完成，正在恢复任务栏并启动安装…";
+            UnregisterTaskbarSlotHotkeys();
             _coordinator.RestoreTaskbar();
             DesktopHelper.ToggleDesktopIcons(true);
             _coordinator.Updates.ApplyAndRestart();
@@ -1840,6 +1867,7 @@ public partial class MainWindow :
             closeMenu: true);
         _autoHideTimer.Stop();
         _transientInteractionDepth = 0;
+        UnregisterTaskbarSlotHotkeys();
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
         if (_summonHotkeyRegistered && hwnd != IntPtr.Zero)
         {
@@ -1989,6 +2017,18 @@ public partial class MainWindow :
             FocusCompactDock();
             handled = true;
         }
+        else if (message == WmHotkey
+                 && _taskbarSlotHotkeySession
+                     ?.TryResolve(
+                         wParam.ToInt32(),
+                         out TaskbarSlotHotkeyBinding
+                             binding)
+                 == true)
+        {
+            ExecuteTaskbarSlotHotkey(
+                binding);
+            handled = true;
+        }
         else if (message == WmDpiChanged)
         {
             _ = Dispatcher.BeginInvoke(
@@ -1997,6 +2037,129 @@ public partial class MainWindow :
         }
 
         return IntPtr.Zero;
+    }
+
+    private void RegisterTaskbarSlotHotkeys()
+    {
+        UnregisterTaskbarSlotHotkeys(
+            updateStatus: false);
+        if (!_viewModel
+                .EnableTaskbarSlotHotkeys)
+        {
+            _viewModel
+                .SetTaskbarSlotShortcutDisabled();
+            return;
+        }
+
+        IntPtr hwnd =
+            new WindowInteropHelper(this)
+                .Handle;
+        if (hwnd == IntPtr.Zero
+            || !_coordinator.Taskbar
+                .IsReplacementEnabled)
+        {
+            _viewModel
+                .SetTaskbarSlotShortcutDisabled();
+            return;
+        }
+
+        var session =
+            new TaskbarSlotHotkeySession(
+                binding =>
+                    NativeMethods.RegisterHotKey(
+                        hwnd,
+                        binding.Id,
+                        binding.Modifiers,
+                        binding.VirtualKey),
+                hotkeyId =>
+                    NativeMethods.UnregisterHotKey(
+                        hwnd,
+                        hotkeyId));
+        TaskbarSlotHotkeyRegistration
+            registration =
+                session.RegisterAvailable();
+        _taskbarSlotHotkeySession =
+            session;
+        _viewModel
+            .SetTaskbarSlotShortcutStatus(
+                registration);
+    }
+
+    private void UnregisterTaskbarSlotHotkeys(
+        bool updateStatus = true)
+    {
+        _taskbarSlotHotkeySession?.Dispose();
+        _taskbarSlotHotkeySession = null;
+        if (updateStatus)
+        {
+            _viewModel
+                .SetTaskbarSlotShortcutDisabled();
+        }
+    }
+
+    private void ExecuteTaskbarSlotHotkey(
+        TaskbarSlotHotkeyBinding binding)
+    {
+        if (_isExit
+            || !_coordinator.Taskbar
+                .IsReplacementEnabled)
+        {
+            return;
+        }
+
+        TaskbarAppItem? task =
+            binding.SlotIndex
+                < _viewModel.TaskbarApps.Count
+                ? _viewModel.TaskbarApps[
+                    binding.SlotIndex]
+                : null;
+        TaskbarSlotInvocationKind invocation =
+            TaskbarSlotHotkeyPolicy
+                .GetInvocation(
+                    _viewModel.TaskbarApps.Count,
+                    binding,
+                    task?.CanLaunchNewInstance
+                        == true);
+        switch (invocation)
+        {
+            case TaskbarSlotInvocationKind
+                .ActivateOrLaunch:
+                _viewModel
+                    .ActivateTaskbarAppCommand
+                    .Execute(task);
+                break;
+            case TaskbarSlotInvocationKind
+                .LaunchNewInstance:
+                _viewModel
+                    .LaunchNewTaskbarAppCommand
+                    .Execute(task);
+                break;
+            default:
+                ShowTaskbarSlotHotkeyUnavailable(
+                    binding,
+                    task);
+                break;
+        }
+    }
+
+    private void
+        ShowTaskbarSlotHotkeyUnavailable(
+            TaskbarSlotHotkeyBinding
+                binding,
+            TaskbarAppItem? task)
+    {
+        string message =
+            task == null
+                ? $"第 {binding.SlotNumber} 个应用槽当前为空。"
+                : $"“{task.DisplayName}”没有可靠的"
+                  + "新实例启动目标。";
+        _toastManager.Enqueue(
+            new FocusToastNotification(
+                $"taskbar-slot-{binding.Id}",
+                "快速应用未执行",
+                message,
+                "\uE783",
+                FocusToastKind.Warning));
     }
 
     private void FocusCompactDock()

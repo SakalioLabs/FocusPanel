@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="500" rx="28" fill="url(#background)"/>
+  <g font-family="Microsoft YaHei UI,Segoe UI,sans-serif">
+    <text x="54" y="62" fill="#f8fafc" font-size="28" font-weight="700">九槽位快速应用 · 全局直达 · 冲突不抢占</text>
+    <text x="54" y="92" fill="#94a3b8" font-size="14">设置中明确开启且接管成功后注册；关闭选项、恢复任务栏、更新或退出前立即注销</text>
+
+    <rect x="54" y="126" width="470" height="292" rx="24" fill="#111827" stroke="#475569"/>
+    <text x="82" y="164" fill="#e2e8f0" font-size="17" font-weight="600">统一应用栏当前顺序</text>
+    <g font-size="14">
+      <g transform="translate(82 188)">
+        <rect width="414" height="52" rx="15" fill="#1e3a8a"/>
+        <circle cx="28" cy="26" r="16" fill="#38bdf8"/>
+        <text x="28" y="31" text-anchor="middle" fill="#082f49" font-weight="700">1</text>
+        <text x="58" y="31" fill="#dbeafe">资源管理器 · 固定且运行</text>
+        <text x="392" y="31" text-anchor="end" fill="#bae6fd">Ctrl+Alt+1</text>
+      </g>
+      <g transform="translate(82 250)">
+        <rect width="414" height="52" rx="15" fill="#1f2937"/>
+        <circle cx="28" cy="26" r="16" fill="#818cf8"/>
+        <text x="28" y="31" text-anchor="middle" fill="#1e1b4b" font-weight="700">2</text>
+        <text x="58" y="31" fill="#e2e8f0">Visual Studio Code · 固定</text>
+        <text x="392" y="31" text-anchor="end" fill="#c7d2fe">Ctrl+Alt+2</text>
+      </g>
+      <g transform="translate(82 312)">
+        <rect width="414" height="52" rx="15" fill="#1f2937"/>
+        <circle cx="28" cy="26" r="16" fill="#64748b"/>
+        <text x="28" y="31" text-anchor="middle" fill="#f8fafc" font-weight="700">3</text>
+        <text x="58" y="31" fill="#e2e8f0">浏览器 · 稳定运行项</text>
+        <text x="392" y="31" text-anchor="end" fill="#cbd5e1">Ctrl+Alt+3</text>
+      </g>
+    </g>
+    <text x="82" y="394" fill="#94a3b8" font-size="13">固定项优先；未固定运行项在其后保持稳定，不按前台跳动</text>
+
+    <rect x="554" y="126" width="592" height="292" rx="24" fill="#111827" stroke="#475569"/>
+    <text x="582" y="164" fill="#e2e8f0" font-size="17" font-weight="600">一次按键，复用同一安全操作语义</text>
+    <g font-size="14" text-anchor="middle">
+      <rect x="592" y="190" width="224" height="64" rx="17" fill="#0c4a6e"/>
+      <text x="704" y="216" fill="#e0f2fe" font-weight="600">Ctrl + Alt + 数字</text>
+      <text x="704" y="238" fill="#bae6fd">启动 / 激活 / 最小化</text>
+      <rect x="864" y="190" width="244" height="64" rx="17" fill="#312e81"/>
+      <text x="986" y="216" fill="#eef2ff" font-weight="600">再加 Shift</text>
+      <text x="986" y="238" fill="#c7d2fe">启动可靠的新实例</text>
+    </g>
+    <path d="M704 272v34M986 272v34" stroke="url(#accent)" stroke-width="3" stroke-linecap="round"/>
+    <rect x="592" y="306" width="516" height="70" rx="18" fill="#134e4a"/>
+    <text x="850" y="334" text-anchor="middle" fill="#ccfbf1" font-size="15" font-weight="600">逐组合 RegisterHotKey</text>
+    <text x="850" y="358" text-anchor="middle" fill="#99f6e4" font-size="13">成功项启用 · 冲突项留给原程序 · 不使用键盘钩子</text>
+    <text x="554" y="462" fill="#94a3b8" font-size="13">默认关闭以保护 AltGr 输入；Windows 原生任务栏恢复后不再持有任何槽位快捷键。</text>
+  </g>
+</svg>

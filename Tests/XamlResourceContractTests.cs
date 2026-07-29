@@ -1370,6 +1370,68 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TaskbarSlots_RegisterOnlyForActiveReplacementAndExposeStatus()
+    {
+        string root =
+            FindRepositoryRoot();
+        string mainWindow =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "MainWindow.xaml"));
+        string codeBehind =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "MainWindow.xaml.cs"));
+        string viewModel =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs"));
+
+        Assert.Contains(
+            "Text=\"{Binding TaskbarSlotShortcutText}\"",
+            mainWindow);
+        Assert.Contains(
+            "IsChecked=\"{Binding EnableTaskbarSlotHotkeys}\"",
+            mainWindow);
+        Assert.Contains(
+            "RegisterTaskbarSlotHotkeys();",
+            codeBehind);
+        Assert.Contains(
+            "UnregisterTaskbarSlotHotkeys();",
+            codeBehind);
+        Assert.Contains(
+            ".IsReplacementEnabled",
+            codeBehind);
+        Assert.Contains(
+            "TaskbarSlotHotkeyPolicy",
+            codeBehind);
+        Assert.Contains(
+            ".GetInvocation(",
+            codeBehind);
+        Assert.Contains(
+            "ActivateTaskbarAppCommand",
+            codeBehind);
+        Assert.Contains(
+            "LaunchNewTaskbarAppCommand",
+            codeBehind);
+        Assert.Contains(
+            "SetTaskbarSlotShortcutStatus(",
+            viewModel);
+        Assert.Contains(
+            "TaskbarSlotHotkeysKey",
+            viewModel);
+        Assert.Contains(
+            "SetShortcutSlot(",
+            viewModel);
+    }
+
+    [Fact]
     public void TransientPanels_MoveFocusInsideAndReturnItToTheirCompactEntry()
     {
         string root = FindRepositoryRoot();

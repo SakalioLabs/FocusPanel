@@ -13,6 +13,7 @@ internal sealed record ShellPreferenceSnapshot(
     bool ReplacementEnabled,
     string ThemeMode,
     bool DisableHotZoneInFullscreen,
+    bool EnableTaskbarSlotHotkeys,
     string DisplayTargetMode)
 {
     internal static ShellPreferenceSnapshot Default { get; } =
@@ -21,6 +22,7 @@ internal sealed record ShellPreferenceSnapshot(
             false,
             "System",
             true,
+            false,
             ShellDisplayTarget
                 .OutermostRightValue);
 }
@@ -50,6 +52,8 @@ internal sealed class ShellPreferenceRepository
         "Shell.Theme";
     internal const string FullscreenHotZoneKey =
         "Shell.DisableHotZoneInFullscreen";
+    internal const string TaskbarSlotHotkeysKey =
+        "Shell.EnableTaskbarSlotHotkeys";
     internal const string DisplayTargetModeKey =
         "Shell.DisplayTargetMode";
 
@@ -59,6 +63,7 @@ internal sealed class ShellPreferenceRepository
         ReplacementEnabledKey,
         ThemeModeKey,
         FullscreenHotZoneKey,
+        TaskbarSlotHotkeysKey,
         DisplayTargetModeKey
     };
 
@@ -257,6 +262,10 @@ internal sealed class ShellPreferenceRepository
                 values,
                 FullscreenHotZoneKey,
                 true),
+            ReadBoolean(
+                values,
+                TaskbarSlotHotkeysKey,
+                false),
             ShellDisplayTarget.NormalizeValue(
                 ReadString(
                     values,

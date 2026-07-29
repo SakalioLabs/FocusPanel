@@ -183,8 +183,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool disableHotZoneInFullscreen = true;
 
     [ObservableProperty]
+    private bool enableTaskbarSlotHotkeys;
+
+    [ObservableProperty]
     private string summonShortcutText =
         "正在注册主动唤出快捷键…";
+
+    [ObservableProperty]
+    private string taskbarSlotShortcutText =
+        "九槽位全局快速键已关闭";
 
     [ObservableProperty]
     private string displayTargetMode =
@@ -532,6 +539,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
             registration.DisplayText;
     }
 
+    internal void SetTaskbarSlotShortcutStatus(
+        TaskbarSlotHotkeyRegistration
+            registration)
+    {
+        TaskbarSlotShortcutText =
+            registration.DisplayText;
+    }
+
+    internal void SetTaskbarSlotShortcutDisabled()
+    {
+        TaskbarSlotShortcutText =
+            EnableTaskbarSlotHotkeys
+                ? "快速应用快捷键将在任务栏接管成功后注册"
+                : "九槽位全局快速键已关闭";
+    }
+
     public void RefreshDisplayTargetOptions()
     {
         string selectedValue =
@@ -591,6 +614,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             DisableHotZoneInFullscreen =
                 preferenceSnapshot
                     .DisableHotZoneInFullscreen;
+            EnableTaskbarSlotHotkeys =
+                preferenceSnapshot
+                    .EnableTaskbarSlotHotkeys;
             DisplayTargetMode =
                 preferenceSnapshot
                     .DisplayTargetMode;
@@ -721,6 +747,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
             QueueShellPreference(
                 ShellPreferenceRepository
                     .FullscreenHotZoneKey,
+                value.ToString());
+        }
+    }
+
+    partial void OnEnableTaskbarSlotHotkeysChanged(
+        bool value)
+    {
+        SetTaskbarSlotShortcutDisabled();
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .TaskbarSlotHotkeysKey,
                 value.ToString());
         }
     }
@@ -1738,6 +1777,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         TaskbarAppCollectionSynchronizer.Synchronize(
             TaskbarApps,
             _taskbarComposer.Compose(_appCatalog.GetPinned(), _windowTracker.GetSnapshot()));
+        for (int index = 0;
+             index < TaskbarApps.Count;
+             index++)
+        {
+            TaskbarApps[index]
+                .SetShortcutSlot(
+                    index
+                        < TaskbarSlotHotkeyPolicy
+                            .SlotCount
+                        ? index + 1
+                        : null);
+        }
         ActiveTaskbarIdentity =
             TaskbarApps.FirstOrDefault(
                 item => item.IsActive)

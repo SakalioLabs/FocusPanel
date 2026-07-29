@@ -249,6 +249,48 @@ public sealed class TaskbarAppPresentationTests
     }
 
     [Fact]
+    public void ShortcutSlot_UpdatesTooltipAndAccessibility()
+    {
+        TaskbarAppItem item =
+            Running(
+                windowCount: 1,
+                active: false);
+        var changed =
+            new List<string?>();
+        item.PropertyChanged +=
+            (_, e) =>
+                changed.Add(
+                    e.PropertyName);
+
+        item.SetShortcutSlot(3);
+
+        Assert.True(
+            item.HasShortcutGesture);
+        Assert.Equal(
+            "Ctrl+Alt+3",
+            item.ShortcutGestureText);
+        Assert.Contains(
+            "快速键 Ctrl+Alt+3",
+            item.AccessibleName);
+        Assert.Contains(
+            "Ctrl+Alt+3 直接启动或切换",
+            item.InteractionHint);
+        Assert.Contains(
+            nameof(
+                TaskbarAppItem
+                    .InteractionHint),
+            changed);
+
+        item.SetShortcutSlot(null);
+
+        Assert.False(
+            item.HasShortcutGesture);
+        Assert.DoesNotContain(
+            "Ctrl+Alt",
+            item.InteractionHint);
+    }
+
+    [Fact]
     public void DropPlacement_ExposesOnlyOneCueAndClears()
     {
         var item = new TaskbarAppItem();
