@@ -1574,6 +1574,24 @@ public sealed class XamlResourceContractTests
             "header.SetResourceReference(",
             menuTheme);
         Assert.Contains(
+            "menu.Resources[typeof(MenuItem)] = menuItemStyle;",
+            menuTheme);
+        Assert.Contains(
+            "menu.Resources[SystemColors.MenuBrushKey] = surface;",
+            menuTheme);
+        Assert.Contains(
+            "menu.Resources[SystemColors.HighlightBrushKey] = selection;",
+            menuTheme);
+        Assert.Contains(
+            "menu.Resources[SystemColors.HighlightTextBrushKey] = text;",
+            menuTheme);
+        Assert.Contains(
+            "if (sender is ContextMenu menu)",
+            codeBehind);
+        Assert.Contains(
+            "FocusMenuTheme.Apply(button.ContextMenu);",
+            codeBehind);
+        Assert.Contains(
             "TextElement.Foreground=\"{TemplateBinding Foreground}\"",
             theme);
         Assert.True(

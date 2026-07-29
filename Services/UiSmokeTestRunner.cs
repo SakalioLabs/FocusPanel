@@ -424,6 +424,28 @@ internal static class UiSmokeTestRunner
                 return;
             }
 
+            if (!ReferenceEquals(
+                    menu.Resources[SystemColors.MenuBrushKey],
+                    Application.Current.FindResource(
+                        "FocusPopupSurfaceBrush"))
+                || !ReferenceEquals(
+                    menu.Resources[SystemColors.MenuTextBrushKey],
+                    Application.Current.FindResource(
+                        "FocusTextBrush"))
+                || !ReferenceEquals(
+                    menu.Resources[SystemColors.HighlightBrushKey],
+                    Application.Current.FindResource(
+                        "FocusAccentSoftBrush"))
+                || !ReferenceEquals(
+                    menu.Resources[SystemColors.HighlightTextBrushKey],
+                    Application.Current.FindResource(
+                        "FocusTextBrush")))
+            {
+                failures.Add(
+                    "Fluent 菜单未覆盖独立 Popup 的系统后备背景、文字或选中色");
+                return;
+            }
+
             results.Add(
                 "PASS Fluent 菜单窗口标题、勾选、分隔线与子菜单");
         }

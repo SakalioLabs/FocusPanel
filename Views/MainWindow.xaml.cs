@@ -558,7 +558,12 @@ public partial class MainWindow :
         => ScheduleAutoHide();
 
     private void TransientContextMenu_Opened(object sender, RoutedEventArgs e)
-        => BeginTransientInteraction();
+    {
+        if (sender is ContextMenu menu)
+            FocusMenuTheme.Apply(menu);
+
+        BeginTransientInteraction();
+    }
 
     private void TransientContextMenu_Closed(object sender, RoutedEventArgs e)
         => EndTransientInteraction();
@@ -743,6 +748,7 @@ public partial class MainWindow :
     private ContextMenu CreateTaskbarContextMenu()
     {
         var menu = new ContextMenu();
+        FocusMenuTheme.Apply(menu);
         menu.Opened += TransientContextMenu_Opened;
         menu.Closed += TransientContextMenu_Closed;
         return menu;
@@ -785,6 +791,7 @@ public partial class MainWindow :
         if (button.ContextMenu == null)
             return;
 
+        FocusMenuTheme.Apply(button.ContextMenu);
         _autoHideTimer.Stop();
         button.ContextMenu.Closed -= ButtonContextMenu_Closed;
         button.ContextMenu.Closed += ButtonContextMenu_Closed;
