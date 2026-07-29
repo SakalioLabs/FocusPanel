@@ -13,13 +13,6 @@ namespace FocusPanel.Services;
 
 public sealed class SystemStatusService : ISystemStatusService
 {
-    private readonly IMMDeviceEnumerator? _deviceEnumerator;
-
-    public SystemStatusService()
-    {
-        _deviceEnumerator = TryCreateDeviceEnumerator();
-    }
-
     public SystemStatusSnapshot GetStatusSnapshot()
     {
         int comInitializationResult =
@@ -47,8 +40,29 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    public AudioStatusSnapshot GetAudioStatus() =>
-        GetAudioStatus(_deviceEnumerator);
+    public AudioStatusSnapshot GetAudioStatus()
+    {
+        int comInitializationResult =
+            NativeMethods.CoInitializeEx(
+                IntPtr.Zero,
+                CoInit.Multithreaded);
+        IMMDeviceEnumerator? deviceEnumerator =
+            TryCreateDeviceEnumerator();
+        try
+        {
+            return GetAudioStatus(
+                deviceEnumerator);
+        }
+        finally
+        {
+            ReleaseComObject(deviceEnumerator);
+            if (HResultSucceeded(
+                    comInitializationResult))
+            {
+                NativeMethods.CoUninitialize();
+            }
+        }
+    }
 
     private static AudioStatusSnapshot GetAudioStatus(
         IMMDeviceEnumerator? deviceEnumerator)
@@ -88,11 +102,17 @@ public sealed class SystemStatusService : ISystemStatusService
 
     public bool TrySetMasterVolume(float value)
     {
+        int comInitializationResult =
+            NativeMethods.CoInitializeEx(
+                IntPtr.Zero,
+                CoInit.Multithreaded);
+        IMMDeviceEnumerator? deviceEnumerator =
+            TryCreateDeviceEnumerator();
         IAudioEndpointVolume? endpoint = null;
         try
         {
             endpoint = GetDefaultAudioEndpoint(
-                _deviceEnumerator);
+                deviceEnumerator);
             if (endpoint == null)
                 return false;
 
@@ -111,16 +131,28 @@ public sealed class SystemStatusService : ISystemStatusService
         finally
         {
             ReleaseComObject(endpoint);
+            ReleaseComObject(deviceEnumerator);
+            if (HResultSucceeded(
+                    comInitializationResult))
+            {
+                NativeMethods.CoUninitialize();
+            }
         }
     }
 
     public bool TrySetMuted(bool value)
     {
+        int comInitializationResult =
+            NativeMethods.CoInitializeEx(
+                IntPtr.Zero,
+                CoInit.Multithreaded);
+        IMMDeviceEnumerator? deviceEnumerator =
+            TryCreateDeviceEnumerator();
         IAudioEndpointVolume? endpoint = null;
         try
         {
             endpoint = GetDefaultAudioEndpoint(
-                _deviceEnumerator);
+                deviceEnumerator);
             if (endpoint == null)
                 return false;
 
@@ -136,6 +168,12 @@ public sealed class SystemStatusService : ISystemStatusService
         finally
         {
             ReleaseComObject(endpoint);
+            ReleaseComObject(deviceEnumerator);
+            if (HResultSucceeded(
+                    comInitializationResult))
+            {
+                NativeMethods.CoUninitialize();
+            }
         }
     }
 
@@ -477,7 +515,8 @@ public sealed class SystemStatusService : ISystemStatusService
 
     public void Dispose()
     {
-        ReleaseComObject(_deviceEnumerator);
+        // Audio COM objects are scoped to each calling thread and
+        // released at the end of every read or write operation.
     }
 
     private static void ReleaseComObject(object? value)

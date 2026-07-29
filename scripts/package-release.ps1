@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.10.9',
+    [string]$Version = '0.10.10',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -14,7 +14,10 @@ param(
     [string]$SignParams,
 
     [Parameter()]
-    [switch]$CleanPackages
+    [switch]$CleanPackages,
+
+    [Parameter()]
+    [switch]$ReplaceCurrentVersion
 )
 
 $ErrorActionPreference = 'Stop'
@@ -43,6 +46,17 @@ function Reset-Directory([string]$Path) {
     New-Item -ItemType Directory -Path $Path | Out-Null
 }
 
+function Remove-GeneratedFile([string]$Path) {
+    Assert-WorkspacePath $Path
+    if (Test-Path -LiteralPath $Path) {
+        Remove-Item -LiteralPath $Path -Force
+    }
+}
+
+if ($CleanPackages -and $ReplaceCurrentVersion) {
+    throw 'CleanPackages and ReplaceCurrentVersion cannot be used together.'
+}
+
 if ([string]::IsNullOrWhiteSpace($Dotnet8Path)) {
     $dotnetCommand = Get-Command dotnet -ErrorAction Stop
     $Dotnet8Path = $dotnetCommand.Source
@@ -59,6 +73,21 @@ if ($CleanPackages) {
 }
 elseif (-not (Test-Path -LiteralPath $packageDir)) {
     New-Item -ItemType Directory -Path $packageDir | Out-Null
+}
+elseif ($ReplaceCurrentVersion) {
+    $replaceTargets = @(
+        "FocusPanel-$Version-full.nupkg",
+        "FocusPanel-$Version-delta.nupkg",
+        'FocusPanel-win-Setup.exe',
+        'FocusPanel-win-Portable.zip',
+        'assets.win.json',
+        'RELEASES',
+        'releases.win.json'
+    )
+    foreach ($target in $replaceTargets) {
+        Remove-GeneratedFile (
+            Join-Path $packageDir $target)
+    }
 }
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)

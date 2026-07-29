@@ -70,6 +70,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - Focus 中心统一承载桌面收纳、任务、番茄钟、OKR、AI、最近使用模块和设置更新；状态中心集中音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
 - 状态中心的快捷设置、通知、输入法、显示桌面、锁定、睡眠与电源操作均返回明确结果；成功后关闭 FocusPanel 弹层以免遮挡 Windows 界面，系统拒绝或启动失败时自动回到状态中心显示可操作的替代方式，不再静默失败或让异常冲击 UI 线程。
 - 音量和静音使用一次性 Core Audio 快照区分“真实 0%”与“没有默认输出设备”；端点切换或写入失败时滑块回到最后确认值并显示原因。无输出设备时控件自动停用，设备恢复后由状态刷新重新启用；紧凑栏滚轮只有在音量写入成功后才会取消静音。
+- 音量 Slider 的高频变化、静音点击和紧凑栏滚轮改由单消费者后台控制器执行；等待中的音量请求只保留最终值，音量与静音严格串行。每次工作线程操作独立初始化 Core Audio COM、创建并释放端点枚举器，旧修订结果不会覆盖新操作；写入期间暂停旧状态快照回填，最新请求失败才回退到最后真实成功值并提示。
 - 紧凑栏状态入口和状态中心静音按钮会根据当前音量显示 Segoe Fluent 音量、静音或设备不可用图标；工具提示和读屏名称同步显示百分比。Panel 从隐藏状态重新唤出时立即刷新一次，不需要先打开状态中心，也不会在隐藏期间常驻轮询。
 - 电池状态通过单次快照同步读取是否存在、百分比和充电状态；状态中心按 10% 档位显示 Segoe Fluent Battery/BatteryCharging 图标和“充电中”文本。紧凑栏状态入口的一个提示整合网络、音量与电池，不增加额外按钮或破坏六入口布局。
 - 网络状态通过单次快照生成可用性、连接类型、接口名称和详情；状态中心按无线、有线、其他连接显示 WiFi、Ethernet 或 Globe 图标，离线时显示 Error。接口切换或枚举失败不会再把不同采样时刻的在线/离线文案拼在一起，也不读取 Explorer 私有托盘数据。
@@ -98,6 +99,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![运行窗口合并式后台快照](docs/images/window-tracker-background-refresh.svg)
 
 ![系统状态合并式后台刷新](docs/images/system-status-background-refresh.svg)
+
+![状态中心音频后台控制链路](docs/images/audio-control-background-pipeline.svg)
 
 ![日历摘要后台查询与月份隔离](docs/images/calendar-summary-background-refresh.svg)
 
@@ -344,16 +347,17 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.9 `
+  -Version 0.10.10 `
   -Dotnet8Path dotnet `
-  -PublishDotnetPath dotnet `
-  -CleanPackages
+  -PublishDotnetPath dotnet
 ```
+
+正常迭代不要使用 `-CleanPackages`，这样上一个完整包会保留并生成差分包。只有首次建立本地包目录时才使用 `-CleanPackages`；若同一版本尚未发布、但在最终复核后需要重新构建，使用 `-ReplaceCurrentVersion` 精确替换该版本和共享清单，同时保留上一版本作为差分基线。两个清理开关不能同时使用。
 
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.10.9-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.10-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

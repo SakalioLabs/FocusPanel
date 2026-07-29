@@ -28,6 +28,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly IShellPreferenceRepository
         _shellPreferences;
+    private readonly AudioControlCoordinator
+        _audioControl;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
@@ -47,6 +49,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
     private long _audioStateRevision;
+    private long _audioVolumeRevision;
+    private long _audioMuteRevision;
+    private volatile bool _volumeWritePending;
+    private volatile bool _muteWritePending;
     private long _taskSummaryMonthTicks;
     private float _confirmedMasterVolume;
     private bool _confirmedMuted;
@@ -284,6 +290,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _windowTracker = windowTracker;
         _systemStatus = systemStatus;
         _updateService = updateService;
+        _audioControl =
+            new AudioControlCoordinator(
+                _systemStatus.TrySetMasterVolume,
+                _systemStatus.TrySetMuted);
+        _audioControl.Completed +=
+            OnAudioControlCompleted;
         _shellPreferences =
             shellPreferences
             ?? throw new ArgumentNullException(
@@ -475,7 +487,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (_updatingAudioState)
             return;
 
-        TryApplyMasterVolume(value);
+        QueueMasterVolume(value);
     }
 
     partial void OnIsMutedChanged(bool value)
@@ -483,65 +495,54 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (_updatingAudioState)
             return;
 
-        TryApplyMuted(value);
+        QueueMuted(value);
     }
 
-    private bool TryApplyMasterVolume(float value)
+    private void QueueMasterVolume(float value)
     {
-        Interlocked.Increment(
-            ref _audioStateRevision);
-        AudioControlResult<float> result =
-            AudioControlPolicy.Apply(
-                Math.Clamp(value, 0f, 1f),
-                _confirmedMasterVolume,
-                _systemStatus.TrySetMasterVolume);
-        if (result.Succeeded)
-        {
-            _confirmedMasterVolume = result.EffectiveValue;
-            IsAudioAvailable = true;
-            AudioStatusText = string.Empty;
-            SystemActionMessage = string.Empty;
-            RestoreConfirmedAudioState(
-                _confirmedMasterVolume,
-                _confirmedMuted);
-            return true;
-        }
-
-        RestoreConfirmedAudioState(
-            result.EffectiveValue,
-            _confirmedMuted);
-        ReportAudioFailure(
-            "无法调整音量。请检查默认音频输出设备，或使用 Win+A。");
-        return false;
-    }
-
-    private bool TryApplyMuted(bool value)
-    {
-        Interlocked.Increment(
-            ref _audioStateRevision);
-        AudioControlResult<bool> result =
-            AudioControlPolicy.Apply(
+        float normalized =
+            Math.Clamp(
                 value,
-                _confirmedMuted,
-                _systemStatus.TrySetMuted);
-        if (result.Succeeded)
+                0f,
+                1f);
+        long revision =
+            Interlocked.Increment(
+            ref _audioStateRevision);
+        Volatile.Write(
+            ref _audioVolumeRevision,
+            revision);
+        _volumeWritePending = true;
+        if (_audioControl.QueueVolume(
+                revision,
+                normalized))
         {
-            _confirmedMuted = result.EffectiveValue;
-            IsAudioAvailable = true;
-            AudioStatusText = string.Empty;
-            SystemActionMessage = string.Empty;
-            RestoreConfirmedAudioState(
-                _confirmedMasterVolume,
-                _confirmedMuted);
-            return true;
+            return;
         }
 
-        RestoreConfirmedAudioState(
-            _confirmedMasterVolume,
-            result.EffectiveValue);
-        ReportAudioFailure(
-            "无法切换静音。请检查默认音频输出设备，或使用 Win+A。");
-        return false;
+        _volumeWritePending = false;
+        SetDisplayedVolume(
+            _confirmedMasterVolume);
+    }
+
+    private void QueueMuted(bool value)
+    {
+        long revision =
+            Interlocked.Increment(
+            ref _audioStateRevision);
+        Volatile.Write(
+            ref _audioMuteRevision,
+            revision);
+        _muteWritePending = true;
+        if (_audioControl.QueueMuted(
+                revision,
+                value))
+        {
+            return;
+        }
+
+        _muteWritePending = false;
+        SetDisplayedMuted(
+            _confirmedMuted);
     }
 
     partial void OnThemeModeChanged(string value)
@@ -930,19 +931,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void ToggleMute() =>
-        TryApplyMuted(!_confirmedMuted);
+        IsMuted = !IsMuted;
 
     public void AdjustMasterVolume(float step)
     {
         float requested = Math.Clamp(
-            _confirmedMasterVolume + step,
+            MasterVolume + step,
             0f,
             1f);
-        if (TryApplyMasterVolume(requested)
-            && requested > 0
-            && _confirmedMuted)
+        MasterVolume = requested;
+        if (requested > 0
+            && IsMuted)
         {
-            TryApplyMuted(false);
+            IsMuted = false;
         }
     }
 
@@ -1343,9 +1344,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         long audioRevision = Volatile.Read(
             ref _audioStateRevision);
+        bool audioWritePendingBeforeCapture =
+            _volumeWritePending
+            || _muteWritePending;
+        SystemStatusSnapshot snapshot =
+            _systemStatus.GetStatusSnapshot();
+        bool audioWritePendingAfterCapture =
+            _volumeWritePending
+            || _muteWritePending;
         return new PendingSystemStatusSnapshot(
-            _systemStatus.GetStatusSnapshot(),
-            audioRevision);
+            snapshot,
+            audioRevision,
+            audioWritePendingBeforeCapture
+            || audioWritePendingAfterCapture);
     }
 
     private async Task ApplySystemStatusAsync(
@@ -1375,7 +1386,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             pending.Snapshot;
         AudioStatusSnapshot audio =
             snapshot.Audio;
-        if (SystemStatusRefreshPolicy.ShouldApplyAudio(
+        if (!pending.AudioWritePending
+            && SystemStatusRefreshPolicy.ShouldApplyAudio(
                 pending.AudioRevision,
                 Volatile.Read(
                     ref _audioStateRevision)))
@@ -1444,6 +1456,102 @@ public partial class MainViewModel : ObservableObject, IDisposable
         finally
         {
             _updatingAudioState = false;
+        }
+    }
+
+    private void SetDisplayedVolume(
+        float value)
+    {
+        _updatingAudioState = true;
+        try
+        {
+            MasterVolume =
+                Math.Clamp(
+                    value,
+                    0f,
+                    1f);
+        }
+        finally
+        {
+            _updatingAudioState = false;
+        }
+    }
+
+    private void SetDisplayedMuted(
+        bool value)
+    {
+        _updatingAudioState = true;
+        try
+        {
+            IsMuted = value;
+        }
+        finally
+        {
+            _updatingAudioState = false;
+        }
+    }
+
+    private void OnAudioControlCompleted(
+        AudioControlOutcome outcome)
+    {
+        _uiDispatcher.BeginInvoke(
+            () =>
+                ApplyAudioControlOutcome(
+                    outcome),
+            DispatcherPriority.Background);
+    }
+
+    private void ApplyAudioControlOutcome(
+        AudioControlOutcome outcome)
+    {
+        if (_isDisposed)
+            return;
+
+        AudioControlCompletion completion =
+            AudioControlCompletionPolicy.Apply(
+                new AudioControlConfirmationState(
+                    _confirmedMasterVolume,
+                    _confirmedMuted,
+                    Volatile.Read(
+                        ref _audioVolumeRevision),
+                    Volatile.Read(
+                        ref _audioMuteRevision),
+                    _volumeWritePending,
+                    _muteWritePending),
+                outcome);
+        _confirmedMasterVolume =
+            completion.State.ConfirmedVolume;
+        _confirmedMuted =
+            completion.State.ConfirmedMuted;
+        _volumeWritePending =
+            completion.State.VolumePending;
+        _muteWritePending =
+            completion.State.MutePending;
+        if (completion.DisplayVolume
+            is float displayVolume)
+        {
+            SetDisplayedVolume(
+                displayVolume);
+        }
+        if (completion.DisplayMuted
+            is bool displayMuted)
+        {
+            SetDisplayedMuted(
+                displayMuted);
+        }
+
+        if (completion.CurrentFailed)
+        {
+            ReportAudioFailure(
+                "无法调整音量或静音。请检查默认音频输出设备，或使用 Win+A。");
+            return;
+        }
+
+        if (completion.CurrentSucceeded)
+        {
+            IsAudioAvailable = true;
+            AudioStatusText = string.Empty;
+            SystemActionMessage = string.Empty;
         }
     }
 
@@ -1779,6 +1887,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
 
         _isDisposed = true;
+        _audioControl.Completed -=
+            OnAudioControlCompleted;
         _shellPreferences.SaveFailed -=
             OnShellPreferenceSaveFailed;
         _clockTimer.Stop();
@@ -1789,6 +1899,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _taskSummaryRefresh.Dispose();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
+        _audioControl.Dispose();
         _shellPreferences.Dispose();
         _tasksViewModel?.Dispose();
         _okrViewModel?.Dispose();
@@ -1813,5 +1924,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly record struct
         PendingSystemStatusSnapshot(
             SystemStatusSnapshot Snapshot,
-            long AudioRevision);
+            long AudioRevision,
+            bool AudioWritePending);
 }

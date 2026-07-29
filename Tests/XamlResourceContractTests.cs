@@ -746,6 +746,9 @@ public sealed class XamlResourceContractTests
             "TryCreateDeviceEnumerator()",
             systemStatus);
         Assert.DoesNotContain(
+            "_deviceEnumerator",
+            systemStatus);
+        Assert.DoesNotContain(
             "string InputLanguageDisplay { get; }",
             statusContract);
         Assert.DoesNotContain(
@@ -777,6 +780,30 @@ public sealed class XamlResourceContractTests
         Assert.Contains("CompleteSystemAction(", viewModel);
         Assert.Contains("IsStatusCenterOpen = true", viewModel);
         Assert.Contains("AdjustMasterVolume(float step)", viewModel);
+        Assert.Contains(
+            "AudioControlCoordinator",
+            viewModel);
+        Assert.Contains(
+            "_audioControl.QueueVolume(",
+            viewModel);
+        Assert.Contains(
+            "_audioControl.QueueMuted(",
+            viewModel);
+        Assert.Contains(
+            "AudioControlCompletionPolicy.Apply(",
+            viewModel);
+        Assert.Contains(
+            "audioWritePendingBeforeCapture",
+            viewModel);
+        Assert.Contains(
+            "audioWritePendingAfterCapture",
+            viewModel);
+        Assert.DoesNotContain(
+            "TryApplyMasterVolume(",
+            viewModel);
+        Assert.DoesNotContain(
+            "TryApplyMuted(",
+            viewModel);
 
         string windowCode = File.ReadAllText(
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
@@ -837,6 +864,15 @@ public sealed class XamlResourceContractTests
             packager);
         Assert.Contains(
             "$manifestNotes -cne $expectedNotes",
+            packager);
+        Assert.Contains(
+            "[switch]$ReplaceCurrentVersion",
+            packager);
+        Assert.Contains(
+            "CleanPackages and ReplaceCurrentVersion cannot be used together.",
+            packager);
+        Assert.Contains(
+            "Remove-GeneratedFile",
             packager);
         Assert.Contains("'RELEASES'", publisher);
         Assert.Contains("-full\\.nupkg", publisher);

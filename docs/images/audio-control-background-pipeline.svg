@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1728"/>
+      <stop offset="1" stop-color="#172940"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#65b9ff"/>
+      <stop offset="1" stop-color="#9a82ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">状态中心 · 音频后台控制链路</text>
+  <text x="54" y="97" fill="#a9c8ed" font-family="Segoe UI, Microsoft YaHei" font-size="16">Slider 高频变化、静音点击与紧凑栏滚轮不再同步阻塞 WPF Dispatcher</text>
+
+  <rect x="54" y="136" width="230" height="252" rx="24" fill="#22344d" stroke="#405c7e"/>
+  <text x="79" y="178" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">即时交互</text>
+  <rect x="78" y="201" width="182" height="42" rx="16" fill="#2c4a6d"/>
+  <text x="169" y="228" text-anchor="middle" fill="#8ed2ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">拖动音量 Slider</text>
+  <rect x="78" y="254" width="182" height="42" rx="16" fill="#2c4a6d"/>
+  <text x="169" y="281" text-anchor="middle" fill="#8ed2ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">点击静音</text>
+  <rect x="78" y="307" width="182" height="42" rx="16" fill="#2c4a6d"/>
+  <text x="169" y="334" text-anchor="middle" fill="#8ed2ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">滚轮调音量</text>
+  <text x="169" y="370" text-anchor="middle" fill="#b9cde7" font-family="Segoe UI, Microsoft YaHei" font-size="13">界面立即显示请求值</text>
+
+  <path d="M303 262 H343" stroke="url(#flow)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M333 251 L346 262 L333 273" fill="none" stroke="#71b7ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="367" y="121" width="276" height="284" rx="26" fill="#2a415f" stroke="#5a7da6"/>
+  <text x="505" y="165" text-anchor="middle" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">单消费者合并队列</text>
+  <circle cx="405" cy="212" r="9" fill="#69c3ff"/>
+  <text x="428" y="218" fill="#dae7f9" font-family="Segoe UI, Microsoft YaHei" font-size="15">等待中的音量只保留最终值</text>
+  <circle cx="405" cy="257" r="9" fill="#72dfb0"/>
+  <text x="428" y="263" fill="#dae7f9" font-family="Segoe UI, Microsoft YaHei" font-size="15">音量与静音严格串行</text>
+  <circle cx="405" cy="302" r="9" fill="#a590ff"/>
+  <text x="428" y="308" fill="#dae7f9" font-family="Segoe UI, Microsoft YaHei" font-size="15">每批操作携带独立修订号</text>
+  <rect x="397" y="337" width="216" height="42" rx="18" fill="#20334d"/>
+  <text x="505" y="364" text-anchor="middle" fill="#b8d8fa" font-family="Segoe UI, Microsoft YaHei" font-size="14">WPF 线程不执行 COM 写入</text>
+
+  <path d="M663 262 H703" stroke="url(#flow)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M693 251 L706 262 L693 273" fill="none" stroke="#9188ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="727" y="136" width="339" height="252" rx="24" fill="#22344d" stroke="#405c7e"/>
+  <text x="752" y="178" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">线程内 Core Audio + 结果隔离</text>
+  <rect x="751" y="201" width="291" height="48" rx="16" fill="#25483f"/>
+  <text x="896" y="230" text-anchor="middle" fill="#99ebc1" font-family="Segoe UI, Microsoft YaHei" font-size="14">CoInitialize → 枚举端点 → 写入 → 释放</text>
+  <rect x="751" y="263" width="291" height="48" rx="16" fill="#3b3b5b"/>
+  <text x="896" y="292" text-anchor="middle" fill="#c9c0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">旧结果只更新确认基线，不覆盖新操作</text>
+  <rect x="751" y="325" width="291" height="42" rx="16" fill="#553b49"/>
+  <text x="896" y="351" text-anchor="middle" fill="#ffc4d3" font-family="Segoe UI, Microsoft YaHei" font-size="14">最新写入失败 → 回退最后真实成功值</text>
+
+  <rect x="54" y="438" width="1012" height="47" rx="18" fill="#1e3049" stroke="#3d5879"/>
+  <text x="560" y="468" text-anchor="middle" fill="#d9e8fb" font-family="Segoe UI, Microsoft YaHei" font-size="15">写入期间暂停旧音频快照回填 · 设备切换失败不堵塞后续操作 · 正常退出排空已接收控制请求</text>
+</svg>
