@@ -142,6 +142,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isPowerMenuOpen;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(WorkspacePinActionText))]
+    private bool isWorkspacePinned;
+
+    [ObservableProperty]
     private bool isOnboardingVisible;
 
     [ObservableProperty]
@@ -465,6 +470,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             BatterySummary);
     public string StatusCenterAutomationName =>
         $"状态中心，{StatusCenterSummary}";
+
+    public string WorkspacePinActionText =>
+        IsWorkspacePinned
+            ? "取消固定工作区"
+            : "固定工作区，不自动收起";
     public string InputLanguageDisplay =>
         InputMethodStatus.LanguageDisplay;
     public string InputMethodDisplay =>
@@ -510,6 +520,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<string>? WorkspaceRequested;
     public event Action<int>? PomodoroCompleted;
     public event Action? DisplayTargetChanged;
+    public event Action<bool>? WorkspacePinChanged;
 
     internal void SetSummonShortcutStatus(
         ShellHotkeyRegistration registration)
@@ -613,6 +624,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RequestSystemStatusRefresh();
         UpdateRefreshActivity();
     }
+
+    partial void OnIsWorkspacePinnedChanged(
+        bool value) =>
+        WorkspacePinChanged?.Invoke(value);
 
     partial void OnMasterVolumeChanged(float value)
     {
@@ -1129,6 +1144,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CloseTransientPanels();
         IsFocusCenterOpen = open;
     }
+
+    [RelayCommand]
+    private void ToggleWorkspacePin() =>
+        IsWorkspacePinned =
+            !IsWorkspacePinned;
 
     [RelayCommand]
     private void ToggleStatusCenter()

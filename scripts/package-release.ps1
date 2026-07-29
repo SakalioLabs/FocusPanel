@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.10.33',
+    [string]$Version = '0.10.34',
 
     [Parameter()]
     [string]$Dotnet8Path,

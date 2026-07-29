@@ -90,6 +90,8 @@ public partial class MainWindow :
             ViewModel_PomodoroCompleted;
         _viewModel.DisplayTargetChanged +=
             ViewModel_DisplayTargetChanged;
+        _viewModel.WorkspacePinChanged +=
+            ViewModel_WorkspacePinChanged;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
         _coordinator.Taskbar.ReplacementStopped += Taskbar_ReplacementStopped;
 
@@ -103,6 +105,7 @@ public partial class MainWindow :
                     Mouse.Captured != null,
                     HasOpenComboBoxDropDown(this));
             bool shouldHide = ShellAutoHidePolicy.ShouldHide(
+                _viewModel.IsWorkspacePinned,
                 _desktopDragSession.IsActive,
                 transientSurfaceActive,
                 IsCursorInsideShell(),
@@ -323,6 +326,7 @@ public partial class MainWindow :
         if (_desktopDragSession.IsActive)
             return;
 
+        _viewModel.IsWorkspacePinned = false;
         CloseOverlayPanels();
         SetShellWidth(CompactWidth, false, true);
     }
@@ -383,10 +387,30 @@ public partial class MainWindow :
 
     private void HideShell()
     {
+        _autoHideTimer.Stop();
         CloseOverlayPanels();
         _viewModel.SetShellVisible(false);
         Visibility = Visibility.Hidden;
+        _viewModel.IsWorkspacePinned = false;
         UpdateEdgeIndicatorVisibility();
+    }
+
+    private void ViewModel_WorkspacePinChanged(
+        bool isPinned)
+    {
+        if (isPinned)
+        {
+            _autoHideTimer.Stop();
+            _autoHideIgnoresInputFocus = false;
+            return;
+        }
+
+        if (IsVisible
+            && WorkspaceHost.Visibility
+                == Visibility.Visible)
+        {
+            ScheduleAutoHide();
+        }
     }
 
     private void ShowWithoutActivating()
@@ -1090,6 +1114,8 @@ public partial class MainWindow :
             ViewModel_PomodoroCompleted;
         _viewModel.DisplayTargetChanged -=
             ViewModel_DisplayTargetChanged;
+        _viewModel.WorkspacePinChanged -=
+            ViewModel_WorkspacePinChanged;
         HideShell();
     }
 

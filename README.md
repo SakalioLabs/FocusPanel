@@ -13,6 +13,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 右缘监测使用独立后台 `PeriodicTimer` 保持约 `30ms` 物理坐标采样，不再让 WPF Dispatcher 承担高频鼠标与全屏窗口检查；只有热区可用状态变化或达到呼出条件时才回到界面线程，因此工作区加载、布局和展开动画繁忙时仍能准确响应。停止或显示器变化后的旧采样会按代际丢弃，不会迟到误展开。
 - 点击搜索、桌面收纳、任务、番茄钟、OKR、AI 等入口后，工作区从右向左展开到约 `720px`。
 - 离开约 `300ms` 自动收起；只有搜索框、密码框和下拉选择等输入控件持有焦点时保持展开，普通按钮或应用图标焦点不会锁住 Panel，`Esc` 可关闭。
+- 工作区标题栏可点击图钉临时“固定展开”，查看任务、日历、OKR 或对照资料时即使鼠标离开也不会自动收起。固定态使用柔和强调色；再次点击、手动收回、`Esc`、托盘隐藏或退出都会解除，不写入数据库或下次启动设置。
 - 应用右键菜单、多窗口列表、下拉选择和桌面收纳的视图/新建/修复弹层打开时会锁住 Panel；即使 ComboBox Popup 使用独立窗口，展开期间也不会被误判为离开，弹层关闭且鼠标离开后才恢复自动收起。
 - 桌面文件卡片只有移动距离超过 Windows 系统拖拽阈值后才开始拖动；靠近主内容区上下边缘时平滑滚动，移回中部、离开、取消、释放或完成放置后立即停止。
 - 桌面拖入、分区收纳和拖出恢复统一经过受观察的异步交互边界：文件属性操作完成前持续持有 Panel，异常会转为可恢复提示，任何成功、失败或提示异常路径都会释放拖拽与自动收起锁。
@@ -22,6 +23,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 主动唤出后焦点落到搜索入口，可使用 Tab、Shift+Tab 或方向键循环浏览紧凑栏，Enter/Space 执行；应用按钮向读屏提供应用名称和窗口摘要，Shift+F10 或菜单键打开右键菜单。
 
 ![主动唤出快捷键回退与真实状态](docs/images/summon-hotkey-fallback.svg)
+
+![工作区固定展开与自动收起生命周期](docs/images/workspace-pin-lifecycle.svg)
 - 键盘导航使用统一的 2px Fluent 圆角焦点环，轮廓只在键盘操作时出现，不给鼠标点击增加常驻边框；高对比度模式跟随 Windows 系统高亮色。
 - 固定应用与运行应用按 Windows AppUserModelID 或可执行路径合并为单一任务栏图标；固定项保持用户顺序，未固定运行项保持本次运行中的稳定顺序。
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
@@ -415,7 +418,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.33 `
+  -Version 0.10.34 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -426,7 +429,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意绝对目录，随后通过标准 Windows Installer 的 `VELOPACK_INSTALLDIR` 属性强制使用该路径。有可用且空间充足的非系统固定盘时会优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版已装在另一目录，向导会先说明并征得确认，再用旧版官方卸载器移除程序文件并安装到新位置；任务、收纳记录和设置保留在用户 AppData。无需再寻找单独的 CustomSetup。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.33-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.34-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

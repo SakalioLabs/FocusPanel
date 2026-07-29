@@ -1437,6 +1437,11 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "MainWindow.xaml"));
         string mainWindowCode = File.ReadAllText(
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string shellPreferences = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ShellPreferenceRepository.cs"));
         string organizer = File.ReadAllText(
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
@@ -1448,6 +1453,28 @@ public sealed class XamlResourceContractTests
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
+        Assert.Contains("_viewModel.IsWorkspacePinned", mainWindowCode);
+        Assert.Contains(
+            "Command=\"{Binding ToggleWorkspacePinCommand}\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"{Binding WorkspacePinActionText}\"",
+            mainWindow);
+        Assert.Contains(
+            "_viewModel.IsWorkspacePinned = false;",
+            mainWindowCode);
+        Assert.Contains(
+            "_viewModel.WorkspacePinChanged +=",
+            mainWindowCode);
+        Assert.Contains(
+            "_viewModel.WorkspacePinChanged -=",
+            mainWindowCode);
+        Assert.Contains(
+            "_autoHideTimer.Stop();",
+            mainWindowCode);
+        Assert.DoesNotContain(
+            "WorkspacePinned",
+            shellPreferences);
         Assert.Contains("IsInputFocusActive()", mainWindowCode);
         Assert.Contains("TextBoxBase or PasswordBox", mainWindowCode);
         Assert.Contains("ComboBox or ComboBoxItem", mainWindowCode);

@@ -129,8 +129,27 @@
                                        Style="{StaticResource FocusSectionTitleText}"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Command="{Binding ToggleWorkspacePinCommand}"
+                                    AutomationProperties.Name="{Binding WorkspacePinActionText}"
+                                    ToolTip="{Binding WorkspacePinActionText}">
+                                <Button.Style>
+                                    <Style TargetType="Button"
+                                           BasedOn="{StaticResource FocusIconButton}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsWorkspacePinned}"
+                                                         Value="True">
+                                                <Setter Property="Background"
+                                                        Value="{DynamicResource FocusAccentSoftBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Style="{StaticResource FocusIconText}"
+                                           Text="&#xE840;"/>
+                            </Button>
                             <Button Style="{StaticResource FocusIconButton}"
                                     Click="CollapseSidebar_Click"
+                                    AutomationProperties.Name="收回工作区"
                                     ToolTip="收回工作区">
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE72B;"/>
                             </Button>
