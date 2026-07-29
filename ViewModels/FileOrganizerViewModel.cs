@@ -10,9 +10,14 @@ using System.Windows.Data;
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using System.Threading;
 using System.Windows.Threading;
 
 namespace FocusPanel.ViewModels;
+
+internal sealed record PendingOrganizerLayoutSnapshot(
+    long SettingsRevision,
+    OrganizerLayoutSnapshot Snapshot);
 
 public partial class FileOrganizerViewModel :
     ObservableObject,
@@ -20,6 +25,18 @@ public partial class FileOrganizerViewModel :
 {
     private readonly FileOrganizerService _fileService;
     private readonly SettingsService _settingsService;
+    private readonly IOrganizerLayoutRepository
+        _layoutRepository;
+    private readonly Dispatcher _uiDispatcher;
+    private readonly OrganizerLegacyLayout _legacyLayout;
+    private readonly CoalescingBackgroundRefresh<
+        PendingOrganizerLayoutSnapshot> _layoutRefresh;
+    private readonly CoalescingAsyncSaveQueue<
+        OrganizerLayoutSaveState> _layoutSaveQueue;
+    private readonly OrganizerLayoutSaveState
+        _layoutSaveState;
+    private bool _applyingLayoutOptions;
+    private long _layoutSettingsRevision;
     private bool _isDisposed;
 
     // Split partitions for Masonry/Staggered Layout
@@ -78,32 +95,28 @@ public partial class FileOrganizerViewModel :
     private void SetIconScale(string scaleStr)
     {
         if (double.TryParse(scaleStr, out double scale))
-        {
             IconScale = scale;
-            _settingsService.CurrentSettings.IconScale = scale;
-            _settingsService.SaveSettings();
-        }
     }
 
     partial void OnIconScaleChanged(double value)
     {
-        _settingsService.CurrentSettings.IconScale = value;
-        _settingsService.SaveSettings();
-        SaveLayoutSettings();
+        if (!_applyingLayoutOptions)
+            QueueLayoutOptionsSave();
     }
 
     partial void OnIsListViewChanged(bool value)
     {
-        _settingsService.CurrentSettings.IsListView = value;
-        _settingsService.SaveSettings();
-        SaveLayoutSettings();
+        if (!_applyingLayoutOptions)
+            QueueLayoutOptionsSave();
     }
     
     partial void OnIsPersonalizedViewChanged(bool value)
     {
-        _settingsService.CurrentSettings.IsPersonalizedView = value;
-        _settingsService.SaveSettings();
-        SaveLayoutSettings();
+        if (_applyingLayoutOptions)
+            return;
+
+        QueueLayoutOptionsSave();
+        RequestLayoutRefresh();
     }
 
     partial void OnIsAutoOrganizeEnabledChanged(bool value)
@@ -111,132 +124,53 @@ public partial class FileOrganizerViewModel :
         AutoOrganizeStatus = value
             ? "正在监听新增桌面项目；现有项目不会被自动收纳"
             : "关闭时不会处理新增桌面项目";
-        try
-        {
-            using var context = new AppDbContext();
-            var config = context.AppConfigs.Find("FileOrganizer_AutoOrganize");
-            if (config == null)
-            {
-                context.AppConfigs.Add(new AppConfig
-                {
-                    Key = "FileOrganizer_AutoOrganize",
-                    Value = value.ToString()
-                });
-            }
-            else
-            {
-                config.Value = value.ToString();
-            }
-            context.SaveChanges();
-        }
-        catch (Exception ex)
-        {
-            AutoOrganizeStatus = value
-                ? "本次会话已启用，但设置未能持久保存"
-                : "本次会话已关闭，但设置未能持久保存";
-            System.Diagnostics.Debug.WriteLine(
-                $"Save auto organize setting failed: {ex.Message}");
-        }
+        if (!_applyingLayoutOptions)
+            QueueLayoutOptionsSave();
     }
     
-    private void SaveLayoutSettings()
+    private void QueueLayoutOptionsSave()
     {
-        try
-        {
-            using (var context = new AppDbContext())
-            {
-                // Save IconScale
-                var scaleConfig = context.AppConfigs.Find("FileOrganizer_IconScale");
-                if (scaleConfig == null)
-                {
-                    context.AppConfigs.Add(new AppConfig { Key = "FileOrganizer_IconScale", Value = IconScale.ToString() });
-                }
-                else
-                {
-                    scaleConfig.Value = IconScale.ToString();
-                }
+        if (_isDisposed)
+            return;
 
-                // Save IsListView
-                var listConfig = context.AppConfigs.Find("FileOrganizer_IsListView");
-                if (listConfig == null)
-                {
-                    context.AppConfigs.Add(new AppConfig { Key = "FileOrganizer_IsListView", Value = IsListView.ToString() });
-                }
-                else
-                {
-                    listConfig.Value = IsListView.ToString();
-                }
-
-                // Save IsPersonalizedView
-                var viewConfig = context.AppConfigs.Find("FileOrganizer_IsPersonalizedView");
-                if (viewConfig == null)
-                {
-                    context.AppConfigs.Add(new AppConfig { Key = "FileOrganizer_IsPersonalizedView", Value = IsPersonalizedView.ToString() });
-                }
-                else
-                {
-                    viewConfig.Value = IsPersonalizedView.ToString();
-                }
-
-                context.SaveChanges();
-            }
-        }
-        catch { }
+        Interlocked.Increment(
+            ref _layoutSettingsRevision);
+        _layoutSaveState.Update(
+            CaptureLayoutOptions());
+        _layoutSaveQueue.Enqueue(
+            _layoutSaveState);
     }
     
-    private void LoadLayoutSettings()
+    private OrganizerLayoutOptions CaptureLayoutOptions() =>
+        new(
+            IconScale,
+            IsListView,
+            IsPersonalizedView,
+            IsAutoOrganizeEnabled);
+
+    private Task SaveLayoutOptionsAsync(
+        OrganizerLayoutSaveState state)
     {
-        try
-        {
-            using (var context = new AppDbContext())
+        OrganizerLayoutOptions options =
+            state.Read();
+        return Task.Run(
+            () =>
             {
-                // Load IconScale
-                var scaleConfig = context.AppConfigs.Find("FileOrganizer_IconScale");
-                if (scaleConfig != null && double.TryParse(scaleConfig.Value, out double scale))
+                _layoutRepository.SaveOptions(options);
+                _settingsService.CurrentSettings.IconScale =
+                    options.IconScale;
+                _settingsService.CurrentSettings.IsListView =
+                    options.IsListView;
+                _settingsService.CurrentSettings
+                    .IsPersonalizedView =
+                    options.IsPersonalizedView;
+                if (!_settingsService.SaveSettings())
                 {
-                    IconScale = scale;
+                    throw new InvalidOperationException(
+                        _settingsService.LastError
+                        ?? "无法保存桌面收纳设置。");
                 }
-                else
-                {
-                    // Fallback to legacy settings
-                    IconScale = _settingsService.CurrentSettings.IconScale > 0 ? _settingsService.CurrentSettings.IconScale : 1.0;
-                }
-
-                // Load IsListView
-                var listConfig = context.AppConfigs.Find("FileOrganizer_IsListView");
-                if (listConfig != null && bool.TryParse(listConfig.Value, out bool isList))
-                {
-                    IsListView = isList;
-                }
-                else
-                {
-                    IsListView = _settingsService.CurrentSettings.IsListView;
-                }
-
-                // Load IsPersonalizedView
-                var viewConfig = context.AppConfigs.Find("FileOrganizer_IsPersonalizedView");
-                if (viewConfig != null && bool.TryParse(viewConfig.Value, out bool isPersonalized))
-                {
-                    IsPersonalizedView = isPersonalized;
-                }
-                else
-                {
-                    IsPersonalizedView = _settingsService.CurrentSettings.IsPersonalizedView;
-                }
-
-                var autoConfig = context.AppConfigs.Find("FileOrganizer_AutoOrganize");
-                IsAutoOrganizeEnabled = autoConfig != null
-                    && bool.TryParse(autoConfig.Value, out bool autoOrganize)
-                    && autoOrganize;
-            }
-        }
-        catch 
-        {
-             // Fallback
-            IconScale = _settingsService.CurrentSettings.IconScale > 0 ? _settingsService.CurrentSettings.IconScale : 1.0;
-            IsListView = _settingsService.CurrentSettings.IsListView;
-            IsPersonalizedView = _settingsService.CurrentSettings.IsPersonalizedView;
-        }
+            });
     }
 
     [ObservableProperty]
@@ -251,11 +185,86 @@ public partial class FileOrganizerViewModel :
     public string OrganizeButtonIcon => IsDesktopHidden ? "Eye" : "EyeOff";
 
     public FileOrganizerViewModel()
+        : this(
+            new SettingsService(),
+            new FileOrganizerService(),
+            new OrganizerLayoutRepository(),
+            Dispatcher.CurrentDispatcher)
     {
-        _settingsService = new SettingsService();
-        _fileService = new FileOrganizerService();
-        
-        LoadLayoutSettings();
+    }
+
+    internal FileOrganizerViewModel(
+        SettingsService settingsService,
+        FileOrganizerService fileService,
+        IOrganizerLayoutRepository layoutRepository,
+        Dispatcher uiDispatcher)
+    {
+        _settingsService =
+            settingsService
+            ?? throw new ArgumentNullException(
+                nameof(settingsService));
+        _fileService =
+            fileService
+            ?? throw new ArgumentNullException(
+                nameof(fileService));
+        _layoutRepository =
+            layoutRepository
+            ?? throw new ArgumentNullException(
+                nameof(layoutRepository));
+        _uiDispatcher =
+            uiDispatcher
+            ?? throw new ArgumentNullException(
+                nameof(uiDispatcher));
+
+        AppSettings legacySettings =
+            _settingsService.CurrentSettings;
+        var fallbackOptions =
+            new OrganizerLayoutOptions(
+                legacySettings.IconScale,
+                legacySettings.IsListView,
+                legacySettings.IsPersonalizedView,
+                false);
+        _legacyLayout =
+            new OrganizerLegacyLayout(
+                fallbackOptions,
+                legacySettings.CustomPartitionNames
+                    .ToArray(),
+                new Dictionary<string, string>(
+                    legacySettings.FilePartitions,
+                    StringComparer.OrdinalIgnoreCase));
+        _layoutSaveState =
+            new OrganizerLayoutSaveState(
+                fallbackOptions);
+        _layoutSaveQueue =
+            new CoalescingAsyncSaveQueue<
+                OrganizerLayoutSaveState>(
+                SaveLayoutOptionsAsync,
+                TimeSpan.FromMilliseconds(180));
+        _layoutSaveQueue.ItemSaved +=
+            OnLayoutOptionsSaved;
+        _layoutSaveQueue.ItemSaveFailed +=
+            OnLayoutOptionsSaveFailed;
+        _layoutRefresh =
+            new CoalescingBackgroundRefresh<
+                PendingOrganizerLayoutSnapshot>(
+                CaptureLayoutSnapshot,
+                ApplyLayoutSnapshotAsync);
+
+        _applyingLayoutOptions = true;
+        try
+        {
+            IconScale = fallbackOptions.IconScale;
+            IsListView = fallbackOptions.IsListView;
+            IsPersonalizedView =
+                fallbackOptions.IsPersonalizedView;
+            CurrentViewMode = IsPersonalizedView
+                ? "Personalized"
+                : "Timeline";
+        }
+        finally
+        {
+            _applyingLayoutOptions = false;
+        }
         
         // Listen for file updates
         _fileService.FilesChanged +=
@@ -273,16 +282,12 @@ public partial class FileOrganizerViewModel :
             IsDesktopHidden = false; // Default safe value
         }
 
-        // Initial Build
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     private void FileService_FilesChanged()
     {
-        // FileOrganizerService publishes collection changes on the
-        // UI thread; keep the guard for explicit service calls.
-        System.Windows.Application.Current
-            .Dispatcher.Invoke(BuildPartitions);
+        RequestLayoutRefresh();
     }
 
     private async void FileService_DesktopItemsCreated(
@@ -319,139 +324,144 @@ public partial class FileOrganizerViewModel :
         }
     }
 
-    private void BuildPartitions()
+    private void RequestLayoutRefresh()
     {
-        var viewModels = new List<PartitionViewModel>();
-        
-        try
+        if (_isDisposed)
+            return;
+
+        if (!_uiDispatcher.CheckAccess())
         {
-            using (var context = new AppDbContext())
+            if (_uiDispatcher.HasShutdownStarted
+                || _uiDispatcher.HasShutdownFinished)
             {
-                context.EnsureSchema();
-
-                // 1. Migration (if DB empty but Settings exist)
-                if (!context.DesktopPartitions.Any() && _settingsService.CurrentSettings.CustomPartitionNames.Any())
-                {
-                    // Migrate Partitions
-                    int index = 0;
-                    foreach (var name in _settingsService.CurrentSettings.CustomPartitionNames)
-                    {
-                        context.DesktopPartitions.Add(new DesktopPartition { Name = name, OrderIndex = index++ });
-                    }
-                    
-                    // Migrate File Preferences
-                    foreach (var kvp in _settingsService.CurrentSettings.FilePartitions)
-                    {
-                        context.DesktopFilePreferences.Add(new DesktopFilePreference { FilePath = kvp.Key, PartitionName = kvp.Value });
-                    }
-                    
-                    context.SaveChanges();
-                }
-
-                // 2. Load Data
-                var dbPartitions = context.DesktopPartitions.OrderBy(p => p.OrderIndex).ToList();
-                var dbPrefs = context.DesktopFilePreferences.ToList();
-                var preferencesByName = dbPrefs
-                    .GroupBy(
-                        item => item.FilePath,
-                        StringComparer.OrdinalIgnoreCase)
-                    .ToDictionary(
-                        group => group.Key,
-                        group => group.Last(),
-                        StringComparer.OrdinalIgnoreCase);
-
-                // 3. Create Partition ViewModels
-                var partitionMap =
-                    new Dictionary<string, PartitionViewModel>(
-                        StringComparer.OrdinalIgnoreCase);
-                
-                if (IsPersonalizedView)
-                {
-                    foreach (var p in dbPartitions)
-                    {
-                        var vm = new PartitionViewModel(p.Name) { IsCustom = true, ColumnIndex = p.ColumnIndex };
-                        partitionMap[p.Name] = vm;
-                        viewModels.Add(vm);
-                    }
-                }
-
-                // 4. Distribute Files - 使用 AllFiles（包含已收纳的文件）
-                var allFiles = _fileService.AllFiles;
-                var uncategorizedFiles = new List<DesktopFile>();
-
-                foreach (var file in allFiles)
-                {
-                    preferencesByName.TryGetValue(
-                        file.Name,
-                        out DesktopFilePreference? pref);
-
-                    // 已收纳的文件（IsHiddenFromDesktop=true）显示在对应分区
-                    // 未收纳的文件如果没有分区则显示在 Unsorted
-                    if (pref != null && partitionMap.ContainsKey(pref.PartitionName))
-                    {
-                        partitionMap[pref.PartitionName].Files.Add(file);
-                        file.CustomPartition = pref.PartitionName;
-                    }
-                    else
-                    {
-                        uncategorizedFiles.Add(file);
-                        file.CustomPartition = null;
-                    }
-                }
-
-                // 5. Create Default Categories (if needed)
-                // Removed per user request: No default partitions, only custom ones.
-                
-                if (!IsPersonalizedView) // Timeline View (Keep as is)
-                {
-                     var dateGroups = allFiles.GroupBy(f => f.DateGroup).OrderBy(g => GetDateGroupSortOrder(g.Key));
-                     int i = 0;
-                     foreach (var group in dateGroups)
-                     {
-                         int defaultCol = (i++ % 2);
-                         var p = new PartitionViewModel(group.Key) { IsCustom = false, ColumnIndex = defaultCol };
-                         foreach (var file in group.OrderByDescending(f => f.CreatedAt)) p.Files.Add(file);
-                         viewModels.Add(p);
-                     }
-                }
+                return;
             }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine("BuildPartitions Error: " + ex.Message);
-            // Keep the last valid visual tree. A transient database read
-            // failure must not look like every collection disappeared.
+
+            _uiDispatcher.BeginInvoke(
+                new Action(RequestLayoutRefresh),
+                DispatcherPriority.Background);
             return;
         }
 
-        // 6. Update ObservableCollections
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        _layoutRefresh.Request();
+    }
+
+    private PendingOrganizerLayoutSnapshot
+        CaptureLayoutSnapshot() =>
+        new(
+            Volatile.Read(
+                ref _layoutSettingsRevision),
+            _layoutRepository.Load(
+                _legacyLayout));
+
+    private async Task ApplyLayoutSnapshotAsync(
+        PendingOrganizerLayoutSnapshot pending,
+        CancellationToken cancellationToken)
+    {
+        await _uiDispatcher.InvokeAsync(
+            () =>
+                ApplyLayoutSnapshot(
+                    pending,
+                    cancellationToken),
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
+    private void ApplyLayoutSnapshot(
+        PendingOrganizerLayoutSnapshot pending,
+        CancellationToken cancellationToken)
+    {
+        if (_isDisposed
+            || cancellationToken.IsCancellationRequested
+            || !pending.Snapshot.IsValid)
         {
-            PartitionCollectionSynchronizer.Synchronize(
-                AllPartitions,
-                PartitionsCol1,
-                PartitionsCol2,
-                viewModels);
-        });
+            return;
+        }
+
+        long currentSettingsRevision =
+            Volatile.Read(
+                ref _layoutSettingsRevision);
+        if (OrganizerLayoutApplyPolicy.CanApplyOptions(
+                pending.Snapshot,
+                pending.SettingsRevision,
+                currentSettingsRevision))
+        {
+            ApplyLayoutOptions(
+                pending.Snapshot.Options);
+        }
+
+        IReadOnlyList<PartitionViewModel>
+            viewModels = OrganizerLayoutComposer.Compose(
+                pending.Snapshot,
+                IsPersonalizedView,
+                _fileService.AllFiles.ToArray());
+        PartitionCollectionSynchronizer.Synchronize(
+            AllPartitions,
+            PartitionsCol1,
+            PartitionsCol2,
+            viewModels);
         
-        // Auto-select
-        if (AllPartitions.Any() && (SelectedPartition == null || !AllPartitions.Contains(SelectedPartition)))
+        if (AllPartitions.Any()
+            && (SelectedPartition == null
+                || !AllPartitions.Contains(
+                    SelectedPartition)))
         {
             SelectedPartition = AllPartitions.First();
         }
     }
 
-    private int GetDateGroupSortOrder(string groupName)
+    private void ApplyLayoutOptions(
+        OrganizerLayoutOptions options)
     {
-        return groupName switch
+        _applyingLayoutOptions = true;
+        try
         {
-            "今天" => 0,
-            "昨天" => 1,
-            "本周" => 2,
-            "本月" => 3,
-            "更早" => 4,
-            _ => 5
-        };
+            IconScale = options.IconScale;
+            IsListView = options.IsListView;
+            IsPersonalizedView =
+                options.IsPersonalizedView;
+            IsAutoOrganizeEnabled =
+                options.IsAutoOrganizeEnabled;
+            CurrentViewMode = IsPersonalizedView
+                ? "Personalized"
+                : "Timeline";
+        }
+        finally
+        {
+            _applyingLayoutOptions = false;
+        }
+    }
+
+    private void OnLayoutOptionsSaveFailed(
+        OrganizerLayoutSaveState state,
+        Exception error)
+    {
+        _ = state;
+        _ = error;
+        if (_isDisposed
+            || _uiDispatcher.HasShutdownStarted
+            || _uiDispatcher.HasShutdownFinished)
+        {
+            return;
+        }
+
+        _uiDispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (!_isDisposed)
+                {
+                    AutoOrganizeStatus =
+                        "布局仍在本次会话生效，但设置未能持久保存";
+                }
+            }),
+            DispatcherPriority.Background);
+    }
+
+    private void OnLayoutOptionsSaved(
+        OrganizerLayoutSaveState state)
+    {
+        _ = state;
+        RequestLayoutRefresh();
     }
 
     [RelayCommand]
@@ -459,14 +469,14 @@ public partial class FileOrganizerViewModel :
     {
         IsPersonalizedView = !IsPersonalizedView;
         CurrentViewMode = IsPersonalizedView ? "Personalized" : "Timeline";
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     [RelayCommand]
     private async Task Refresh()
     {
         await _fileService.RefreshFiles();
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     [RelayCommand]
@@ -536,7 +546,7 @@ public partial class FileOrganizerViewModel :
             }
 
             await _fileService.RefreshFiles();
-            BuildPartitions();
+            RequestLayoutRefresh();
             int remaining = _fileService.Files.Count;
             FocusDialogService.Show(
                 remaining == 0
@@ -582,7 +592,7 @@ public partial class FileOrganizerViewModel :
                     IsPersonalizedView = true;
                     CurrentViewMode = "Personalized";
                 }
-                BuildPartitions();
+                RequestLayoutRefresh();
             }
         }
         
@@ -634,7 +644,7 @@ public partial class FileOrganizerViewModel :
             }
         });
         
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
     
     [RelayCommand]
@@ -670,7 +680,7 @@ public partial class FileOrganizerViewModel :
                 context.SaveChanges();
             }
         }
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     [RelayCommand]
@@ -714,7 +724,7 @@ public partial class FileOrganizerViewModel :
         {
             await _fileService.HideFileFromDesktop(file.Name, partitionName);
         }
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     [RelayCommand]
@@ -727,7 +737,7 @@ public partial class FileOrganizerViewModel :
         {
             await _fileService.RestoreFileToDesktop(file.Name);
         }
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     [RelayCommand]
@@ -820,7 +830,7 @@ public partial class FileOrganizerViewModel :
                 context.SaveChanges();
             }
         }
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     public void MovePartitionToColumn(PartitionViewModel source, int targetColumn)
@@ -843,7 +853,7 @@ public partial class FileOrganizerViewModel :
                 context.SaveChanges();
             }
         }
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     [RelayCommand]
@@ -882,7 +892,7 @@ public partial class FileOrganizerViewModel :
             }
             context.SaveChanges();
         }
-        BuildPartitions();
+        RequestLayoutRefresh();
     }
 
     [RelayCommand]
@@ -908,7 +918,7 @@ public partial class FileOrganizerViewModel :
         try
         {
             await _fileService.HideFileFromDesktop(fileName, targetPartition);
-            BuildPartitions();
+            RequestLayoutRefresh();
         }
         catch (Exception ex)
         {
@@ -937,7 +947,7 @@ public partial class FileOrganizerViewModel :
         try
         {
             await _fileService.RestoreFileToDesktop(fileName);
-            BuildPartitions();
+            RequestLayoutRefresh();
         }
         catch (Exception ex)
         {
@@ -1027,7 +1037,7 @@ public partial class FileOrganizerViewModel :
         }
 
         await _fileService.RefreshFiles();
-        BuildPartitions();
+        RequestLayoutRefresh();
         return new DesktopImportResult(
             collected,
             outsideDesktop,
@@ -1041,10 +1051,18 @@ public partial class FileOrganizerViewModel :
             return;
 
         _isDisposed = true;
+        _layoutRefresh.Dispose();
         _fileService.FilesChanged -=
             FileService_FilesChanged;
         _fileService.DesktopItemsCreated -=
             FileService_DesktopItemsCreated;
+        _layoutSaveQueue.ItemSaved -=
+            OnLayoutOptionsSaved;
+        _layoutSaveQueue.ItemSaveFailed -=
+            OnLayoutOptionsSaveFailed;
+        _layoutSaveQueue.CompleteAsync()
+            .GetAwaiter()
+            .GetResult();
         _fileService.Dispose();
     }
 }

@@ -135,6 +135,50 @@ public sealed class FileOrganizerLifecycleContractTests
             .Count >= 4);
     }
 
+    [Fact]
+    public void LayoutRefreshAndSettingsSave_AreBackgroundAndLifecycleAware()
+    {
+        string root = FindRepositoryRoot();
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+        string repository = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "OrganizerLayoutRepository.cs"));
+
+        Assert.Contains(
+            "CoalescingBackgroundRefresh",
+            viewModel);
+        Assert.Contains(
+            "CoalescingAsyncSaveQueue",
+            viewModel);
+        Assert.Contains(
+            "OrganizerLayoutComposer.Compose",
+            viewModel);
+        Assert.Contains(
+            "_layoutRefresh.Dispose()",
+            viewModel);
+        Assert.Contains(
+            "_layoutSaveQueue.CompleteAsync()",
+            viewModel);
+        Assert.DoesNotContain(
+            "BuildPartitions",
+            viewModel);
+        Assert.DoesNotContain(
+            "Dispatcher.Invoke(",
+            viewModel);
+        Assert.Contains(
+            "SemaphoreSlim _gate",
+            repository);
+        Assert.Contains(
+            "_gate.Wait()",
+            repository);
+    }
+
     private static string ReadService()
     {
         string root = FindRepositoryRoot();
