@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Windows;
 using System.IO;
 using System;
+using System.Threading;
 
 namespace FocusPanel.ViewModels;
 
@@ -136,6 +137,11 @@ public partial class TasksViewModel
     private readonly SettingsService _settingsService;
     private readonly IFolderPickerService _folderPickerService;
     private readonly IFilePickerService _filePickerService;
+    private readonly CoalescingAsyncSaveQueue<TodoItem>
+        _taskSaveQueue;
+    private TodoItem? _lastSaveFailureItem;
+    private bool _isDisposed;
+    private int _loadGeneration;
 
     // Unified Items List (Replaces RootItems and ChildItems)
     [ObservableProperty]
@@ -232,6 +238,14 @@ public partial class TasksViewModel
             filePickerService;
         _context = new AppDbContext();
         _taskService = new TaskService(_context);
+        _taskSaveQueue =
+            new CoalescingAsyncSaveQueue<TodoItem>(
+                _taskService.UpdateItemAsync,
+                TimeSpan.FromMilliseconds(180));
+        _taskSaveQueue.ItemSaved +=
+            OnQueuedItemSaved;
+        _taskSaveQueue.ItemSaveFailed +=
+            OnQueuedItemSaveFailed;
         _settingsService = new SettingsService();
         ImageSavePath = _settingsService.CurrentSettings.ImageSavePath;
         
@@ -252,23 +266,85 @@ public partial class TasksViewModel
         }
     }
 
-    private async void OnTodoItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnTodoItemPropertyChanged(
+        object? sender,
+        System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (sender is TodoItem item)
+        if (_isDisposed
+            || sender is not TodoItem item)
         {
-            try
-            {
-                if (e.PropertyName == nameof(TodoItem.Status))
-                    RefreshBoardColumns();
-                await _taskService.UpdateItemAsync(item);
-                TaskStatusMessage = string.Empty;
-            }
-            catch (Exception ex)
-            {
-                TaskStatusMessage =
-                    $"任务保存失败：{ex.Message}";
-            }
+            return;
         }
+
+        if (e.PropertyName == nameof(TodoItem.Status))
+            RefreshBoardColumns();
+
+        _taskSaveQueue.Enqueue(item);
+    }
+
+    private void OnQueuedItemSaved(TodoItem item)
+    {
+        PostToUi(
+            () =>
+            {
+                if (!ReferenceEquals(
+                        _lastSaveFailureItem,
+                        item))
+                {
+                    return;
+                }
+
+                _lastSaveFailureItem = null;
+                if (TaskStatusMessage.StartsWith(
+                        "任务保存失败：",
+                        StringComparison.Ordinal))
+                {
+                    TaskStatusMessage = string.Empty;
+                }
+            });
+    }
+
+    private void OnQueuedItemSaveFailed(
+        TodoItem item,
+        Exception error)
+    {
+        PostToUi(
+            () =>
+            {
+                _lastSaveFailureItem = item;
+                TaskStatusMessage =
+                    $"任务保存失败：{error.Message}";
+            });
+    }
+
+    private void PostToUi(Action action)
+    {
+        if (_isDisposed)
+            return;
+
+        System.Windows.Threading.Dispatcher? dispatcher =
+            Application.Current?.Dispatcher;
+        if (dispatcher == null
+            || dispatcher.CheckAccess())
+        {
+            if (!_isDisposed)
+                action();
+            return;
+        }
+
+        if (dispatcher.HasShutdownStarted
+            || dispatcher.HasShutdownFinished)
+        {
+            return;
+        }
+
+        _ = dispatcher.BeginInvoke(
+            new Action(
+                () =>
+                {
+                    if (!_isDisposed)
+                        action();
+                }));
     }
 
     async partial void OnCurrentParentItemChanged(
@@ -366,7 +442,8 @@ public partial class TasksViewModel
         // Save preference if we are in a context
         if (CurrentParentItem != null)
         {
-            await _taskService.UpdateItemAsync(CurrentParentItem);
+            await SaveImmediatelyAsync(
+                CurrentParentItem);
         }
         
         // Reload to refresh UI if needed
@@ -486,7 +563,8 @@ public partial class TasksViewModel
         if (CurrentParentItem != null)
         {
             CurrentParentItem.CustomFieldsJson = json;
-            await _taskService.UpdateItemAsync(CurrentParentItem);
+            await SaveImmediatelyAsync(
+                CurrentParentItem);
         }
         else
         {
@@ -693,26 +771,67 @@ public partial class TasksViewModel
     [RelayCommand]
     private async Task LoadCurrentViewItems()
     {
-        foreach (var item in CurrentViewItems)
+        int loadGeneration =
+            Interlocked.Increment(
+                ref _loadGeneration);
+        int? parentId =
+            CurrentParentItem?.Id;
+        List<TodoItem> previousItems =
+            CurrentViewItems.ToList();
+        foreach (TodoItem item in previousItems)
         {
             item.PropertyChanged -= OnTodoItemPropertyChanged;
         }
-        CurrentViewItems.Clear();
-        
+
+        await _taskSaveQueue.FlushAsync();
+
         List<TodoItem> items;
-        if (CurrentParentItem == null)
+        try
         {
-            items = await _taskService.GetRootItemsAsync();
+            if (!parentId.HasValue)
+            {
+                items =
+                    await _taskService.GetRootItemsAsync();
+            }
+            else
+            {
+                items =
+                    await _taskService.GetChildItemsAsync(
+                        parentId.Value);
+            }
         }
-        else
+        catch
         {
-            items = await _taskService.GetChildItemsAsync(CurrentParentItem.Id);
+            if (_isDisposed
+                || loadGeneration
+                != Volatile.Read(
+                    ref _loadGeneration))
+            {
+                return;
+            }
+
+            foreach (TodoItem item in previousItems)
+            {
+                item.PropertyChanged +=
+                    OnTodoItemPropertyChanged;
+            }
+            throw;
         }
 
-        foreach (var t in items)
+        if (_isDisposed
+            || loadGeneration
+            != Volatile.Read(
+                ref _loadGeneration))
         {
-            t.PropertyChanged += OnTodoItemPropertyChanged;
-            CurrentViewItems.Add(t);
+            return;
+        }
+
+        CurrentViewItems.Clear();
+        foreach (TodoItem item in items)
+        {
+            item.PropertyChanged +=
+                OnTodoItemPropertyChanged;
+            CurrentViewItems.Add(item);
         }
 
         RefreshBoardColumns();
@@ -781,9 +900,25 @@ public partial class TasksViewModel
             MessageBoxImage.Warning);
         if (result != MessageBoxResult.Yes) return;
 
-        await _taskService.DeleteItemAsync(item);
         item.PropertyChanged -= OnTodoItemPropertyChanged;
-        
+        _taskSaveQueue.Discard(item);
+
+        try
+        {
+            await _taskService.DeleteItemAsync(item);
+        }
+        catch (Exception ex)
+        {
+            if (!_isDisposed)
+            {
+                item.PropertyChanged +=
+                    OnTodoItemPropertyChanged;
+                TaskStatusMessage =
+                    $"任务删除失败：{ex.Message}";
+            }
+            return;
+        }
+
         if (IsListView)
         {
             CurrentViewItems.Remove(item);
@@ -834,7 +969,37 @@ public partial class TasksViewModel
     private async Task UpdateCurrentContext()
     {
         if (CurrentParentItem == null) return;
-        await _taskService.UpdateItemAsync(CurrentParentItem);
+        await SaveImmediatelyAsync(
+            CurrentParentItem);
+    }
+
+    private async Task SaveImmediatelyAsync(
+        TodoItem item)
+    {
+        _taskSaveQueue.Discard(item);
+        try
+        {
+            await _taskService.UpdateItemAsync(item);
+            if (ReferenceEquals(
+                    _lastSaveFailureItem,
+                    item))
+            {
+                _lastSaveFailureItem = null;
+            }
+            if (TaskStatusMessage.StartsWith(
+                    "任务保存失败：",
+                    StringComparison.Ordinal))
+            {
+                TaskStatusMessage = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            _lastSaveFailureItem = item;
+            TaskStatusMessage =
+                $"任务保存失败：{ex.Message}";
+            throw;
+        }
     }
 
     [RelayCommand]
@@ -884,6 +1049,12 @@ public partial class TasksViewModel
 
     public void Dispose()
     {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        Interlocked.Increment(
+            ref _loadGeneration);
         if (CurrentParentItem != null)
         {
             CurrentParentItem.PropertyChanged -=
@@ -895,6 +1066,16 @@ public partial class TasksViewModel
                 OnTodoItemPropertyChanged;
         }
 
+        _taskSaveQueue.CompleteAsync()
+            .GetAwaiter()
+            .GetResult();
+        _taskService.WaitForIdleAsync()
+            .GetAwaiter()
+            .GetResult();
+        _taskSaveQueue.ItemSaved -=
+            OnQueuedItemSaved;
+        _taskSaveQueue.ItemSaveFailed -=
+            OnQueuedItemSaveFailed;
         CloseTaskDetailRequested?.Invoke();
         _context.Dispose();
     }

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="360" viewBox="0 0 1120 360" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 任务编辑安全落盘生命周期</title>
+  <desc id="desc">连续属性变化先合并，再由单消费者和数据库操作闸门串行保存；切换和退出前会排空队列。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4f7fc"/>
+      <stop offset="1" stop-color="#e8eef8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2086cf"/>
+      <stop offset="1" stop-color="#1267a8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#20314b" flood-opacity=".14"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="360" rx="28" fill="url(#bg)"/>
+  <text x="56" y="58" font-family="Segoe UI, Microsoft YaHei" font-size="25" font-weight="700" fill="#172033">任务编辑：合并、串行、退出前排空</text>
+  <text x="56" y="88" font-family="Segoe UI, Microsoft YaHei" font-size="15" fill="#617087">快速输入不再为每个字符并发调用同一个 EF Core DbContext</text>
+
+  <g transform="translate(56 126)" filter="url(#shadow)">
+    <rect width="220" height="150" rx="18" fill="#ffffff" stroke="#d7dfeb"/>
+    <text x="24" y="34" font-family="Segoe UI, Microsoft YaHei" font-size="16" font-weight="700" fill="#172033">连续编辑</text>
+    <rect x="24" y="54" width="172" height="30" rx="8" fill="#edf3fa"/>
+    <text x="38" y="75" font-family="Consolas, Microsoft YaHei" font-size="13" fill="#3e536f">标 → 标题 → 标题完成</text>
+    <text x="24" y="111" font-family="Segoe UI, Microsoft YaHei" font-size="13" fill="#617087">标题 / 状态 / 自定义字段</text>
+    <text x="24" y="132" font-family="Segoe UI, Microsoft YaHei" font-size="13" fill="#617087">同步进入同一变化入口</text>
+  </g>
+
+  <path d="M294 201h72" stroke="#4c7397" stroke-width="4" stroke-linecap="round"/>
+  <path d="m354 190 15 11-15 11" fill="none" stroke="#4c7397" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(388 126)" filter="url(#shadow)">
+    <rect width="220" height="150" rx="18" fill="#ffffff" stroke="#d7dfeb"/>
+    <circle cx="44" cy="62" r="24" fill="#dceffc"/>
+    <path d="M44 47v16l11 7" fill="none" stroke="#1675b8" stroke-width="4" stroke-linecap="round"/>
+    <text x="80" y="56" font-family="Segoe UI, Microsoft YaHei" font-size="16" font-weight="700" fill="#172033">180ms 合并</text>
+    <text x="80" y="79" font-family="Segoe UI, Microsoft YaHei" font-size="13" fill="#617087">同一对象只保留一次</text>
+    <text x="24" y="112" font-family="Segoe UI, Microsoft YaHei" font-size="13" fill="#617087">保存中再次变化：</text>
+    <text x="24" y="134" font-family="Segoe UI, Microsoft YaHei" font-size="13" fill="#1267a8">保留一个尾随保存</text>
+  </g>
+
+  <path d="M626 201h72" stroke="#4c7397" stroke-width="4" stroke-linecap="round"/>
+  <path d="m686 190 15 11-15 11" fill="none" stroke="#4c7397" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(720 126)" filter="url(#shadow)">
+    <rect width="180" height="150" rx="18" fill="url(#accent)"/>
+    <rect x="27" y="37" width="126" height="16" rx="8" fill="#ffffff" fill-opacity=".95"/>
+    <rect x="27" y="67" width="126" height="16" rx="8" fill="#ffffff" fill-opacity=".72"/>
+    <rect x="27" y="97" width="126" height="16" rx="8" fill="#ffffff" fill-opacity=".48"/>
+    <text x="90" y="137" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="13" fill="#ffffff">单消费者保存队列</text>
+  </g>
+
+  <path d="M918 201h52" stroke="#4c7397" stroke-width="4" stroke-linecap="round"/>
+  <path d="m958 190 15 11-15 11" fill="none" stroke="#4c7397" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(992 126)" filter="url(#shadow)">
+    <rect width="72" height="150" rx="18" fill="#202936"/>
+    <path d="M22 47h28v20H22zM22 80h28v20H22z" fill="none" stroke="#72c2f4" stroke-width="3"/>
+    <path d="M36 29v18M36 100v20" stroke="#72c2f4" stroke-width="3" stroke-linecap="round"/>
+    <text x="36" y="139" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="12" fill="#f3f7ff">DB 闸门</text>
+  </g>
+
+  <rect x="388" y="298" width="512" height="34" rx="17" fill="#dceffc"/>
+  <text x="644" y="320" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="13" fill="#195f91">切换页面 / 删除 / 退出：解除监听 → 排空队列 → 等待数据库空闲</text>
+</svg>

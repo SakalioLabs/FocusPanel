@@ -20,6 +20,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 固定应用与运行应用按 Windows AppUserModelID 或可执行路径合并为单一任务栏图标；固定项保持用户顺序，未固定运行项保持本次运行中的稳定顺序。
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
 - 搜索结果和任务列表统一继承全局 Fluent `ListBox/ListBoxItem`：启动按钮与标题显式使用动态 `FocusTextBrush`，选中项使用 `FocusAccentSoftBrush`、强调描边和主题文字，不再落回 WPF 的系统浅蓝选择背景，因此深色、浅色及系统强调色变化下都保持可读。
+- 任务标题、完成状态和自定义字段采用 180ms 合并保存；所有任务增删查改通过同一个串行数据库闸门。页面切换会先排空旧范围的修改，应用退出会先停止接收变化并等待保存完成，再释放数据库上下文，避免快速输入触发 EF 并发异常或丢失最后一次修改。
 - 开始菜单快捷方式、`shell:AppsFolder` 和应用身份解析在可取消的 STA 后台线程构建；Panel 壳层不再等待完整目录扫描才响应鼠标与键盘。
 - 搜索和固定项会先显示名称与首字符占位，再由单一后台队列按需加载真实图标；Shell 图标提供器响应缓慢时不会卡住搜索输入。索引期间显示“正在载入应用目录”，完成但无匹配项时显示明确空状态。
 - 打开搜索后会立即聚焦并全选搜索框；无需离开键盘即可用上下方向键选择结果、回车启动，`Esc` 关闭后焦点返回紧凑栏搜索入口。应用目录在后台补全时会按稳定身份保留当前选择，不会把光标跳回第一项。
@@ -91,6 +92,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![运行时菜单深色主题解析](docs/images/runtime-menu-theme.svg)
 
 ![独立 Popup 与 DWM 壳层主题隔离](docs/images/popup-theme-isolation.svg)
+
+![任务编辑安全落盘生命周期](docs/images/task-save-lifecycle.svg)
 
 ![统一应用栏鼠标操作](docs/images/taskbar-app-mouse-actions.svg)
 
@@ -290,7 +293,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.90 `
+  -Version 0.9.91 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
