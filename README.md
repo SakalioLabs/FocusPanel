@@ -29,6 +29,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 窗口前台状态改变时按应用身份增量更新图标，只替换真正变化的项目，不再清空并重建整条应用栏，因此滚动位置和未变化图标保持稳定。
 - 同一运行应用的活动状态、窗口标题和窗口数量改为在原有任务栏项目上原位同步；WPF 不再因前台切换执行集合 `Replace`、销毁按钮并重新创建视觉树，当前应用状态条和工具提示可以平滑更新。
 - 窗口跟踪覆盖 `CREATE / DESTROY / SHOW / HIDE / NAMECHANGE / FOREGROUND` 完整生命周期；新应用窗口创建后及时进入统一应用栏，最后窗口销毁后及时移除，不再依赖下一次偶然的前台或标题事件纠正陈旧图标。
+- 顶层窗口枚举、AUMID/进程身份解析和图标提取通过单消费者后台快照执行，不再占用 WPF 界面线程；窗口事件在捕获期间继续到达时只保留一次尾随刷新，并用修订号拒绝旧结果、隐藏后的迟到结果和退出后的回调。
 - WinEvent 只接收 `OBJID_WINDOW` 窗口本体并跳过 FocusPanel 自身进程；按钮、菜单和 Panel 显隐不会触发无意义的完整窗口重扫，短时间重复通知继续合并为一次刷新。
 - 窗口枚举采用最后有效快照提交：`EnumWindows` 整体失败时保留当前应用栏，不把系统瞬时错误显示成“所有运行应用消失”；单个受保护窗口的进程、身份或图标读取失败只降级该项目，不中断其他窗口。
 - `SnapshotChanged` 按订阅者隔离发布，一个界面监听器异常不会阻断其他状态消费者，也不会反向终止窗口枚举。退出时先标记跟踪器失效、停止计时器并解除 WinEvent；已经在途的原生回调会在 Dispatcher 关闭前静默丢弃。
@@ -92,6 +93,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![运行应用窗口生命周期跟踪](docs/images/window-lifecycle-tracking.svg)
 
 ![运行窗口最后有效快照与异常隔离](docs/images/window-snapshot-resilience.svg)
+
+![运行窗口合并式后台快照](docs/images/window-tracker-background-refresh.svg)
 
 ![系统状态合并式后台刷新](docs/images/system-status-background-refresh.svg)
 
@@ -334,7 +337,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.5 `
+  -Version 0.10.6 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -343,7 +346,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.10.5-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.6-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

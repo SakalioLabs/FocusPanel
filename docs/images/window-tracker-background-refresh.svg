@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1827"/>
+      <stop offset="1" stop-color="#1b2943"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#42c8ff"/>
+      <stop offset="1" stop-color="#8b7cff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity=".24"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="520" rx="28" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="27" font-weight="700">运行窗口 · 合并式后台快照</text>
+  <text x="54" y="96" fill="#aebbd0" font-family="Segoe UI, Microsoft YaHei" font-size="16">枚举、身份解析和图标提取离开 WPF 界面线程，只提交最新一轮完整结果</text>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="142" width="218" height="232" rx="22" fill="#223149" stroke="#40536f"/>
+    <text x="78" y="184" fill="#e4edf9" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">WinEvent 突发</text>
+    <text x="78" y="225" fill="#b9c8dc" font-family="Segoe UI, Microsoft YaHei" font-size="14">前台切换</text>
+    <text x="78" y="258" fill="#b9c8dc" font-family="Segoe UI, Microsoft YaHei" font-size="14">创建 / 销毁</text>
+    <text x="78" y="291" fill="#b9c8dc" font-family="Segoe UI, Microsoft YaHei" font-size="14">显示 / 隐藏 / 改名</text>
+    <rect x="78" y="320" width="170" height="32" rx="16" fill="#2d405d"/>
+    <text x="163" y="341" text-anchor="middle" fill="#7fd4ff" font-family="Segoe UI, Microsoft YaHei" font-size="13">140ms 合并</text>
+  </g>
+
+  <path d="M286 258 H330" stroke="url(#line)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M318 246 L336 258 L318 270" fill="none" stroke="#5ea9ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="350" y="126" width="300" height="264" rx="24" fill="#273b56" stroke="#587494"/>
+    <text x="500" y="170" text-anchor="middle" fill="#eef5fd" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">单消费者后台捕获</text>
+    <circle cx="391" cy="219" r="8" fill="#55d69d"/>
+    <text x="415" y="225" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="14">EnumWindows 全量枚举</text>
+    <circle cx="391" cy="261" r="8" fill="#65c9ff"/>
+    <text x="415" y="267" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="14">AUMID / 进程身份解析</text>
+    <circle cx="391" cy="303" r="8" fill="#a794ff"/>
+    <text x="415" y="309" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="14">冻结图标并组合窗口组</text>
+    <rect x="378" y="338" width="244" height="32" rx="16" fill="#304967"/>
+    <text x="500" y="359" text-anchor="middle" fill="#c4d6ea" font-family="Segoe UI, Microsoft YaHei" font-size="13">重复请求只保留一次尾随捕获</text>
+  </g>
+
+  <path d="M670 258 H714" stroke="url(#line)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M702 246 L720 258 L702 270" fill="none" stroke="#827fff" stroke-width="5" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="734" y="142" width="332" height="232" rx="22" fill="#223149" stroke="#40536f"/>
+    <text x="758" y="184" fill="#e4edf9" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">修订门 + UI 原子提交</text>
+    <rect x="758" y="210" width="284" height="42" rx="13" fill="#2b405d"/>
+    <text x="900" y="236" text-anchor="middle" fill="#f0f5fb" font-family="Segoe UI, Microsoft YaHei" font-size="14">最新修订 → Dispatcher.Background</text>
+    <rect x="758" y="266" width="284" height="42" rx="13" fill="#3a3048"/>
+    <text x="900" y="292" text-anchor="middle" fill="#f4c7d1" font-family="Segoe UI, Microsoft YaHei" font-size="14">旧修订 / 已隐藏 / 已退出 → 丢弃</text>
+    <text x="758" y="341" fill="#b9c8dc" font-family="Segoe UI, Microsoft YaHei" font-size="14">捕获失败继续保留上一份有效应用栏</text>
+  </g>
+
+  <rect x="54" y="428" width="1012" height="52" rx="18" fill="#20314a" stroke="#405675"/>
+  <text x="560" y="460" text-anchor="middle" fill="#c8d7e9" font-family="Segoe UI, Microsoft YaHei" font-size="15">界面线程不再枚举窗口或提取图标 · 窗口突发不堆积 · 任务栏图标不闪回旧状态</text>
+</svg>

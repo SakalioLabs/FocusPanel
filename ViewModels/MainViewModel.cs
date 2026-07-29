@@ -318,13 +318,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _fileOrganizerViewModel = new FileOrganizerViewModel();
         CurrentViewModel = _fileOrganizerViewModel;
 
+        // Subscribe before reading the initial background snapshots. A capture
+        // can finish while this constructor is still building the shell; the
+        // UI-dispatched event must not be missed between the first read and the
+        // subscription.
+        _windowTracker.SnapshotChanged += OnWindowSnapshotChanged;
+        _appCatalog.CatalogChanged += OnCatalogChanged;
         RefreshTaskbarApps();
         RefreshSearchResults();
         RequestSystemStatusRefresh();
         RequestTaskSummaryRefresh();
 
-        _windowTracker.SnapshotChanged += OnWindowSnapshotChanged;
-        _appCatalog.CatalogChanged += OnCatalogChanged;
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now;
 

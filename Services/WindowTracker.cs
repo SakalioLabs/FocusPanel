@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 using FocusPanel.Helpers;
@@ -27,6 +29,9 @@ public sealed class WindowTracker : IWindowTracker
     private const int DwmwaCloaked = 14;
 
     private readonly DispatcherTimer _refreshDebounce;
+    private readonly Dispatcher _uiDispatcher;
+    private readonly CoalescingBackgroundRefresh<
+        PendingWindowSnapshot> _snapshotRefresh;
     private readonly NativeMethods.WinEventDelegate _callback;
     private readonly List<IntPtr> _hooks = new();
     private readonly IAppIdentityResolver _identityResolver;
@@ -35,6 +40,7 @@ public sealed class WindowTracker : IWindowTracker
         _snapshotStore = new();
     private volatile bool _trackingActive = true;
     private volatile bool _disposed;
+    private long _snapshotRevision;
 
     public WindowTracker() : this(new AppIdentityResolver())
     {
@@ -43,8 +49,18 @@ public sealed class WindowTracker : IWindowTracker
     internal WindowTracker(IAppIdentityResolver identityResolver)
     {
         _identityResolver = identityResolver;
+        _uiDispatcher = Dispatcher.CurrentDispatcher;
         _commands = new WindowCommandExecutor(
             new WindowsWindowCommandBoundary());
+        _snapshotRefresh =
+            new CoalescingBackgroundRefresh<
+                PendingWindowSnapshot>(
+                CapturePendingSnapshot,
+                ApplySnapshotAsync,
+                ex => Debug.WriteLine(
+                    "Window snapshot refresh failed; "
+                    + "keeping the last valid snapshot: "
+                    + ex.Message));
         _callback = OnWinEvent;
         _refreshDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(140) };
         _refreshDebounce.Tick +=
@@ -59,7 +75,7 @@ public sealed class WindowTracker : IWindowTracker
         AddHook(
             WindowTrackingEventPolicy.EventObjectNameChange,
             WindowTrackingEventPolicy.EventObjectNameChange);
-        RefreshSnapshotSafely();
+        RequestSnapshotRefresh();
     }
 
     public event EventHandler? SnapshotChanged;
@@ -82,7 +98,7 @@ public sealed class WindowTracker : IWindowTracker
                 wasActive,
                 isActive))
         {
-            RefreshSnapshotSafely();
+            RequestSnapshotRefresh();
         }
     }
 
@@ -128,26 +144,60 @@ public sealed class WindowTracker : IWindowTracker
     {
         _refreshDebounce.Stop();
         if (_trackingActive && !_disposed)
-            RefreshSnapshotSafely();
+            RequestSnapshotRefresh();
     }
 
-    private void RefreshSnapshotSafely()
+    private void RequestSnapshotRefresh()
     {
-        if (_disposed)
+        if (_disposed || !_trackingActive)
             return;
 
-        if (!_snapshotStore.TryRefresh(
-                CaptureSnapshot,
-                out Exception? failure))
-        {
-            Debug.WriteLine(
-                "Window snapshot refresh failed; "
-                + "keeping the last valid snapshot: "
-                + failure?.Message);
-            return;
-        }
+        Interlocked.Increment(
+            ref _snapshotRevision);
+        _snapshotRefresh.Request();
+    }
 
-        PublishSnapshotChangedSafely();
+    private PendingWindowSnapshot
+        CapturePendingSnapshot() =>
+        new(
+            Interlocked.Read(
+                ref _snapshotRevision),
+            CaptureSnapshot());
+
+    private async Task ApplySnapshotAsync(
+        PendingWindowSnapshot pending,
+        CancellationToken cancellationToken)
+    {
+        await _uiDispatcher.InvokeAsync(
+            () =>
+            {
+                if (!WindowSnapshotApplyPolicy.CanApply(
+                        pending.Revision,
+                        Interlocked.Read(
+                            ref _snapshotRevision),
+                        _trackingActive,
+                        _disposed,
+                        cancellationToken
+                            .IsCancellationRequested))
+                {
+                    return;
+                }
+
+                if (!_snapshotStore.TryRefresh(
+                        () => pending.Items,
+                        out Exception? failure))
+                {
+                    Debug.WriteLine(
+                        "Window snapshot commit failed; "
+                        + "keeping the last valid snapshot: "
+                        + failure?.Message);
+                    return;
+                }
+
+                PublishSnapshotChangedSafely();
+            },
+            DispatcherPriority.Background,
+            cancellationToken);
     }
 
     private IReadOnlyList<WindowTaskItem> CaptureSnapshot()
@@ -426,6 +476,7 @@ public sealed class WindowTracker : IWindowTracker
 
         _disposed = true;
         _trackingActive = false;
+        _snapshotRefresh.Dispose();
         _refreshDebounce.Stop();
         _refreshDebounce.Tick -=
             RefreshDebounce_Tick;
@@ -442,6 +493,10 @@ public sealed class WindowTracker : IWindowTracker
         string IdentityKey,
         string? ApplicationUserModelId,
         bool IsActive);
+
+    private sealed record PendingWindowSnapshot(
+        long Revision,
+        IReadOnlyList<WindowTaskItem> Items);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct NativeRect
