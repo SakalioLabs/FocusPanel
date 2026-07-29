@@ -298,8 +298,8 @@ public sealed class FileOrganizerLifecycleContractTests
         Assert.Contains(
             "HideFileFromDesktopPathCore(",
             body);
-        Assert.Contains(
-            "allowElevation,\n                                                false)",
+        Assert.Matches(
+            @"allowElevation,\s*false\)",
             body);
         Assert.Contains(
             "await RefreshFilesCore()",
