@@ -575,6 +575,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         new PomodoroViewModel();
                     _pomodoroViewModel.SessionCompleted +=
                         PomodoroViewModel_SessionCompleted;
+                    _pomodoroViewModel.SessionPersisted +=
+                        PomodoroViewModel_SessionPersisted;
                 }
                 CurrentViewModel = _pomodoroViewModel;
                 CurrentSectionTitle = "番茄钟";
@@ -1241,6 +1243,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         => PomodoroCompleted?.Invoke(
             e.DurationMinutes);
 
+    private void PomodoroViewModel_SessionPersisted(
+        object? sender,
+        EventArgs e)
+        => RequestTaskSummaryRefresh();
+
     private void OnCatalogChanged(object? sender, EventArgs e)
     {
         IsAppCatalogLoading = _appCatalog.IsIndexing;
@@ -1705,6 +1712,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             _pomodoroViewModel.SessionCompleted -=
                 PomodoroViewModel_SessionCompleted;
+            _pomodoroViewModel.SessionPersisted -=
+                PomodoroViewModel_SessionPersisted;
             _pomodoroViewModel.Dispose();
         }
     }

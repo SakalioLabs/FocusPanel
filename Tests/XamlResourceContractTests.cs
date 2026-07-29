@@ -2579,7 +2579,31 @@ public sealed class XamlResourceContractTests
             "SessionCompleted?.Invoke",
             viewModel);
         Assert.Contains(
+            "CoalescingBackgroundRefresh<",
+            viewModel);
+        Assert.Contains(
+            "CoalescingAsyncSaveQueue<",
+            viewModel);
+        Assert.Contains(
+            "Task.Run(",
+            viewModel);
+        Assert.Contains(
+            "_sessionSaveQueue.CompleteAsync()",
+            viewModel);
+        Assert.Contains(
+            "SessionPersisted?.Invoke",
+            viewModel);
+        Assert.DoesNotContain(
+            "new AppDbContext()",
+            viewModel);
+        Assert.DoesNotContain(
+            "SaveChanges()",
+            viewModel);
+        Assert.Contains(
             "PomodoroCompleted?.Invoke",
+            mainViewModel);
+        Assert.Contains(
+            "PomodoroViewModel_SessionPersisted",
             mainViewModel);
         Assert.Contains(
             "ViewModel_PomodoroCompleted",

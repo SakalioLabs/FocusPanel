@@ -1,10 +1,9 @@
 using System;
-using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FocusPanel.Data;
-using FocusPanel.Models;
 using FocusPanel.Services;
 
 namespace FocusPanel.ViewModels;
@@ -24,7 +23,16 @@ public partial class PomodoroViewModel
 {
     private readonly DispatcherTimer _timer;
     private readonly PomodoroCountdown _countdown;
+    private readonly Dispatcher _uiDispatcher;
+    private readonly IPomodoroSessionRepository
+        _sessionRepository;
+    private readonly CoalescingBackgroundRefresh<
+        PendingPomodoroStats> _statsRefresh;
+    private readonly CoalescingAsyncSaveQueue<
+        PendingPomodoroSave> _sessionSaveQueue;
     private DateTime? _sessionStartedAt;
+    private long _statsRevision;
+    private long _sessionUiRevision;
     private bool _disposed;
 
     [ObservableProperty]
@@ -52,7 +60,23 @@ public partial class PomodoroViewModel
     private int selectedDurationMinutes = 25;
 
     public PomodoroViewModel()
+        : this(
+            new PomodoroSessionRepository(),
+            Dispatcher.CurrentDispatcher)
     {
+    }
+
+    internal PomodoroViewModel(
+        IPomodoroSessionRepository
+            sessionRepository,
+        Dispatcher dispatcher)
+    {
+        _sessionRepository = sessionRepository
+            ?? throw new ArgumentNullException(
+                nameof(sessionRepository));
+        _uiDispatcher = dispatcher
+            ?? throw new ArgumentNullException(
+                nameof(dispatcher));
         _countdown =
             new PomodoroCountdown(
                 TimeSpan.FromMinutes(
@@ -62,12 +86,27 @@ public partial class PomodoroViewModel
             Interval = TimeSpan.FromSeconds(1)
         };
         _timer.Tick += Timer_Tick;
+        _statsRefresh =
+            new CoalescingBackgroundRefresh<
+                PendingPomodoroStats>(
+                CaptureStats,
+                ApplyStatsAsync);
+        _sessionSaveQueue =
+            new CoalescingAsyncSaveQueue<
+                PendingPomodoroSave>(
+                SaveSessionAsync,
+                TimeSpan.Zero);
+        _sessionSaveQueue.ItemSaved +=
+            OnSessionSaved;
+        _sessionSaveQueue.ItemSaveFailed +=
+            OnSessionSaveFailed;
         SyncCountdownState();
-        LoadStats();
+        _statsRefresh.Request();
     }
 
     public event EventHandler<PomodoroCompletedEventArgs>?
         SessionCompleted;
+    public event EventHandler? SessionPersisted;
 
     public bool CanStart => !IsRunning;
     public bool CanPause => IsRunning;
@@ -76,58 +115,130 @@ public partial class PomodoroViewModel
         && (!_countdown.HasElapsed
             || _countdown.IsCompleted);
 
-    private void LoadStats()
+    private PendingPomodoroStats CaptureStats()
     {
-        try
+        long revision = Volatile.Read(
+            ref _statsRevision);
+        return new PendingPomodoroStats(
+            _sessionRepository.LoadStats(),
+            revision);
+    }
+
+    private async Task ApplyStatsAsync(
+        PendingPomodoroStats pending,
+        CancellationToken cancellationToken)
+    {
+        await _uiDispatcher.InvokeAsync(
+            () =>
+            {
+                if (_disposed
+                    || cancellationToken
+                        .IsCancellationRequested)
+                {
+                    return;
+                }
+
+                long currentRevision =
+                    Volatile.Read(
+                        ref _statsRevision);
+                if (pending.Revision
+                    != currentRevision)
+                {
+                    return;
+                }
+                if (!pending.Snapshot.IsValid)
+                {
+                    ReportInitialStatsUnavailable();
+                    return;
+                }
+                if (!PomodoroStatsApplyPolicy
+                    .ShouldApply(
+                        pending.Snapshot,
+                        pending.Revision,
+                        currentRevision))
+                {
+                    return;
+                }
+
+                CompletedPomodoros =
+                    pending.Snapshot
+                        .CompletedSessions;
+                TotalFocusMinutes =
+                    pending.Snapshot
+                        .TotalFocusMinutes;
+            },
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
+    private Task SaveSessionAsync(
+        PendingPomodoroSave pending) =>
+        Task.Run(
+            () => _sessionRepository.Save(
+                pending.Session));
+
+    private void OnSessionSaved(
+        PendingPomodoroSave pending)
+    {
+        DispatchSaveResult(
+            () =>
+            {
+                if (PomodoroSaveResultPolicy
+                    .ShouldUpdateCompletionMessage(
+                        pending.Revision,
+                        Volatile.Read(
+                            ref _sessionUiRevision),
+                        IsRunning))
+                {
+                    StatusMessage =
+                        $"本轮 {pending.Session.DurationMinutes} 分钟专注已完成";
+                }
+
+                SessionPersisted?.Invoke(
+                    this,
+                    EventArgs.Empty);
+            });
+    }
+
+    private void OnSessionSaveFailed(
+        PendingPomodoroSave pending,
+        Exception error)
+    {
+        _ = error;
+        DispatchSaveResult(
+            () =>
+            {
+                StatusMessage = IsRunning
+                    ? "正在专注 · 上一轮统计记录保存失败"
+                    : "本轮已完成，但统计记录保存失败";
+            });
+    }
+
+    private void DispatchSaveResult(
+        Action apply)
+    {
+        if (_disposed
+            || _uiDispatcher.HasShutdownStarted
+            || _uiDispatcher.HasShutdownFinished)
         {
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            CompletedPomodoros =
-                context.PomodoroSessions.Count(
-                    session =>
-                        session.Status == "Completed");
-            TotalFocusMinutes =
-                context.PomodoroSessions
-                    .Where(
-                        session =>
-                            session.Status == "Completed")
-                    .Select(
-                        session =>
-                            (double)session.DurationMinutes)
-                    .DefaultIfEmpty()
-                    .Sum();
+            return;
         }
-        catch
+
+        _uiDispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (!_disposed)
+                    apply();
+            }),
+            DispatcherPriority.Background);
+    }
+
+    private void ReportInitialStatsUnavailable()
+    {
+        if (!IsRunning)
         {
             StatusMessage =
                 "统计暂时不可用，计时仍可正常使用";
-        }
-    }
-
-    private bool SaveCompletedSession(
-        int durationMinutes)
-    {
-        try
-        {
-            DateTime endedAt = DateTime.Now;
-            using var context = new AppDbContext();
-            context.PomodoroSessions.Add(
-                new PomodoroSession
-                {
-                    StartTime =
-                        _sessionStartedAt
-                        ?? endedAt.AddMinutes(
-                            -durationMinutes),
-                    EndTime = endedAt,
-                    DurationMinutes = durationMinutes,
-                    Status = "Completed"
-                });
-            context.SaveChanges();
-            return true;
-        }
-        catch
-        {
-            return false;
         }
     }
 
@@ -143,13 +254,28 @@ public partial class PomodoroViewModel
         _timer.Stop();
         int durationMinutes =
             SelectedDurationMinutes;
-        bool saved =
-            SaveCompletedSession(durationMinutes);
+        DateTime endedAt = DateTime.Now;
+        Interlocked.Increment(
+            ref _statsRevision);
+        long uiRevision = Interlocked.Increment(
+            ref _sessionUiRevision);
+        var pending =
+            new PendingPomodoroSave(
+                new CompletedPomodoroSession(
+                    _sessionStartedAt
+                    ?? endedAt.AddMinutes(
+                        -durationMinutes),
+                    endedAt,
+                    durationMinutes),
+                uiRevision);
+        bool saveQueued =
+            _sessionSaveQueue.Enqueue(
+                pending);
         CompletedPomodoros++;
         TotalFocusMinutes += durationMinutes;
-        StatusMessage = saved
-            ? $"本轮 {durationMinutes} 分钟专注已完成"
-            : "本轮已完成，但统计记录保存失败";
+        StatusMessage = saveQueued
+            ? $"本轮 {durationMinutes} 分钟专注已完成 · 正在保存统计"
+            : "本轮已完成，但统计记录未能进入保存队列";
         _sessionStartedAt = null;
         CloseOverlayWindows();
         SessionCompleted?.Invoke(
@@ -198,6 +324,8 @@ public partial class PomodoroViewModel
             return;
         }
 
+        Interlocked.Increment(
+            ref _sessionUiRevision);
         SelectedDurationMinutes = minutes;
         _countdown.Configure(
             TimeSpan.FromMinutes(minutes));
@@ -212,6 +340,8 @@ public partial class PomodoroViewModel
         if (IsRunning)
             return;
 
+        Interlocked.Increment(
+            ref _sessionUiRevision);
         if (_countdown.IsCompleted)
             _countdown.Reset();
         _sessionStartedAt ??= DateTime.Now;
@@ -237,6 +367,8 @@ public partial class PomodoroViewModel
     [RelayCommand]
     private void Reset()
     {
+        Interlocked.Increment(
+            ref _sessionUiRevision);
         _timer.Stop();
         _countdown.Reset();
         _sessionStartedAt = null;
@@ -260,6 +392,23 @@ public partial class PomodoroViewModel
         _disposed = true;
         _timer.Stop();
         _timer.Tick -= Timer_Tick;
+        _statsRefresh.Dispose();
+        _sessionSaveQueue.CompleteAsync()
+            .GetAwaiter()
+            .GetResult();
+        _sessionSaveQueue.ItemSaved -=
+            OnSessionSaved;
+        _sessionSaveQueue.ItemSaveFailed -=
+            OnSessionSaveFailed;
         CloseOverlayWindows();
     }
+
+    private readonly record struct
+        PendingPomodoroStats(
+            PomodoroStatsSnapshot Snapshot,
+            long Revision);
+
+    private sealed record PendingPomodoroSave(
+        CompletedPomodoroSession Session,
+        long Revision);
 }

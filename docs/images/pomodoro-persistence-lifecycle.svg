@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="500" viewBox="0 0 1120 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="1" stop-color="#182840"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#51c7ff"/>
+      <stop offset="1" stop-color="#8979ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000" flood-opacity=".25"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="500" rx="28" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f5f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="27" font-weight="700">番茄钟 · 非阻塞统计与安全落盘</text>
+  <text x="54" y="96" fill="#aebbd0" font-family="Segoe UI, Microsoft YaHei" font-size="16">打开模块和倒计时归零都不再在 WPF UI 线程访问 SQLite</text>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="136" width="244" height="230" rx="22" fill="#223149" stroke="#40526e"/>
+    <text x="78" y="178" fill="#dce7f6" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">即时完成反馈</text>
+    <circle cx="88" cy="222" r="7" fill="#55d69d"/>
+    <text x="108" y="228" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">倒计时归零</text>
+    <circle cx="88" cy="266" r="7" fill="#7fd0ff"/>
+    <text x="108" y="272" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">统计数先在内存增加</text>
+    <circle cx="88" cy="310" r="7" fill="#8979ff"/>
+    <text x="108" y="316" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">声音与 Toast 立即显示</text>
+    <rect x="78" y="334" width="192" height="28" rx="14" fill="#293b56"/>
+    <text x="174" y="353" text-anchor="middle" fill="#bcd0e7" font-family="Segoe UI, Microsoft YaHei" font-size="13">UI 不等待数据库</text>
+  </g>
+
+  <path d="M318 252 H390" stroke="url(#accent)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M376 240 L394 252 L376 264" fill="none" stroke="#718cff" stroke-width="5" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="412" y="120" width="296" height="264" rx="24" fill="#273a54" stroke="#587293"/>
+    <text x="560" y="164" text-anchor="middle" fill="#e8f1fb" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">后台单消费者保存</text>
+    <circle cx="450" cy="210" r="9" fill="#55d69d"/>
+    <text x="474" y="216" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">每轮会话完整排队</text>
+    <circle cx="450" cy="256" r="9" fill="#7fd0ff"/>
+    <text x="474" y="262" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">独立 DbContext 串行写入</text>
+    <circle cx="450" cy="302" r="9" fill="#ffc66d"/>
+    <text x="474" y="308" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">退出前排空当前队列</text>
+    <rect x="438" y="338" width="244" height="30" rx="15" fill="#304765"/>
+    <text x="560" y="359" text-anchor="middle" fill="#bcd0e7" font-family="Segoe UI, Microsoft YaHei" font-size="13">失败隔离 · 后续会话继续保存</text>
+  </g>
+
+  <path d="M728 252 H800" stroke="url(#accent)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M786 240 L804 252 L786 264" fill="none" stroke="#8979ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="822" y="136" width="244" height="230" rx="22" fill="#223149" stroke="#40526e"/>
+    <text x="846" y="178" fill="#dce7f6" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">迟到结果隔离</text>
+    <circle cx="860" cy="222" r="7" fill="#55d69d"/>
+    <text x="880" y="228" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">当前轮 → 更新提示</text>
+    <circle cx="860" cy="266" r="7" fill="#ffc66d"/>
+    <text x="880" y="272" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">已开始新轮 → 不覆盖</text>
+    <circle cx="860" cy="310" r="7" fill="#ff7d8d"/>
+    <text x="880" y="316" fill="#edf4fc" font-family="Segoe UI, Microsoft YaHei" font-size="15">保存失败 → 明确提示</text>
+  </g>
+
+  <rect x="54" y="414" width="1012" height="50" rx="17" fill="#202f47" stroke="#3c506d"/>
+  <text x="560" y="445" text-anchor="middle" fill="#c6d4e7" font-family="Segoe UI, Microsoft YaHei" font-size="15">结果：打开计时页不顿挫 · 完成提醒不延迟 · 立即退出也会先完成会话落盘</text>
+</svg>
