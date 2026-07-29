@@ -30,6 +30,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _shellPreferences;
     private readonly AudioControlCoordinator
         _audioControl;
+    private readonly AppLaunchCoordinator
+        _appLaunch;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
@@ -290,6 +292,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _windowTracker = windowTracker;
         _systemStatus = systemStatus;
         _updateService = updateService;
+        _appLaunch =
+            new AppLaunchCoordinator(
+                _appCatalog.Launch);
         _audioControl =
             new AudioControlCoordinator(
                 _systemStatus.TrySetMasterVolume,
@@ -650,12 +655,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         WorkspaceRequested?.Invoke(destination);
     }
 
-    [RelayCommand]
-    private void LaunchApp(AppLaunchItem? app)
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task LaunchApp(
+        AppLaunchItem? app)
     {
         if (app == null)
             return;
-        if (TryLaunchApp(app))
+        if (await TryLaunchAppAsync(app))
             IsSearchOpen = false;
     }
 
@@ -713,8 +719,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RefreshSearchResults();
     }
 
-    [RelayCommand]
-    private void ActivateTaskbarApp(TaskbarAppItem? task)
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task ActivateTaskbarApp(
+        TaskbarAppItem? task)
     {
         if (task?.RunningTask != null)
         {
@@ -728,15 +735,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         AppLaunchItem? launch = task?.CreateLaunchItem();
         if (launch != null)
-            TryLaunchApp(launch);
+            await TryLaunchAppAsync(launch);
     }
 
-    [RelayCommand]
-    private void LaunchNewTaskbarApp(TaskbarAppItem? task)
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task LaunchNewTaskbarApp(
+        TaskbarAppItem? task)
     {
         AppLaunchItem? launch = task?.CreateLaunchItem();
         if (launch != null)
-            TryLaunchApp(launch);
+            await TryLaunchAppAsync(launch);
     }
 
     [RelayCommand]
@@ -1739,13 +1747,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
             IsStatusCenterOpen = true;
     }
 
-    private bool TryLaunchApp(AppLaunchItem app)
+    private async Task<bool> TryLaunchAppAsync(
+        AppLaunchItem app)
     {
-        bool succeeded = SystemActionExecution.Try(
-            () => _appCatalog.Launch(app));
-        if (succeeded)
+        AppLaunchCompletion completion =
+            await _appLaunch.LaunchAsync(app);
+        if (_isDisposed
+            || !_appLaunch.IsCurrent(
+                completion.Revision))
         {
-            SystemActionMessage = string.Empty;
+            return false;
+        }
+
+        if (completion.Succeeded)
+        {
+            SystemActionMessage =
+                string.Empty;
             return true;
         }
 

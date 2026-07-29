@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bglaunch" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1828"/>
+      <stop offset="1" stop-color="#242d4c"/>
+    </linearGradient>
+    <linearGradient id="flowlaunch" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#60c7ff"/>
+      <stop offset="1" stop-color="#a48cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bglaunch)"/>
+  <text x="54" y="62" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">统一应用栏 · 并发后台启动</text>
+  <text x="54" y="97" fill="#b9cce8" font-family="Segoe UI, Microsoft YaHei" font-size="16">慢快捷方式不再冻结 Panel，也不阻塞用户继续点击下一项</text>
+
+  <rect x="54" y="137" width="250" height="250" rx="24" fill="#223650" stroke="#496889"/>
+  <text x="179" y="178" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">三个统一入口</text>
+  <rect x="80" y="207" width="198" height="42" rx="15" fill="#2b4c6e"/>
+  <text x="179" y="234" text-anchor="middle" fill="#9edcff" font-family="Segoe UI, Microsoft YaHei" font-size="14">应用搜索结果</text>
+  <rect x="80" y="261" width="198" height="42" rx="15" fill="#2b4c6e"/>
+  <text x="179" y="288" text-anchor="middle" fill="#9edcff" font-family="Segoe UI, Microsoft YaHei" font-size="14">未运行固定应用</text>
+  <rect x="80" y="315" width="198" height="42" rx="15" fill="#2b4c6e"/>
+  <text x="179" y="342" text-anchor="middle" fill="#9edcff" font-family="Segoe UI, Microsoft YaHei" font-size="14">启动新实例</text>
+
+  <path d="M324 262 H364" stroke="url(#flowlaunch)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M353 251 L367 262 L353 273" fill="none" stroke="#68c6ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="390" y="118" width="340" height="288" rx="26" fill="#2b405f" stroke="#6382aa"/>
+  <text x="560" y="160" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">AppLaunchCoordinator</text>
+  <circle cx="430" cy="207" r="9" fill="#68c7ff"/>
+  <text x="454" y="213" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">复制不含 ImageSource 的启动快照</text>
+  <circle cx="430" cy="249" r="9" fill="#8ce4b9"/>
+  <text x="454" y="255" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">每次点击独立进入工作线程</text>
+  <circle cx="430" cy="291" r="9" fill="#ad97ff"/>
+  <text x="454" y="297" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">异常转换为失败，不逃逸命令</text>
+  <rect x="422" y="337" width="276" height="42" rx="16" fill="#203149"/>
+  <text x="560" y="364" text-anchor="middle" fill="#cbdcf1" font-family="Segoe UI, Microsoft YaHei" font-size="14">修订号只接受最后一次反馈</text>
+
+  <path d="M750 262 H790" stroke="url(#flowlaunch)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M779 251 L793 262 L779 273" fill="none" stroke="#9e90ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="816" y="137" width="250" height="250" rx="24" fill="#293852" stroke="#50698c"/>
+  <text x="941" y="178" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">Windows Shell</text>
+  <rect x="842" y="210" width="198" height="48" rx="16" fill="#294d43"/>
+  <text x="941" y="240" text-anchor="middle" fill="#a2edc5" font-family="Segoe UI, Microsoft YaHei" font-size="14">EXE / LNK / AUMID</text>
+  <rect x="842" y="273" width="198" height="48" rx="16" fill="#473f64"/>
+  <text x="941" y="303" text-anchor="middle" fill="#d1c7ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">并发请求互不等待</text>
+  <text x="941" y="351" text-anchor="middle" fill="#bccde5" font-family="Segoe UI, Microsoft YaHei" font-size="13">失败回到状态中心</text>
+
+  <rect x="54" y="440" width="1012" height="46" rx="17" fill="#20334c" stroke="#426080"/>
+  <text x="560" y="469" text-anchor="middle" fill="#dce9f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">Panel 持续响应 · 后续点击不排队 · 旧失败不覆盖新成功 · 退出后不更新界面</text>
+</svg>

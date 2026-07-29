@@ -1405,7 +1405,6 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "AppCatalogService.cs"));
-
         Assert.Contains(
             "x:Name=\"SearchResultsList\"",
             mainWindow);
@@ -3180,6 +3179,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "AppCatalogService.cs"));
+        string coordinator = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "AppLaunchCoordinator.cs"));
         string viewModel = File.ReadAllText(
             Path.Combine(
                 root,
@@ -3201,7 +3205,24 @@ public sealed class XamlResourceContractTests
             "AppLaunchExecution.TryStart",
             catalog);
         Assert.Contains(
-            "SystemActionExecution.Try(",
+            "TryLaunchAppAsync",
+            viewModel);
+        Assert.True(
+            viewModel.Split(
+                "[RelayCommand(AllowConcurrentExecutions = true)]",
+                StringSplitOptions.None).Length - 1
+            >= 3);
+        Assert.Contains(
+            "Task.Run(",
+            coordinator);
+        Assert.Contains(
+            "CaptureLaunch",
+            coordinator);
+        Assert.Contains(
+            "IsCurrent",
+            coordinator);
+        Assert.DoesNotContain(
+            "_appCatalog.Launch(app)",
             viewModel);
         Assert.Contains(
             "请在搜索中重新固定",

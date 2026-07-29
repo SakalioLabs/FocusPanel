@@ -64,6 +64,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 应用图标左侧使用任务栏式圆角状态条：后台运行显示 `4×12px` 短条，当前活动扩展为 `4×24px` 长条并使用单一柔和背景，固定但未运行的应用不显示状态条。状态层完全点击穿透，不会吞掉图标左缘操作。
 - 工具提示和读屏名称明确区分“已固定 · 未运行”“正在运行 · 1 个窗口”“正在使用 · 2 个窗口”；辅助操作提示会按启动、单窗口切换/最小化和多窗口列表自动变化。
 - 应用启动会区分普通可执行文件、快捷方式、Shell 路径和 `shell:AppsFolder` 返回的 AUMID；商店应用不再把 AUMID 错当文件名。应用已卸载、固定路径移动或 Shell 拒绝启动时不会让 Panel 闪退，而是在状态中心说明原因并引导重新固定。
+- 搜索结果、固定应用和“启动新实例”的 Windows Shell 启动全部在工作线程执行；网络快捷方式或 Shell 宿主响应缓慢时不会冻结 Panel。连续点击允许并发启动，等待中的旧结果不能覆盖最后一次点击的成功/失败反馈；传入工作线程的是不含 WPF 图标的纯启动快照。
 - 窗口切换、最小化和关闭会检查 Win32 的真实结果；Windows 拒绝前台切换、窗口已失效或关闭消息未能入队时，状态中心会显示对应窗口和原因，不再表现为点击后毫无反应。
 - 固定、取消固定和拖动排序会确认 SQLite 提交结果；数据库短暂锁定或写入失败不会冲击 UI 线程，也不会把未保存的顺序伪装成成功。
 - 运行项可通过右键固定；拖动未固定运行项会自动创建固定项并保存排序，取消固定后只要窗口仍在就继续显示。
@@ -92,6 +93,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![非阻塞应用目录与图标队列](docs/images/app-catalog-background.svg)
 
 ![统一应用栏可靠启动链路](docs/images/app-launch-safety.svg)
+
+![统一应用栏并发后台启动协调](docs/images/app-launch-background-coordinator.svg)
 
 ![任务栏操作结果与失败反馈](docs/images/taskbar-action-feedback.svg)
 
@@ -362,7 +365,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.14 `
+  -Version 0.10.15 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -373,7 +376,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：默认目录的一键首次安装入口；也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win.msi`：带 Windows 安装向导的自定义目录安装入口，可选择当前用户或整机范围。
-- `FocusPanel-0.10.14-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.15-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

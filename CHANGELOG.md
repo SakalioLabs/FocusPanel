@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.15 - 2026-07-29
+
+- 搜索结果整行启动、未运行固定项点击以及右键/中键“启动新实例”不再在 WPF 命令中同步执行 `_appCatalog.Launch()`；新的 `AppLaunchCoordinator` 在工作线程调用 Windows Shell，网络快捷方式、失效关联或 Explorer 繁忙不会冻结 Panel。
+- 三个启动命令显式允许并发执行；一个慢启动不会禁用整条搜索结果或统一应用栏，用户可以继续启动其他应用。每次请求分配单调修订号，只有最后一次点击能关闭搜索或更新状态中心，旧失败不会覆盖新成功。
+- 调度前复制仅含显示名、启动类型、目标、参数和身份的分离快照，不把 `AppLaunchItem` 上的 WPF `ImageSource`、固定状态或其他 UI 可变属性带入工作线程。
+- `Process.Start`、请求构建和原有可执行文件/快捷方式/AUMID 语义保持不变；任意同步异常被协调器转换为失败结果，已释放 ViewModel 和过期结果不会触碰界面。
+- 新增启动离开调用线程、异常隔离、最新请求所有权和无 UI 图标快照测试，并增加 ViewModel 无同步 `_appCatalog.Launch(app)` 的界面契约；README 增加并发后台启动图。Release 构建 0 错误、0 警告，全量 673 项测试与界面冒烟通过。
+
 ## v0.10.14 - 2026-07-29
 
 - OKR 目标与关键结果的新增、编辑和删除不再从 `OkrViewModel` 直接创建 `AppDbContext`、执行 `EnsureSchema()` 或调用 SQLite async provider；六类 CRUD 全部迁入 `OkrWorkspaceRepository` 的工作线程持久化边界。
