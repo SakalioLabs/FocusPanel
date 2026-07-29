@@ -80,7 +80,11 @@ public sealed class ShellWindowSafetyTests
             Path.Combine(
                 projectRoot,
                 "Views",
-                "MainWindow.xaml.cs"));
+                "MainWindow.xaml.cs"))
+            .Replace(
+                "\r\n",
+                "\n",
+                StringComparison.Ordinal);
         string indicator = File.ReadAllText(
             Path.Combine(
                 projectRoot,
