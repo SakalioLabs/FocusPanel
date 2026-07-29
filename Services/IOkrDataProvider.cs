@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using FocusPanel.Models;
 
 namespace FocusPanel.Services;
@@ -9,9 +11,20 @@ namespace FocusPanel.Services;
 /// </summary>
 public interface IOkrDataProvider
 {
-    string GetOkrContextForAI();
-    OkrObjective CreateDraftFromAI(string name, string? note,
-        List<(string name, double start, double target, string unit)> krs);
-    List<OkrObjective> GetAllObjectives();
-    OkrSyncResult TriggerSync();
+    Task<string> GetOkrContextForAIAsync(
+        CancellationToken cancellationToken = default);
+    Task<OkrObjective> CreateDraftFromAIAsync(
+        string name,
+        string? note,
+        List<(
+            string name,
+            double start,
+            double target,
+            string unit)> krs,
+        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<OkrObjective>>
+        GetAllObjectivesAsync(
+            CancellationToken cancellationToken = default);
+    Task<OkrSyncResult> TriggerSyncAsync(
+        CancellationToken cancellationToken = default);
 }

@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FocusPanel.Data;
@@ -13,12 +15,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FocusPanel.ViewModels;
 
+internal sealed record PendingOkrWorkspaceSnapshot(
+    long Revision,
+    OkrWorkspaceSnapshot Snapshot);
+
 public partial class OkrViewModel
     : ObservableObject, IOkrDataProvider, IDisposable
 {
     private readonly OkrSyncService _syncService;
+    private readonly IOkrWorkspaceRepository
+        _workspaceRepository;
+    private readonly Dispatcher _uiDispatcher;
+    private readonly CoalescingBackgroundRefresh<
+        PendingOkrWorkspaceSnapshot> _workspaceRefresh;
     private bool _syncSettingsReady;
+    private bool _workspaceInitialized;
     private bool _disposed;
+    private long _dataRevision;
+    private string? _cachedUserId;
 
     [ObservableProperty]
     private ObservableCollection<OkrObjective> objectives = new();
@@ -94,27 +108,40 @@ public partial class OkrViewModel
     public bool IsObjectiveSelected => SelectedObjective != null;
 
     public OkrViewModel()
+        : this(
+            new OkrSyncService(),
+            new OkrWorkspaceRepository(),
+            Dispatcher.CurrentDispatcher)
     {
-        _syncService = new OkrSyncService();
+    }
+
+    internal OkrViewModel(
+        OkrSyncService syncService,
+        IOkrWorkspaceRepository workspaceRepository,
+        Dispatcher uiDispatcher)
+    {
+        _syncService =
+            syncService
+            ?? throw new ArgumentNullException(
+                nameof(syncService));
+        _workspaceRepository =
+            workspaceRepository
+            ?? throw new ArgumentNullException(
+                nameof(workspaceRepository));
+        _uiDispatcher =
+            uiDispatcher
+            ?? throw new ArgumentNullException(
+                nameof(uiDispatcher));
         _syncService.ProgressChanged += OnSyncProgress;
         _syncService.SyncCompleted += OnSyncCompleted;
-
-        IsConfigured = _syncService.IsConfigured;
-        SyncIntervalMinutes = _syncService.GetSyncIntervalMinutes();
-        LastSyncTime = _syncService.GetLastSyncTime();
-        _syncSettingsReady = true;
-
-        if (IsConfigured)
-        {
-            SyncStatusText = "已连接飞书 OKR";
-            _ = LoadObjectives();
-            _syncService.StartAutoSync();
-        }
-        else
-        {
-            SyncStatusText =
-                "尚未配置飞书凭据；本地 OKR 仍可创建和管理。";
-        }
+        _workspaceRefresh =
+            new CoalescingBackgroundRefresh<
+                PendingOkrWorkspaceSnapshot>(
+                CaptureWorkspace,
+                ApplyWorkspaceAsync,
+                ReportWorkspaceLoadFailure);
+        IsLoading = true;
+        _workspaceRefresh.Request();
     }
 
     partial void OnSyncIntervalMinutesChanged(
@@ -126,15 +153,30 @@ public partial class OkrViewModel
             return;
         }
 
+        _ = PersistSyncIntervalAsync(value);
+    }
+
+    private async Task PersistSyncIntervalAsync(
+        int value)
+    {
         try
         {
-            _syncService.SetSyncIntervalMinutes(value);
+            await Task.Run(
+                () =>
+                    _syncService
+                        .SetSyncIntervalMinutes(value));
+            if (_disposed)
+                return;
+
             SettingsValidationMessage =
                 $"自动同步间隔已设为 {value} 分钟。";
             SettingsValidationSuccess = true;
         }
         catch (Exception ex)
         {
+            if (_disposed)
+                return;
+
             SettingsValidationMessage =
                 $"无法保存同步间隔：{ex.Message}";
             SettingsValidationSuccess = false;
@@ -186,56 +228,125 @@ public partial class OkrViewModel
         OkrSyncResult result)
     {
         IsSyncing = false;
-        LastSyncTime = _syncService.GetLastSyncTime();
+        if (result.Success)
+            LastSyncTime = DateTime.Now;
         LastSyncResultText = result.Success
             ? $"同步成功：{result.Message}"
             : $"同步失败：{result.Message}";
         SyncStatusText = LastSyncResultText;
         if (result.ObjectivesPulled > 0
-            || result.KeyResultsPulled > 0)
+            || result.KeyResultsPulled > 0
+            || result.ObjectivesPushed > 0
+            || result.KeyResultsPushed > 0)
         {
-            await LoadObjectives();
+            Interlocked.Increment(
+                ref _dataRevision);
+            RequestWorkspaceRefresh();
         }
+        await Task.CompletedTask;
     }
 
     // --- Data Loading ---
 
     [RelayCommand]
-    private async Task LoadObjectives()
-    {
-        IsLoading = true;
-        try
-        {
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            List<OkrObjective> items =
-                await context.OkrObjectives
-                    .AsNoTracking()
-                    .Include(o =>
-                        o.KeyResults.Where(
-                            result =>
-                                !result.IsDeleted))
-                    .Where(o => !o.IsDeleted)
-                    .OrderByDescending(o => o.CreatedAt)
-                    .ToListAsync();
+    private void LoadObjectives()
+        => RequestWorkspaceRefresh();
 
-            Objectives.Clear();
-            foreach (OkrObjective item in items)
-                Objectives.Add(item);
-            OnPropertyChanged(nameof(HasObjectives));
-            SyncStatusText = IsConfigured
-                ? $"已加载 {items.Count} 个目标，等待同步。"
-                : $"本地共有 {items.Count} 个目标。";
-        }
-        catch (Exception ex)
+    private void RequestWorkspaceRefresh()
+    {
+        if (_disposed)
+            return;
+
+        IsLoading = true;
+        _workspaceRefresh.Request();
+    }
+
+    private PendingOkrWorkspaceSnapshot
+        CaptureWorkspace() =>
+        new(
+            Volatile.Read(ref _dataRevision),
+            _workspaceRepository.Load());
+
+    private async Task ApplyWorkspaceAsync(
+        PendingOkrWorkspaceSnapshot pending,
+        CancellationToken cancellationToken)
+    {
+        await _uiDispatcher.InvokeAsync(
+            () => ApplyWorkspace(
+                pending,
+                cancellationToken),
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
+    private void ApplyWorkspace(
+        PendingOkrWorkspaceSnapshot pending,
+        CancellationToken cancellationToken)
+    {
+        if (_disposed
+            || cancellationToken.IsCancellationRequested)
         {
-            SyncStatusText =
-                $"无法加载 OKR：{ex.Message}";
+            return;
         }
-        finally
+
+        long currentRevision =
+            Volatile.Read(ref _dataRevision);
+        if (!pending.Snapshot.IsValid)
         {
             IsLoading = false;
+            SyncStatusText =
+                "暂时无法读取 OKR，本地数据未被修改。";
+            return;
         }
+        if (!OkrWorkspaceApplyPolicy.CanApply(
+                pending.Snapshot,
+                pending.Revision,
+                currentRevision))
+        {
+            _workspaceRefresh.Request();
+            return;
+        }
+
+        OkrWorkspaceSnapshot snapshot =
+            pending.Snapshot;
+        Objectives.Clear();
+        foreach (OkrObjective objective
+                 in snapshot.Objectives)
+        {
+            Objectives.Add(objective);
+        }
+        OnPropertyChanged(nameof(HasObjectives));
+        _cachedUserId = snapshot.UserId;
+        IsLoading = false;
+
+        if (_workspaceInitialized)
+            return;
+
+        _workspaceInitialized = true;
+        IsConfigured = snapshot.IsConfigured;
+        SyncIntervalMinutes =
+            snapshot.SyncIntervalMinutes;
+        LastSyncTime = snapshot.LastSyncTime;
+        _syncSettingsReady = true;
+        SyncStatusText = IsConfigured
+            ? $"已加载 {snapshot.Objectives.Count} 个目标，等待同步。"
+            : $"本地共有 {snapshot.Objectives.Count} 个目标；尚未配置飞书凭据。";
+        if (IsConfigured)
+            _syncService.StartAutoSync(
+                snapshot.SyncIntervalMinutes);
+    }
+
+    private void ReportWorkspaceLoadFailure(
+        Exception error)
+    {
+        _ = error;
+        DispatchToUi(
+            () =>
+            {
+                IsLoading = false;
+                SyncStatusText =
+                    "暂时无法读取 OKR，本地数据未被修改。";
+            });
     }
 
     // --- Objective CRUD ---
@@ -254,7 +365,7 @@ public partial class OkrViewModel
             Name = NewObjectiveName.Trim(),
             Note = string.IsNullOrWhiteSpace(NewObjectiveNote) ? null : NewObjectiveNote.Trim(),
             Period = string.IsNullOrWhiteSpace(NewObjectivePeriod) ? null : NewObjectivePeriod.Trim(),
-            UserId = GetUserId(),
+            UserId = _cachedUserId,
             SyncStatus = OkrSyncStatus.LocalCreated,
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now
@@ -266,6 +377,8 @@ public partial class OkrViewModel
             context.EnsureSchema();
             context.OkrObjectives.Add(obj);
             await context.SaveChangesAsync();
+            Interlocked.Increment(
+                ref _dataRevision);
 
             Objectives.Insert(0, obj);
             OnPropertyChanged(nameof(HasObjectives));
@@ -315,6 +428,8 @@ public partial class OkrViewModel
                     OkrSyncStatus.LocalDeleted;
             }
             await context.SaveChangesAsync();
+            Interlocked.Increment(
+                ref _dataRevision);
 
             Objectives.Remove(obj);
             OnPropertyChanged(nameof(HasObjectives));
@@ -353,6 +468,8 @@ public partial class OkrViewModel
             dbObj.UpdatedAt = obj.UpdatedAt;
             dbObj.SyncStatus = obj.SyncStatus;
             await context.SaveChangesAsync();
+            Interlocked.Increment(
+                ref _dataRevision);
             SyncStatusText = "目标信息已保存。";
         }
         catch (Exception ex)
@@ -427,6 +544,8 @@ public partial class OkrViewModel
                 objectiveSyncStatus;
             storedObjective.UpdatedAt = DateTime.Now;
             await context.SaveChangesAsync();
+            Interlocked.Increment(
+                ref _dataRevision);
 
             obj.KeyResults.Add(kr);
             obj.Progress = objectiveProgress;
@@ -514,6 +633,8 @@ public partial class OkrViewModel
                 objectiveSyncStatus;
             storedObjective.UpdatedAt = DateTime.Now;
             await context.SaveChangesAsync();
+            Interlocked.Increment(
+                ref _dataRevision);
 
             parent.KeyResults.Remove(kr);
             parent.Progress = objectiveProgress;
@@ -596,6 +717,8 @@ public partial class OkrViewModel
                 objectiveSyncStatus;
             storedObjective.UpdatedAt = DateTime.Now;
             await context.SaveChangesAsync();
+            Interlocked.Increment(
+                ref _dataRevision);
 
             parent.Progress = objectiveProgress;
             parent.SyncStatus = objectiveSyncStatus;
@@ -619,7 +742,9 @@ public partial class OkrViewModel
         SyncStatusText = "正在同步飞书 OKR…";
         try
         {
-            var result = await _syncService.SyncAsync();
+            OkrSyncResult result =
+                await Task.Run(
+                    () => _syncService.SyncAsync());
             if (!result.Success)
             {
                 IsSyncing = false;
@@ -640,7 +765,7 @@ public partial class OkrViewModel
     // --- Settings ---
 
     [RelayCommand]
-    private void ToggleSettings()
+    private async Task ToggleSettings()
     {
         ShowSettings = !ShowSettings;
         if (ShowSettings)
@@ -649,7 +774,7 @@ public partial class OkrViewModel
             {
                 var auth = new FeishuAuthService();
                 SettingsAppId =
-                    auth.GetAppId()
+                    await Task.Run(auth.GetAppId)
                     ?? string.Empty;
                 SettingsAppSecret = string.Empty;
                 SettingsValidationMessage =
@@ -688,16 +813,21 @@ public partial class OkrViewModel
 
             if (valid)
             {
-                auth.SaveCredentials(
-                    SettingsAppId.Trim(),
-                    SettingsAppSecret.Trim());
+                string appId = SettingsAppId.Trim();
+                string appSecret =
+                    SettingsAppSecret.Trim();
+                await Task.Run(
+                    () => auth.SaveCredentials(
+                        appId,
+                        appSecret));
                 SettingsAppSecret = string.Empty;
                 SettingsValidationMessage =
                     "凭据验证成功并已安全保存。";
                 SettingsValidationSuccess = true;
                 IsConfigured = true;
-                await LoadObjectives();
-                _syncService.StartAutoSync();
+                RequestWorkspaceRefresh();
+                _syncService.StartAutoSync(
+                    SyncIntervalMinutes);
             }
             else
             {
@@ -715,7 +845,7 @@ public partial class OkrViewModel
     }
 
     [RelayCommand]
-    private void ClearCredentials()
+    private async Task ClearCredentials()
     {
         MessageBoxResult confirmation =
             FocusDialogService.Show(
@@ -729,7 +859,7 @@ public partial class OkrViewModel
         try
         {
             var auth = new FeishuAuthService();
-            auth.ClearCredentials();
+            await Task.Run(auth.ClearCredentials);
             IsConfigured = false;
             SettingsAppId = string.Empty;
             SettingsAppSecret = string.Empty;
@@ -740,7 +870,7 @@ public partial class OkrViewModel
             _syncService.StopAutoSync();
             Objectives.Clear();
             OnPropertyChanged(nameof(HasObjectives));
-            _ = LoadObjectives();
+            RequestWorkspaceRefresh();
         }
         catch (Exception ex)
         {
@@ -750,25 +880,19 @@ public partial class OkrViewModel
         }
     }
 
-    // --- Helpers ---
-
-    private static string? GetUserId()
-    {
-        try
-        {
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            return context.OkrObjectives
-                .Where(o => o.UserId != null)
-                .Select(o => o.UserId)
-                .FirstOrDefault();
-        }
-        catch { return null; }
-    }
-
     // --- IOkrDataProvider implementation (AI hooks, future use) ---
 
-    public string GetOkrContextForAI()
+    public async Task<string>
+        GetOkrContextForAIAsync(
+            CancellationToken cancellationToken = default)
+    {
+        return await _uiDispatcher.InvokeAsync(
+            BuildOkrContextForAI,
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
+    private string BuildOkrContextForAI()
     {
         var lines = new List<string> { "=== Current OKRs ===" };
         foreach (var obj in Objectives.Where(o => !o.IsDeleted))
@@ -789,14 +913,23 @@ public partial class OkrViewModel
         return string.Join("\n", lines);
     }
 
-    public OkrObjective CreateDraftFromAI(string name, string? note,
-        List<(string name, double start, double target, string unit)> krs)
+    public async Task<OkrObjective>
+        CreateDraftFromAIAsync(
+            string name,
+            string? note,
+            List<(
+                string name,
+                double start,
+                double target,
+                string unit)> krs,
+            CancellationToken cancellationToken = default)
     {
         var obj = new OkrObjective
         {
             Name = name,
             Note = note,
             Period = DateTime.Now.Year + " Q" + ((DateTime.Now.Month - 1) / 3 + 1),
+            UserId = _cachedUserId,
             SyncStatus = OkrSyncStatus.LocalCreated,
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now
@@ -817,32 +950,42 @@ public partial class OkrViewModel
             });
         }
 
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            Objectives.Insert(0, obj);
-        });
+        await Task.Run(
+            () =>
+                _workspaceRepository.SaveDraft(obj),
+            cancellationToken);
+        Interlocked.Increment(
+            ref _dataRevision);
+        await _uiDispatcher.InvokeAsync(
+            () =>
+            {
+                if (_disposed)
+                    return;
 
-        using (var context = new AppDbContext())
-        {
-            context.EnsureSchema();
-            context.OkrObjectives.Add(obj);
-            context.SaveChanges();
-        }
-
+                Objectives.Insert(0, obj);
+                OnPropertyChanged(
+                    nameof(HasObjectives));
+            },
+            DispatcherPriority.Background,
+            cancellationToken);
         return obj;
     }
 
-    public List<OkrObjective> GetAllObjectives()
-    {
-        return Objectives.ToList();
-    }
+    public async Task<IReadOnlyList<OkrObjective>>
+        GetAllObjectivesAsync(
+            CancellationToken cancellationToken = default) =>
+        await _uiDispatcher.InvokeAsync(
+            () =>
+                (IReadOnlyList<OkrObjective>)
+                    Objectives.ToList(),
+            DispatcherPriority.Background,
+            cancellationToken);
 
-    public OkrSyncResult TriggerSync()
-    {
-        var task = _syncService.SyncAsync();
-        task.Wait();
-        return task.Result;
-    }
+    public Task<OkrSyncResult> TriggerSyncAsync(
+        CancellationToken cancellationToken = default)
+        => Task.Run(
+            () => _syncService.SyncAsync(),
+            cancellationToken);
 
     public void Dispose()
     {
@@ -850,6 +993,7 @@ public partial class OkrViewModel
             return;
 
         _disposed = true;
+        _workspaceRefresh.Dispose();
         _syncService.ProgressChanged -= OnSyncProgress;
         _syncService.SyncCompleted -= OnSyncCompleted;
         _syncService.Dispose();

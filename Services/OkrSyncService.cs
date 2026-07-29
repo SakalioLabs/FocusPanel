@@ -483,7 +483,8 @@ public class OkrSyncService : IDisposable
 
     // --- Auto-sync timer ---
 
-    public void StartAutoSync()
+    public void StartAutoSync(
+        int? intervalMinutes = null)
     {
         if (_timer != null) return;
         _timer = new System.Timers.Timer();
@@ -492,7 +493,13 @@ public class OkrSyncService : IDisposable
             if (!_isSyncing)
                 await SyncAsync();
         };
-        _timer.Interval = TimeSpan.FromMinutes(GetSyncIntervalMinutes()).TotalMilliseconds;
+        int interval =
+            intervalMinutes is >= 1
+                ? intervalMinutes.Value
+                : GetSyncIntervalMinutes();
+        _timer.Interval =
+            TimeSpan.FromMinutes(interval)
+                .TotalMilliseconds;
         _timer.AutoReset = true;
         _timer.Start();
     }

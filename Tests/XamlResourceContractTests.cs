@@ -2718,6 +2718,16 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "OkrSyncService.cs"));
+        string workspaceRepository = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "OkrWorkspaceRepository.cs"));
+        string dataProvider = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "IOkrDataProvider.cs"));
 
         Assert.DoesNotContain(
             "materialDesign:",
@@ -2762,10 +2772,37 @@ public sealed class XamlResourceContractTests
             viewModel);
         Assert.Contains(
             "!result.IsDeleted",
-            viewModel);
+            workspaceRepository);
         Assert.Contains(
             "DispatchToUi",
             viewModel);
+        Assert.Contains(
+            "CoalescingBackgroundRefresh",
+            viewModel);
+        Assert.Contains(
+            "OkrWorkspaceApplyPolicy.CanApply",
+            viewModel);
+        Assert.Contains(
+            "Task.Run(",
+            viewModel);
+        Assert.Contains(
+            "_workspaceRefresh.Dispose()",
+            viewModel);
+        Assert.DoesNotContain(
+            "Dispatcher.Invoke(",
+            viewModel);
+        Assert.DoesNotContain(
+            ".Wait()",
+            viewModel);
+        Assert.DoesNotContain(
+            ".Result",
+            viewModel);
+        Assert.Contains(
+            "CreateDraftFromAIAsync",
+            dataProvider);
+        Assert.Contains(
+            "TriggerSyncAsync",
+            dataProvider);
         Assert.Contains(
             "IOkrDataProvider, IDisposable",
             viewModel);
