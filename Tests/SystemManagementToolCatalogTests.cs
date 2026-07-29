@@ -20,6 +20,12 @@ public sealed class SystemManagementToolCatalogTests
         yield return Case(SystemManagementTool.TaskManager, "taskmgr.exe");
         yield return Case(SystemManagementTool.Settings, "ms-settings:");
         yield return Case(SystemManagementTool.FileExplorer, "explorer.exe");
+        yield return Case(
+            SystemManagementTool.DateAndTimeSettings,
+            "ms-settings:dateandtime");
+        yield return Case(
+            SystemManagementTool.NotificationSettings,
+            "ms-settings:notifications");
     }
 
     [Theory]

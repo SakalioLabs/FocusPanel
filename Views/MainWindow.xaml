@@ -319,7 +319,8 @@
                                                    Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Margin="0,14,0,10"
+                                <Button x:Name="FocusCenterLastWorkspaceButton"
+                                        Margin="0,14,0,10"
                                         Style="{StaticResource FocusSecondaryButton}"
                                         AutomationProperties.Name="{Binding CurrentSectionTitle, StringFormat=打开最近使用的模块：{0}}"
                                         Command="{Binding OpenLastWorkspaceCommand}">
@@ -381,7 +382,11 @@
                                         <TextBlock Text="{Binding NetworkDetail}"
                                                    Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
-                                    <Button Grid.Column="2" Style="{StaticResource FocusSecondaryButton}" Content="快捷设置" Command="{Binding OpenQuickSettingsCommand}"/>
+                                    <Button x:Name="StatusCenterQuickSettingsButton"
+                                            Grid.Column="2"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            Content="快捷设置"
+                                            Command="{Binding OpenQuickSettingsCommand}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.RowDefinitions>
@@ -431,7 +436,9 @@
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="显示桌面" Command="{Binding ShowDesktopCommand}"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="锁定" Command="{Binding LockComputerCommand}"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="睡眠" Command="{Binding SleepComputerCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="电源" Command="{Binding TogglePowerMenuCommand}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            Content="电源"
+                                            Click="PowerMenuItem_Click"/>
                                 </UniformGrid>
                             </StackPanel>
                         </ScrollViewer>
@@ -498,7 +505,8 @@
                                         </TextBlock.Style>
                                     </TextBlock>
                                     <StackPanel Orientation="Horizontal">
-                                        <Button Style="{StaticResource FocusPrimaryButton}"
+                                        <Button x:Name="SettingsEnableReplacementButton"
+                                                Style="{StaticResource FocusPrimaryButton}"
                                                 Content="启用"
                                                 Command="{Binding EnableReplacementCommand}"/>
                                         <Button Style="{StaticResource FocusSecondaryButton}"
@@ -645,7 +653,11 @@
                             <TextBlock Text="电源"
                                        Margin="4,0,0,10"
                                        Style="{StaticResource FocusSectionTitleText}"/>
-                            <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="锁定" Command="{Binding LockComputerCommand}"/>
+                            <Button x:Name="PowerMenuLockButton"
+                                    Style="{StaticResource FocusSecondaryButton}"
+                                    HorizontalContentAlignment="Left"
+                                    Content="锁定"
+                                    Command="{Binding LockComputerCommand}"/>
                             <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="睡眠" Command="{Binding SleepComputerCommand}"/>
                             <Button Style="{StaticResource FocusSecondaryButton}" HorizontalContentAlignment="Left" Content="重启…" Command="{Binding RestartComputerCommand}"/>
                             <Button Style="{StaticResource FocusDangerButton}" HorizontalContentAlignment="Left" Content="关机…" Command="{Binding ShutdownComputerCommand}"/>
@@ -670,7 +682,8 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0">
-                            <Button Style="{StaticResource FocusIconButton}"
+                            <Button x:Name="FocusCenterButton"
+                                    Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Command="{Binding OpenStartMenuCommand}"
                                     AutomationProperties.Name="开始"
@@ -924,7 +937,8 @@
 
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
-                            <Button Style="{StaticResource FocusIconButton}"
+                            <Button x:Name="StatusCenterButton"
+                                    Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Command="{Binding OpenTaskViewCommand}"
                                     AutomationProperties.Name="任务视图"
@@ -968,11 +982,25 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                             </Button>
-                            <Button Style="{StaticResource FocusIconButton}"
+                            <Button x:Name="TimeButton"
+                                    Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
                                     Click="CalendarPanelButton_Click"
                                     AutomationProperties.Name="时间与今日任务"
-                                    ToolTip="时间与今日任务">
+                                    AutomationProperties.HelpText="按 Enter 打开月历，按 Shift+F10 调整日期时间或通知设置"
+                                    ToolTip="时间与今日任务 · 右键打开系统设置">
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource FocusContextMenu}"
+                                                 Opened="TransientContextMenu_Opened"
+                                                 Closed="TransientContextMenu_Closed">
+                                        <MenuItem Header="调整日期和时间"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.DateAndTimeSettings}"/>
+                                        <MenuItem Header="通知设置"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:SystemManagementTool.NotificationSettings}"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
                                 <StackPanel>
                                     <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm}}"
                                                HorizontalAlignment="Center"

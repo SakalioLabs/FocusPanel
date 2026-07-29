@@ -55,6 +55,7 @@ public partial class MainWindow :
     private bool _isHotZoneAvailable;
     private bool _shellStartupReady;
     private bool _autoHideIgnoresInputFocus;
+    private FrameworkElement? _overlayReturnFocusTarget;
     private int _transientInteractionDepth;
     private System.Windows.Point _pinnedDragStart;
     private long _lastTaskbarDragScrollTick = -1;
@@ -520,12 +521,19 @@ public partial class MainWindow :
     private void SearchButton_Click(object sender, RoutedEventArgs e)
     {
         ExpandSidebar();
+        _overlayReturnFocusTarget =
+            SearchButton;
         Dispatcher.BeginInvoke(() =>
         {
             if (_viewModel.IsSearchOpen)
             {
                 SearchBox.Focus();
                 SearchBox.SelectAll();
+            }
+            else
+            {
+                _overlayReturnFocusTarget =
+                    null;
             }
         }, DispatcherPriority.Input);
     }
@@ -570,18 +578,66 @@ public partial class MainWindow :
     {
         ExpandSidebar();
         _viewModel.ToggleFocusCenterCommand.Execute(null);
+        QueueOverlayFocus(
+            FocusCenterButton,
+            FocusCenterLastWorkspaceButton,
+            () => _viewModel.IsFocusCenterOpen);
     }
 
     private void StatusCenterButton_Click(object sender, RoutedEventArgs e)
     {
         ExpandSidebar();
         _viewModel.ToggleStatusCenterCommand.Execute(null);
+        QueueOverlayFocus(
+            StatusCenterButton,
+            StatusCenterQuickSettingsButton,
+            () => _viewModel.IsStatusCenterOpen);
     }
 
     private void CalendarPanelButton_Click(object sender, RoutedEventArgs e)
     {
         ExpandSidebar();
         _viewModel.ToggleCalendarCommand.Execute(null);
+        if (_viewModel.IsCalendarOpen)
+        {
+            _overlayReturnFocusTarget =
+                TimeButton;
+        }
+        else
+        {
+            _overlayReturnFocusTarget =
+                null;
+        }
+    }
+
+    private void QueueOverlayFocus(
+        FrameworkElement returnTarget,
+        FrameworkElement initialTarget,
+        Func<bool> isOpen)
+    {
+        if (!isOpen())
+        {
+            _overlayReturnFocusTarget = null;
+            return;
+        }
+
+        _overlayReturnFocusTarget =
+            returnTarget;
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (_isExit
+                    || !IsVisible
+                    || !isOpen()
+                    || !initialTarget.IsVisible
+                    || !initialTarget.IsEnabled)
+                {
+                    return;
+                }
+
+                initialTarget.Focus();
+            }),
+            DispatcherPriority.Input);
     }
 
     private void TaskbarAppsScrollViewer_ScrollChanged(
@@ -1074,12 +1130,20 @@ public partial class MainWindow :
     {
         ExpandSidebar();
         _viewModel.ToggleSettingsCommand.Execute(null);
+        QueueOverlayFocus(
+            FocusCenterButton,
+            SettingsEnableReplacementButton,
+            () => _viewModel.IsSettingsOpen);
     }
 
     private void PowerMenuItem_Click(object sender, RoutedEventArgs e)
     {
         ExpandSidebar();
         _viewModel.TogglePowerMenuCommand.Execute(null);
+        QueueOverlayFocus(
+            StatusCenterButton,
+            PowerMenuLockButton,
+            () => _viewModel.IsPowerMenuOpen);
     }
 
     private void CloseOverlayPanels()
@@ -1090,6 +1154,7 @@ public partial class MainWindow :
         _viewModel.IsStatusCenterOpen = false;
         _viewModel.IsSettingsOpen = false;
         _viewModel.IsPowerMenuOpen = false;
+        _overlayReturnFocusTarget = null;
     }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -1104,12 +1169,22 @@ public partial class MainWindow :
             || _viewModel.IsSettingsOpen
             || _viewModel.IsPowerMenuOpen)
         {
-            bool returnToSearch = _viewModel.IsSearchOpen;
+            FrameworkElement? returnTarget =
+                _overlayReturnFocusTarget;
             CloseOverlayPanels();
-            if (returnToSearch)
+            if (returnTarget != null)
             {
                 Dispatcher.BeginInvoke(
-                    new Action(() => SearchButton.Focus()),
+                    new Action(() =>
+                    {
+                        if (!_isExit
+                            && IsVisible
+                            && returnTarget.IsVisible
+                            && returnTarget.IsEnabled)
+                        {
+                            returnTarget.Focus();
+                        }
+                    }),
                     DispatcherPriority.Input);
             }
         }

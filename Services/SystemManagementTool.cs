@@ -14,7 +14,9 @@ public enum SystemManagementTool
     TerminalAdministrator,
     TaskManager,
     Settings,
-    FileExplorer
+    FileExplorer,
+    DateAndTimeSettings,
+    NotificationSettings
 }
 
 internal readonly record struct SystemLaunchRequest(
@@ -45,6 +47,10 @@ internal static class SystemManagementToolCatalog
         SystemManagementTool.TaskManager => new("taskmgr.exe"),
         SystemManagementTool.Settings => new("ms-settings:"),
         SystemManagementTool.FileExplorer => new("explorer.exe"),
+        SystemManagementTool.DateAndTimeSettings =>
+            new("ms-settings:dateandtime"),
+        SystemManagementTool.NotificationSettings =>
+            new("ms-settings:notifications"),
         _ => throw new System.ArgumentOutOfRangeException(nameof(tool), tool, null)
     };
 }

@@ -1356,6 +1356,103 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TransientPanels_MoveFocusInsideAndReturnItToTheirCompactEntry()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "x:Name=\"FocusCenterButton\"",
+            mainWindow);
+        Assert.Contains(
+            "x:Name=\"StatusCenterButton\"",
+            mainWindow);
+        Assert.Contains(
+            "x:Name=\"TimeButton\"",
+            mainWindow);
+        Assert.Contains(
+            "x:Name=\"FocusCenterLastWorkspaceButton\"",
+            mainWindow);
+        Assert.Contains(
+            "x:Name=\"StatusCenterQuickSettingsButton\"",
+            mainWindow);
+        Assert.Contains(
+            "x:Name=\"SettingsEnableReplacementButton\"",
+            mainWindow);
+        Assert.Contains(
+            "x:Name=\"PowerMenuLockButton\"",
+            mainWindow);
+        Assert.Contains(
+            "private FrameworkElement? _overlayReturnFocusTarget",
+            codeBehind);
+        Assert.Contains(
+            "private void QueueOverlayFocus(",
+            codeBehind);
+        Assert.Contains(
+            "FocusCenterLastWorkspaceButton",
+            codeBehind);
+        Assert.Contains(
+            "StatusCenterQuickSettingsButton",
+            codeBehind);
+        Assert.Contains(
+            "SettingsEnableReplacementButton",
+            codeBehind);
+        Assert.Contains(
+            "PowerMenuLockButton",
+            codeBehind);
+        Assert.Contains(
+            "FrameworkElement? returnTarget",
+            codeBehind);
+        Assert.Contains(
+            "returnTarget.Focus();",
+            codeBehind);
+        Assert.DoesNotContain(
+            "bool returnToSearch",
+            codeBehind);
+    }
+
+    [Fact]
+    public void TimeEntry_RightClickOpensOfficialDateAndNotificationSettings()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+
+        int timeButtonStart = mainWindow.IndexOf(
+            "x:Name=\"TimeButton\"",
+            StringComparison.Ordinal);
+        Assert.True(timeButtonStart >= 0);
+        string timeButton = mainWindow[
+            timeButtonStart..
+            mainWindow.IndexOf(
+                "</Button>",
+                timeButtonStart,
+                StringComparison.Ordinal)];
+
+        Assert.Contains(
+            "调整日期和时间",
+            timeButton);
+        Assert.Contains(
+            "SystemManagementTool.DateAndTimeSettings",
+            timeButton);
+        Assert.Contains(
+            "通知设置",
+            timeButton);
+        Assert.Contains(
+            "SystemManagementTool.NotificationSettings",
+            timeButton);
+        Assert.Contains(
+            "TransientContextMenu_Opened",
+            timeButton);
+        Assert.Contains(
+            "按 Shift+F10",
+            timeButton);
+    }
+
+    [Fact]
     public void TaskbarApps_ShowDistinctRunningAndActiveStates()
     {
         string root = FindRepositoryRoot();
@@ -1583,10 +1680,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            3,
+            4,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            3,
+            4,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -1890,8 +1987,11 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "SearchBox.SelectAll();",
             codeBehind);
+        Assert.Matches(
+            @"_overlayReturnFocusTarget\s*=\s*SearchButton;",
+            codeBehind);
         Assert.Contains(
-            "new Action(() => SearchButton.Focus())",
+            "returnTarget.Focus();",
             codeBehind);
         Assert.Contains(
             "SelectedSearchResult?.IdentityKey",
@@ -2003,7 +2103,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            3,
+            4,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);
