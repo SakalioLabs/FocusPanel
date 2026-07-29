@@ -166,6 +166,15 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         Assert.Contains(
             nameof(TaskbarAppItem.AccessibleName),
             changed);
+        Assert.Contains(
+            nameof(TaskbarAppItem.HasMultipleWindows),
+            changed);
+        Assert.Contains(
+            nameof(TaskbarAppItem.WindowCountBadgeText),
+            changed);
+        Assert.Contains(
+            nameof(TaskbarAppItem.WindowPreviewText),
+            changed);
     }
 
     [Fact]

@@ -812,7 +812,14 @@
                                                                        Style="{StaticResource FocusCardTitleText}"/>
                                                             <TextBlock Text="{Binding StatusSummary}"
                                                                        Style="{StaticResource FocusMetaText}"/>
+                                                            <TextBlock Text="{Binding WindowPreviewText}"
+                                                                       Margin="0,6,0,0"
+                                                                       Style="{StaticResource FocusCaptionText}"
+                                                                       TextWrapping="Wrap"
+                                                                       MaxWidth="260"
+                                                                       Visibility="{Binding HasWindowPreview, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                             <TextBlock Text="{Binding InteractionHint}"
+                                                                       Margin="0,6,0,0"
                                                                        Style="{StaticResource FocusCaptionText}"
                                                                        TextWrapping="Wrap"
                                                                        MaxWidth="260"/>
@@ -823,9 +830,30 @@
                                                                      Opened="TransientContextMenu_Opened"
                                                                      Closed="TransientContextMenu_Closed"/>
                                                     </Button.ContextMenu>
-                                                    <controls:AppIconPresenter
-                                                        Icon="{Binding Icon}"
-                                                        DisplayName="{Binding DisplayName}"/>
+                                                    <Grid>
+                                                        <controls:AppIconPresenter
+                                                            Icon="{Binding Icon}"
+                                                            DisplayName="{Binding DisplayName}"/>
+                                                        <Border MinWidth="16"
+                                                                Height="16"
+                                                                Padding="2,0"
+                                                                Margin="0,-4,-4,0"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Top"
+                                                                CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                                                Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                                                BorderBrush="{DynamicResource FocusAccentBrightBrush}"
+                                                                BorderThickness="1"
+                                                                IsHitTestVisible="False"
+                                                                Visibility="{Binding HasMultipleWindows, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                            <TextBlock Text="{Binding WindowCountBadgeText}"
+                                                                       Style="{StaticResource FocusMetaText}"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                                                       FontWeight="SemiBold"/>
+                                                        </Border>
+                                                    </Grid>
                                                 </Button>
                                                 <Border Width="4"
                                                         CornerRadius="2"

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="390" viewBox="0 0 1120 390">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#17243a"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#75d7ff"/>
+      <stop offset="1" stop-color="#7d9dff"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#020817" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="390" rx="28" fill="url(#bg)"/>
+  <text x="54" y="64" fill="#f4f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="28" font-weight="700">统一应用栏 · 多窗口一眼可辨</text>
+  <text x="54" y="98" fill="#a9bdd8" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="16">一个应用仍只占一个图标，数量角标与文字标题补足窗口分组信息</text>
+
+  <g transform="translate(70 130)" filter="url(#shadow)">
+    <rect width="84" height="210" rx="28" fill="#ffffff" fill-opacity=".075" stroke="#ffffff" stroke-opacity=".12"/>
+    <rect x="14" y="18" width="56" height="56" rx="16" fill="#ffffff" fill-opacity=".075"/>
+    <circle cx="42" cy="46" r="14" fill="url(#blue)" fill-opacity=".92"/>
+    <path d="M34 47h16M42 39v16" stroke="#0c1930" stroke-width="3" stroke-linecap="round"/>
+    <rect x="14" y="82" width="56" height="56" rx="16" fill="#ffffff" fill-opacity=".10"/>
+    <rect x="27" y="95" width="30" height="30" rx="7" fill="#3d78d6"/>
+    <path d="M34 103h16v14H34z" fill="none" stroke="#edf6ff" stroke-width="2"/>
+    <rect x="50" y="78" width="22" height="18" rx="9" fill="#18283e" stroke="#6bcfff"/>
+    <text x="61" y="91" text-anchor="middle" fill="#79d7ff" font-family="Segoe UI, sans-serif" font-size="10" font-weight="700">4</text>
+    <rect x="14" y="146" width="56" height="50" rx="16" fill="#ffffff" fill-opacity=".075"/>
+    <circle cx="42" cy="171" r="13" fill="#6ca57d"/>
+    <rect x="8" y="96" width="4" height="28" rx="2" fill="#66cfff"/>
+  </g>
+
+  <path d="M184 235h72" stroke="url(#blue)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M246 227l12 8-12 8" fill="none" stroke="#7dc6ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(282 126)" filter="url(#shadow)">
+    <rect width="430" height="220" rx="20" fill="#202a3a" stroke="#ffffff" stroke-opacity=".14"/>
+    <text x="28" y="42" fill="#f4f8ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="19" font-weight="650">文件资源管理器</text>
+    <text x="28" y="70" fill="#78cfff" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="13">正在使用 · 4 个窗口</text>
+    <g fill="#c9d6e8" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="15">
+      <text x="28" y="108">• packages - 文件资源管理器</text>
+      <text x="28" y="138">• docs - 文件资源管理器</text>
+      <text x="28" y="168">• screenshots - 文件资源管理器</text>
+      <text x="28" y="198">• 另有 1 个窗口</text>
+    </g>
+  </g>
+
+  <g transform="translate(756 126)">
+    <rect width="310" height="220" rx="20" fill="#ffffff" fill-opacity=".055" stroke="#ffffff" stroke-opacity=".1"/>
+    <text x="26" y="42" fill="#8bdcff" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="15" font-weight="600">稳定分组语义</text>
+    <g fill="#d8e4f4" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="15">
+      <text x="26" y="82">AppUserModelID / 可执行路径</text>
+      <text x="26" y="116">窗口变化原位更新</text>
+      <text x="26" y="150">固定顺序不会跳动</text>
+      <text x="26" y="184">点击仍打开完整文字列表</text>
+    </g>
+    <circle cx="278" cy="184" r="12" fill="#76d7ae" fill-opacity=".18"/>
+    <path d="M272 184l4 4 8-9" fill="none" stroke="#8ce4bc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="560" y="373" text-anchor="middle" fill="#8198b6" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="14">不复制第三方托盘 · 不抓取实时缩略图 · 不增加第二条应用列表</text>
+</svg>

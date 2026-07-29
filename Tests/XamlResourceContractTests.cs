@@ -1255,6 +1255,15 @@ public sealed class XamlResourceContractTests
             "Text=\"{Binding StatusSummary}\"",
             mainWindow);
         Assert.Contains(
+            "Text=\"{Binding WindowPreviewText}\"",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding WindowCountBadgeText}\"",
+            mainWindow);
+        Assert.Contains(
+            "Visibility=\"{Binding HasMultipleWindows, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            mainWindow);
+        Assert.Contains(
             "Binding=\"{Binding IsActive}\"",
             mainWindow);
         Assert.Contains(
@@ -1283,6 +1292,15 @@ public sealed class XamlResourceContractTests
             model);
         Assert.Contains(
             "public string InteractionHint",
+            model);
+        Assert.Contains(
+            "public string WindowPreviewText",
+            model);
+        Assert.Contains(
+            "public bool HasMultipleWindows",
+            model);
+        Assert.Contains(
+            "WindowCount > 99",
             model);
     }
 

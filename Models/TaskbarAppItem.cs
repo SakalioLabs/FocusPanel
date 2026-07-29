@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,6 +9,9 @@ namespace FocusPanel.Models;
 
 public sealed class TaskbarAppItem : ObservableObject
 {
+    private const int WindowPreviewLimit = 3;
+    private const int WindowTitleLimit = 64;
+
     private string _displayName = string.Empty;
     private ImageSource? _icon;
     private AppLaunchItem? _launchItem;
@@ -54,6 +58,16 @@ public sealed class TaskbarAppItem : ObservableObject
     public IReadOnlyList<WindowReference> Windows =>
         RunningTask?.Windows ?? Array.Empty<WindowReference>();
     public int WindowCount => Windows.Count;
+    public bool HasMultipleWindows =>
+        WindowCount > 1;
+    public bool HasWindowPreview =>
+        WindowCount > 0;
+    public string WindowCountBadgeText =>
+        WindowCount > 99
+            ? "99+"
+            : WindowCount.ToString();
+    public string WindowPreviewText =>
+        ComposeWindowPreview();
     public string? ApplicationUserModelId => RunningTask?.ApplicationUserModelId;
     public string? ExecutablePath => RunningTask?.ExecutablePath;
     public string WindowSummary => WindowCount == 0 ? "未运行" : $"{WindowCount} 个窗口";
@@ -80,6 +94,51 @@ public sealed class TaskbarAppItem : ObservableObject
                 ? $"{primaryAction}；Shift+左键或中键启动新实例"
                 : primaryAction;
         }
+    }
+
+    private string ComposeWindowPreview()
+    {
+        if (WindowCount == 0)
+            return string.Empty;
+
+        var lines = Windows
+            .Take(WindowPreviewLimit)
+            .Select(window =>
+                "• "
+                + NormalizeWindowTitle(
+                    window.Title))
+            .ToList();
+        if (WindowCount > WindowPreviewLimit)
+        {
+            lines.Add(
+                $"• 另有 {WindowCount - WindowPreviewLimit} 个窗口");
+        }
+
+        return string.Join(
+            Environment.NewLine,
+            lines);
+    }
+
+    private string NormalizeWindowTitle(
+        string? title)
+    {
+        string normalized =
+            string.IsNullOrWhiteSpace(title)
+                ? DisplayName
+                : title
+                    .Replace('\r', ' ')
+                    .Replace('\n', ' ')
+                    .Trim();
+        int[] textElements =
+            StringInfo.ParseCombiningCharacters(
+                normalized);
+        return textElements.Length
+                <= WindowTitleLimit
+            ? normalized
+            : normalized[
+                ..textElements[
+                    WindowTitleLimit - 1]]
+                + "…";
     }
 
     internal void ApplySnapshot(TaskbarAppItem snapshot)
@@ -141,6 +200,10 @@ public sealed class TaskbarAppItem : ObservableObject
         OnPropertyChanged(nameof(CanPin));
         OnPropertyChanged(nameof(Windows));
         OnPropertyChanged(nameof(WindowCount));
+        OnPropertyChanged(nameof(HasMultipleWindows));
+        OnPropertyChanged(nameof(HasWindowPreview));
+        OnPropertyChanged(nameof(WindowCountBadgeText));
+        OnPropertyChanged(nameof(WindowPreviewText));
         OnPropertyChanged(nameof(ApplicationUserModelId));
         OnPropertyChanged(nameof(ExecutablePath));
         OnPropertyChanged(nameof(WindowSummary));
