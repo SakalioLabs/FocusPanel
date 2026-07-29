@@ -17,22 +17,47 @@ public sealed class SystemStatusService : ISystemStatusService
 
     public SystemStatusService()
     {
+        _deviceEnumerator = TryCreateDeviceEnumerator();
+    }
+
+    public SystemStatusSnapshot GetStatusSnapshot()
+    {
+        int comInitializationResult =
+            NativeMethods.CoInitializeEx(
+                IntPtr.Zero,
+                CoInit.Multithreaded);
+        IMMDeviceEnumerator? deviceEnumerator =
+            TryCreateDeviceEnumerator();
         try
         {
-            _deviceEnumerator = (IMMDeviceEnumerator)new MMDeviceEnumeratorComObject();
+            return new SystemStatusSnapshot(
+                GetAudioStatus(deviceEnumerator),
+                GetNetworkStatus(),
+                GetInputMethodStatus(),
+                GetBatteryStatus());
         }
-        catch
+        finally
         {
-            _deviceEnumerator = null;
+            ReleaseComObject(deviceEnumerator);
+            if (HResultSucceeded(
+                    comInitializationResult))
+            {
+                NativeMethods.CoUninitialize();
+            }
         }
     }
 
-    public AudioStatusSnapshot GetAudioStatus()
+    public AudioStatusSnapshot GetAudioStatus() =>
+        GetAudioStatus(_deviceEnumerator);
+
+    private static AudioStatusSnapshot GetAudioStatus(
+        IMMDeviceEnumerator? deviceEnumerator)
     {
         IAudioEndpointVolume? endpoint = null;
         try
         {
-            endpoint = GetDefaultAudioEndpoint();
+            endpoint = GetDefaultAudioEndpoint(
+                deviceEnumerator);
             if (endpoint == null)
                 return AudioStatusSnapshot.Unavailable;
 
@@ -66,7 +91,8 @@ public sealed class SystemStatusService : ISystemStatusService
         IAudioEndpointVolume? endpoint = null;
         try
         {
-            endpoint = GetDefaultAudioEndpoint();
+            endpoint = GetDefaultAudioEndpoint(
+                _deviceEnumerator);
             if (endpoint == null)
                 return false;
 
@@ -93,7 +119,8 @@ public sealed class SystemStatusService : ISystemStatusService
         IAudioEndpointVolume? endpoint = null;
         try
         {
-            endpoint = GetDefaultAudioEndpoint();
+            endpoint = GetDefaultAudioEndpoint(
+                _deviceEnumerator);
             if (endpoint == null)
                 return false;
 
@@ -316,13 +343,14 @@ public sealed class SystemStatusService : ISystemStatusService
     public bool Shutdown() =>
         SystemActionExecution.TryStart(() => StartShutdown("/s /t 0"));
 
-    private IAudioEndpointVolume? GetDefaultAudioEndpoint()
+    private static IAudioEndpointVolume? GetDefaultAudioEndpoint(
+        IMMDeviceEnumerator? deviceEnumerator)
     {
-        if (_deviceEnumerator == null)
+        if (deviceEnumerator == null)
             return null;
 
         int deviceResult =
-            _deviceEnumerator.GetDefaultAudioEndpoint(
+            deviceEnumerator.GetDefaultAudioEndpoint(
             EDataFlow.Render,
             ERole.Multimedia,
             out IMMDevice device);
@@ -358,6 +386,20 @@ public sealed class SystemStatusService : ISystemStatusService
 
     internal static bool HResultSucceeded(int result) =>
         result >= 0;
+
+    private static IMMDeviceEnumerator?
+        TryCreateDeviceEnumerator()
+    {
+        try
+        {
+            return (IMMDeviceEnumerator)
+                new MMDeviceEnumeratorComObject();
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     private static IntPtr GetForegroundKeyboardLayout()
     {
@@ -449,6 +491,11 @@ public sealed class SystemStatusService : ISystemStatusService
         Render,
         Capture,
         All
+    }
+
+    private enum CoInit : uint
+    {
+        Multithreaded = 0
     }
 
     private enum ERole
@@ -549,6 +596,14 @@ public sealed class SystemStatusService : ISystemStatusService
 
     private static class NativeMethods
     {
+        [DllImport("ole32.dll")]
+        internal static extern int CoInitializeEx(
+            IntPtr reserved,
+            CoInit concurrencyModel);
+
+        [DllImport("ole32.dll")]
+        internal static extern void CoUninitialize();
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern IntPtr FindWindow(string className, string? windowName);
 

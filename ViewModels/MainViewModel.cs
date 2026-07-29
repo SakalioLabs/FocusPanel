@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -35,6 +36,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _systemStatusTimer;
     private readonly DispatcherTimer _taskSummaryTimer;
     private readonly DispatcherTimer _updateCheckTimer;
+    private readonly Dispatcher _uiDispatcher;
+    private readonly CoalescingBackgroundRefresh<
+        PendingSystemStatusSnapshot> _systemStatusRefresh;
     private DashboardViewModel? _dashboardViewModel;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
@@ -42,11 +46,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private OkrViewModel? _okrViewModel;
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
+    private long _audioStateRevision;
     private float _confirmedMasterVolume;
     private bool _confirmedMuted;
     private bool _updatingStartupState;
     private string? _lastNotifiedUpdateVersion;
     private bool _isShellVisible;
+    private bool _isDisposed;
     private IReadOnlyDictionary<DateTime, CalendarFocusSummary>
         _calendarFocusByDate =
             new Dictionary<DateTime, CalendarFocusSummary>();
@@ -260,6 +266,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _systemStatus = systemStatus;
         _updateService = updateService;
         _desktopVisibility = new WindowsDesktopItemVisibilityService();
+        _uiDispatcher = Dispatcher.CurrentDispatcher;
+        _systemStatusRefresh =
+            new CoalescingBackgroundRefresh<
+                PendingSystemStatusSnapshot>(
+                CaptureSystemStatus,
+                ApplySystemStatusAsync,
+                ex => Debug.WriteLine(
+                    $"系统状态刷新失败：{ex}"));
         IsAppCatalogLoading = _appCatalog.IsIndexing;
 
         CurrentTime = DateTime.Now;
@@ -294,7 +308,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         RefreshTaskbarApps();
         RefreshSearchResults();
-        RefreshSystemStatus();
+        RequestSystemStatusRefresh();
         RefreshTaskSummary();
 
         _windowTracker.SnapshotChanged += OnWindowSnapshotChanged;
@@ -303,7 +317,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now;
 
         _systemStatusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _systemStatusTimer.Tick += (_, _) => RefreshSystemStatus();
+        _systemStatusTimer.Tick +=
+            (_, _) => RequestSystemStatusRefresh();
 
         _taskSummaryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
         _taskSummaryTimer.Tick += (_, _) => RefreshTaskSummary();
@@ -376,7 +391,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (becameVisible)
         {
             CurrentTime = DateTime.Now;
-            RefreshSystemStatus();
+            RequestSystemStatusRefresh();
         }
         UpdateRefreshActivity();
     }
@@ -405,7 +420,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnIsStatusCenterOpenChanged(bool value)
     {
         if (value && _isShellVisible)
-            RefreshSystemStatus();
+            RequestSystemStatusRefresh();
         UpdateRefreshActivity();
     }
 
@@ -427,6 +442,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private bool TryApplyMasterVolume(float value)
     {
+        Interlocked.Increment(
+            ref _audioStateRevision);
         AudioControlResult<float> result =
             AudioControlPolicy.Apply(
                 Math.Clamp(value, 0f, 1f),
@@ -454,6 +471,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private bool TryApplyMuted(bool value)
     {
+        Interlocked.Increment(
+            ref _audioStateRevision);
         AudioControlResult<bool> result =
             AudioControlPolicy.Apply(
                 value,
@@ -1216,32 +1235,77 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RefreshSearchResults();
     }
 
-    private void RefreshSystemStatus()
+    private void RequestSystemStatusRefresh()
     {
+        if (!_isDisposed)
+            _systemStatusRefresh.Request();
+    }
+
+    private PendingSystemStatusSnapshot
+        CaptureSystemStatus()
+    {
+        long audioRevision = Volatile.Read(
+            ref _audioStateRevision);
+        return new PendingSystemStatusSnapshot(
+            _systemStatus.GetStatusSnapshot(),
+            audioRevision);
+    }
+
+    private async Task ApplySystemStatusAsync(
+        PendingSystemStatusSnapshot pending,
+        CancellationToken cancellationToken)
+    {
+        await _uiDispatcher.InvokeAsync(
+            () =>
+            {
+                if (_isDisposed
+                    || cancellationToken
+                        .IsCancellationRequested)
+                {
+                    return;
+                }
+
+                ApplySystemStatus(pending);
+            },
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
+    private void ApplySystemStatus(
+        PendingSystemStatusSnapshot pending)
+    {
+        SystemStatusSnapshot snapshot =
+            pending.Snapshot;
         AudioStatusSnapshot audio =
-            _systemStatus.GetAudioStatus();
-        IsAudioAvailable = audio.IsAvailable;
-        AudioStatusText = audio.IsAvailable
-            ? string.Empty
-            : "未检测到可用的音频输出设备";
-        if (audio.IsAvailable)
+            snapshot.Audio;
+        if (SystemStatusRefreshPolicy.ShouldApplyAudio(
+                pending.AudioRevision,
+                Volatile.Read(
+                    ref _audioStateRevision)))
         {
-            RestoreConfirmedAudioState(
-                audio.MasterVolume,
-                audio.IsMuted);
+            IsAudioAvailable = audio.IsAvailable;
+            AudioStatusText = audio.IsAvailable
+                ? string.Empty
+                : "未检测到可用的音频输出设备";
+            if (audio.IsAvailable)
+            {
+                RestoreConfirmedAudioState(
+                    audio.MasterVolume,
+                    audio.IsMuted);
+            }
         }
 
         NetworkStatusSnapshot network =
-            _systemStatus.GetNetworkStatus();
+            snapshot.Network;
         IsNetworkAvailable = network.IsAvailable;
         NetworkConnectionKind =
             network.ConnectionKind;
         NetworkDisplayName = network.DisplayName;
         NetworkDetail = network.Detail;
         InputMethodStatus =
-            _systemStatus.GetInputMethodStatus();
+            snapshot.InputMethod;
         BatteryStatusSnapshot battery =
-            _systemStatus.GetBatteryStatus();
+            snapshot.Battery;
         HasBattery = battery.HasBattery;
         BatteryPercent = battery.Percent;
         IsCharging = battery.IsCharging;
@@ -1573,10 +1637,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
         _clockTimer.Stop();
         _systemStatusTimer.Stop();
         _taskSummaryTimer.Stop();
         _updateCheckTimer.Stop();
+        _systemStatusRefresh.Dispose();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
         _tasksViewModel?.Dispose();
@@ -1596,4 +1665,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _pomodoroViewModel.Dispose();
         }
     }
+
+    private readonly record struct
+        PendingSystemStatusSnapshot(
+            SystemStatusSnapshot Snapshot,
+            long AudioRevision);
 }

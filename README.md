@@ -33,6 +33,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 窗口枚举采用最后有效快照提交：`EnumWindows` 整体失败时保留当前应用栏，不把系统瞬时错误显示成“所有运行应用消失”；单个受保护窗口的进程、身份或图标读取失败只降级该项目，不中断其他窗口。
 - `SnapshotChanged` 按订阅者隔离发布，一个界面监听器异常不会阻断其他状态消费者，也不会反向终止窗口枚举。退出时先标记跟踪器失效、停止计时器并解除 WinEvent；已经在途的原生回调会在 Dispatcher 关闭前静默丢弃。
 - Panel 隐藏后暂停完整窗口枚举、时钟、系统状态和任务摘要刷新；右缘热区、全屏抑制、安全恢复和 GitHub 更新检查继续运行。再次唤出时先刷新窗口快照和当前时间，状态中心与日历在打开时即时刷新。
+- 音频、网络、输入法和电池状态通过单消费者后台快照读取；刷新期间的重复请求合并为一次尾随刷新，只有最终快照回到 WPF Dispatcher 后才更新界面。设备读取失败不会阻塞悬停呼出，退出后的迟到结果会被丢弃。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
 - 应用图标支持 Windows 任务栏常用的新实例手势：`Shift+左键` 或鼠标中键直接启动新实例；没有可靠启动目标的受保护窗口不会显示或执行该动作。工具提示和读屏帮助会同步说明当前可用操作。
 - 多窗口列表精确标记当前前台窗口；同一应用内部切换窗口也会增量更新标记。标题超过 340px 时视觉省略，读屏名称仍保留完整标题并说明“当前窗口”。
@@ -87,6 +88,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![运行应用窗口生命周期跟踪](docs/images/window-lifecycle-tracking.svg)
 
 ![运行窗口最后有效快照与异常隔离](docs/images/window-snapshot-resilience.svg)
+
+![系统状态合并式后台刷新](docs/images/system-status-background-refresh.svg)
 
 ![多窗口应用一层直接列表](docs/images/multi-window-direct-list.svg)
 
@@ -311,7 +314,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.97 `
+  -Version 0.9.98 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -320,7 +323,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.97-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.98-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

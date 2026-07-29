@@ -4,6 +4,7 @@ namespace FocusPanel.Services;
 
 public interface ISystemStatusService : IDisposable
 {
+    SystemStatusSnapshot GetStatusSnapshot();
     AudioStatusSnapshot GetAudioStatus();
     bool TrySetMasterVolume(float value);
     bool TrySetMuted(bool value);

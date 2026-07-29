@@ -722,6 +722,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains("bool Restart()", statusContract);
         Assert.Contains("bool Shutdown()", statusContract);
         Assert.Contains("AudioStatusSnapshot GetAudioStatus()", statusContract);
+        Assert.Contains(
+            "SystemStatusSnapshot GetStatusSnapshot()",
+            statusContract);
         Assert.Contains("bool TrySetMasterVolume(float value)", statusContract);
         Assert.Contains("bool TrySetMuted(bool value)", statusContract);
         Assert.Contains(
@@ -733,6 +736,15 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "InputMethodStatusSnapshot GetInputMethodStatus()",
             statusContract);
+        Assert.Contains(
+            "NativeMethods.CoInitializeEx(",
+            systemStatus);
+        Assert.Contains(
+            "NativeMethods.CoUninitialize();",
+            systemStatus);
+        Assert.Contains(
+            "TryCreateDeviceEnumerator()",
+            systemStatus);
         Assert.DoesNotContain(
             "string InputLanguageDisplay { get; }",
             statusContract);
@@ -2899,7 +2911,25 @@ public sealed class XamlResourceContractTests
             "if (becameVisible)",
             viewModel);
         Assert.Contains(
-            "RefreshSystemStatus();",
+            "RequestSystemStatusRefresh();",
+            viewModel);
+        Assert.Contains(
+            "CoalescingBackgroundRefresh<",
+            viewModel);
+        Assert.Contains(
+            "_systemStatus.GetStatusSnapshot()",
+            viewModel);
+        Assert.Contains(
+            "DispatcherPriority.Background",
+            viewModel);
+        Assert.Contains(
+            "Interlocked.Increment(",
+            viewModel);
+        Assert.Contains(
+            "_systemStatusRefresh.Dispose();",
+            viewModel);
+        Assert.DoesNotContain(
+            "_systemStatus.GetNetworkStatus()",
             viewModel);
         Assert.Contains("_windowTracker.SetTrackingActive(isVisible)", viewModel);
         Assert.Contains("ShellRefreshActivityPolicy.GetActivity", viewModel);
