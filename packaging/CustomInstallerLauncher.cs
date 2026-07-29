@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using FocusPanel.Services;
 using Microsoft.Win32;
@@ -51,6 +52,20 @@ internal static class CustomInstallerLauncher
                         existingDirectory);
                 if (uninstallResult != 0)
                     return uninstallResult;
+
+                if (!WaitForUninstallCompletion(
+                        existingDirectory,
+                        TimeSpan.FromSeconds(90)))
+                {
+                    MessageBox.Show(
+                        "旧版卸载程序已经返回，但 Windows 仍未释放原安装目录。"
+                        + "\r\n\r\n为避免新版本又写回 C 盘，本次迁移已停止。"
+                        + "请在“已安装的应用”确认旧版已移除后，再重新运行此安装包。",
+                        "迁移尚未完成",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return 1;
+                }
             }
 
             return RunInstaller(
@@ -93,6 +108,8 @@ internal static class CustomInstallerLauncher
                         "/i " + Quote(msiPath)
                         + " VELOPACK_INSTALLDIR="
                         + Quote(installDirectory)
+                        + " INSTALLFOLDER="
+                        + Quote(installDirectory)
                         + " /L*V " + Quote(logPath),
                     UseShellExecute = true,
                     WorkingDirectory = tempDirectory
@@ -101,10 +118,30 @@ internal static class CustomInstallerLauncher
                 if (process == null)
                     throw new InvalidOperationException("无法启动 FocusPanel 安装程序。");
                 process.WaitForExit();
+                if (process.ExitCode == 1602)
+                    return 0;
                 if (process.ExitCode == 0
-                    || process.ExitCode == 3010
-                    || process.ExitCode == 1602)
+                    || process.ExitCode == 3010)
                 {
+                    string actualDirectory =
+                        WaitForInstalledDirectory(
+                            TimeSpan.FromSeconds(30));
+                    if (!SamePath(
+                            actualDirectory,
+                            installDirectory))
+                    {
+                        throw new InvalidOperationException(
+                            "Windows Installer 没有使用所选目录。"
+                            + "\r\n所选目录："
+                            + installDirectory
+                            + "\r\n实际目录："
+                            + (string.IsNullOrWhiteSpace(
+                                    actualDirectory)
+                                ? "未检测到安装记录"
+                                : actualDirectory)
+                            + "\r\n\r\n安装日志："
+                            + logPath);
+                    }
                     return 0;
                 }
 
@@ -227,6 +264,63 @@ internal static class CustomInstallerLauncher
         return string.Empty;
     }
 
+    private static bool WaitForUninstallCompletion(
+        string previousDirectory,
+        TimeSpan timeout)
+    {
+        DateTime deadline =
+            DateTime.UtcNow.Add(timeout);
+        do
+        {
+            string registeredDirectory =
+                FindExistingInstallDirectory();
+            bool registrationReleased =
+                string.IsNullOrWhiteSpace(
+                    registeredDirectory)
+                || !SamePath(
+                    registeredDirectory,
+                    previousDirectory);
+            bool updaterReleased =
+                !File.Exists(
+                    Path.Combine(
+                        previousDirectory,
+                        "Update.exe"));
+            if (registrationReleased
+                && updaterReleased)
+            {
+                return true;
+            }
+
+            Thread.Sleep(250);
+        }
+        while (DateTime.UtcNow < deadline);
+
+        return false;
+    }
+
+    private static string WaitForInstalledDirectory(
+        TimeSpan timeout)
+    {
+        DateTime deadline =
+            DateTime.UtcNow.Add(timeout);
+        string directory;
+        do
+        {
+            directory =
+                FindExistingInstallDirectory();
+            if (!string.IsNullOrWhiteSpace(
+                    directory))
+            {
+                return directory;
+            }
+
+            Thread.Sleep(250);
+        }
+        while (DateTime.UtcNow < deadline);
+
+        return string.Empty;
+    }
+
     private static int UninstallExisting(
         string existingDirectory)
     {
@@ -331,8 +425,8 @@ internal static class CustomInstallerLauncher
             {
                 Text = string.IsNullOrWhiteSpace(
                         existingDirectory)
-                    ? "将使用 Windows Installer 写入所选目录；后续一键更新继续沿用。"
-                    : "已安装版本可迁移到新目录；业务数据和设置不会被删除。",
+                    ? "可直接输入或浏览到 D/E 盘；安装结束后会校验真实落盘目录。"
+                    : "当前版本可迁移到新目录；业务数据和设置不会被删除。",
                 AutoSize = true,
                 ForeColor = SystemColors.GrayText,
                 Location = new Point(26, 58)

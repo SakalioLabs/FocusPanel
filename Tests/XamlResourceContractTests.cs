@@ -902,6 +902,27 @@ public sealed class XamlResourceContractTests
                     root,
                     "packaging",
                     "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "INSTALLFOLDER=",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "WaitForUninstallCompletion(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "WaitForInstalledDirectory(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
         Assert.DoesNotContain(
             "--installto",
             File.ReadAllText(
@@ -2720,8 +2741,23 @@ public sealed class XamlResourceContractTests
             "private async void FileService_DesktopItemsCreated",
             viewModel);
         Assert.Contains(
-            "private async Task FileService_DesktopItemsCreated",
+            "private Task FileService_DesktopItemsCreated",
             viewModel);
+        Assert.Contains(
+            "_organizeOperationTracker.TryStart(",
+            viewModel);
+        Assert.Contains(
+            "_organizeOperationTracker",
+            viewModel);
+        Assert.Contains(
+            "SafeDispatcherProgress<",
+            viewModel);
+        Assert.Contains(
+            "NotifyFilesChanged()",
+            service);
+        Assert.DoesNotContain(
+            "FilesChanged?.Invoke()",
+            service);
         Assert.Contains(
             "_pendingChanges.RenamePath(",
             service);

@@ -36,6 +36,8 @@ public partial class FileOrganizerViewModel :
         _layoutSaveState;
     private readonly InFlightTaskTracker
         _layoutMutationTracker = new();
+    private readonly InFlightTaskTracker
+        _organizeOperationTracker = new();
     private readonly DesktopDropPreflight
         _desktopDropPreflight = new();
     private readonly ShellPathOpenCoordinator
@@ -296,16 +298,31 @@ public partial class FileOrganizerViewModel :
         RequestLayoutRefresh();
     }
 
-    private async Task FileService_DesktopItemsCreated(
+    private Task FileService_DesktopItemsCreated(
         IReadOnlyList<string> paths)
     {
         if (!IsAutoOrganizeEnabled
             || _isDisposed
             || paths.Count == 0)
         {
-            return;
+            return Task.CompletedTask;
         }
 
+        Task<bool>? operation =
+            _organizeOperationTracker.TryStart(
+                async () =>
+                {
+                    await AutoOrganizeCreatedItemsAsync(
+                        paths);
+                    return true;
+                });
+        return operation
+            ?? Task.CompletedTask;
+    }
+
+    private async Task AutoOrganizeCreatedItemsAsync(
+        IReadOnlyList<string> paths)
+    {
         await _organizePresentationGate
             .WaitAsync();
         try
@@ -350,7 +367,9 @@ public partial class FileOrganizerViewModel :
         CreateOrganizeProgress(
             string operationName,
             long revision) =>
-        new Progress<DesktopOrganizeProgress>(
+        new SafeDispatcherProgress<
+            DesktopOrganizeProgress>(
+            _uiDispatcher,
             progress =>
             {
                 if (_isDisposed
@@ -368,7 +387,11 @@ public partial class FileOrganizerViewModel :
                     + $"{progress.Processed}/"
                     + $"{progress.Total} · "
                     + progress.CurrentItemName;
-            });
+            },
+            error =>
+                System.Diagnostics.Debug.WriteLine(
+                    "Desktop organize progress failed: "
+                    + error.Message));
 
     private long BeginOrganizePresentation(
         int total,
@@ -612,6 +635,19 @@ public partial class FileOrganizerViewModel :
     [RelayCommand(
         CanExecute = nameof(CanOrganizeAll))]
     private async Task OrganizeAll()
+    {
+        Task<bool>? operation =
+            _organizeOperationTracker.TryStart(
+                async () =>
+                {
+                    await OrganizeAllCore();
+                    return true;
+                });
+        if (operation != null)
+            await operation;
+    }
+
+    private async Task OrganizeAllCore()
     {
         try
         {
@@ -1141,6 +1177,18 @@ public partial class FileOrganizerViewModel :
         {
             System.Diagnostics.Debug.WriteLine(
                 "Complete organizer layout mutation failed: "
+                + ex.Message);
+        }
+        try
+        {
+            await _organizeOperationTracker
+                .CompleteAsync()
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                "Complete organizer operation failed: "
                 + ex.Message);
         }
         _fileService.Dispose();

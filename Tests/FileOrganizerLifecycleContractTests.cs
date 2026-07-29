@@ -229,6 +229,47 @@ public sealed class FileOrganizerLifecycleContractTests
     }
 
     [Fact]
+    public void OrganizeCallbacks_AreIsolatedAndDrainedBeforeServiceDispose()
+    {
+        string root = FindRepositoryRoot();
+        string service = ReadService();
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+
+        Assert.Contains(
+            "NotifyFilesChanged()",
+            service);
+        Assert.DoesNotContain(
+            "FilesChanged?.Invoke()",
+            service);
+        Assert.Contains(
+            "SafeDispatcherProgress<",
+            viewModel);
+        Assert.Contains(
+            "_organizeOperationTracker.TryStart(",
+            viewModel);
+        Assert.Contains(
+            "_organizeOperationTracker",
+            viewModel);
+
+        int drainIndex = viewModel.IndexOf(
+            "_organizeOperationTracker",
+            viewModel.IndexOf(
+                "private async Task CompleteDisposeAsync()",
+                StringComparison.Ordinal),
+            StringComparison.Ordinal);
+        int disposeIndex = viewModel.IndexOf(
+            "_fileService.Dispose();",
+            drainIndex,
+            StringComparison.Ordinal);
+        Assert.True(drainIndex >= 0);
+        Assert.True(disposeIndex > drainIndex);
+    }
+
+    [Fact]
     public void PartitionMutations_UseSharedBackgroundRepositoryAndDragLease()
     {
         string root = FindRepositoryRoot();

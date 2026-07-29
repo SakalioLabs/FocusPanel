@@ -285,6 +285,7 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 - 桌面根目录监视器会把 500ms 内重复的创建、写入、删除和重命名通知按路径合并，只读取真正变化的项目；旧仓库变化或监视器缓冲区异常时才安全回退全量扫描。
 - “新增桌面项目自动按类型收纳”只处理开关开启后由监视器确认的新路径；普通内容变化、属性刷新、既有项目改名、启动扫描和错误恢复不会把原有桌面项目批量抓走。复制临时文件改名到最终名称时保留新增身份，取消收纳与救援工具创建的项目则明确跳过，避免恢复后立即被重新收纳。
 - 自动收纳不会在后台弹出管理员授权窗口；公共桌面项目保持可见并显示“需手动授权”，成功、部分失败和设置保存异常也会在选项下方给出非打断式状态。
+- 自动收纳和手动一键整理都会登记为可等待操作；应用退出时先停止接收新批次并等待已开始的文件属性事务收尾，再释放监视器。进度渲染和文件列表订阅者各自捕获异常，单个卡片、迟到 Dispatcher 消息或观察者失败不会再触发整个 Panel 的全局闪退。
 - 外部重命名、文件大小和类型变化继续复用原卡片并更新派生文本；已收纳文件外部丢失时保留“需要恢复”入口。退出应用会释放全部桌面监视器和计时器，不留下重复刷新源。
 - 网格和列表模式使用与外层统一滚动条协作的视口虚拟化面板，只创建当前可见行和前后缓冲行的文件卡片；完整集合、滚动范围、双列收纳盒和业务排序不变。
 - 文件卡片容器在滚动时回收复用，图标缩放、窗口宽度、收纳盒折叠和集合变化会重新计算实现区间。1000 项真实 WPF 冒烟中，首屏、中段、集合变化和返回顶部仅存在 `9/12/12/9` 个视觉容器。
@@ -340,6 +341,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 自动收纳的文件属性事务、监视器通知和布局刷新现在是同一条可观察异步链：服务先释放文件刷新闸门，再执行新增项目收纳；单个文件失败会留在桌面并进入结果摘要，末尾扫描或 SQLite 竞态也只会显示可恢复错误，不会再把异常抛给 WPF 全局退出策略。
 
 ![自动收纳异常隔离与防闪退](docs/images/organizer-auto-crash-boundary.svg)
+
+![跨盘安装校验与自动收纳退出闭环](docs/images/install-organizer-safety-closure.svg)
 
 文件较多时，工具栏下方会临时显示实时进度、当前项目和已处理数量；整理按钮同步禁用，防止重复点击排队。手动整理、自动新增收纳和公共桌面授权阶段各自使用独立进度修订，上一阶段迟到的 UI 消息不会覆盖最终摘要。
 
@@ -421,7 +424,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.35 `
+  -Version 0.10.36 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -430,15 +433,17 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
-- `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意绝对目录，随后通过标准 Windows Installer 的 `VELOPACK_INSTALLDIR` 属性强制使用该路径。有可用且空间充足的非系统固定盘时会优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版已装在另一目录，向导会先说明并征得确认，再用旧版官方卸载器移除程序文件并安装到新位置；任务、收纳记录和设置保留在用户 AppData。无需再寻找单独的 CustomSetup。
-- `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.35-full.nupkg`：完整更新包。
+- `FocusPanel-win-Setup.exe`：统一的图形化首次安装与跨盘迁移入口；双击后可直接输入或浏览到 D/E 盘任意绝对目录。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，完成后反查 Windows 安装记录核对真实路径。有可用且空间充足的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置；超时则停止而不是写回 C 盘。任务、收纳记录和设置保留在用户 AppData。
+- `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
+- `FocusPanel-0.10.36-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
 ![一键安装与自定义目录安装](docs/images/custom-install-location.svg)
 
 ![Windows Installer 强制自定义目录](docs/images/msi-install-location-flow.svg)
+
+![跨盘安装校验与自动收纳退出闭环](docs/images/install-organizer-safety-closure.svg)
 
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 

@@ -391,7 +391,7 @@ public class FileOrganizerService : IDisposable
                 Files,
                 changes);
             if (changes.Count > 0)
-                FilesChanged?.Invoke();
+                NotifyFilesChanged();
         });
     }
 
@@ -839,7 +839,7 @@ public class FileOrganizerService : IDisposable
                     return;
 
                 UpdateFilesIncremental(files);
-                FilesChanged?.Invoke();
+                NotifyFilesChanged();
             }).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -1226,7 +1226,7 @@ public class FileOrganizerService : IDisposable
                     f => f.Name == fileName);
             if (visibleFile != null)
                 Files.Remove(visibleFile);
-            FilesChanged?.Invoke();
+            NotifyFilesChanged();
         }).ConfigureAwait(false);
 
         IconHelper.ClearCache(fileName);
@@ -1367,7 +1367,7 @@ public class FileOrganizerService : IDisposable
             {
                 Files.Add(restoredFile);
             }
-            FilesChanged?.Invoke();
+            NotifyFilesChanged();
         }).ConfigureAwait(false);
     }
 
@@ -1448,7 +1448,17 @@ public class FileOrganizerService : IDisposable
             context.SaveChanges();
         });
 
-        FilesChanged?.Invoke();
+        NotifyFilesChanged();
+    }
+
+    private void NotifyFilesChanged()
+    {
+        ObserverIsolation.Notify(
+            FilesChanged,
+            ex =>
+                System.Diagnostics.Debug.WriteLine(
+                    "Desktop file observer failed: "
+                    + ex.Message));
     }
 
     // ============================================================

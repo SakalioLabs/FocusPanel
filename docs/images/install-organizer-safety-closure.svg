@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="430" viewBox="0 0 1120 430">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#020617" flood-opacity=".32"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="430" rx="28" fill="url(#bg)"/>
+  <text x="54" y="58" fill="#f8fafc" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="26" font-weight="700">0.10.36 · 安装与收纳都必须完成闭环</text>
+  <text x="54" y="88" fill="#94a3b8" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="15">不再只相信“命令已返回”：检查真实目录，也等待真实文件操作结束</text>
+
+  <g filter="url(#shadow)">
+    <rect x="50" y="118" width="495" height="260" rx="22" fill="#ffffff" fill-opacity=".075" stroke="#93c5fd" stroke-opacity=".32"/>
+    <rect x="575" y="118" width="495" height="260" rx="22" fill="#ffffff" fill-opacity=".075" stroke="#67e8f9" stroke-opacity=".32"/>
+  </g>
+
+  <text x="78" y="157" fill="#bfdbfe" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="18" font-weight="700">跨盘安装</text>
+  <text x="603" y="157" fill="#a5f3fc" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="18" font-weight="700">自动收纳</text>
+
+  <g font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="15">
+    <rect x="78" y="181" width="132" height="48" rx="14" fill="#2563eb"/>
+    <text x="144" y="211" text-anchor="middle" fill="white">选择 D / E 盘</text>
+    <path d="M218 205H255" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+    <path d="M248 198l9 7-9 7" fill="none" stroke="#60a5fa" stroke-width="3"/>
+    <rect x="267" y="181" width="236" height="48" rx="14" fill="#1e3a8a"/>
+    <text x="385" y="201" text-anchor="middle" fill="#dbeafe">VELOPACK_INSTALLDIR</text>
+    <text x="385" y="219" text-anchor="middle" fill="#dbeafe">+ INSTALLFOLDER</text>
+    <path d="M289 254H461" stroke="#475569" stroke-width="2"/>
+    <circle cx="289" cy="254" r="5" fill="#60a5fa"/>
+    <circle cx="461" cy="254" r="5" fill="#22d3ee"/>
+    <text x="78" y="284" fill="#cbd5e1">迁移：等待旧注册与 Update.exe 释放</text>
+    <text x="78" y="313" fill="#cbd5e1">完成：反查 Windows 实际安装目录</text>
+    <rect x="78" y="332" width="425" height="28" rx="10" fill="#0f766e" fill-opacity=".65"/>
+    <text x="290" y="352" text-anchor="middle" fill="#ccfbf1">所选目录 = 实际目录，才报告成功</text>
+
+    <rect x="603" y="181" width="126" height="48" rx="14" fill="#0891b2"/>
+    <text x="666" y="211" text-anchor="middle" fill="white">监视器事件</text>
+    <path d="M737 205H774" stroke="#22d3ee" stroke-width="3" stroke-linecap="round"/>
+    <path d="M767 198l9 7-9 7" fill="none" stroke="#22d3ee" stroke-width="3"/>
+    <rect x="786" y="181" width="244" height="48" rx="14" fill="#164e63"/>
+    <text x="908" y="201" text-anchor="middle" fill="#cffafe">可等待收纳任务</text>
+    <text x="908" y="219" text-anchor="middle" fill="#cffafe">逐项属性事务</text>
+    <text x="603" y="269" fill="#cbd5e1">进度回调异常 → 本地记录，不越过 Dispatcher</text>
+    <text x="603" y="298" fill="#cbd5e1">列表观察者异常 → 单独隔离，继续其他订阅者</text>
+    <text x="603" y="327" fill="#cbd5e1">应用退出 → 停止接单 → 排空批次 → 释放监视器</text>
+    <rect x="603" y="341" width="427" height="28" rx="10" fill="#0f766e" fill-opacity=".65"/>
+    <text x="816" y="361" text-anchor="middle" fill="#ccfbf1">单项失败可恢复，Panel 不再跟着退出</text>
+  </g>
+  <rect x="50" y="398" width="1020" height="4" rx="2" fill="url(#accent)" opacity=".75"/>
+</svg>
