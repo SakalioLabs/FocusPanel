@@ -286,6 +286,67 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
+    public async Task GuardResultFromRestoredSession_IsDiscarded()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native =
+            new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    native,
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+            TaskbarReplacementStoppedEvent? stopped =
+                null;
+            controller.ReplacementStopped +=
+                value => stopped = value;
+
+            Assert.True(
+                controller.TryEnableReplacement(
+                    out _));
+            native.BlockNextAppBarRead = true;
+            Task guard =
+                Task.Run(
+                    controller.RunGuardOnceForTests);
+            Assert.True(
+                native.AppBarReadEntered.Wait(
+                    TimeSpan.FromSeconds(2)));
+
+            Task restore =
+                Task.Run(controller.Restore);
+            await Task.Delay(50);
+            native.ReleaseAppBarRead.Set();
+            await Task.WhenAll(
+                guard,
+                restore);
+
+            Assert.False(
+                controller.IsReplacementEnabled);
+            Assert.Null(stopped);
+            Assert.True(native.Visible);
+        }
+        finally
+        {
+            native.ReleaseAppBarRead.Set();
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(
+                    directory,
+                    true);
+            }
+        }
+    }
+
+    [Fact]
     public void GuardFailure_RestoresTaskbarAndReportsReplacementStopped()
     {
         string directory = Path.Combine(
@@ -307,6 +368,11 @@ public sealed class TaskbarControllerStateTests
             Assert.True(controller.TryEnableReplacement(out _));
             native.AppBarState = 2;
             native.SetAppBarStateSucceeds = false;
+
+            controller.RunGuardOnceForTests();
+
+            Assert.True(controller.IsReplacementEnabled);
+            Assert.Null(stopped);
 
             controller.RunGuardOnceForTests();
 
@@ -348,6 +414,13 @@ public sealed class TaskbarControllerStateTests
             native.Visible = true;
             controller.RunGuardOnceForTests();
 
+            Assert.True(controller.IsReplacementEnabled);
+            Assert.True(native.Visible);
+            Assert.Equal(1, native.HideWriteCount);
+            Assert.Null(stopped);
+
+            controller.RunGuardOnceForTests();
+
             Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
             Assert.Equal(1, native.HideWriteCount);
@@ -376,12 +449,67 @@ public sealed class TaskbarControllerStateTests
             controller.ReplacementStopped += value => stopped = value;
 
             Assert.True(controller.TryEnableReplacement(out _));
-            native.TaskbarHandle = IntPtr.Zero;
+            native.TaskbarHandle = new IntPtr(2);
+            controller.RunGuardOnceForTests();
+
+            Assert.True(controller.IsReplacementEnabled);
+            Assert.Null(stopped);
+
             controller.RunGuardOnceForTests();
 
             Assert.NotNull(stopped);
             Assert.Equal(TaskbarReplacementStopReason.ExplorerHostChanged, stopped.Reason);
             Assert.Equal(1, native.HideWriteCount);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void TransientTaskbarVisibility_DoesNotStopReplacement()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native =
+            new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    native,
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+            TaskbarReplacementStoppedEvent? stopped =
+                null;
+            controller.ReplacementStopped +=
+                value => stopped = value;
+
+            Assert.True(
+                controller.TryEnableReplacement(
+                    out _));
+            int visibilityWrites =
+                native.TaskbarVisibilityWriteCount;
+
+            native.Visible = true;
+            controller.RunGuardOnceForTests();
+            native.Visible = false;
+            controller.RunGuardOnceForTests();
+
+            Assert.True(
+                controller.IsReplacementEnabled);
+            Assert.Null(stopped);
+            Assert.Equal(
+                visibilityWrites,
+                native.TaskbarVisibilityWriteCount);
         }
         finally
         {

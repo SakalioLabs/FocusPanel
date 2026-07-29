@@ -31,12 +31,16 @@ public sealed class TaskbarController : ITaskbarController
     private readonly string _disabledFile;
     private readonly ITaskbarNativeApi _native;
     private readonly ITaskbarWatchdogLauncher _watchdogLauncher;
+    private readonly TaskbarGuardConfirmation
+        _guardConfirmation = new();
     private Timer? _guardTimer;
     private TaskbarSessionState? _state;
+    private IntPtr _activeTaskbarHandle;
     private string? _lastApplyError;
     private TaskbarReplacementStopReason _lastStopReason = TaskbarReplacementStopReason.Unknown;
     private int _restoring;
     private int _guardRunning;
+    private int _replacementGeneration;
 
     public event Action<TaskbarReplacementStoppedEvent>? ReplacementStopped;
 
@@ -121,7 +125,10 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
+        Interlocked.Increment(
+            ref _replacementGeneration);
         IsReplacementEnabled = true;
+        _guardConfirmation.ObserveValid();
         _guardTimer = new Timer(
             static state => ((TaskbarController)state!).GuardReplacementSafely(),
             this,
@@ -137,12 +144,16 @@ public sealed class TaskbarController : ITaskbarController
 
         try
         {
+            Interlocked.Increment(
+                ref _replacementGeneration);
             _guardTimer?.Dispose();
             _guardTimer = null;
             if (_state != null || File.Exists(_sessionFile))
                 RestoreSessionFile(_sessionFile, _native);
             IsReplacementEnabled = false;
             _state = null;
+            _activeTaskbarHandle = IntPtr.Zero;
+            _guardConfirmation.ObserveValid();
         }
         finally
         {
@@ -278,6 +289,7 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
+        _activeTaskbarHandle = taskbar;
         _lastApplyError = null;
         return true;
     }
@@ -330,10 +342,18 @@ public sealed class TaskbarController : ITaskbarController
             return;
         }
 
+        int generation = Volatile.Read(
+            ref _replacementGeneration);
         try
         {
             if (File.Exists(_disabledFile))
             {
+                if (!IsCurrentReplacement(
+                        generation))
+                {
+                    return;
+                }
+
                 StopReplacementFromGuard(
                     TaskbarReplacementStopReason.EmergencyRestore,
                     "任务栏替代模式已通过紧急快捷键关闭。");
@@ -359,11 +379,27 @@ public sealed class TaskbarController : ITaskbarController
                 valid = false;
             }
 
+            if (!IsCurrentReplacement(
+                    generation))
+            {
+                return;
+            }
+
             if (!valid)
             {
+                if (!_guardConfirmation.ObserveInvalid(
+                        _lastStopReason))
+                {
+                    return;
+                }
+
                 StopReplacementFromGuard(
                     _lastStopReason,
                     $"{_lastApplyError ?? "任务栏替代状态失效"}，已恢复 Windows 任务栏。");
+            }
+            else
+            {
+                _guardConfirmation.ObserveValid();
             }
         }
         finally
@@ -372,13 +408,24 @@ public sealed class TaskbarController : ITaskbarController
         }
     }
 
+    private bool IsCurrentReplacement(
+        int generation) =>
+        IsReplacementEnabled
+        && generation == Volatile.Read(
+            ref _replacementGeneration);
+
     private bool ValidateReplacement()
     {
         using var mutation = AcquireMutationMutex();
         IntPtr taskbar = _native.FindPrimaryTaskbar();
-        if (taskbar == IntPtr.Zero)
+        if (taskbar == IntPtr.Zero
+            || (_activeTaskbarHandle != IntPtr.Zero
+                && taskbar != _activeTaskbarHandle))
         {
-            _lastApplyError = "Explorer 任务栏宿主已重新创建或暂时不可用";
+            _lastApplyError =
+                taskbar == IntPtr.Zero
+                    ? "Explorer 任务栏宿主暂时不可用"
+                    : "Explorer 已重新创建任务栏宿主";
             _lastStopReason = TaskbarReplacementStopReason.ExplorerHostChanged;
             return false;
         }

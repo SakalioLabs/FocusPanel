@@ -156,7 +156,9 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 
 ## 侧边任务栏完整替代与安全恢复
 
-完整替代模式先使用微软公开的 `ABM_SETSTATE + ABS_AUTOHIDE` 让 Explorer 释放工作区，再一次性隐藏主屏 `Shell_TrayWnd`。守护器只读取并验证状态，不会周期性执行 `ShowWindow` 或 `SPI_SETWORKAREA`，因此不会与 Explorer 在“占用/释放工作区”之间来回争抢。Windows 若主动恢复任务栏或 Explorer 宿主失效，FocusPanel 会退出替代模式并恢复原设置，而不是反复隐藏造成闪烁。状态中心和设置页会显示停止原因；确认环境正常后，由用户点击“重新接管任务栏”手动启用。
+完整替代模式先使用微软公开的 `ABM_SETSTATE + ABS_AUTOHIDE` 让 Explorer 释放工作区，再一次性隐藏主屏 `Shell_TrayWnd`。守护器只读取并验证状态，不会周期性执行 `ShowWindow` 或 `SPI_SETWORKAREA`，因此不会与 Explorer 在“占用/释放工作区”之间来回争抢。Windows Shell 面板可能让任务栏窗口短暂变为可见，守护器会要求连续两次、约 4 秒的同类异常才判定替代状态失效；中间恢复正常会清除待确认状态。持续失效后 FocusPanel 只恢复一次原设置，不反复隐藏；紧急快捷键不等待确认，立即恢复。
+
+接管成功时会记录当前主屏 `Shell_TrayWnd` 句柄。Explorer 重启并创建新宿主后，即使新窗口碰巧处于隐藏状态，也会准确报告“Explorer 宿主变化”，而不是误报成普通可见性变化。每次恢复和重新接管都会推进会话代际，已经在后台读取中的旧守护结果会自动作废，不会污染新会话或弹出迟到警告。状态中心和设置页会显示停止原因；确认环境正常后，由用户点击“重新接管任务栏”手动启用。
 
 首次启用前会显示安全说明。只有在侧边壳层、热区以及独立恢复守护进程都就绪后，FocusPanel 才会隐藏原任务栏；紧急快捷键注册失败时不会改变任务栏设置。
 
@@ -171,6 +173,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。完整替代后，Win+A、Win+N、Win+Space 等公开系统快捷入口继续可用；Explorer 的第三方托盘溢出内容属于私有壳层，FocusPanel 不读取其进程内存，也不能保证在原任务栏隐藏时完整复制。
 
 ![任务栏安全状态机](docs/images/taskbar-safety-flow.svg)
+
+![任务栏守护连续异常确认](docs/images/taskbar-guard-confirmation.svg)
 
 ![开机启动写入与回滚](docs/images/startup-safety.svg)
 
@@ -303,7 +307,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.94 `
+  -Version 0.9.95 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
