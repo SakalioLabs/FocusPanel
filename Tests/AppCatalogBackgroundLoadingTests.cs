@@ -69,6 +69,33 @@ public sealed class AppCatalogBackgroundLoadingTests
     }
 
     [Fact]
+    public void Index_PreservesExactApplicationUserModelId()
+    {
+        using var service =
+            new AppCatalogService(
+                new ExactAumidIdentityResolver(),
+                new ImmediateCatalogSource(),
+                new NullIconSource(),
+                () =>
+                    Array.Empty<PinnedApp>());
+        Assert.True(
+            SpinWait.SpinUntil(
+                () => !service.IsIndexing,
+                TimeSpan.FromSeconds(3)));
+
+        AppLaunchItem result =
+            Assert.Single(
+                service.Search("Demo"));
+
+        Assert.Equal(
+            "Contoso.Demo_Exact!App",
+            result.ApplicationUserModelId);
+        Assert.Equal(
+            "aumid:contoso.demo_exact!app",
+            result.IdentityKey);
+    }
+
+    [Fact]
     public void Dispose_SuppressesLateCatalogNotification()
     {
         var source = new BlockingCatalogSource();
@@ -389,6 +416,23 @@ public sealed class AppCatalogBackgroundLoadingTests
                 null,
                 app.LaunchTarget);
         }
+
+        public ResolvedAppIdentity ResolveWindow(
+            IntPtr window,
+            uint processId,
+            string? executablePath) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class ExactAumidIdentityResolver :
+        IAppIdentityResolver
+    {
+        public ResolvedAppIdentity ResolveLaunch(
+            AppLaunchItem app) =>
+            new(
+                "aumid:contoso.demo_exact!app",
+                "Contoso.Demo_Exact!App",
+                null);
 
         public ResolvedAppIdentity ResolveWindow(
             IntPtr window,

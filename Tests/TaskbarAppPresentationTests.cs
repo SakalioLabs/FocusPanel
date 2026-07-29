@@ -291,6 +291,74 @@ public sealed class TaskbarAppPresentationTests
     }
 
     [Fact]
+    public void JumpListAppId_PrefersRuntimeAndFallsBackToIdentity()
+    {
+        var running =
+            new TaskbarAppItem
+            {
+                IdentityKey = "aumid:runtime.app",
+                DisplayName = "编辑器",
+                RunningTask =
+                    new WindowTaskItem
+                    {
+                        IdentityKey =
+                            "aumid:runtime.app",
+                        AppKey =
+                            "runtime",
+                        DisplayName =
+                            "编辑器",
+                        ApplicationUserModelId =
+                            "Runtime.App",
+                        Windows =
+                            new[]
+                            {
+                                new
+                                    WindowReference(
+                                        new IntPtr(1),
+                                        "文档")
+                            }
+                    }
+            };
+
+        Assert.Equal(
+            "Runtime.App",
+            running
+                .JumpListApplicationUserModelId);
+
+        var pinned =
+            new TaskbarAppItem
+            {
+                IdentityKey =
+                    "aumid:contoso.editor",
+                DisplayName =
+                    "编辑器"
+            };
+        Assert.Equal(
+            "contoso.editor",
+            pinned
+                .JumpListApplicationUserModelId);
+        Assert.Null(
+            new TaskbarAppItem
+            {
+                IdentityKey =
+                    @"exe:c:\apps\editor.exe"
+            }.JumpListApplicationUserModelId);
+        Assert.Equal(
+            "Contoso.Editor_Exact!App",
+            new TaskbarAppItem
+            {
+                IdentityKey =
+                    "aumid:contoso.editor_exact!app",
+                LaunchItem =
+                    new AppLaunchItem
+                    {
+                        ApplicationUserModelId =
+                            "Contoso.Editor_Exact!App"
+                    }
+            }.JumpListApplicationUserModelId);
+    }
+
+    [Fact]
     public void DropPlacement_ExposesOnlyOneCueAndClears()
     {
         var item = new TaskbarAppItem();

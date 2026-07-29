@@ -12,6 +12,8 @@ public sealed class ShellCoordinator : IDisposable
         Windows = new WindowTracker();
         SystemStatus = new SystemStatusService();
         Updates = new VelopackUpdateService();
+        JumpLists =
+            new AppJumpListService();
     }
 
     public ITaskbarController Taskbar { get; }
@@ -19,6 +21,11 @@ public sealed class ShellCoordinator : IDisposable
     public IWindowTracker Windows { get; }
     public ISystemStatusService SystemStatus { get; }
     public IAppUpdateService Updates { get; }
+    internal IAppJumpListService
+        JumpLists
+    {
+        get;
+    }
 
     public bool TryEnableTaskbarReplacement(out string? error) =>
         Taskbar.TryEnableReplacement(out error);
@@ -31,6 +38,7 @@ public sealed class ShellCoordinator : IDisposable
         Windows.Dispose();
         SystemStatus.Dispose();
         Updates.Dispose();
+        JumpLists.Dispose();
         if (Apps is AppCatalogService catalog)
         {
             await catalog

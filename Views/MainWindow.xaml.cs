@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Media;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
@@ -74,6 +76,9 @@ public partial class MainWindow :
     private bool _taskbarPreviewInteractionActive;
     private TaskbarSlotHotkeySession?
         _taskbarSlotHotkeySession;
+    private CancellationTokenSource?
+        _jumpListCancellation;
+    private long _jumpListRevision;
     private string? _lastTaskbarWindowCycleIdentity;
     private IntPtr _lastTaskbarWindowCycleHandle;
     private long _lastTaskbarWindowCycleTick = -1;
@@ -1049,6 +1054,14 @@ public partial class MainWindow :
     {
         ContextMenu menu = CreateTaskbarContextMenu();
 
+        if (TryAddJumpListSection(
+                menu,
+                task))
+        {
+            menu.Items.Add(
+                new Separator());
+        }
+
         if (task.CreateLaunchItem() != null)
         {
             menu.Items.Add(new MenuItem
@@ -1134,6 +1147,212 @@ public partial class MainWindow :
 
         FocusMenuTheme.Apply(menu);
         button.ContextMenu = menu;
+    }
+
+    private bool TryAddJumpListSection(
+        ContextMenu menu,
+        TaskbarAppItem task)
+    {
+        string? applicationUserModelId =
+            task.JumpListApplicationUserModelId;
+        if (string.IsNullOrWhiteSpace(
+                applicationUserModelId))
+        {
+            return false;
+        }
+
+        CancelJumpListLoad();
+        var recentHeader =
+            new MenuItem
+            {
+                Header = "最近项目",
+                IsEnabled = false
+            };
+        var loadingItem =
+            new MenuItem
+            {
+                Header = "正在读取…",
+                IsEnabled = false
+            };
+        menu.Items.Add(
+            recentHeader);
+        menu.Items.Add(
+            loadingItem);
+
+        var cancellation =
+            new CancellationTokenSource();
+        _jumpListCancellation =
+            cancellation;
+        long revision =
+            Interlocked.Increment(
+                ref _jumpListRevision);
+        menu.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(
+                    _jumpListCancellation,
+                    cancellation))
+            {
+                CancelJumpListLoad();
+            }
+        };
+        _ = LoadJumpListSectionAsync(
+            menu,
+            recentHeader,
+            loadingItem,
+            applicationUserModelId,
+            CreateJumpListLaunchSnapshot(
+                task),
+            revision,
+            cancellation);
+        return true;
+    }
+
+    private async Task
+        LoadJumpListSectionAsync(
+            ContextMenu menu,
+            MenuItem recentHeader,
+            MenuItem loadingItem,
+            string applicationUserModelId,
+            AppJumpListApplicationLaunch?
+                application,
+            long revision,
+            CancellationTokenSource
+                cancellation)
+    {
+        IReadOnlyList<AppJumpListItem>
+            recent;
+        try
+        {
+            recent =
+                await _coordinator
+                    .JumpLists
+                    .GetRecentAsync(
+                        applicationUserModelId,
+                        AppJumpListPolicy
+                            .MaximumItemCount,
+                        cancellation.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (_isExit
+            || cancellation
+                .IsCancellationRequested
+            || revision
+                != Volatile.Read(
+                    ref _jumpListRevision)
+            || !ReferenceEquals(
+                _jumpListCancellation,
+                cancellation))
+        {
+            return;
+        }
+
+        menu.Items.Remove(
+            loadingItem);
+        if (recent.Count == 0)
+        {
+            recentHeader.Header =
+                "最近项目 · 无可用记录";
+            return;
+        }
+
+        int insertionIndex =
+            menu.Items.IndexOf(
+                recentHeader)
+            + 1;
+        foreach (AppJumpListItem item
+                 in recent)
+        {
+            var recentItem =
+                new MenuItem
+                {
+                    Header =
+                        item.DisplayName,
+                    ToolTip =
+                        item.LaunchTarget,
+                    Tag =
+                        new
+                            TaskbarJumpListMenuAction(
+                                item,
+                                application)
+                };
+            AutomationProperties.SetName(
+                recentItem,
+                $"打开最近项目 {item.DisplayName}");
+            recentItem.Click +=
+                JumpListItem_Click;
+            menu.Items.Insert(
+                insertionIndex++,
+                recentItem);
+        }
+
+        FocusMenuTheme.Apply(menu);
+    }
+
+    private async void JumpListItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender
+                is not FrameworkElement
+                {
+                    Tag:
+                        TaskbarJumpListMenuAction
+                            action
+                })
+        {
+            return;
+        }
+
+        bool opened =
+            await _coordinator
+                .JumpLists
+                .OpenAsync(
+                    action.Item,
+                    action.Application);
+        if (opened || _isExit)
+            return;
+
+        _toastManager.Enqueue(
+            new FocusToastNotification(
+                "jump-list-open-failed",
+                "无法打开最近项目",
+                $"“{action.Item.DisplayName}”可能已移动、删除，"
+                + "或原应用已不再可用。",
+                "\uE783",
+                FocusToastKind.Warning));
+    }
+
+    private void CancelJumpListLoad()
+    {
+        CancellationTokenSource?
+            cancellation =
+                _jumpListCancellation;
+        _jumpListCancellation = null;
+        if (cancellation == null)
+            return;
+
+        cancellation.Cancel();
+        cancellation.Dispose();
+    }
+
+    private static
+        AppJumpListApplicationLaunch?
+        CreateJumpListLaunchSnapshot(
+            TaskbarAppItem task)
+    {
+        AppLaunchItem? launch =
+            task.CreateLaunchItem();
+        return launch == null
+            ? null
+            : new
+                AppJumpListApplicationLaunch(
+                    launch.LaunchKind,
+                    launch.LaunchTarget,
+                    launch.Arguments);
     }
 
     private void PopulateTaskbarWindowList(
@@ -1865,6 +2084,7 @@ public partial class MainWindow :
     {
         CancelTaskbarHoverPreview(
             closeMenu: true);
+        CancelJumpListLoad();
         _autoHideTimer.Stop();
         _transientInteractionDepth = 0;
         UnregisterTaskbarSlotHotkeys();
@@ -2482,6 +2702,12 @@ public partial class MainWindow :
         TaskbarWindowMenuAction(
             ContextMenu Menu,
             WindowReference Window);
+
+    private sealed record
+        TaskbarJumpListMenuAction(
+            AppJumpListItem Item,
+            AppJumpListApplicationLaunch?
+                Application);
 
     private static class NativeMethods
     {

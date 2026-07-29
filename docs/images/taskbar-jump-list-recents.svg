@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" rx="28" fill="url(#bg)"/>
+  <g font-family="Microsoft YaHei UI,Segoe UI,sans-serif">
+    <text x="54" y="62" fill="#f8fafc" font-size="28" font-weight="700">应用右键 · 原生最近项目 · 一层直达</text>
+    <text x="54" y="92" fill="#94a3b8" font-size="14">只使用 Windows 公开 Jump List 接口；没有明确应用身份时不猜测、不串历史</text>
+
+    <rect x="54" y="126" width="410" height="330" rx="24" fill="#111827" stroke="#475569"/>
+    <rect x="82" y="154" width="354" height="48" rx="14" fill="#1e293b"/>
+    <circle cx="108" cy="178" r="15" fill="#38bdf8"/>
+    <text x="108" y="184" text-anchor="middle" fill="#082f49" font-size="15" font-weight="700">W</text>
+    <text x="136" y="184" fill="#e2e8f0" font-size="16" font-weight="600">文档应用</text>
+
+    <text x="82" y="232" fill="#94a3b8" font-size="13" font-weight="600">最近项目</text>
+    <g font-size="14">
+      <rect x="82" y="248" width="354" height="44" rx="12" fill="#0c4a6e"/>
+      <text x="102" y="275" fill="#e0f2fe">季度复盘.docx</text>
+      <rect x="82" y="300" width="354" height="44" rx="12" fill="#1f2937"/>
+      <text x="102" y="327" fill="#e2e8f0">产品路线图.docx</text>
+      <rect x="82" y="352" width="354" height="44" rx="12" fill="#1f2937"/>
+      <text x="102" y="379" fill="#e2e8f0">会议纪要.docx</text>
+    </g>
+    <path d="M82 414h354" stroke="#334155"/>
+    <text x="102" y="440" fill="#cbd5e1" font-size="14">启动新实例 · 固定 · 窗口管理</text>
+
+    <path d="M490 288h92" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M566 276l16 12-16 12" fill="none" stroke="#818cf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="608" y="126" width="538" height="330" rx="24" fill="#111827" stroke="#475569"/>
+    <text x="638" y="164" fill="#e2e8f0" font-size="17" font-weight="600">可取消的安全读取与打开</text>
+    <g font-size="14" text-anchor="middle">
+      <rect x="638" y="194" width="216" height="72" rx="18" fill="#0c4a6e"/>
+      <text x="746" y="222" fill="#e0f2fe" font-weight="600">精确 AUMID</text>
+      <text x="746" y="244" fill="#bae6fd">窗口 → 目录 → 不猜测</text>
+      <rect x="900" y="194" width="216" height="72" rx="18" fill="#312e81"/>
+      <text x="1008" y="222" fill="#eef2ff" font-weight="600">后台 STA</text>
+      <text x="1008" y="244" fill="#c7d2fe">菜单关闭即取消</text>
+    </g>
+    <path d="M746 284v34M1008 284v34" stroke="url(#accent)" stroke-width="3" stroke-linecap="round"/>
+    <rect x="638" y="318" width="478" height="82" rx="18" fill="#134e4a"/>
+    <text x="877" y="349" text-anchor="middle" fill="#ccfbf1" font-size="15" font-weight="600">复用应用可靠启动边界</text>
+    <text x="877" y="374" text-anchor="middle" fill="#99f6e4" font-size="13">桌面应用带文档启动 · 打包应用交给文件关联</text>
+    <text x="638" y="431" fill="#94a3b8" font-size="13">单项损坏或 COM 失败只显示空状态；不会阻塞 Panel，也不会读取 Explorer 私有内存。</text>
+  </g>
+</svg>

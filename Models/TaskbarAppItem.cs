@@ -72,6 +72,46 @@ public sealed class TaskbarAppItem : ObservableObject
     public string WindowPreviewText =>
         ComposeWindowPreview();
     public string? ApplicationUserModelId => RunningTask?.ApplicationUserModelId;
+    public string?
+        JumpListApplicationUserModelId
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(
+                    ApplicationUserModelId))
+            {
+                return ApplicationUserModelId;
+            }
+
+            string? catalogApplicationUserModelId =
+                LaunchItem?.ApplicationUserModelId
+                ?? PinnedLaunches
+                    .Select(
+                        item =>
+                            item.ApplicationUserModelId)
+                    .FirstOrDefault(
+                        value =>
+                            !string.IsNullOrWhiteSpace(
+                                value));
+            if (!string.IsNullOrWhiteSpace(
+                    catalogApplicationUserModelId))
+            {
+                return catalogApplicationUserModelId;
+            }
+
+            const string prefix =
+                "aumid:";
+            return IdentityKey.StartsWith(
+                    prefix,
+                    StringComparison
+                        .OrdinalIgnoreCase)
+                && IdentityKey.Length
+                    > prefix.Length
+                ? IdentityKey[
+                    prefix.Length..]
+                : null;
+        }
+    }
     public string? ExecutablePath => RunningTask?.ExecutablePath;
     public string WindowSummary => WindowCount == 0 ? "未运行" : $"{WindowCount} 个窗口";
     public string StatusSummary =>
@@ -265,6 +305,9 @@ public sealed class TaskbarAppItem : ObservableObject
         OnPropertyChanged(nameof(WindowCountBadgeText));
         OnPropertyChanged(nameof(WindowPreviewText));
         OnPropertyChanged(nameof(ApplicationUserModelId));
+        OnPropertyChanged(
+            nameof(
+                JumpListApplicationUserModelId));
         OnPropertyChanged(nameof(ExecutablePath));
         OnPropertyChanged(nameof(WindowSummary));
         OnPropertyChanged(nameof(StatusSummary));

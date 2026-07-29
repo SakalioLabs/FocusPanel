@@ -592,8 +592,23 @@ public sealed class AppCatalogService : IAppCatalogService
 
     private void EnsureIdentity(AppLaunchItem item)
     {
+        if (!string.IsNullOrWhiteSpace(item.IdentityKey)
+            && !string.IsNullOrWhiteSpace(
+                item.ApplicationUserModelId))
+        {
+            return;
+        }
+
+        ResolvedAppIdentity identity =
+            _identityResolver.ResolveLaunch(item);
         if (string.IsNullOrWhiteSpace(item.IdentityKey))
-            item.IdentityKey = _identityResolver.ResolveLaunch(item).Key;
+            item.IdentityKey = identity.Key;
+        if (string.IsNullOrWhiteSpace(
+                item.ApplicationUserModelId))
+        {
+            item.ApplicationUserModelId =
+                identity.ApplicationUserModelId;
+        }
     }
 
     private void BuildCatalog(

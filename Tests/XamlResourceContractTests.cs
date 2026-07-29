@@ -1432,6 +1432,71 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TaskbarContextMenu_LoadsFlatPublicJumpListOnDemand()
+    {
+        string root =
+            FindRepositoryRoot();
+        string mainWindow =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "MainWindow.xaml.cs"));
+        string jumpLists =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Services",
+                    "AppJumpListService.cs"));
+        string coordinator =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Services",
+                    "ShellCoordinator.cs"));
+
+        Assert.Contains(
+            "TryAddJumpListSection(",
+            mainWindow);
+        Assert.Contains(
+            "LoadJumpListSectionAsync(",
+            mainWindow);
+        Assert.Contains(
+            "menu.Items.Insert(",
+            mainWindow);
+        Assert.Contains(
+            "CancelJumpListLoad();",
+            mainWindow);
+        Assert.Contains(
+            "JumpListItem_Click",
+            mainWindow);
+        Assert.DoesNotContain(
+            "recentRoot.Items.Add",
+            mainWindow);
+        Assert.Contains(
+            "IApplicationDocumentLists",
+            jumpLists);
+        Assert.Contains(
+            "SetAppId(",
+            jumpLists);
+        Assert.Contains(
+            "GetList(",
+            jumpLists);
+        Assert.Contains(
+            "IObjectArray",
+            jumpLists);
+        Assert.Contains(
+            "IShellItem",
+            jumpLists);
+        Assert.Contains(
+            "IShellLinkW",
+            jumpLists);
+        Assert.Contains(
+            "JumpLists.Dispose();",
+            coordinator);
+    }
+
+    [Fact]
     public void TransientPanels_MoveFocusInsideAndReturnItToTheirCompactEntry()
     {
         string root = FindRepositoryRoot();
