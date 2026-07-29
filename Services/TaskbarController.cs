@@ -60,8 +60,10 @@ public sealed class TaskbarController : ITaskbarController
         _native = native;
         _watchdogLauncher = watchdogLauncher;
         _sessionFile = sessionFile;
-        Directory.CreateDirectory(Path.GetDirectoryName(_sessionFile)
-            ?? throw new ArgumentException("恢复会话路径必须包含目录。", nameof(sessionFile)));
+        _ = Path.GetDirectoryName(_sessionFile)
+            ?? throw new ArgumentException(
+                "恢复会话路径必须包含目录。",
+                nameof(sessionFile));
         _disabledFile = _sessionFile + ".disabled";
     }
 
@@ -92,6 +94,9 @@ public sealed class TaskbarController : ITaskbarController
 
         try
         {
+            Directory.CreateDirectory(
+                Path.GetDirectoryName(
+                    _sessionFile)!);
             File.Delete(_disabledFile);
             File.WriteAllText(_sessionFile, JsonSerializer.Serialize(_state, SessionJsonOptions));
         }

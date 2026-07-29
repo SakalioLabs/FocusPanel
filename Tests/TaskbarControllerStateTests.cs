@@ -10,6 +10,35 @@ namespace FocusPanel.Tests;
 public sealed class TaskbarControllerStateTests
 {
     [Fact]
+    public void Construction_DoesNotCreateRecoveryDirectory()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    new FakeTaskbarNativeApi(),
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+
+            Assert.False(
+                Directory.Exists(directory));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
     public void EnableAndRestore_UsesFakeBoundaryAndRestoresOriginalStateOnce()
     {
         string directory = Path.Combine(

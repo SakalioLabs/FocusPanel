@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="420" viewBox="0 0 1120 420" role="img" aria-labelledby="title desc">
+  <title id="title">任务栏恢复会话按需创建</title>
+  <desc id="desc">普通启动只构造控制器而不写磁盘；用户确认接管后创建恢复目录、保存快照，成功后才隐藏原生任务栏，失败则保持原生任务栏可见。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="1" stop-color="#18243a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity=".25"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0l10 5-10 5z" fill="#7dd3fc"/>
+    </marker>
+  </defs>
+  <rect width="1120" height="420" rx="28" fill="url(#bg)"/>
+  <text x="56" y="64" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="28" font-weight="650">恢复能力只在真正接管时落盘</text>
+  <text x="56" y="96" fill="#9fb0c8" font-family="Segoe UI, sans-serif" font-size="15">普通唤出保持轻量，安全顺序仍然先快照、后隐藏</text>
+
+  <g filter="url(#shadow)">
+    <rect x="56" y="140" width="244" height="196" rx="22" fill="#1e2b42" stroke="#334766"/>
+    <circle cx="92" cy="178" r="18" fill="#153d52"/>
+    <path d="M84 178h16m-8-8v16" stroke="#7dd3fc" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="122" y="184" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="19" font-weight="600">普通启动</text>
+    <text x="80" y="226" fill="#cbd5e1" font-family="Segoe UI, sans-serif" font-size="15">构造控制器</text>
+    <text x="80" y="255" fill="#cbd5e1" font-family="Segoe UI, sans-serif" font-size="15">校验会话路径</text>
+    <rect x="80" y="278" width="164" height="34" rx="10" fill="#132033"/>
+    <text x="96" y="300" fill="#86efac" font-family="Segoe UI, sans-serif" font-size="14">不创建目录 · 不写磁盘</text>
+  </g>
+
+  <path d="M320 238h92" stroke="#7dd3fc" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="330" y="220" fill="#9fb0c8" font-family="Segoe UI, sans-serif" font-size="13">用户确认接管</text>
+
+  <g filter="url(#shadow)">
+    <rect x="432" y="120" width="290" height="236" rx="22" fill="#1e2b42" stroke="#4c5d82"/>
+    <rect x="456" y="145" width="242" height="44" rx="12" fill="url(#accent)" opacity=".92"/>
+    <text x="475" y="173" fill="#fff" font-family="Segoe UI, sans-serif" font-size="17" font-weight="600">恢复会话事务</text>
+    <circle cx="476" cy="222" r="11" fill="#60a5fa"/>
+    <text x="498" y="228" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="15">1. 创建恢复目录</text>
+    <circle cx="476" cy="263" r="11" fill="#818cf8"/>
+    <text x="498" y="269" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="15">2. 保存原始状态快照</text>
+    <circle cx="476" cy="304" r="11" fill="#a78bfa"/>
+    <text x="498" y="310" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="15">3. 启动恢复 watchdog</text>
+  </g>
+
+  <path d="M742 206h91" stroke="#86efac" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="758" y="187" fill="#86efac" font-family="Segoe UI, sans-serif" font-size="13">全部成功</text>
+  <path d="M742 285h91" stroke="#fda4af" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="758" y="268" fill="#fda4af" font-family="Segoe UI, sans-serif" font-size="13">任一步失败</text>
+
+  <g filter="url(#shadow)">
+    <rect x="853" y="130" width="211" height="91" rx="20" fill="#17352d" stroke="#32725d"/>
+    <text x="880" y="169" fill="#dcfce7" font-family="Segoe UI, sans-serif" font-size="17" font-weight="600">隐藏主屏任务栏</text>
+    <text x="880" y="194" fill="#9ee8c4" font-family="Segoe UI, sans-serif" font-size="13">已有可恢复会话</text>
+    <rect x="853" y="259" width="211" height="91" rx="20" fill="#3a222b" stroke="#7f4353"/>
+    <text x="880" y="298" fill="#ffe4e6" font-family="Segoe UI, sans-serif" font-size="17" font-weight="600">中止本次接管</text>
+    <text x="880" y="323" fill="#fecdd3" font-family="Segoe UI, sans-serif" font-size="13">原生任务栏保持可见</text>
+  </g>
+</svg>

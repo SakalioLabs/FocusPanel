@@ -39,6 +39,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 待办数量和日历 42 天专注摘要也在工作线程使用独立 `AppDbContext` 查询；快速翻月时旧月份结果不会覆盖当前网格，SQLite 临时繁忙时保留最后有效摘要而不是闪成 0 项。
 - 固定应用在后台读取后保存为线程安全内存快照；前台切换、窗口标题变化及窗口创建/关闭只组合缓存与运行窗口，不再在 WinEvent 高频路径上反复打开 SQLite。固定、取消固定和拖动排序也通过专用后台闸门串行提交，成功后才原子替换缓存；拖放提交期间保持 Panel 展开，退出会等待在途写入完成。
 - 主壳启动时在工作线程用一个无跟踪快照读取首次引导、任务栏替代、主题和全屏热区设置，不再阻塞 `MainViewModel` 构造或为四个键重复打开 SQLite。窗口在快照就绪前保持隐藏，热区、托盘唤出和全局快捷键不会提前展开；就绪后才创建热区并决定显示引导或申请一次任务栏接管。运行中写入继续按设置键合并并由单消费者后台队列串行落盘。
+- 任务栏控制器构造只校验恢复会话路径，不再在普通启动期间同步创建 `%LOCALAPPDATA%\FocusPanel` 目录；只有用户真正启用替代模式时，才在隐藏原任务栏之前准备目录并写入恢复快照。任一步失败都会中止接管，避免出现“任务栏已隐藏但没有可恢复会话”。
 - Windows 开机启动项的初始注册表读取、启用、禁用和失败复读全部通过串行后台协调器执行，主壳构造与设置开关不再同步访问注册表。快速连续切换会按请求顺序写入并以最后选择为准；启动期迟到读取不能覆盖用户操作，写入失败则回滚到后台复读的真实状态，退出前排空已接收的修改。
 - 番茄钟历史统计在工作线程加载；倒计时归零时立即更新界面、播放提醒并把完整会话交给后台单消费者串行保存。开始新一轮、暂停或重置后，上一轮迟到的保存结果不会覆盖当前提示，退出前会排空已经进入队列的会话。
 - OKR 首次打开时由工作线程一次读取本地目标、飞书配置、同步间隔和最后同步时间；SQLite 较大或暂时繁忙不会阻塞工作区展开。手动飞书同步、配置读写和 AI 预留接口也不再同步等待 WPF Dispatcher，旧加载快照不会覆盖刚完成的本地编辑。
@@ -122,6 +123,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![Panel 设置非阻塞持久化](docs/images/shell-preference-background-write.svg)
 
 ![主壳偏好后台加载与接管安全门](docs/images/shell-preference-startup-gate.svg)
+
+![任务栏恢复会话按需创建](docs/images/taskbar-session-lazy-creation.svg)
 
 ![开机启动注册表后台串行协调](docs/images/auto-startup-background-coordinator.svg)
 
@@ -383,7 +386,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.22 `
+  -Version 0.10.23 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -395,7 +398,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：当前用户默认目录的一键首次安装入口；命令行也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win-CustomSetup.exe`：带图形化文件夹选择器的安装入口；在另一台电脑上需要任意自定义目录时优先下载它。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.22-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.23-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
