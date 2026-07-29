@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.10.20',
+    [string]$Version = '0.10.21',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -79,6 +79,7 @@ elseif ($ReplaceCurrentVersion) {
         "FocusPanel-$Version-full.nupkg",
         "FocusPanel-$Version-delta.nupkg",
         'FocusPanel-win-Setup.exe',
+        'FocusPanel-win-CustomSetup.exe',
         'FocusPanel-win.msi',
         'FocusPanel-win-Portable.zip',
         'assets.win.json',
@@ -190,12 +191,38 @@ $msi = Get-ChildItem -LiteralPath $packageDir -Filter '*.msi' |
     Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
 if ($null -eq $msi) {
-    throw 'Packaging completed without producing the custom-location MSI.'
+    throw 'Packaging completed without producing the MSI installer.'
+}
+
+$customInstallerSource = Join-Path $projectRoot 'packaging\CustomInstallerLauncher.cs'
+$customInstaller = Join-Path $packageDir 'FocusPanel-win-CustomSetup.exe'
+$frameworkCsc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+if (-not (Test-Path -LiteralPath $frameworkCsc)) {
+    $frameworkCsc = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
+}
+if (-not (Test-Path -LiteralPath $frameworkCsc)) {
+    throw 'The Windows .NET Framework compiler required for CustomSetup.exe was not found.'
+}
+
+Write-Host 'Creating the custom install-location launcher...'
+& $frameworkCsc `
+    /nologo `
+    /target:winexe `
+    /optimize+ `
+    /reference:System.dll `
+    /reference:System.Drawing.dll `
+    /reference:System.Windows.Forms.dll `
+    "/resource:$($setup.FullName),FocusPanelSetup" `
+    "/out:$customInstaller" `
+    $customInstallerSource
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $customInstaller)) {
+    throw "Custom installer compilation failed with exit code $LASTEXITCODE."
 }
 
 Write-Host ''
 Write-Host "Installer created: $($setup.FullName)"
-Write-Host "Custom-location installer created: $($msi.FullName)"
+Write-Host "Custom-location installer created: $customInstaller"
+Write-Host "MSI installer created: $($msi.FullName)"
 Get-ChildItem -LiteralPath $packageDir |
     Sort-Object Name |
     Select-Object Name, Length, LastWriteTime

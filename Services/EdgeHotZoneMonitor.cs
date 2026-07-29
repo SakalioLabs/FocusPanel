@@ -13,8 +13,8 @@ public sealed class EdgeHotZoneMonitor : IDisposable
     private readonly EdgeHotZoneDetector _detector;
     private readonly DispatcherTimer _pollTimer;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
-    private Rectangle _primaryBounds;
-    private bool _hasPrimaryScreen;
+    private Rectangle _targetBounds;
+    private bool _hasTargetScreen;
     private bool _disposed;
     private bool? _lastAvailability;
 
@@ -55,9 +55,10 @@ public sealed class EdgeHotZoneMonitor : IDisposable
 
     public void RefreshDisplayBounds()
     {
-        Forms.Screen? primary = Forms.Screen.PrimaryScreen;
-        _hasPrimaryScreen = primary != null;
-        _primaryBounds = primary?.Bounds ?? Rectangle.Empty;
+        _targetBounds = ShellDisplayTarget.GetBounds();
+        _hasTargetScreen =
+            _targetBounds.Width > 0
+            && _targetBounds.Height > 0;
         _detector.Reset();
     }
 
@@ -73,10 +74,10 @@ public sealed class EdgeHotZoneMonitor : IDisposable
 
     private void PollTimer_Tick(object? sender, EventArgs e)
     {
-        if (!_hasPrimaryScreen)
+        if (!_hasTargetScreen)
         {
             RefreshDisplayBounds();
-            if (!_hasPrimaryScreen)
+            if (!_hasTargetScreen)
             {
                 SetAvailability(false);
                 return;
@@ -91,7 +92,7 @@ public sealed class EdgeHotZoneMonitor : IDisposable
         }
 
         SetAvailability(true);
-        if (_detector.Update(Forms.Cursor.Position, _primaryBounds, _clock.ElapsedMilliseconds))
+        if (_detector.Update(Forms.Cursor.Position, _targetBounds, _clock.ElapsedMilliseconds))
             OpenRequested?.Invoke(this, EventArgs.Empty);
     }
 

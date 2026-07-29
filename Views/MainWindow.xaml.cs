@@ -16,7 +16,6 @@ using FocusPanel.Models;
 using FocusPanel.Services;
 using FocusPanel.ViewModels;
 using Microsoft.Win32;
-using Forms = System.Windows.Forms;
 
 namespace FocusPanel.Views;
 
@@ -117,7 +116,7 @@ public partial class MainWindow :
         object sender,
         RoutedEventArgs e)
     {
-        PositionAtPrimaryRightEdge();
+        PositionAtTargetRightEdge();
         HideShell();
         await _viewModel
             .WaitForShellPreferencesAsync();
@@ -237,26 +236,42 @@ public partial class MainWindow :
         _edgeIndicator ??= new EdgeIndicatorWindow();
     }
 
-    private void PositionAtPrimaryRightEdge()
+    private void PositionAtTargetRightEdge()
     {
         ApplyPanelPlacement(Width);
     }
 
     private void ApplyPanelPlacement(double widthDip)
     {
-        Forms.Screen? primary = Forms.Screen.PrimaryScreen;
-        if (primary == null)
+        Rectangle targetBounds =
+            ShellDisplayTarget.GetBounds();
+        if (targetBounds.Width <= 0
+            || targetBounds.Height <= 0)
             return;
 
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
-        uint dpi = ShellWindowPlacement.GetPrimaryMonitorDpi();
+        uint dpi =
+            ShellWindowPlacement.GetWindowDpi(hwnd);
         PhysicalWindowBounds bounds =
             ShellWindowPlacement.CalculatePanel(
-                primary.Bounds,
+                targetBounds,
                 dpi,
                 widthDip,
                 ScreenMargin);
         Height = bounds.Height / (dpi / 96.0);
+        ShellWindowPlacement.Apply(hwnd, bounds);
+
+        uint targetDpi =
+            ShellWindowPlacement.GetWindowDpi(hwnd);
+        if (targetDpi == dpi)
+            return;
+
+        bounds = ShellWindowPlacement.CalculatePanel(
+            targetBounds,
+            targetDpi,
+            widthDip,
+            ScreenMargin);
+        Height = bounds.Height / (targetDpi / 96.0);
         ShellWindowPlacement.Apply(hwnd, bounds);
     }
 
@@ -1035,7 +1050,7 @@ public partial class MainWindow :
     {
         Dispatcher.BeginInvoke(() =>
         {
-            PositionAtPrimaryRightEdge();
+            PositionAtTargetRightEdge();
             _toastManager.Reposition();
             _hotZoneMonitor?.RefreshDisplayBounds();
             _edgeIndicator?.Reposition();

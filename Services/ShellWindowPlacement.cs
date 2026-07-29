@@ -45,14 +45,11 @@ internal static class ShellWindowPlacement
             Math.Max(1, widthPhysicalPixels),
             Math.Max(1, screenBounds.Height));
 
-    internal static uint GetPrimaryMonitorDpi()
+    internal static uint GetWindowDpi(IntPtr hwnd)
     {
-        IntPtr taskbar = NativeMethods.FindWindow(
-            "Shell_TrayWnd",
-            null);
-        uint dpi = taskbar == IntPtr.Zero
+        uint dpi = hwnd == IntPtr.Zero
             ? 0
-            : NativeMethods.GetDpiForWindow(taskbar);
+            : NativeMethods.GetDpiForWindow(hwnd);
         if (dpi == 0)
             dpi = NativeMethods.GetDpiForSystem();
         return NormalizeDpi(dpi);
@@ -83,14 +80,6 @@ internal static class ShellWindowPlacement
     {
         internal const uint SwpNoActivate = 0x0010;
         internal const uint SwpNoOwnerZOrder = 0x0200;
-
-        [DllImport(
-            "user32.dll",
-            CharSet = CharSet.Unicode,
-            SetLastError = true)]
-        internal static extern IntPtr FindWindow(
-            string? className,
-            string? windowName);
 
         [DllImport("user32.dll")]
         internal static extern uint GetDpiForWindow(IntPtr hwnd);

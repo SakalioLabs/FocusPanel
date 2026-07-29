@@ -877,13 +877,41 @@ public sealed class XamlResourceContractTests
         Assert.Contains("'--msi', 'true'", packager);
         Assert.Contains("'--instLocation', 'Either'", packager);
         Assert.Contains(
-            "custom-location MSI",
+            "CustomInstallerLauncher.cs",
             packager);
+        Assert.Contains(
+            "FocusPanel-win-CustomSetup.exe",
+            packager);
+        Assert.Contains(
+            "/resource:$($setup.FullName),FocusPanelSetup",
+            packager);
+        Assert.Contains(
+            "'FocusPanel-win-CustomSetup.exe'",
+            publisher);
         Assert.Contains(
             "'FocusPanel-win.msi'",
             publisher);
         Assert.Contains("'RELEASES'", publisher);
         Assert.Contains("-full\\.nupkg", publisher);
+    }
+
+    [Fact]
+    public void ShellSurfaces_ShareOutermostDisplayTarget()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string indicator = File.ReadAllText(
+            Path.Combine(root, "Views", "EdgeIndicatorWindow.xaml.cs"));
+        string hotZone = File.ReadAllText(
+            Path.Combine(root, "Services", "EdgeHotZoneMonitor.cs"));
+
+        Assert.Contains("ShellDisplayTarget.GetBounds()", mainWindow);
+        Assert.Contains("ShellDisplayTarget.GetBounds()", indicator);
+        Assert.Contains("ShellDisplayTarget.GetBounds()", hotZone);
+        Assert.DoesNotContain("Screen.PrimaryScreen", mainWindow);
+        Assert.DoesNotContain("Screen.PrimaryScreen", indicator);
+        Assert.DoesNotContain("Screen.PrimaryScreen", hotZone);
     }
 
     [Fact]

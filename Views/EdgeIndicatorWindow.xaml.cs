@@ -1,9 +1,9 @@
 using System;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using FocusPanel.Services;
-using Forms = System.Windows.Forms;
 
 namespace FocusPanel.Views;
 
@@ -42,21 +42,33 @@ public partial class EdgeIndicatorWindow : Window
 
     public void Reposition()
     {
-        Forms.Screen? primary = Forms.Screen.PrimaryScreen;
-        if (primary == null)
+        Rectangle targetBounds =
+            ShellDisplayTarget.GetBounds();
+        if (targetBounds.Width <= 0
+            || targetBounds.Height <= 0)
             return;
 
-        uint dpi = ShellWindowPlacement.GetPrimaryMonitorDpi();
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        uint dpi =
+            ShellWindowPlacement.GetWindowDpi(hwnd);
         double scale = dpi / 96.0;
         PhysicalWindowBounds bounds =
             ShellWindowPlacement.CalculateIndicator(
-                primary.Bounds,
+                targetBounds,
                 (int)IndicatorPhysicalWidth);
         Width = bounds.Width / scale;
         Height = bounds.Height / scale;
-        ShellWindowPlacement.Apply(
-            new WindowInteropHelper(this).Handle,
-            bounds);
+        ShellWindowPlacement.Apply(hwnd, bounds);
+
+        uint targetDpi =
+            ShellWindowPlacement.GetWindowDpi(hwnd);
+        if (targetDpi == dpi)
+            return;
+
+        scale = targetDpi / 96.0;
+        Width = bounds.Width / scale;
+        Height = bounds.Height / scale;
+        ShellWindowPlacement.Apply(hwnd, bounds);
     }
 
     private void ApplyClickThroughStyles()

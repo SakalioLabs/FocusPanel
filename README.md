@@ -379,7 +379,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.20 `
+  -Version 0.10.21 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -388,9 +388,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
-- `FocusPanel-win-Setup.exe`：默认目录的一键首次安装入口；也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
-- `FocusPanel-win.msi`：带 Windows 安装向导的自定义目录安装入口，可选择当前用户或整机范围。
-- `FocusPanel-0.10.20-full.nupkg`：完整更新包。
+- `FocusPanel-win-Setup.exe`：当前用户默认目录的一键首次安装入口；命令行也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
+- `FocusPanel-win-CustomSetup.exe`：带图形化文件夹选择器的安装入口；在另一台电脑上需要任意自定义目录时优先下载它。
+- `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
+- `FocusPanel-0.10.21-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -398,15 +399,21 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
-正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES`、完整更新包和 MSI。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要通过 `Setup.exe` 或 `Setup.msi` 安装过一次，以后即可在设置页直接完成检查、下载、安装和重启。需要图形化选择目录时使用 MSI；默认目录快速安装时使用 EXE。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载安装器覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
+正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES`、完整更新包、CustomSetup 和 MSI。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要通过任一安装入口安装过一次，以后即可在设置页直接完成检查、下载、安装和重启。需要图形化选择任意目录时使用 `CustomSetup.exe`，默认目录快速安装时使用 `Setup.exe`，企业部署使用 MSI。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载安装器覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
 
 ![GitHub 静态清单一键更新与手动兜底](docs/images/github-static-update-flow.svg)
 
-用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备首次用 EXE 快速安装，或用 MSI 选择目录；后续版本均沿用同一条更新链，不会因自定义目录而回到默认位置。
+用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备首次用 EXE 快速安装，或用 CustomSetup 图形化选择目录；后续版本均沿用同一条更新链，不会因自定义目录而回到默认位置。
 
 ![一键更新流程](docs/images/one-click-update.svg)
 
 源码直接运行的开发版不会原地覆盖自身，设置页会提示先安装 `Setup.exe`。
+
+## 多显示器右缘定位
+
+0.10.21 起，Panel、12px 物理热区和 3px 运行指示条共同选择虚拟桌面中最外侧的右屏，而不是盲目使用主屏右缘。这样当主屏在左、副屏在右时，呼出位置位于整套显示器的最右边，不再卡在两屏接缝；副屏在左时则仍落在主屏外侧。每次分辨率、主屏或缩放改变都会重新选择目标屏幕；窗口先移动到目标屏，再用 `GetDpiForWindow` 读取承载屏幕 DPI并精确计算 76/720 DIP 的实际像素宽度。
+
+![双屏外侧右缘选择](docs/images/multi-monitor-edge-target.svg)
 
 将生成的包上传为 GitHub Release 草稿：
 

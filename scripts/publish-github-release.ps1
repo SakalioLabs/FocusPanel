@@ -106,8 +106,11 @@ if ($Publish) {
     if (-not $hasFullPackage) {
         throw "Latest release '$releaseTag' is missing the full Velopack package."
     }
+    if ($assetNames -notcontains 'FocusPanel-win-CustomSetup.exe') {
+        throw "Latest release '$releaseTag' is missing the custom-location installer."
+    }
     if ($assetNames -notcontains 'FocusPanel-win.msi') {
-        throw "Latest release '$releaseTag' is missing the custom-location MSI installer."
+        throw "Latest release '$releaseTag' is missing the MSI installer."
     }
 
     Write-Host "FocusPanel $releaseTag is published, marked latest, and contains a valid update feed."

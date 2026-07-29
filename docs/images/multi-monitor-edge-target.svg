@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101825"/>
+      <stop offset="1" stop-color="#242d46"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#79c7ff" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#9f8cff" stop-opacity=".46"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">双屏不再把 Panel 放在接缝</text>
+  <text x="54" y="98" fill="#b9c8df" font-family="Segoe UI, Microsoft YaHei" font-size="16">Panel、热区与指示条共享同一个最外侧右屏目标，并使用该屏幕自己的 DPI</text>
+
+  <rect x="54" y="144" width="410" height="260" rx="20" fill="#203047" stroke="#4c6483" stroke-width="2"/>
+  <rect x="464" y="112" width="540" height="320" rx="20" fill="#243653" stroke="#6381a8" stroke-width="2"/>
+  <text x="76" y="178" fill="#dbe8f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">主屏 · 1920×1080 · 100%</text>
+  <text x="488" y="146" fill="#dbe8f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">右侧副屏 · 2560×1440 · 150%</text>
+
+  <line x1="464" y1="112" x2="464" y2="432" stroke="#ffbd66" stroke-width="4" stroke-dasharray="8 8"/>
+  <text x="444" y="464" text-anchor="end" fill="#ffce8a" font-family="Segoe UI, Microsoft YaHei" font-size="14">旧：主屏右缘 = 两屏接缝</text>
+
+  <rect x="884" y="134" width="102" height="276" rx="22" fill="url(#panel)" stroke="#b9e4ff" stroke-width="2"/>
+  <rect x="997" y="112" width="5" height="320" rx="2.5" fill="#7dd8ff"/>
+  <text x="935" y="270" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="700">Panel</text>
+  <text x="935" y="294" text-anchor="middle" fill="#eef8ff" font-family="Segoe UI, Microsoft YaHei" font-size="13">76 / 720 DIP</text>
+  <path d="M1048 250 H1008" stroke="#7dd8ff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M1018 240 L1008 250 L1018 260" fill="none" stroke="#7dd8ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1050" y="224" text-anchor="end" fill="#9fe4ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">新：最外侧右缘</text>
+
+  <rect x="190" y="462" width="740" height="38" rx="15" fill="#1e473e" stroke="#3f806d"/>
+  <text x="560" y="487" text-anchor="middle" fill="#a8edcd" font-family="Segoe UI, Microsoft YaHei" font-size="15">显示设置变化 → 重新选屏 → 读取目标 DPI → 同步定位 Panel / 12px 热区 / 3px 指示条</text>
+</svg>
