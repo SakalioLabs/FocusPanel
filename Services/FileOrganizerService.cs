@@ -51,6 +51,7 @@ public class FileOrganizerService : IDisposable
         DesktopItemsCreated;
 
     private readonly SemaphoreSlim _organizeGate = new(1, 1);
+    private readonly SemaphoreSlim _visibilityGate = new(1, 1);
     private const int DebounceInterval = 500;
 
     public FileOrganizerService()
@@ -195,6 +196,9 @@ public class FileOrganizerService : IDisposable
         }
         _ = InvokeOnUiAsync(() =>
         {
+            if (_disposed)
+                return;
+
             DesktopFile? renamed = AllFiles
                 .FirstOrDefault(item =>
                     string.Equals(
@@ -280,7 +284,8 @@ public class FileOrganizerService : IDisposable
         if (_disposed)
             return;
 
-        await _refreshGate.WaitAsync();
+        await _refreshGate.WaitAsync()
+            .ConfigureAwait(false);
         try
         {
             DesktopChangeBatch batch =
@@ -289,15 +294,23 @@ public class FileOrganizerService : IDisposable
                 return;
 
             if (batch.RequiresFullRefresh)
-                await RefreshFiles();
+                await RefreshFilesCore()
+                    .ConfigureAwait(false);
             else
-                await RefreshChangedPaths(batch.Paths);
+                await RefreshChangedPaths(batch.Paths)
+                    .ConfigureAwait(false);
 
-            if (batch.CreatedPaths.Count > 0)
+            if (!_disposed
+                && batch.CreatedPaths.Count > 0)
             {
                 await InvokeOnUiAsync(() =>
-                    DesktopItemsCreated?.Invoke(
-                        batch.CreatedPaths));
+                {
+                    if (!_disposed)
+                    {
+                        DesktopItemsCreated?.Invoke(
+                            batch.CreatedPaths);
+                    }
+                }).ConfigureAwait(false);
             }
         }
         catch (Exception ex)
@@ -326,8 +339,14 @@ public class FileOrganizerService : IDisposable
                 .Cast<DesktopItemRefresh>()
                 .ToArray());
 
+        if (_disposed)
+            return;
+
         await InvokeOnUiAsync(() =>
         {
+            if (_disposed)
+                return;
+
             DesktopFileCollectionSynchronizer.Apply(
                 AllFiles,
                 Files,
@@ -557,14 +576,26 @@ public class FileOrganizerService : IDisposable
     {
         Application? application =
             Application.Current;
-        if (application == null
-            || application.Dispatcher.CheckAccess())
+        if (application == null)
         {
             action();
             return Task.CompletedTask;
         }
 
-        return application.Dispatcher
+        System.Windows.Threading.Dispatcher dispatcher =
+            application.Dispatcher;
+        if (dispatcher.HasShutdownStarted
+            || dispatcher.HasShutdownFinished)
+        {
+            return Task.CompletedTask;
+        }
+        if (dispatcher.CheckAccess())
+        {
+            action();
+            return Task.CompletedTask;
+        }
+
+        return dispatcher
             .InvokeAsync(action)
             .Task;
     }
@@ -611,6 +642,27 @@ public class FileOrganizerService : IDisposable
     }
 
     public async Task RefreshFiles()
+    {
+        if (_disposed)
+            return;
+
+        await _refreshGate.WaitAsync()
+            .ConfigureAwait(false);
+        try
+        {
+            if (!_disposed)
+            {
+                await RefreshFilesCore()
+                    .ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            _refreshGate.Release();
+        }
+    }
+
+    private async Task RefreshFilesCore()
     {
         try
         {
@@ -715,11 +767,17 @@ public class FileOrganizerService : IDisposable
                 return fileList.OrderByDescending(f => f.FileType == "Folder").ThenBy(f => f.Name).ToList();
             });
 
-            await Application.Current.Dispatcher.InvokeAsync(() =>
+            if (_disposed)
+                return;
+
+            await InvokeOnUiAsync(() =>
             {
+                if (_disposed)
+                    return;
+
                 UpdateFilesIncremental(files);
                 FilesChanged?.Invoke();
-            });
+            }).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -961,6 +1019,19 @@ public class FileOrganizerService : IDisposable
         string partitionName,
         bool allowCommonDesktopElevation = false)
     {
+        await RunVisibilityMutationAsync(
+            () =>
+                HideFileFromDesktopPathCore(
+                    fullPath,
+                    partitionName,
+                    allowCommonDesktopElevation));
+    }
+
+    private async Task HideFileFromDesktopPathCore(
+        string fullPath,
+        string partitionName,
+        bool allowCommonDesktopElevation)
+    {
         fullPath = Path.GetFullPath(fullPath);
         DesktopDropLocation location = DesktopDropPolicy.Classify(
             fullPath,
@@ -1067,19 +1138,26 @@ public class FileOrganizerService : IDisposable
             throw;
         }
 
-        // Update memory
-        if (AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile file)
+        await InvokeOnUiAsync(() =>
         {
-            file.IsHidden = true;
-            file.FullPath = fullPath;
-        }
+            if (_disposed)
+                return;
 
-        await Application.Current.Dispatcher.InvokeAsync(() =>
-        {
-            var vf = Files.FirstOrDefault(f => f.Name == fileName);
-            if (vf != null) Files.Remove(vf);
+            if (AllFiles.FirstOrDefault(
+                    f => f.Name == fileName)
+                is DesktopFile file)
+            {
+                file.IsHidden = true;
+                file.FullPath = fullPath;
+            }
+
+            DesktopFile? visibleFile =
+                Files.FirstOrDefault(
+                    f => f.Name == fileName);
+            if (visibleFile != null)
+                Files.Remove(visibleFile);
             FilesChanged?.Invoke();
-        });
+        }).ConfigureAwait(false);
 
         IconHelper.ClearCache(fileName);
     }
@@ -1088,6 +1166,19 @@ public class FileOrganizerService : IDisposable
     // 取消收纳：属性模式恢复原属性；旧仓库模式恢复到桌面
     // ============================================================
     public async Task RestoreFileToDesktop(string fileName, double? desktopX = null, double? desktopY = null)
+    {
+        await RunVisibilityMutationAsync(
+            () =>
+                RestoreFileToDesktopCore(
+                    fileName,
+                    desktopX,
+                    desktopY));
+    }
+
+    private async Task RestoreFileToDesktopCore(
+        string fileName,
+        double? desktopX,
+        double? desktopY)
     {
         string restoredPath = Path.Combine(_desktopPath, fileName);
 
@@ -1178,22 +1269,56 @@ public class FileOrganizerService : IDisposable
             context.SaveChanges();
         });
 
-        // Update memory
-        if (AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile file)
+        await InvokeOnUiAsync(() =>
         {
-            file.IsHidden = false;
-            file.Name = Path.GetFileName(restoredPath);
-            file.FullPath = restoredPath;
-            if (desktopX.HasValue) file.DesktopX = desktopX.Value;
-            if (desktopY.HasValue) file.DesktopY = desktopY.Value;
-        }
+            if (_disposed)
+                return;
 
-        await Application.Current.Dispatcher.InvokeAsync(() =>
-        {
-            if (!Files.Any(f => f.Name == fileName) && AllFiles.FirstOrDefault(f => f.Name == fileName) is DesktopFile df)
-                Files.Add(df);
+            DesktopFile? restoredFile =
+                AllFiles.FirstOrDefault(
+                    f => f.Name == fileName);
+            if (restoredFile != null)
+            {
+                restoredFile.IsHidden = false;
+                restoredFile.Name =
+                    Path.GetFileName(restoredPath);
+                restoredFile.FullPath = restoredPath;
+                if (desktopX.HasValue)
+                    restoredFile.DesktopX =
+                        desktopX.Value;
+                if (desktopY.HasValue)
+                    restoredFile.DesktopY =
+                        desktopY.Value;
+            }
+
+            if (!Files.Any(
+                    f => f.Name == fileName)
+                && restoredFile != null)
+            {
+                Files.Add(restoredFile);
+            }
             FilesChanged?.Invoke();
-        });
+        }).ConfigureAwait(false);
+    }
+
+    private async Task RunVisibilityMutationAsync(
+        Func<Task> operation)
+    {
+        await _visibilityGate.WaitAsync();
+        try
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(
+                    nameof(FileOrganizerService));
+            }
+
+            await operation();
+        }
+        finally
+        {
+            _visibilityGate.Release();
+        }
     }
 
     public async Task SaveDesktopPosition(string fileName, double desktopX, double desktopY)
@@ -1362,6 +1487,16 @@ public class FileOrganizerService : IDisposable
         await _organizeGate.WaitAsync();
         try
         {
+            if (_disposed)
+            {
+                return new DesktopOrganizeResult(
+                    0,
+                    0,
+                    0,
+                    0,
+                    Array.Empty<string>());
+            }
+
             var candidates = Files
                 .Select(file => new DesktopAutoOrganizeItem(
                     file.Name,
