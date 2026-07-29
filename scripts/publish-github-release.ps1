@@ -78,8 +78,8 @@ if ($Publish) {
         Where-Object { $_.name -eq $customInstallerName } |
         Select-Object -First 1
     $customInstallerLength = (Get-Item -LiteralPath $customInstallerPath).Length
-    if ($null -ne $existingCustomInstaller
-        -and $existingCustomInstaller.size -ne $customInstallerLength) {
+    if ($null -ne $existingCustomInstaller -and
+        $existingCustomInstaller.size -ne $customInstallerLength) {
         Invoke-RestMethod `
             -Method Delete `
             -Uri "$apiBaseUrl/releases/assets/$($existingCustomInstaller.id)" `
