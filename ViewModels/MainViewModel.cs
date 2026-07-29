@@ -939,38 +939,110 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        int pinnedCount =
-            TaskbarApps.Count(
-                item => item.IsPinned);
-        int sourceIndex = source.IsPinned
-            ? TaskbarApps
-                .TakeWhile(item =>
-                    !ReferenceEquals(
-                        item,
-                        source))
-                .Count(item =>
-                    item.IsPinned)
-            : -1;
-        int targetIndex = TaskbarApps
-            .TakeWhile(item => !ReferenceEquals(item, target))
-            .Count(item => item.IsPinned);
-        int insertionIndex =
-            TaskbarAppDropPolicy
-                .GetInsertionIndex(
-                    source.IsPinned,
-                    sourceIndex,
-                    target.IsPinned,
-                    targetIndex,
-                    pinnedCount,
-                    placement);
-        if (!await TryMovePinnedAsync(
+        AppLaunchItem? relativeTarget =
+            target.IsPinned
+                ? target.CreateLaunchItem()
+                : null;
+        if (target.IsPinned
+            && relativeTarget == null)
+        {
+            return;
+        }
+        if (!await TryMovePinnedRelativeAsync(
                 launch,
-                insertionIndex))
+                relativeTarget,
+                placement))
         {
             RefreshTaskbarApps();
             RefreshSearchResults();
             return;
         }
+        RefreshTaskbarApps();
+        RefreshSearchResults();
+    }
+
+    [RelayCommand(
+        CanExecute =
+            nameof(CanMoveTaskbarAppUp))]
+    private async Task MoveTaskbarAppUp(
+        TaskbarAppItem? task) =>
+        await MoveTaskbarAppByOffset(
+            task,
+            -1);
+
+    private bool CanMoveTaskbarAppUp(
+        TaskbarAppItem? task) =>
+        CanMoveTaskbarAppByOffset(
+            task,
+            -1);
+
+    [RelayCommand(
+        CanExecute =
+            nameof(CanMoveTaskbarAppDown))]
+    private async Task MoveTaskbarAppDown(
+        TaskbarAppItem? task) =>
+        await MoveTaskbarAppByOffset(
+            task,
+            1);
+
+    private bool CanMoveTaskbarAppDown(
+        TaskbarAppItem? task) =>
+        CanMoveTaskbarAppByOffset(
+            task,
+            1);
+
+    private bool CanMoveTaskbarAppByOffset(
+        TaskbarAppItem? task,
+        int offset)
+    {
+        if (_isDisposed
+            || task?.IsPinned != true)
+        {
+            return false;
+        }
+
+        int index = TaskbarApps
+            .TakeWhile(item =>
+                !ReferenceEquals(
+                    item,
+                    task))
+            .Count(item =>
+                item.IsPinned);
+        int pinnedCount =
+            TaskbarApps.Count(item =>
+                item.IsPinned);
+        return TaskbarPinnedStepPolicy
+            .GetTargetIndex(
+                index,
+                pinnedCount,
+                offset)
+            .HasValue;
+    }
+
+    private async Task MoveTaskbarAppByOffset(
+        TaskbarAppItem? task,
+        int offset)
+    {
+        if (!CanMoveTaskbarAppByOffset(
+                task,
+                offset))
+        {
+            return;
+        }
+
+        AppLaunchItem? launch =
+            task!.CreateLaunchItem();
+        if (launch == null)
+            return;
+        if (!await TryMovePinnedByOffsetAsync(
+                launch,
+                offset))
+        {
+            RefreshTaskbarApps();
+            RefreshSearchResults();
+            return;
+        }
+
         RefreshTaskbarApps();
         RefreshSearchResults();
     }
@@ -2210,17 +2282,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
         return false;
     }
 
-    private async Task<bool> TryMovePinnedAsync(
+    private async Task<bool>
+        TryMovePinnedRelativeAsync(
         AppLaunchItem app,
-        int newIndex)
+        AppLaunchItem? target,
+        TaskbarDropPlacement placement)
     {
         bool succeeded;
         try
         {
             succeeded =
-                await _appCatalog.MovePinnedAsync(
+                await _appCatalog
+                    .MovePinnedRelativeAsync(
                     app,
-                    newIndex);
+                    target,
+                    placement);
         }
         catch
         {
@@ -2237,6 +2313,39 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ReportTaskbarActionFailure(
             $"无法保存“{app.DisplayName}”的新位置。"
             + "固定状态已经保留，请稍后重新排序。");
+        return false;
+    }
+
+    private async Task<bool>
+        TryMovePinnedByOffsetAsync(
+            AppLaunchItem app,
+            int offset)
+    {
+        bool succeeded;
+        try
+        {
+            succeeded =
+                await _appCatalog
+                    .MovePinnedByOffsetAsync(
+                        app,
+                        offset);
+        }
+        catch
+        {
+            succeeded = false;
+        }
+        if (_isDisposed)
+            return false;
+        if (succeeded)
+        {
+            SystemActionMessage =
+                string.Empty;
+            return true;
+        }
+
+        ReportTaskbarActionFailure(
+            $"无法移动“{app.DisplayName}”。"
+            + "固定状态已经保留，请稍后重试。");
         return false;
     }
 

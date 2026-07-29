@@ -197,7 +197,8 @@ public sealed class TaskbarAppPresentationTests
             "编辑器，已固定 · 未运行",
             item.AccessibleName);
         Assert.Equal(
-            "左键启动，右键管理应用；Shift+左键或中键启动新实例",
+            "左键启动，右键管理应用；Shift+左键或中键启动新实例；"
+            + "Alt+↑/↓调整固定顺序",
             item.InteractionHint);
     }
 

@@ -1601,8 +1601,23 @@ public sealed class XamlResourceContractTests
         Assert.Contains("SystemManagementTool.TaskManager", mainWindow);
         Assert.Contains("TaskbarApp_Click", mainWindow);
         Assert.Contains("TaskbarApp_PreviewMouseDown", mainWindow);
+        Assert.Contains(
+            "PreviewKeyDown=\"TaskbarApp_PreviewKeyDown\"",
+            mainWindow);
         Assert.Contains("MouseButton.Middle", codeBehind);
         Assert.Contains("Keyboard.Modifiers", codeBehind);
+        Assert.Contains(
+            "MoveTaskbarAppUpCommand",
+            codeBehind);
+        Assert.Contains(
+            "MoveTaskbarAppDownCommand",
+            codeBehind);
+        Assert.Contains(
+            "InputGestureText = \"Alt+↑\"",
+            codeBehind);
+        Assert.Contains(
+            "InputGestureText = \"Alt+↓\"",
+            codeBehind);
         Assert.Contains("LaunchNewTaskbarAppCommand.Execute(task)", codeBehind);
         Assert.Contains("PopulateTaskbarAppContextMenu", codeBehind);
         Assert.Contains("CloseWindowCommand", codeBehind);
@@ -1629,7 +1644,12 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("ObservableCollection<AppLaunchItem> PinnedApps", viewModel);
         Assert.DoesNotContain("ObservableCollection<WindowTaskItem> RunningApps", viewModel);
         Assert.Contains("TrySetPinnedAsync(", viewModel);
-        Assert.Contains("TryMovePinnedAsync(", viewModel);
+        Assert.Contains(
+            "TryMovePinnedRelativeAsync(",
+            viewModel);
+        Assert.Contains(
+            "TryMovePinnedByOffsetAsync(",
+            viewModel);
     }
 
     [Fact]
@@ -3677,6 +3697,12 @@ public sealed class XamlResourceContractTests
             "Task<bool> MovePinnedAsync(",
             appContract);
         Assert.Contains(
+            "Task<bool> MovePinnedRelativeAsync(",
+            appContract);
+        Assert.Contains(
+            "Task<bool> MovePinnedByOffsetAsync(",
+            appContract);
+        Assert.Contains(
             "GetPinnedEntitySnapshot()",
             catalog);
         Assert.Contains(
@@ -3708,7 +3734,10 @@ public sealed class XamlResourceContractTests
             "TrySetPinnedAsync(",
             viewModel);
         Assert.Contains(
-            "TryMovePinnedAsync(",
+            "TryMovePinnedRelativeAsync(",
+            viewModel);
+        Assert.Contains(
+            "TryMovePinnedByOffsetAsync(",
             viewModel);
         Assert.Contains(
             "Windows 暂时阻止了前台切换",

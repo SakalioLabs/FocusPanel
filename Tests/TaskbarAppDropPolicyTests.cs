@@ -176,4 +176,43 @@ public sealed class TaskbarAppDropPolicyTests
                     TaskbarDropPlacement
                         .Before));
     }
+
+    [Theory]
+    [InlineData(0, 3, 1, 1)]
+    [InlineData(1, 3, -1, 0)]
+    [InlineData(1, 3, 1, 2)]
+    [InlineData(2, 3, -1, 1)]
+    public void StepMove_ReturnsAdjacentPinnedIndex(
+        int currentIndex,
+        int pinnedCount,
+        int offset,
+        int expected)
+    {
+        Assert.Equal(
+            expected,
+            TaskbarPinnedStepPolicy
+                .GetTargetIndex(
+                    currentIndex,
+                    pinnedCount,
+                    offset));
+    }
+
+    [Theory]
+    [InlineData(0, 3, -1)]
+    [InlineData(2, 3, 1)]
+    [InlineData(-1, 3, 1)]
+    [InlineData(0, 0, 1)]
+    [InlineData(0, 3, 0)]
+    public void StepMove_RejectsUnavailableDirection(
+        int currentIndex,
+        int pinnedCount,
+        int offset)
+    {
+        Assert.Null(
+            TaskbarPinnedStepPolicy
+                .GetTargetIndex(
+                    currentIndex,
+                    pinnedCount,
+                    offset));
+    }
 }

@@ -18,5 +18,12 @@ public interface IAppCatalogService : IDisposable
     Task<bool> MovePinnedAsync(
         AppLaunchItem app,
         int newIndex);
+    Task<bool> MovePinnedRelativeAsync(
+        AppLaunchItem app,
+        AppLaunchItem? target,
+        TaskbarDropPlacement placement);
+    Task<bool> MovePinnedByOffsetAsync(
+        AppLaunchItem app,
+        int offset);
     void Refresh();
 }

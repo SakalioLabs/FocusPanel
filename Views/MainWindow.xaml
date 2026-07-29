@@ -792,6 +792,7 @@
                                                 <Button Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         AllowDrop="True"
                                                         PreviewMouseDown="TaskbarApp_PreviewMouseDown"
+                                                        PreviewKeyDown="TaskbarApp_PreviewKeyDown"
                                                         PreviewMouseLeftButtonDown="TaskbarApp_PreviewMouseLeftButtonDown"
                                                         PreviewMouseMove="TaskbarApp_PreviewMouseMove"
                                                         DragOver="TaskbarApp_DragOver"

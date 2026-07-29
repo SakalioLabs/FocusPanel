@@ -92,9 +92,13 @@ public sealed class TaskbarAppItem : ObservableObject
                 : IsRunning
                     ? "左键切换或最小化，右键管理应用"
                     : "左键启动，右键管理应用";
-            return CanLaunchNewInstance
+            string interaction =
+                CanLaunchNewInstance
                 ? $"{primaryAction}；Shift+左键或中键启动新实例"
                 : primaryAction;
+            return IsPinned
+                ? $"{interaction}；Alt+↑/↓调整固定顺序"
+                : interaction;
         }
     }
     public bool ShowsDropBefore =>

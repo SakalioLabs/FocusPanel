@@ -76,7 +76,7 @@ public sealed class AppCatalogPinnedWriteTests
                 return Success(
                     new[] { Persisted(app, 0) });
             },
-            movePinned: (_, _) =>
+            movePinned: _ =>
             {
                 moveStarted.Set();
                 return Success(
@@ -148,7 +148,7 @@ public sealed class AppCatalogPinnedWriteTests
         AppLaunchItem first = Demo("First");
         AppLaunchItem second = Demo("Second");
         using var service = CreateService(
-            movePinned: (_, _) =>
+            movePinned: _ =>
                 Success(
                     new[]
                     {
@@ -242,10 +242,129 @@ public sealed class AppCatalogPinnedWriteTests
                 TimeSpan.FromSeconds(2));
     }
 
+    [Fact]
+    public async Task RelativeAndStepMoves_KeepTypedIntent()
+    {
+        var requests =
+            new List<PinnedAppMoveRequest>();
+        AppLaunchItem source =
+            Demo("Editor");
+        AppLaunchItem target =
+            Demo("Terminal");
+        using var service = CreateService(
+            movePinned: request =>
+            {
+                requests.Add(request);
+                return Success(
+                    new[]
+                    {
+                        Persisted(
+                            source,
+                            0)
+                    });
+            });
+
+        Assert.True(
+            await service
+                .MovePinnedRelativeAsync(
+                    source,
+                    target,
+                    TaskbarDropPlacement
+                        .Before));
+        Assert.True(
+            await service
+                .MovePinnedByOffsetAsync(
+                    source,
+                    -1));
+
+        Assert.Equal(2, requests.Count);
+        Assert.Same(
+            target,
+            requests[0].RelativeTarget);
+        Assert.Equal(
+            TaskbarDropPlacement.Before,
+            requests[0].Placement);
+        Assert.Null(requests[0].Offset);
+        Assert.Equal(
+            -1,
+            requests[1].Offset);
+        Assert.Null(
+            requests[1].Placement);
+    }
+
+    [Fact]
+    public async Task RelativeAndStepMoves_AreStrictlySerialized()
+    {
+        using var firstStarted =
+            new ManualResetEventSlim();
+        using var releaseFirst =
+            new ManualResetEventSlim();
+        int calls = 0;
+        int active = 0;
+        int maximumActive = 0;
+        AppLaunchItem source =
+            Demo("Editor");
+        using var service = CreateService(
+            movePinned: _ =>
+            {
+                int current =
+                    Interlocked.Increment(
+                        ref active);
+                maximumActive = Math.Max(
+                    maximumActive,
+                    current);
+                if (Interlocked.Increment(
+                        ref calls) == 1)
+                {
+                    firstStarted.Set();
+                    releaseFirst.Wait(
+                        TimeSpan
+                            .FromSeconds(2));
+                }
+
+                Interlocked.Decrement(
+                    ref active);
+                return Success(
+                    new[]
+                    {
+                        Persisted(
+                            source,
+                            0)
+                    });
+            });
+
+        Task<bool> relative =
+            service.MovePinnedRelativeAsync(
+                source,
+                source,
+                TaskbarDropPlacement.After);
+        Assert.True(
+            firstStarted.Wait(
+                TimeSpan.FromSeconds(2)));
+        Task<bool> step =
+            service.MovePinnedByOffsetAsync(
+                source,
+                1);
+
+        await Task.Delay(100);
+        Assert.Equal(1, calls);
+        releaseFirst.Set();
+        bool[] results =
+            await Task.WhenAll(
+                    relative,
+                    step)
+                .WaitAsync(
+                    TimeSpan.FromSeconds(2));
+
+        Assert.All(results, Assert.True);
+        Assert.Equal(2, calls);
+        Assert.Equal(1, maximumActive);
+    }
+
     private static AppCatalogService CreateService(
         Func<AppLaunchItem, bool, PinnedAppMutationResult>?
             setPinned = null,
-        Func<AppLaunchItem, int, PinnedAppMutationResult>?
+        Func<PinnedAppMoveRequest, PinnedAppMutationResult>?
             movePinned = null) =>
         new(
             new FakeIdentityResolver(),
@@ -258,7 +377,7 @@ public sealed class AppCatalogPinnedWriteTests
                     Success(
                         Array.Empty<PinnedApp>())),
                 movePinned
-                ?? ((_, _) =>
+                ?? (_ =>
                     new PinnedAppMutationResult(
                         false,
                         Array.Empty<PinnedApp>()))));

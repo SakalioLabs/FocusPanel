@@ -17,10 +17,17 @@ internal sealed record PinnedAppMutationResult(
     bool Succeeded,
     IReadOnlyList<PinnedApp> Ordered);
 
+internal readonly record struct PinnedAppMoveRequest(
+    AppLaunchItem Source,
+    AppLaunchItem? RelativeTarget,
+    TaskbarDropPlacement? Placement,
+    int? Offset,
+    int? AbsoluteIndex);
+
 internal sealed record PinnedAppPersistenceHandlers(
     Func<AppLaunchItem, bool, PinnedAppMutationResult>
         SetPinned,
-    Func<AppLaunchItem, int, PinnedAppMutationResult>
+    Func<PinnedAppMoveRequest, PinnedAppMutationResult>
         MovePinned);
 
 public sealed class AppCatalogService : IAppCatalogService
@@ -271,7 +278,43 @@ public sealed class AppCatalogService : IAppCatalogService
 
     public async Task<bool> MovePinnedAsync(
         AppLaunchItem app,
-        int newIndex)
+        int newIndex) =>
+        await MovePinnedCoreAsync(
+                new PinnedAppMoveRequest(
+                    app,
+                    null,
+                    null,
+                    null,
+                    newIndex))
+            .ConfigureAwait(false);
+
+    public async Task<bool> MovePinnedRelativeAsync(
+        AppLaunchItem app,
+        AppLaunchItem? target,
+        TaskbarDropPlacement placement) =>
+        await MovePinnedCoreAsync(
+                new PinnedAppMoveRequest(
+                    app,
+                    target,
+                    placement,
+                    null,
+                    null))
+            .ConfigureAwait(false);
+
+    public async Task<bool> MovePinnedByOffsetAsync(
+        AppLaunchItem app,
+        int offset) =>
+        await MovePinnedCoreAsync(
+                new PinnedAppMoveRequest(
+                    app,
+                    null,
+                    null,
+                    offset,
+                    null))
+            .ConfigureAwait(false);
+
+    private async Task<bool> MovePinnedCoreAsync(
+        PinnedAppMoveRequest request)
     {
         if (_disposed)
             return false;
@@ -288,8 +331,7 @@ public sealed class AppCatalogService : IAppCatalogService
                         () =>
                             _pinnedPersistence
                                 .MovePinned(
-                                    app,
-                                    newIndex))
+                                    request))
                     .ConfigureAwait(false);
             if (!result.Succeeded)
                 return false;
@@ -311,18 +353,63 @@ public sealed class AppCatalogService : IAppCatalogService
 
     private static PinnedAppMutationResult
         MovePinnedPersistence(
-        AppLaunchItem app,
-        int newIndex)
+        PinnedAppMoveRequest request)
     {
         using var context = new AppDbContext();
         var ordered = context.PinnedApps.OrderBy(item => item.OrderIndex).ToList();
         var target = ordered.FirstOrDefault(item =>
-            string.Equals(BuildKey(item), BuildKey(app), StringComparison.OrdinalIgnoreCase));
+            string.Equals(
+                BuildKey(item),
+                BuildKey(request.Source),
+                StringComparison.OrdinalIgnoreCase));
         if (target == null)
         {
             return new PinnedAppMutationResult(
                 false,
                 ordered);
+        }
+
+        int oldIndex =
+            ordered.IndexOf(target);
+        int newIndex;
+        if (request.Offset is int offset)
+        {
+            newIndex = oldIndex + offset;
+        }
+        else if (request.Placement
+                 is TaskbarDropPlacement placement)
+        {
+            PinnedApp? relativeTarget =
+                request.RelativeTarget == null
+                    ? null
+                    : ordered.FirstOrDefault(item =>
+                        string.Equals(
+                            BuildKey(item),
+                            BuildKey(
+                                request
+                                    .RelativeTarget),
+                            StringComparison
+                                .OrdinalIgnoreCase));
+            int relativeIndex =
+                relativeTarget == null
+                    ? ordered.Count
+                    : ordered.IndexOf(
+                        relativeTarget);
+            newIndex =
+                TaskbarAppDropPolicy
+                    .GetInsertionIndex(
+                        true,
+                        oldIndex,
+                        relativeTarget != null,
+                        relativeIndex,
+                        ordered.Count,
+                        placement);
+        }
+        else
+        {
+            newIndex =
+                request.AbsoluteIndex
+                ?? oldIndex;
         }
 
         PinnedAppOrdering.Move(ordered, target, newIndex);

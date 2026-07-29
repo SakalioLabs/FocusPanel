@@ -825,6 +825,38 @@ public partial class MainWindow :
         e.Handled = true;
     }
 
+    private void TaskbarApp_PreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (!Keyboard.Modifiers.HasFlag(
+                ModifierKeys.Alt)
+            || e.Key
+                is not (
+                    Key.Up
+                    or Key.Down)
+            || sender
+                is not FrameworkElement
+                {
+                    DataContext:
+                        TaskbarAppItem task
+                }
+            || !task.IsPinned)
+        {
+            return;
+        }
+
+        ICommand command =
+            e.Key == Key.Up
+                ? _viewModel
+                    .MoveTaskbarAppUpCommand
+                : _viewModel
+                    .MoveTaskbarAppDownCommand;
+        if (command.CanExecute(task))
+            command.Execute(task);
+        e.Handled = true;
+    }
+
     private void TaskbarApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
         e.Handled = true;
@@ -863,6 +895,29 @@ public partial class MainWindow :
             Command = _viewModel.ToggleTaskbarPinCommand,
             CommandParameter = task
         });
+        if (task.IsPinned)
+        {
+            menu.Items.Add(
+                new Separator());
+            menu.Items.Add(new MenuItem
+            {
+                Header = "上移固定应用",
+                InputGestureText = "Alt+↑",
+                Command =
+                    _viewModel
+                        .MoveTaskbarAppUpCommand,
+                CommandParameter = task
+            });
+            menu.Items.Add(new MenuItem
+            {
+                Header = "下移固定应用",
+                InputGestureText = "Alt+↓",
+                Command =
+                    _viewModel
+                        .MoveTaskbarAppDownCommand,
+                CommandParameter = task
+            });
+        }
         if (task.Windows.Count > 0)
             menu.Items.Add(new Separator());
 

@@ -87,3 +87,26 @@ internal static class TaskbarAppDropPolicy
             maximumIndex);
     }
 }
+
+internal static class TaskbarPinnedStepPolicy
+{
+    internal static int? GetTargetIndex(
+        int currentIndex,
+        int pinnedCount,
+        int offset)
+    {
+        if (pinnedCount <= 0
+            || currentIndex < 0
+            || currentIndex >= pinnedCount
+            || offset == 0)
+        {
+            return null;
+        }
+
+        int target = currentIndex + offset;
+        return target >= 0
+               && target < pinnedCount
+            ? target
+            : null;
+    }
+}
