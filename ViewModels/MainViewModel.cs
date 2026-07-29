@@ -369,9 +369,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             1);
         SelectedCalendarDate = CurrentTime.Date;
         CurrentAppVersion = _updateService.CurrentVersion;
-        UpdateStatus = _updateService.CanUpdate
-            ? "将自动从 GitHub Releases 检查更新"
-            : "当前为开发运行版；安装发布包后可一键更新";
+        UpdateStatus =
+            "正在准备 GitHub Releases 更新服务…";
         StartupStatus =
             "正在读取 Windows 启动项…";
         _ = LoadStartupStateAsync();
@@ -1348,7 +1347,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public async Task CheckForUpdatesInBackgroundAsync()
     {
-        if (!_updateService.CanUpdate || IsUpdateBusy)
+        if (IsUpdateBusy)
             return;
 
         IsUpdateBusy = true;
@@ -1357,6 +1356,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             UpdateStatus = "正在从 GitHub Releases 自动检查更新…";
             AppUpdateInfo? update = await _updateService.CheckForUpdateAsync();
+            if (!_updateService.CanUpdate)
+            {
+                ApplyUpdateAvailability(null);
+                UpdateStatus =
+                    "当前为开发运行版；安装发布包后可一键更新";
+                return;
+            }
+
             if (update == null)
             {
                 ApplyUpdateAvailability(null);
@@ -1391,18 +1398,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (IsUpdateBusy)
             return;
 
-        if (!_updateService.CanUpdate)
-        {
-            UpdateStatus = "开发运行版不能原地更新，请先安装 Setup.exe 发布包。";
-            return;
-        }
-
         IsUpdateBusy = true;
         UpdateProgress = 0;
         try
         {
             UpdateStatus = "正在检查更新…";
             AppUpdateInfo? update = await _updateService.CheckForUpdateAsync();
+            if (!_updateService.CanUpdate)
+            {
+                ApplyUpdateAvailability(null);
+                UpdateStatus =
+                    "开发运行版不能原地更新，请先安装 Setup.exe 发布包。";
+                return;
+            }
+
             if (update == null)
             {
                 ApplyUpdateAvailability(null);
