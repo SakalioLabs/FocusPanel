@@ -11,7 +11,7 @@ namespace FocusPanel.Tests;
 public sealed class ShellPreferenceRepositoryTests
 {
     [Fact]
-    public void Load_NormalizesUnsupportedTheme()
+    public async Task Load_NormalizesUnsupportedTheme()
     {
         using var repository =
             new ShellPreferenceRepository(
@@ -24,7 +24,7 @@ public sealed class ShellPreferenceRepositoryTests
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
-            repository.Load();
+            await repository.LoadAsync();
 
         Assert.True(snapshot.FirstRunAccepted);
         Assert.True(snapshot.ReplacementEnabled);
@@ -33,6 +33,57 @@ public sealed class ShellPreferenceRepositoryTests
             snapshot.ThemeMode);
         Assert.False(
             snapshot.DisableHotZoneInFullscreen);
+    }
+
+    [Fact]
+    public async Task Load_ReturnsBeforeStorageCompletesAndIsShared()
+    {
+        using var started =
+            new ManualResetEventSlim();
+        using var release =
+            new ManualResetEventSlim();
+        int callingThread =
+            Environment.CurrentManagedThreadId;
+        int loadThread =
+            callingThread;
+        using var repository =
+            new ShellPreferenceRepository(
+                () =>
+                {
+                    loadThread =
+                        Environment
+                            .CurrentManagedThreadId;
+                    started.Set();
+                    release.Wait(
+                        TimeSpan.FromSeconds(5));
+                    return new ShellPreferenceSnapshot(
+                        true,
+                        false,
+                        "Dark",
+                        true);
+                },
+                (_, _) => { });
+
+        Task<ShellPreferenceSnapshot> first =
+            repository.LoadAsync();
+        Task<ShellPreferenceSnapshot> second =
+            repository.LoadAsync();
+
+        Assert.Same(first, second);
+        Assert.True(
+            started.Wait(
+                TimeSpan.FromSeconds(2)));
+        Assert.False(first.IsCompleted);
+        Assert.NotEqual(
+            callingThread,
+            loadThread);
+        release.Set();
+
+        ShellPreferenceSnapshot snapshot =
+            await first;
+        Assert.True(snapshot.FirstRunAccepted);
+        Assert.False(snapshot.ReplacementEnabled);
+        Assert.Equal("Dark", snapshot.ThemeMode);
     }
 
     [Fact]

@@ -47,6 +47,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         PendingSystemStatusSnapshot> _systemStatusRefresh;
     private readonly CoalescingBackgroundRefresh<
         TaskSummarySnapshot> _taskSummaryRefresh;
+    private readonly Task
+        _shellPreferencesInitialization;
     private DashboardViewModel? _dashboardViewModel;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
@@ -350,27 +352,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StartupStatus =
             "正在读取 Windows 启动项…";
         _ = LoadStartupStateAsync();
-        ShellPreferenceSnapshot preferenceSnapshot =
-            _shellPreferences.Load();
-        _loadingShellPreferences = true;
-        IsReplacementEnabled =
-            preferenceSnapshot.ReplacementEnabled;
-        ReplacementStatus = IsReplacementEnabled
-            ? "侧边任务栏运行中 · Windows 任务栏已完整隐藏"
-            : "替代模式未启用，Windows 任务栏保持原设置";
-        ThemeMode =
-            preferenceSnapshot.ThemeMode;
-        DisableHotZoneInFullscreen =
-            preferenceSnapshot
-                .DisableHotZoneInFullscreen;
-        _loadingShellPreferences = false;
+        IsReplacementEnabled = false;
+        ReplacementStatus =
+            "正在读取任务栏替代设置…";
+        IsOnboardingVisible = true;
+        _shellPreferencesInitialization =
+            LoadShellPreferencesAsync();
         ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles;
-        ThemeService.SetMode(ThemeMode);
-        // Replacement is the product's primary mode. Never hide the taskbar without
-        // a click, but keep the activation screen discoverable until it is enabled.
-        IsOnboardingVisible =
-            !preferenceSnapshot.FirstRunAccepted
-            || !IsReplacementEnabled;
 
         _fileOrganizerViewModel = new FileOrganizerViewModel();
         CurrentViewModel = _fileOrganizerViewModel;
@@ -477,6 +465,45 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<AppUpdateInfo>? UpdateAvailable;
     public event Action<string>? WorkspaceRequested;
     public event Action<int>? PomodoroCompleted;
+
+    internal Task WaitForShellPreferencesAsync() =>
+        _shellPreferencesInitialization;
+
+    private async Task LoadShellPreferencesAsync()
+    {
+        ShellPreferenceSnapshot preferenceSnapshot =
+            await _shellPreferences.LoadAsync();
+        if (_isDisposed)
+            return;
+
+        _loadingShellPreferences = true;
+        try
+        {
+            IsReplacementEnabled =
+                preferenceSnapshot
+                    .ReplacementEnabled;
+            ReplacementStatus =
+                IsReplacementEnabled
+                    ? "侧边任务栏等待安全接管"
+                    : "替代模式未启用，Windows 任务栏保持原设置";
+            ThemeMode =
+                preferenceSnapshot.ThemeMode;
+            DisableHotZoneInFullscreen =
+                preferenceSnapshot
+                    .DisableHotZoneInFullscreen;
+            IsOnboardingVisible =
+                !preferenceSnapshot
+                    .FirstRunAccepted
+                || !IsReplacementEnabled;
+        }
+        finally
+        {
+            _loadingShellPreferences = false;
+        }
+
+        ThemeService.SetMode(
+            ThemeMode);
+    }
 
     partial void OnSearchQueryChanged(string value)
     {

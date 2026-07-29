@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bgshellgate" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101a2a"/>
+      <stop offset="1" stop-color="#28304f"/>
+    </linearGradient>
+    <linearGradient id="flowshellgate" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#60c9ff"/>
+      <stop offset="1" stop-color="#a68cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bgshellgate)"/>
+  <text x="54" y="62" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">主壳偏好 · 后台加载与接管安全门</text>
+  <text x="54" y="97" fill="#b9cce8" font-family="Segoe UI, Microsoft YaHei" font-size="16">SQLite 读取期间不展开 Panel，也不触碰 Windows 任务栏</text>
+
+  <rect x="54" y="128" width="250" height="268" rx="24" fill="#223650" stroke="#496889"/>
+  <text x="179" y="169" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">窗口先就绪</text>
+  <rect x="80" y="205" width="198" height="48" rx="16" fill="#2b4c6e"/>
+  <text x="179" y="235" text-anchor="middle" fill="#a8e0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">创建句柄并定位右缘</text>
+  <rect x="80" y="269" width="198" height="48" rx="16" fill="#2b4c6e"/>
+  <text x="179" y="299" text-anchor="middle" fill="#a8e0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">FocusPanel 自身保持隐藏</text>
+  <text x="179" y="354" text-anchor="middle" fill="#bfd0e8" font-family="Segoe UI, Microsoft YaHei" font-size="13">热区 / 托盘 / 快捷键关闭</text>
+  <text x="179" y="377" text-anchor="middle" fill="#91a8c4" font-family="Segoe UI, Microsoft YaHei" font-size="12">原生任务栏完全不变</text>
+
+  <path d="M324 262 H364" stroke="url(#flowshellgate)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M353 251 L367 262 L353 273" fill="none" stroke="#68c6ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="390" y="118" width="340" height="288" rx="26" fill="#2b405f" stroke="#6382aa"/>
+  <text x="560" y="160" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">ShellPreferenceRepository</text>
+  <circle cx="430" cy="207" r="9" fill="#68c7ff"/>
+  <text x="454" y="213" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">工作线程一次读取四项设置</text>
+  <circle cx="430" cy="249" r="9" fill="#8ce4b9"/>
+  <text x="454" y="255" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">所有等待者共享同一快照任务</text>
+  <circle cx="430" cy="291" r="9" fill="#ad97ff"/>
+  <text x="454" y="297" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">异常回落到安全默认值</text>
+  <rect x="422" y="337" width="276" height="42" rx="16" fill="#203149"/>
+  <text x="560" y="364" text-anchor="middle" fill="#cbdcf1" font-family="Segoe UI, Microsoft YaHei" font-size="14">退出同时排空读取与写入</text>
+
+  <path d="M750 262 H790" stroke="url(#flowshellgate)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M779 251 L793 262 L779 273" fill="none" stroke="#9e90ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="816" y="128" width="250" height="268" rx="24" fill="#293852" stroke="#50698c"/>
+  <text x="941" y="169" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">就绪后决策</text>
+  <rect x="842" y="206" width="198" height="48" rx="16" fill="#294d43"/>
+  <text x="941" y="236" text-anchor="middle" fill="#a2edc5" font-family="Segoe UI, Microsoft YaHei" font-size="14">需要引导 → 展开引导</text>
+  <rect x="842" y="269" width="198" height="48" rx="16" fill="#473f64"/>
+  <text x="941" y="299" text-anchor="middle" fill="#d1c7ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">已启用 → 空闲时接管一次</text>
+  <text x="941" y="351" text-anchor="middle" fill="#bccde5" font-family="Segoe UI, Microsoft YaHei" font-size="13">随后启动热区与指示条</text>
+  <text x="941" y="374" text-anchor="middle" fill="#91a8c4" font-family="Segoe UI, Microsoft YaHei" font-size="12">不循环隐藏原任务栏</text>
+
+  <rect x="54" y="440" width="1012" height="46" rx="17" fill="#20334c" stroke="#426080"/>
+  <text x="560" y="469" text-anchor="middle" fill="#dce9f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">窗口先安全隐藏 · SQLite 后台加载 · 快照就绪再开放入口 · 最后决定是否接管</text>
+</svg>

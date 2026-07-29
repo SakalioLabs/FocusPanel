@@ -48,6 +48,7 @@ public partial class MainWindow :
     private bool _isExit;
     private bool _hiddenToTray;
     private bool _isHotZoneAvailable;
+    private bool _shellStartupReady;
     private bool _autoHideIgnoresInputFocus;
     private int _transientInteractionDepth;
     private System.Windows.Point _pinnedDragStart;
@@ -112,12 +113,21 @@ public partial class MainWindow :
         SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
     }
 
-    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    private async void MainWindow_Loaded(
+        object sender,
+        RoutedEventArgs e)
     {
         PositionAtPrimaryRightEdge();
+        HideShell();
+        await _viewModel
+            .WaitForShellPreferencesAsync();
+        if (_isExit)
+            return;
+
         EnsureEdgeIndicator();
         EnsureHotZoneMonitor();
         _hotZoneMonitor?.Start();
+        _shellStartupReady = true;
 
         if (_viewModel.IsOnboardingVisible)
         {
@@ -128,10 +138,15 @@ public partial class MainWindow :
         {
             HideShell();
             if (_viewModel.IsReplacementEnabled)
-                Dispatcher.BeginInvoke(EnableTaskbarReplacement, DispatcherPriority.ApplicationIdle);
+            {
+                _ = Dispatcher.BeginInvoke(
+                    EnableTaskbarReplacement,
+                    DispatcherPriority
+                        .ApplicationIdle);
+            }
         }
 
-        Dispatcher.BeginInvoke(
+        _ = Dispatcher.BeginInvoke(
             new Action(() => _ = _viewModel.CheckForUpdatesInBackgroundAsync()),
             DispatcherPriority.ContextIdle);
     }
@@ -247,7 +262,9 @@ public partial class MainWindow :
 
     private void OpenCompactDock()
     {
-        if (_hiddenToTray || IsVisible)
+        if (!_shellStartupReady
+            || _hiddenToTray
+            || IsVisible)
             return;
 
         _autoHideTimer.Stop();
@@ -258,6 +275,9 @@ public partial class MainWindow :
 
     public void ExpandSidebar()
     {
+        if (!_shellStartupReady)
+            return;
+
         _hiddenToTray = false;
         _autoHideTimer.Stop();
         WorkspaceHost.Visibility = Visibility.Visible;
@@ -991,6 +1011,9 @@ public partial class MainWindow :
 
     public void ShowFromTray()
     {
+        if (!_shellStartupReady)
+            return;
+
         _hiddenToTray = false;
         EnsureHotZoneMonitor();
         _hotZoneMonitor?.Start();

@@ -25,7 +25,7 @@ internal sealed record ShellPreferenceSnapshot(
 internal interface IShellPreferenceRepository
     : IDisposable
 {
-    ShellPreferenceSnapshot Load();
+    Task<ShellPreferenceSnapshot> LoadAsync();
 
     bool QueueSave(
         string key,
@@ -63,6 +63,8 @@ internal sealed class ShellPreferenceRepository
     private readonly Dictionary<string, string> _pendingValues =
         new(StringComparer.Ordinal);
     private Task _processor = Task.CompletedTask;
+    private Task<ShellPreferenceSnapshot>?
+        _loadTask;
     private bool _isRunning;
     private bool _isAccepting = true;
     private bool _isDisposed;
@@ -90,14 +92,23 @@ internal sealed class ShellPreferenceRepository
 
     public event Action<string, Exception>? SaveFailed;
 
-    public ShellPreferenceSnapshot Load()
+    public Task<ShellPreferenceSnapshot> LoadAsync()
     {
         lock (_sync)
         {
             if (_isDisposed)
-                return ShellPreferenceSnapshot.Default;
-        }
+            {
+                return Task.FromResult(
+                    ShellPreferenceSnapshot.Default);
+            }
 
+            return _loadTask
+                ??= Task.Run(LoadSafely);
+        }
+    }
+
+    private ShellPreferenceSnapshot LoadSafely()
+    {
         try
         {
             return Normalize(_load());
@@ -142,7 +153,11 @@ internal sealed class ShellPreferenceRepository
         lock (_sync)
         {
             _isAccepting = false;
-            return _processor;
+            return _loadTask == null
+                ? _processor
+                : Task.WhenAll(
+                    _processor,
+                    _loadTask);
         }
     }
 
@@ -303,6 +318,7 @@ internal sealed class ShellPreferenceRepository
 
     public void Dispose()
     {
+        Task completion;
         lock (_sync)
         {
             if (_isDisposed)
@@ -310,9 +326,14 @@ internal sealed class ShellPreferenceRepository
 
             _isDisposed = true;
             _isAccepting = false;
+            completion = _loadTask == null
+                ? _processor
+                : Task.WhenAll(
+                    _processor,
+                    _loadTask);
         }
 
-        _processor.GetAwaiter()
+        completion.GetAwaiter()
             .GetResult();
     }
 }

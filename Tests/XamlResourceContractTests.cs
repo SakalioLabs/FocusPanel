@@ -3371,6 +3371,12 @@ public sealed class XamlResourceContractTests
             "ShellPreferenceSnapshot preferenceSnapshot",
             viewModel);
         Assert.Contains(
+            "await _shellPreferences.LoadAsync()",
+            viewModel);
+        Assert.Contains(
+            "WaitForShellPreferencesAsync()",
+            viewModel);
+        Assert.Contains(
             "_shellPreferences.QueueSave(",
             viewModel);
         Assert.Contains(
@@ -3380,7 +3386,7 @@ public sealed class XamlResourceContractTests
             "new AppDbContext()",
             viewModel);
         Assert.Contains(
-            "await Task.Run(",
+            "Task.Run(LoadSafely)",
             repository);
         Assert.Contains(
             "Dictionary<string, string> _pendingValues",
@@ -3388,6 +3394,30 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Task CompleteAsync()",
             repository);
+
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        Assert.Contains(
+            "private async void MainWindow_Loaded(",
+            mainWindow);
+        Assert.Contains(
+            "await _viewModel",
+            mainWindow);
+        Assert.Contains(
+            ".WaitForShellPreferencesAsync()",
+            mainWindow);
+        Assert.Contains(
+            "HideShell();",
+            mainWindow);
+        Assert.Contains(
+            "_shellStartupReady = true",
+            mainWindow);
+        Assert.Contains(
+            "if (!_shellStartupReady",
+            mainWindow);
     }
 
     [Fact]
