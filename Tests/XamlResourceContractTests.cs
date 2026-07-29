@@ -3245,6 +3245,44 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void ShellPreferences_UseSnapshotAndBackgroundWriteQueue()
+    {
+        string root = FindRepositoryRoot();
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        string repository = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ShellPreferenceRepository.cs"));
+
+        Assert.Contains(
+            "ShellPreferenceSnapshot preferenceSnapshot",
+            viewModel);
+        Assert.Contains(
+            "_shellPreferences.QueueSave(",
+            viewModel);
+        Assert.Contains(
+            "_shellPreferences.Dispose();",
+            viewModel);
+        Assert.DoesNotContain(
+            "new AppDbContext()",
+            viewModel);
+        Assert.Contains(
+            "await Task.Run(",
+            repository);
+        Assert.Contains(
+            "Dictionary<string, string> _pendingValues",
+            repository);
+        Assert.Contains(
+            "Task CompleteAsync()",
+            repository);
+    }
+
+    [Fact]
     public void RuntimeNotifications_UseNoActivateNativeFluentToasts()
     {
         string root = FindRepositoryRoot();

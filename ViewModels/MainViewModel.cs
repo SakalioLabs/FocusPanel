@@ -10,7 +10,6 @@ using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FocusPanel.Data;
 using FocusPanel.Models;
 using FocusPanel.Services;
 using FocusPanel.Views;
@@ -19,10 +18,6 @@ namespace FocusPanel.ViewModels;
 
 public partial class MainViewModel : ObservableObject, IDisposable
 {
-    private const string FirstRunAcceptedKey = "Shell.FirstRunAccepted";
-    private const string ReplacementEnabledKey = "Shell.ReplacementEnabled";
-    private const string ThemeModeKey = "Shell.Theme";
-    private const string FullscreenHotZoneKey = "Shell.DisableHotZoneInFullscreen";
     private static readonly CultureInfo ChineseCulture =
         CultureInfo.GetCultureInfo("zh-CN");
 
@@ -31,6 +26,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ISystemStatusService _systemStatus;
     private readonly IAppUpdateService _updateService;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
+    private readonly IShellPreferenceRepository
+        _shellPreferences;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
@@ -57,6 +54,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string? _lastNotifiedUpdateVersion;
     private bool _isShellVisible;
     private bool _isDisposed;
+    private bool _loadingShellPreferences;
     private DateTime _calendarFocusMonth;
     private IReadOnlyDictionary<DateTime, CalendarFocusSummary>
         _calendarFocusByDate =
@@ -265,11 +263,33 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IWindowTracker windowTracker,
         ISystemStatusService systemStatus,
         IAppUpdateService updateService)
+        : this(
+            appCatalog,
+            windowTracker,
+            systemStatus,
+            updateService,
+            new ShellPreferenceRepository())
+    {
+    }
+
+    internal MainViewModel(
+        IAppCatalogService appCatalog,
+        IWindowTracker windowTracker,
+        ISystemStatusService systemStatus,
+        IAppUpdateService updateService,
+        IShellPreferenceRepository
+            shellPreferences)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
         _systemStatus = systemStatus;
         _updateService = updateService;
+        _shellPreferences =
+            shellPreferences
+            ?? throw new ArgumentNullException(
+                nameof(shellPreferences));
+        _shellPreferences.SaveFailed +=
+            OnShellPreferenceSaveFailed;
         _desktopVisibility = new WindowsDesktopItemVisibilityService();
         _uiDispatcher = Dispatcher.CurrentDispatcher;
         _systemStatusRefresh =
@@ -302,18 +322,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StartupStatus = StartWithWindows
             ? "已设置为随 Windows 启动"
             : "当前不会随 Windows 启动";
-        bool firstRunAccepted = ReadBooleanConfig(FirstRunAcceptedKey);
-        IsReplacementEnabled = ReadBooleanConfig(ReplacementEnabledKey);
+        ShellPreferenceSnapshot preferenceSnapshot =
+            _shellPreferences.Load();
+        _loadingShellPreferences = true;
+        IsReplacementEnabled =
+            preferenceSnapshot.ReplacementEnabled;
         ReplacementStatus = IsReplacementEnabled
             ? "侧边任务栏运行中 · Windows 任务栏已完整隐藏"
             : "替代模式未启用，Windows 任务栏保持原设置";
-        ThemeMode = ReadStringConfig(ThemeModeKey, "System");
-        DisableHotZoneInFullscreen = ReadBooleanConfig(FullscreenHotZoneKey, true);
+        ThemeMode =
+            preferenceSnapshot.ThemeMode;
+        DisableHotZoneInFullscreen =
+            preferenceSnapshot
+                .DisableHotZoneInFullscreen;
+        _loadingShellPreferences = false;
         ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles;
         ThemeService.SetMode(ThemeMode);
         // Replacement is the product's primary mode. Never hide the taskbar without
         // a click, but keep the activation screen discoverable until it is enabled.
-        IsOnboardingVisible = !firstRunAccepted || !IsReplacementEnabled;
+        IsOnboardingVisible =
+            !preferenceSnapshot.FirstRunAccepted
+            || !IsReplacementEnabled;
 
         _fileOrganizerViewModel = new FileOrganizerViewModel();
         CurrentViewModel = _fileOrganizerViewModel;
@@ -525,12 +554,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         ThemeService.SetMode(normalized);
-        SaveStringConfig(ThemeModeKey, normalized);
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .ThemeModeKey,
+                normalized);
+        }
     }
 
     partial void OnDisableHotZoneInFullscreenChanged(bool value)
     {
-        SaveBooleanConfig(FullscreenHotZoneKey, value);
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .FullscreenHotZoneKey,
+                value.ToString());
+        }
     }
 
     partial void OnStartWithWindowsChanged(bool value)
@@ -1017,8 +1058,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void SkipOnboarding()
     {
         IsOnboardingVisible = false;
-        SaveBooleanConfig(FirstRunAcceptedKey, true);
-        SaveBooleanConfig(ReplacementEnabledKey, false);
+        QueueShellPreference(
+            ShellPreferenceRepository
+                .FirstRunAcceptedKey,
+            bool.TrueString);
+        QueueShellPreference(
+            ShellPreferenceRepository
+                .ReplacementEnabledKey,
+            bool.FalseString);
     }
 
     public void MarkReplacementEnabled(bool enabled)
@@ -1037,8 +1084,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ? "Windows 任务栏已安全恢复"
                 : "替代模式未启用，Windows 任务栏保持原设置";
         ReplacementError = error ?? string.Empty;
-        SaveBooleanConfig(FirstRunAcceptedKey, true);
-        SaveBooleanConfig(ReplacementEnabledKey, enabled);
+        QueueShellPreference(
+            ShellPreferenceRepository
+                .FirstRunAcceptedKey,
+            bool.TrueString);
+        QueueShellPreference(
+            ShellPreferenceRepository
+                .ReplacementEnabledKey,
+            enabled.ToString());
         ApplyStartupPreference(enabled && StartWithWindows);
     }
 
@@ -1685,49 +1738,39 @@ public partial class MainViewModel : ObservableObject, IDisposable
             destination.Add(item);
     }
 
-    private static bool ReadBooleanConfig(string key, bool defaultValue = false)
+    private void QueueShellPreference(
+        string key,
+        string value)
     {
-        try
+        if (_isDisposed
+            || _shellPreferences.QueueSave(
+                key,
+                value))
         {
-            using var context = new AppDbContext();
-            return bool.TryParse(context.AppConfigs.Find(key)?.Value, out bool value) ? value : defaultValue;
+            return;
         }
-        catch
-        {
-            return defaultValue;
-        }
+
+        ReportShellPreferenceFailure();
     }
 
-    private static string ReadStringConfig(string key, string defaultValue)
+    private void OnShellPreferenceSaveFailed(
+        string key,
+        Exception error)
     {
-        try
-        {
-            using var context = new AppDbContext();
-            string? value = context.AppConfigs.Find(key)?.Value;
-            return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
-        }
-        catch
-        {
-            return defaultValue;
-        }
+        Debug.WriteLine(
+            $"Shell 设置保存失败（{key}）：{error}");
+        _uiDispatcher.BeginInvoke(
+            ReportShellPreferenceFailure);
     }
 
-    private static void SaveBooleanConfig(string key, bool value)
-        => SaveStringConfig(key, value.ToString());
-
-    private static void SaveStringConfig(string key, string value)
+    private void ReportShellPreferenceFailure()
     {
-        using var context = new AppDbContext();
-        var config = context.AppConfigs.Find(key);
-        if (config == null)
-        {
-            context.AppConfigs.Add(new AppConfig { Key = key, Value = value.ToString() });
-        }
-        else
-        {
-            config.Value = value;
-        }
-        context.SaveChanges();
+        if (_isDisposed)
+            return;
+
+        SystemActionMessage =
+            "设置暂时无法保存；当前会话仍然有效，"
+            + "请稍后重试。";
     }
 
     public void Dispose()
@@ -1736,6 +1779,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
 
         _isDisposed = true;
+        _shellPreferences.SaveFailed -=
+            OnShellPreferenceSaveFailed;
         _clockTimer.Stop();
         _systemStatusTimer.Stop();
         _taskSummaryTimer.Stop();
@@ -1744,6 +1789,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _taskSummaryRefresh.Dispose();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
+        _shellPreferences.Dispose();
         _tasksViewModel?.Dispose();
         _okrViewModel?.Dispose();
         _aiAssistantViewModel?.Dispose();

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1727"/>
+      <stop offset="1" stop-color="#17263d"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#68b7ff"/>
+      <stop offset="1" stop-color="#8e7cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f4f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">Panel 设置 · 非阻塞持久化</text>
+  <text x="54" y="97" fill="#a9c7ec" font-family="Segoe UI, Microsoft YaHei" font-size="16">主题、全屏热区与任务栏替代状态不再在 WPF 界面线程执行 SaveChanges</text>
+
+  <rect x="54" y="136" width="254" height="252" rx="24" fill="#22334c" stroke="#3e5a7d"/>
+  <text x="79" y="178" fill="#f0f5ff" font-family="Segoe UI, Microsoft YaHei" font-size="21" font-weight="700">即时界面反馈</text>
+  <circle cx="88" cy="220" r="8" fill="#68b7ff"/>
+  <text x="108" y="226" fill="#d8e5f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">切换浅色 / 深色 / 系统</text>
+  <circle cx="88" cy="262" r="8" fill="#68b7ff"/>
+  <text x="108" y="268" fill="#d8e5f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">调整全屏热区策略</text>
+  <circle cx="88" cy="304" r="8" fill="#68b7ff"/>
+  <text x="108" y="310" fill="#d8e5f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">启用 / 恢复任务栏替代</text>
+  <rect x="78" y="335" width="206" height="35" rx="17.5" fill="#2f4c70"/>
+  <text x="181" y="358" text-anchor="middle" fill="#8ed0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">Panel 不等待 SQLite</text>
+
+  <path d="M328 262 H374" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M363 251 L376 262 L363 273" fill="none" stroke="#76b5ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="397" y="121" width="326" height="284" rx="26" fill="#2a405e" stroke="#587ba4"/>
+  <text x="560" y="165" text-anchor="middle" fill="#f0f5ff" font-family="Segoe UI, Microsoft YaHei" font-size="21" font-weight="700">按设置键合并的单消费者队列</text>
+  <rect x="429" y="193" width="262" height="42" rx="16" fill="#20324b"/>
+  <text x="448" y="219" fill="#dce8fa" font-family="Segoe UI, Microsoft YaHei" font-size="14">Shell.Theme</text>
+  <text x="670" y="219" text-anchor="end" fill="#7fd0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">只保留最后值</text>
+  <rect x="429" y="246" width="262" height="42" rx="16" fill="#20324b"/>
+  <text x="448" y="272" fill="#dce8fa" font-family="Segoe UI, Microsoft YaHei" font-size="14">Shell.FullscreenHotZone</text>
+  <text x="670" y="272" text-anchor="end" fill="#86e3b5" font-family="Segoe UI, Microsoft YaHei" font-size="14">严格串行</text>
+  <rect x="429" y="299" width="262" height="42" rx="16" fill="#20324b"/>
+  <text x="448" y="325" fill="#dce8fa" font-family="Segoe UI, Microsoft YaHei" font-size="14">Shell.ReplacementEnabled</text>
+  <text x="670" y="325" text-anchor="end" fill="#b9a9ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">退出排空</text>
+  <text x="560" y="375" text-anchor="middle" fill="#b8cce6" font-family="Segoe UI, Microsoft YaHei" font-size="14">一个后台工作者 · 每次独立短生命周期上下文</text>
+
+  <path d="M743 262 H789" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M778 251 L791 262 L778 273" fill="none" stroke="#8d83ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="812" y="136" width="254" height="252" rx="24" fill="#22334c" stroke="#3e5a7d"/>
+  <text x="837" y="178" fill="#f0f5ff" font-family="Segoe UI, Microsoft YaHei" font-size="21" font-weight="700">可靠落盘</text>
+  <rect x="836" y="205" width="206" height="48" rx="16" fill="#294b43"/>
+  <text x="939" y="235" text-anchor="middle" fill="#99ecc3" font-family="Segoe UI, Microsoft YaHei" font-size="15">成功 · 保存最终状态</text>
+  <rect x="836" y="268" width="206" height="61" rx="16" fill="#553b49"/>
+  <text x="939" y="293" text-anchor="middle" fill="#ffc4d3" font-family="Segoe UI, Microsoft YaHei" font-size="15">失败 · 当前会话继续有效</text>
+  <text x="939" y="315" text-anchor="middle" fill="#eab0c0" font-family="Segoe UI, Microsoft YaHei" font-size="13">状态中心给出可重试提示</text>
+  <text x="939" y="360" text-anchor="middle" fill="#b8cce6" font-family="Segoe UI, Microsoft YaHei" font-size="14">后续设置不会被一次失败堵住</text>
+
+  <rect x="54" y="438" width="1012" height="47" rx="18" fill="#1e3049" stroke="#3d5879"/>
+  <text x="560" y="468" text-anchor="middle" fill="#d9e8fb" font-family="Segoe UI, Microsoft YaHei" font-size="15">启动只读取一次 Shell 快照 · 高频切换不会堆积重复写入 · 正常退出确保已接收的设置完成持久化</text>
+</svg>
