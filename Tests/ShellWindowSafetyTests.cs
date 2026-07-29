@@ -50,6 +50,7 @@ public sealed class ShellWindowSafetyTests
                 Assert.Equal(3, indicator.Width);
                 Assert.False(indicator.ShowActivated);
                 Assert.False(indicator.IsHitTestVisible);
+                Assert.False(indicator.IsStarting);
                 indicator.Close();
             }
             catch (Exception ex)
@@ -62,5 +63,70 @@ public sealed class ShellWindowSafetyTests
         thread.Join();
 
         Assert.Null(failure);
+    }
+
+    [Fact]
+    public void StartupIndicator_IsReusedByMainShell()
+    {
+        string projectRoot = Path.GetFullPath(
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "..", "..", "..", ".."));
+        string app = File.ReadAllText(
+            Path.Combine(
+                projectRoot,
+                "App.xaml.cs"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                projectRoot,
+                "Views",
+                "MainWindow.xaml.cs"));
+        string indicator = File.ReadAllText(
+            Path.Combine(
+                projectRoot,
+                "Views",
+                "EdgeIndicatorWindow.xaml.cs"));
+
+        int showIndicator = app.IndexOf(
+            "TryShowStartupIndicator();",
+            StringComparison.Ordinal);
+        int prepareDatabase = app.IndexOf(
+            "await _databaseStartup.PrepareAsync(",
+            StringComparison.Ordinal);
+        int transferIndicator = app.IndexOf(
+            "new MainWindow(startupIndicator);",
+            StringComparison.Ordinal);
+
+        Assert.True(showIndicator >= 0);
+        Assert.True(prepareDatabase > showIndicator);
+        Assert.True(transferIndicator
+            > prepareDatabase);
+        Assert.Contains(
+            "_edgeIndicator =\n            startupIndicator;",
+            mainWindow);
+        Assert.Contains(
+            "_edgeIndicator ??= new EdgeIndicatorWindow();",
+            mainWindow);
+        Assert.Contains(
+            "ShowStartingIndicator()",
+            indicator);
+        Assert.Contains(
+            "RepeatBehavior.Forever",
+            indicator);
+        Assert.Contains(
+            "SystemParameters.HighContrast",
+            indicator);
+        Assert.Contains(
+            "ClientAreaAnimation",
+            indicator);
+        Assert.Contains(
+            "ShowWindow(hwnd, SwShowNoActivate)",
+            indicator);
+        Assert.DoesNotContain(
+            "Activate()",
+            indicator);
+        Assert.Contains(
+            "startupIndicator?.Close();",
+            app);
     }
 }

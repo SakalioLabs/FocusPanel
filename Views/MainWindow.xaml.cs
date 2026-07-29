@@ -60,7 +60,15 @@ public partial class MainWindow :
     private System.Windows.Point _pinnedDragStart;
 
     public MainWindow()
+        : this(null)
     {
+    }
+
+    internal MainWindow(
+        EdgeIndicatorWindow? startupIndicator)
+    {
+        _edgeIndicator =
+            startupIndicator;
         _coordinator = new ShellCoordinator();
         _viewModel = new MainViewModel(
             _coordinator.Apps,

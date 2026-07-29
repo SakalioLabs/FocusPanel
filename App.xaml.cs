@@ -49,6 +49,8 @@ public partial class App : Application
         // Set working directory to the application's base directory
         System.IO.Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
 
+        EdgeIndicatorWindow? startupIndicator =
+            TryShowStartupIndicator();
         DatabaseStartupCompletion completion;
         try
         {
@@ -71,15 +73,20 @@ public partial class App : Application
         }
 
         if (completion.Notice != null)
+        {
+            startupIndicator?.HideIndicator();
             ShowDatabaseStartupNotice(
                 completion.Notice);
+        }
         if (!completion.Succeeded)
         {
+            startupIndicator?.Close();
             Shutdown(-1);
             return;
         }
 
-        var mainWindow = new MainWindow();
+        var mainWindow =
+            new MainWindow(startupIndicator);
         MainWindow = mainWindow;
         mainWindow.Show();
     }
@@ -279,6 +286,31 @@ public partial class App : Application
             notice.Title,
             MessageBoxButton.OK,
             image);
+    }
+
+    private static EdgeIndicatorWindow?
+        TryShowStartupIndicator()
+    {
+        EdgeIndicatorWindow? indicator = null;
+        try
+        {
+            indicator =
+                new EdgeIndicatorWindow();
+            indicator.ShowStartingIndicator();
+            return indicator;
+        }
+        catch
+        {
+            try
+            {
+                indicator?.Close();
+            }
+            catch
+            {
+            }
+
+            return null;
+        }
     }
 
     private static void RestoreNativeDesktopIcons()

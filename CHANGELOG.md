@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.10.29 - 2026-07-29
+
+- 0.10.28 将数据库准备移出 Dispatcher 后，慢磁盘期间仍缺少可见反馈；现在系统外壳恢复完成后、后台数据库事务开始前立即创建现有 `EdgeIndicatorWindow`，以 `0.28→0.92` 的 720ms 柔和呼吸明确表示 FocusPanel 已启动但主壳仍在准备；减少动态效果或高对比度下改用稳定亮度。
+- 启动指示继续使用 3 个物理像素、`WS_EX_TRANSPARENT | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW` 和 `SW_SHOWNOACTIVATE`：不创建全屏覆盖层、不接收点击、不抢键盘焦点，也不会在数据库尚未验证时提前启用 12px 热区。
+- `App` 将同一个启动指示实例传给 `MainWindow`；主壳完成偏好加载和热区可用性确认后停止呼吸并切回稳定运行指示，不再关闭一个窗口再创建另一个窗口。恢复提示出现前暂时隐藏，数据库安全停止时明确关闭。
+- 新增启动指示创建顺序、无激活窗口、永久呼吸、减少动态效果、失败关闭和主壳实例复用契约测试；README 增加启动指示无缝交接图。Release 构建 0 错误、0 警告，全量 733 项测试与界面冒烟通过。
+
 ## v0.10.28 - 2026-07-29
 
 - `App.OnStartup` 不再在 WPF Dispatcher 上同步执行 SQLite 在线启动备份、`EnsureCreated()`、手工 `EnsureSchema()` 和业务表探测；新的 `DatabaseStartupCoordinator` 立即返回可等待任务，并在专用工作线程执行完整启动事务，大数据库、WAL 合并或慢磁盘不会冻结应用消息循环。

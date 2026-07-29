@@ -100,7 +100,7 @@ public sealed class DatabaseStartupCoordinatorTests
             "await _databaseStartup.PrepareAsync(",
             StringComparison.Ordinal);
         int createShell = app.IndexOf(
-            "var mainWindow = new MainWindow();",
+            "new MainWindow(startupIndicator);",
             StringComparison.Ordinal);
 
         Assert.Contains(

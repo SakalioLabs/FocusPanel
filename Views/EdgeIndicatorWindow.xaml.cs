@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media.Animation;
 using FocusPanel.Services;
 
 namespace FocusPanel.Views;
@@ -15,6 +16,10 @@ public partial class EdgeIndicatorWindow : Window
     private const long WsExNoActivate = 0x08000000L;
     private const int SwShowNoActivate = 4;
     private const double IndicatorPhysicalWidth = 3;
+    private static readonly Duration
+        StartingPulseDuration =
+        new(TimeSpan.FromMilliseconds(720));
+    private bool _isStarting;
 
     public EdgeIndicatorWindow()
     {
@@ -24,6 +29,49 @@ public partial class EdgeIndicatorWindow : Window
     }
 
     public void ShowIndicator()
+    {
+        StopStartingAnimation();
+        ShowWithoutActivation();
+    }
+
+    internal void ShowStartingIndicator()
+    {
+        _isStarting = true;
+        if (!SystemParameters
+                .ClientAreaAnimation
+            || SystemParameters.HighContrast)
+        {
+            IndicatorSurface.Opacity = 0.72;
+        }
+        else
+        {
+            IndicatorSurface.BeginAnimation(
+                OpacityProperty,
+                new DoubleAnimation(
+                    0.28,
+                    0.92,
+                    StartingPulseDuration)
+                {
+                    AutoReverse = true,
+                    RepeatBehavior =
+                        RepeatBehavior.Forever,
+                    EasingFunction =
+                        new SineEase
+                        {
+                            EasingMode =
+                                EasingMode.EaseInOut
+                        }
+                },
+                HandoffBehavior
+                    .SnapshotAndReplace);
+        }
+        ShowWithoutActivation();
+    }
+
+    internal bool IsStarting =>
+        _isStarting;
+
+    private void ShowWithoutActivation()
     {
         if (!IsVisible)
             Show();
@@ -36,6 +84,7 @@ public partial class EdgeIndicatorWindow : Window
 
     public void HideIndicator()
     {
+        StopStartingAnimation();
         if (IsVisible)
             Hide();
     }
@@ -61,6 +110,18 @@ public partial class EdgeIndicatorWindow : Window
         Width = bounds.Width / scale;
         Height = bounds.Height / scale;
         ShellWindowPlacement.Apply(hwnd, bounds);
+    }
+
+    private void StopStartingAnimation()
+    {
+        if (!_isStarting)
+            return;
+
+        _isStarting = false;
+        IndicatorSurface.BeginAnimation(
+            OpacityProperty,
+            null);
+        IndicatorSurface.Opacity = 1;
     }
 
     private void ApplyClickThroughStyles()
