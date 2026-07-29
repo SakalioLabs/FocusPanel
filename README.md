@@ -271,11 +271,15 @@ dotnet run --project FocusPanel.csproj
 
 数据库位于 `%APPDATA%\FocusPanel\focuspanel.db`。启动备份使用 SQLite 在线备份 API，因此 WAL 中已提交的数据也会进入独立备份文件。恢复时先安全退出当前实例并恢复原生任务栏，再由交接进程等待单实例锁释放；候选备份跨 AppData 与安装目录按时间排序并逐个执行 `PRAGMA quick_check`，最新文件损坏时会回退到更早的有效备份，全部失败则保持当前数据库不动。
 
+未处理异常会先恢复原生任务栏和桌面图标，再写入 `%LOCALAPPDATA%\FocusPanel\Logs\crash.log` 并安全退出。异常处理不会删除或覆盖业务数据库，也不会把 DLL 当作程序启动。启动时只有在原数据库已成功归档保留、且没有有效备份可用的情况下才会创建新库；归档失败或恢复库仍不兼容时停止启动并保留所有文件，避免用“空库能打开”掩盖数据损失。
+
 普通界面设置位于 `%APPDATA%\FocusPanel\settings.json`，与 Velopack 的只读安装目录和版本目录分离。0.9.43 首次启动会在新文件不存在时读取旧版安装目录中的 `settings.json`，原子复制到新位置，并保留旧文件作为回退；用户自定义图片目录不会被重写，只有旧版默认的安装目录 `Images` 会迁移到 `%APPDATA%\FocusPanel\Images`。设置文件损坏时应用使用安全默认值，保存失败会留下可诊断错误，不会先删除已有配置。
 
 ![设置迁移与原子保存](docs/images/settings-migration-safety.svg)
 
 ![数据库安全备份与恢复](docs/images/database-restore-safety.svg)
+
+![崩溃与数据库安全恢复](docs/images/crash-recovery-safety.svg)
 
 ## 安装包与一键更新
 
@@ -284,7 +288,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.64 `
+  -Version 0.9.89 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages

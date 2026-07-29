@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111723"/>
+      <stop offset="1" stop-color="#253550"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#78C9FF"/>
+    </marker>
+  </defs>
+  <rect width="1120" height="520" rx="28" fill="url(#bg)"/>
+  <text x="52" y="62" fill="#F5F7FF" font-family="Segoe UI Variable Display, Segoe UI" font-size="28" font-weight="600">崩溃恢复以“数据不动、系统先恢复”为原则</text>
+  <text x="52" y="94" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="15">未知错误不会被伪装成已处理；数据库只有在成功归档原文件后才可能创建新库。</text>
+
+  <g font-family="Segoe UI Variable Text, Segoe UI">
+    <g transform="translate(54 132)">
+      <rect width="222" height="116" rx="18" fill="#FFFFFF" fill-opacity=".08" stroke="#FFFFFF" stroke-opacity=".12"/>
+      <circle cx="34" cy="34" r="17" fill="#FF6B7A" fill-opacity=".24"/>
+      <text x="34" y="40" text-anchor="middle" fill="#FF8591" font-size="18">!</text>
+      <text x="62" y="34" fill="#F5F7FF" font-size="16" font-weight="600">未处理异常</text>
+      <text x="20" y="72" fill="#AEB5C8" font-size="13">UI、SQLite 或后台线程</text>
+      <text x="20" y="94" fill="#AEB5C8" font-size="13">不假定进程仍可继续运行</text>
+    </g>
+    <path d="M286 190H350" stroke="#78C9FF" stroke-width="3" marker-end="url(#arrow)"/>
+    <g transform="translate(370 132)">
+      <rect width="274" height="116" rx="18" fill="#FFFFFF" fill-opacity=".08" stroke="#FFFFFF" stroke-opacity=".12"/>
+      <text x="22" y="34" fill="#F5F7FF" font-size="16" font-weight="600">先恢复 Windows 壳层</text>
+      <text x="22" y="66" fill="#AEB5C8" font-size="13">恢复主任务栏与工作区</text>
+      <text x="22" y="88" fill="#AEB5C8" font-size="13">恢复 Explorer 桌面图标</text>
+    </g>
+    <path d="M654 190H718" stroke="#78C9FF" stroke-width="3" marker-end="url(#arrow)"/>
+    <g transform="translate(738 132)">
+      <rect width="328" height="116" rx="18" fill="#FFFFFF" fill-opacity=".08" stroke="#FFFFFF" stroke-opacity=".12"/>
+      <text x="22" y="34" fill="#F5F7FF" font-size="16" font-weight="600">用户目录日志 + 安全退出</text>
+      <text x="22" y="66" fill="#AEB5C8" font-size="13">%LOCALAPPDATA%\FocusPanel\Logs</text>
+      <text x="22" y="88" fill="#AEB5C8" font-size="13">数据库不删除、不覆盖、不自动重建</text>
+    </g>
+
+    <g transform="translate(54 292)">
+      <rect width="1012" height="170" rx="22" fill="#FFFFFF" fill-opacity=".055" stroke="#FFFFFF" stroke-opacity=".10"/>
+      <text x="24" y="34" fill="#F5F7FF" font-size="16" font-weight="600">下次启动的数据库恢复闸门</text>
+      <g transform="translate(24 58)">
+        <rect width="220" height="82" rx="14" fill="#2588C8" fill-opacity=".18"/>
+        <text x="16" y="30" fill="#F5F7FF" font-size="14" font-weight="600">① 尝试初始化与补齐结构</text>
+        <text x="16" y="56" fill="#AEB5C8" font-size="12">成功则直接进入 Panel</text>
+      </g>
+      <path d="M254 99H310" stroke="#78C9FF" stroke-width="3" marker-end="url(#arrow)"/>
+      <g transform="translate(328 58)">
+        <rect width="220" height="82" rx="14" fill="#2588C8" fill-opacity=".18"/>
+        <text x="16" y="30" fill="#F5F7FF" font-size="14" font-weight="600">② 带时间戳归档原库</text>
+        <text x="16" y="56" fill="#AEB5C8" font-size="12">归档失败立即停止，不改文件</text>
+      </g>
+      <path d="M558 99H614" stroke="#78C9FF" stroke-width="3" marker-end="url(#arrow)"/>
+      <g transform="translate(632 58)">
+        <rect width="174" height="82" rx="14" fill="#2588C8" fill-opacity=".18"/>
+        <text x="16" y="30" fill="#F5F7FF" font-size="14" font-weight="600">③ 验证并恢复备份</text>
+        <text x="16" y="56" fill="#AEB5C8" font-size="12">逐个 quick_check</text>
+      </g>
+      <path d="M816 99H860" stroke="#78C9FF" stroke-width="3" marker-end="url(#arrow)"/>
+      <g transform="translate(876 58)">
+        <rect width="112" height="82" rx="14" fill="#45C489" fill-opacity=".18"/>
+        <text x="56" y="30" text-anchor="middle" fill="#83E2B5" font-size="14" font-weight="600">安全结果</text>
+        <text x="56" y="56" text-anchor="middle" fill="#AEB5C8" font-size="12">恢复或新库</text>
+      </g>
+    </g>
+  </g>
+</svg>

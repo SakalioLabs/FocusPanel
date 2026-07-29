@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using FocusPanel.Data;
@@ -12,6 +11,10 @@ namespace FocusPanel;
 
 public partial class App : Application
 {
+    private readonly CrashLogService _crashLog =
+        new();
+    private bool _handlingFatalException;
+
     public App()
     {
         DispatcherUnhandledException += App_DispatcherUnhandledException;
@@ -69,77 +72,72 @@ public partial class App : Application
             backupService.PerformStartupBackup();
         }
 
-        bool dbInitSuccess = false;
-
-        try
-        {
-            // Initialize Database
-            using (var context = new AppDbContext())
-            {
-                if (!context.Database.EnsureCreated())
-                {
-                    // Database exists. Check if schema is valid
-                    context.EnsureSchema();
-                    var count = context.Todos.Count(); 
-                }
-                else
-                {
-                    // New DB created, run any additional setup
-                    context.EnsureSchema();
-                }
-                dbInitSuccess = true;
-            }
-        }
-        catch (Exception ex)
-        {
-            LogException(ex);
-            // Database initialization failed
-        }
+        bool dbInitSuccess =
+            TryInitializeDatabase();
 
         if (!dbInitSuccess)
         {
-            // Try to recover
-            if (backupService.ArchiveCorruptedDatabase()
+            bool archiveSucceeded =
+                backupService.ArchiveCorruptedDatabase();
+            string recoveryMessage =
+                "没有找到可安全恢复的数据库备份。";
+            bool backupRestored =
+                archiveSucceeded
                 && backupService.TryRestoreLatestBackup(
-                    out string recoveryMessage))
+                    out recoveryMessage);
+            DatabaseStartupRecoveryAction action =
+                DatabaseStartupRecoveryPolicy.Decide(
+                    archiveSucceeded,
+                    backupRestored);
+
+            if (action
+                == DatabaseStartupRecoveryAction
+                    .ValidateRestoredDatabase)
             {
-                MessageBox.Show(
-                    $"检测到数据库异常。{recoveryMessage}",
-                    "数据库已恢复",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                try
+                dbInitSuccess =
+                    TryInitializeDatabase();
+                if (dbInitSuccess)
                 {
-                    using (var context = new AppDbContext())
-                    {
-                         var count = context.Todos.Count();
-                         dbInitSuccess = true;
-                    }
-                }
-                catch
-                {
-                    // Restore failed or backup also corrupted
+                    MessageBox.Show(
+                        $"检测到数据库异常。{recoveryMessage}",
+                        "数据库已恢复",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
                 }
             }
-        }
+            else if (action
+                     == DatabaseStartupRecoveryAction
+                         .CreateFreshDatabase)
+            {
+                dbInitSuccess =
+                    TryInitializeDatabase();
+                if (dbInitSuccess)
+                {
+                    MessageBox.Show(
+                        "原数据库无法使用且没有有效备份。"
+                        + "原文件已归档保留，FocusPanel 已创建新的业务数据库。",
+                        "已保留异常数据库",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+            }
 
-        if (!dbInitSuccess)
-        {
-             // If all else fails, recreate
-             try
-             {
-                 using (var context = new AppDbContext())
-                 {
-                     context.Database.EnsureDeleted();
-                     context.Database.EnsureCreated();
-                 }
-                 MessageBox.Show("Database was corrupted and could not be restored. A new database has been created.", "Database Reset", MessageBoxButton.OK, MessageBoxImage.Warning);
-             }
-             catch (Exception ex)
-             {
-                 MessageBox.Show($"Critical Database Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                 LogException(ex);
-             }
+            if (!dbInitSuccess)
+            {
+                string detail = action
+                    == DatabaseStartupRecoveryAction
+                        .StopWithoutChanges
+                    ? "FocusPanel 无法安全归档当前数据库，因此没有删除、覆盖或重建任何数据。"
+                    : "数据库恢复后仍未通过应用结构检查，因此没有继续覆盖或重建数据。";
+                MessageBox.Show(
+                    $"{detail}\n\n请保留数据库与日志后再进行人工恢复。"
+                    + $"\n日志：{_crashLog.LogPath}",
+                    "数据库安全保护",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                Shutdown(-1);
+                return;
+            }
         }
 
         var mainWindow = new MainWindow();
@@ -156,28 +154,38 @@ public partial class App : Application
 
     private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
+        e.Handled = true;
         LogException(e.Exception);
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
-        
-        // Specific handling for SQLite "no such table" error which might bubble up
-        if (e.Exception.Message.Contains("no such table") || e.Exception.InnerException?.Message.Contains("no such table") == true)
+
+        if (_handlingFatalException)
         {
-             MessageBox.Show("Database schema mismatch detected. The application will restart with a fresh database.", "Database Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-             try 
-             {
-                 File.Delete(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "focuspanel.db"));
-             }
-             catch {} // Best effort
-             
-             // Optionally restart app here, but for now just exit cleanly or let user restart
-             System.Diagnostics.Process.Start(ResourceAssembly.Location);
-             Current.Shutdown();
-             return;
+            Current.Shutdown(-1);
+            return;
         }
 
-        MessageBox.Show($"An unexpected error occurred: {e.Exception.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        e.Handled = true;
+        _handlingFatalException = true;
+        FatalExceptionNotice notice =
+            UnhandledExceptionRecoveryPolicy.CreateNotice(
+                e.Exception,
+                _crashLog.LogPath);
+        try
+        {
+            MessageBox.Show(
+                notice.Message,
+                notice.Title,
+                MessageBoxButton.OK,
+                notice.IsWarning
+                    ? MessageBoxImage.Warning
+                    : MessageBoxImage.Error);
+        }
+        catch
+        {
+            // The dispatcher is already failing. Recovery must not depend on another UI operation.
+        }
+
+        Current.Shutdown(-1);
     }
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -185,22 +193,29 @@ public partial class App : Application
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
         if (e.ExceptionObject is Exception ex)
+            LogException(ex);
+    }
+
+    private bool TryInitializeDatabase()
+    {
+        try
+        {
+            using var context =
+                new AppDbContext();
+            context.Database.EnsureCreated();
+            context.EnsureSchema();
+            _ = context.Todos.Count();
+            return true;
+        }
+        catch (Exception ex)
         {
             LogException(ex);
-            MessageBox.Show($"Critical Error: {ex.Message}", "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
         }
     }
 
     private void LogException(Exception ex)
-    {
-        try
-        {
-            string logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash.log");
-            string message = $"[{DateTime.Now}] {ex}\n\n";
-            File.AppendAllText(logFile, message);
-        }
-        catch { }
-    }
+        => _crashLog.TryAppend(ex);
 
     private static void RestoreNativeDesktopIcons()
     {

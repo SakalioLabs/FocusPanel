@@ -1125,6 +1125,39 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void FatalRecovery_NeverDeletesBusinessDatabaseOrRunsAssemblyDll()
+    {
+        string root = FindRepositoryRoot();
+        string app = File.ReadAllText(
+            Path.Combine(root, "App.xaml.cs"));
+
+        Assert.Contains(
+            "UnhandledExceptionRecoveryPolicy.CreateNotice",
+            app);
+        Assert.Contains(
+            "e.Handled = true;",
+            app);
+        Assert.Contains(
+            "Current.Shutdown(-1);",
+            app);
+        Assert.Contains(
+            "DatabaseStartupRecoveryPolicy.Decide",
+            app);
+        Assert.DoesNotContain(
+            "EnsureDeleted()",
+            app);
+        Assert.DoesNotContain(
+            "ResourceAssembly.Location",
+            app);
+        Assert.DoesNotContain(
+            "File.Delete(",
+            app);
+        Assert.DoesNotContain(
+            "MessageBox.Show($\"Critical Error",
+            app);
+    }
+
+    [Fact]
     public void ShellAutoHide_WaitsForMenusPopupsAndMouseCapture()
     {
         string root = FindRepositoryRoot();
