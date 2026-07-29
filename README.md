@@ -210,6 +210,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 - 桌面文件变化后按收纳盒身份和文件完整路径差量同步：未变化的收纳盒、卡片和展开状态保留原对象，文件移动只更新对应集合，列表不会因 `Clear()` 重建而自动跳回顶部。
 - 桌面监控、拖入拖出、视图切换和手动刷新触发的分区重组不再在 WPF UI 线程读取全部 SQLite 分区与文件偏好；重复请求合并为后台快照，返回后继续使用差量同步器，因此大量记录下滚动、拖拽和 Panel 自动收起保持响应。
 - 图标缩放、列表/网格、个性化/时间线和自动整理开关使用 180ms 合并式后台保存；快速连续调整只写入最后状态，数据库读写严格串行，退出前排空当前设置，保存失败会保留本次会话选择并显示提示。
+- 新建、重命名、删除、拖拽排序、跨列移动和普通文件分类也统一进入同一个后台仓库闸门；操作成功后才刷新布局，失败时原界面和数据库保持原状并显示 Fluent 错误提示，退出前会等待已经进入仓库的写操作完成。
+- 分区拖拽排序持有既有临时交互锁直到 SQLite 提交完成；这段时间 Panel 不会自动收起，重复拖拽不能并发改写顺序。跨列移动会同时连续重排来源列和目标列，不留下重复或跳跃序号。
 - 左右列排序使用 `Move` 更新而非清空重加；同路径文件刷新保留选中状态。数据库瞬时读取失败时保留最后一次有效界面，不把暂时错误显示成“所有收纳盒消失”。
 - 桌面根目录监视器会把 500ms 内重复的创建、写入、删除和重命名通知按路径合并，只读取真正变化的项目；旧仓库变化或监视器缓冲区异常时才安全回退全量扫描。
 - “新增桌面项目自动按类型收纳”只处理开关开启后由监视器确认的新路径；普通内容变化、属性刷新、既有项目改名、启动扫描和错误恢复不会把原有桌面项目批量抓走。复制临时文件改名到最终名称时保留新增身份，取消收纳与救援工具创建的项目则明确跳过，避免恢复后立即被重新收纳。
@@ -239,6 +241,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![桌面收纳差量刷新与滚动稳定](docs/images/organizer-stable-refresh.svg)
 
 ![桌面收纳后台布局快照](docs/images/organizer-background-layout.svg)
+
+![桌面收纳分区写入与拖拽锁](docs/images/organizer-partition-mutations.svg)
 
 ![桌面文件监视路径级增量刷新](docs/images/organizer-path-refresh.svg)
 
@@ -330,7 +334,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.3 `
+  -Version 0.10.4 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -339,7 +343,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.10.3-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.4-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

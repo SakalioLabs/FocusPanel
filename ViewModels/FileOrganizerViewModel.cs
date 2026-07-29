@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FocusPanel.Models;
 using FocusPanel.Services;
-using FocusPanel.Data;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -35,6 +34,8 @@ public partial class FileOrganizerViewModel :
         OrganizerLayoutSaveState> _layoutSaveQueue;
     private readonly OrganizerLayoutSaveState
         _layoutSaveState;
+    private readonly InFlightTaskTracker
+        _layoutMutationTracker = new();
     private bool _applyingLayoutOptions;
     private long _layoutSettingsRevision;
     private bool _isDisposed;
@@ -464,6 +465,43 @@ public partial class FileOrganizerViewModel :
         RequestLayoutRefresh();
     }
 
+    private async Task<bool> RunLayoutMutationAsync(
+        Func<bool> mutation,
+        string operationName)
+    {
+        if (_isDisposed)
+            return false;
+
+        try
+        {
+            Task<bool>? work =
+                _layoutMutationTracker.TryStart(
+                    () => Task.Run(mutation));
+            if (work == null)
+                return false;
+
+            bool changed = await work;
+            if (!_isDisposed
+                && changed)
+            {
+                RequestLayoutRefresh();
+            }
+            return changed;
+        }
+        catch (Exception ex)
+        {
+            if (!_isDisposed)
+            {
+                FocusDialogService.Show(
+                    $"{operationName}失败，原有布局未被修改：{ex.Message}",
+                    "桌面收纳",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+            }
+            return false;
+        }
+    }
+
     [RelayCommand]
     private void ToggleView()
     {
@@ -573,29 +611,28 @@ public partial class FileOrganizerViewModel :
     }
 
     [RelayCommand]
-    private void CreatePartition(string? name = null)
+    private async Task CreatePartition(
+        string? name = null)
     {
-        string partitionName = name ?? NewPartitionName;
+        string partitionName =
+            (name ?? NewPartitionName).Trim();
         
-        if (string.IsNullOrWhiteSpace(partitionName)) return;
-        
-        using (var context = new AppDbContext())
+        if (partitionName.Length == 0)
+            return;
+
+        bool changed =
+            await RunLayoutMutationAsync(
+                () =>
+                    _layoutRepository
+                        .CreatePartition(
+                            partitionName),
+                "创建收纳盒");
+        if (changed
+            && !IsPersonalizedView)
         {
-            if (!context.DesktopPartitions.Any(p => p.Name == partitionName))
-            {
-                int maxOrder = context.DesktopPartitions.Any() ? context.DesktopPartitions.Max(p => p.OrderIndex) : -1;
-                context.DesktopPartitions.Add(new DesktopPartition { Name = partitionName, OrderIndex = maxOrder + 1 });
-                context.SaveChanges();
-                
-                if (!IsPersonalizedView)
-                {
-                    IsPersonalizedView = true;
-                    CurrentViewMode = "Personalized";
-                }
-                RequestLayoutRefresh();
-            }
+            IsPersonalizedView = true;
+            CurrentViewMode = "Personalized";
         }
-        
         NewPartitionName = string.Empty;
     }
     
@@ -624,27 +661,12 @@ public partial class FileOrganizerViewModel :
 
         if (oldName == newName) return;
 
-        await Task.Run(() => 
-        {
-            using (var context = new AppDbContext())
-            {
-                var p = context.DesktopPartitions.FirstOrDefault(dp => dp.Name == oldName);
-                if (p != null)
-                {
-                    p.Name = newName;
-                    
-                    var prefs = context.DesktopFilePreferences.Where(fp => fp.PartitionName == oldName).ToList();
-                    foreach (var pref in prefs)
-                    {
-                        pref.PartitionName = newName;
-                    }
-                    
-                    context.SaveChanges();
-                }
-            }
-        });
-        
-        RequestLayoutRefresh();
+        await RunLayoutMutationAsync(
+            () =>
+                _layoutRepository.RenamePartition(
+                    oldName,
+                    newName),
+            "重命名收纳盒");
     }
     
     [RelayCommand]
@@ -654,7 +676,8 @@ public partial class FileOrganizerViewModel :
     }
 
     [RelayCommand]
-    private void DeletePartition(PartitionViewModel? partition)
+    private async Task DeletePartition(
+        PartitionViewModel? partition)
     {
         if (partition == null) return;
 
@@ -666,21 +689,11 @@ public partial class FileOrganizerViewModel :
 
         if (result != System.Windows.MessageBoxResult.Yes) return;
 
-        using (var context = new AppDbContext())
-        {
-            var p = context.DesktopPartitions.FirstOrDefault(dp => dp.Name == partition.Name);
-            if (p != null)
-            {
-                context.DesktopPartitions.Remove(p);
-                var prefs = context.DesktopFilePreferences
-                    .Where(fp => fp.PartitionName == partition.Name)
-                    .ToList();
-                foreach (var pref in prefs)
-                    pref.PartitionName = "";
-                context.SaveChanges();
-            }
-        }
-        RequestLayoutRefresh();
+        await RunLayoutMutationAsync(
+            () =>
+                _layoutRepository.DeletePartition(
+                    partition.Name),
+            "删除收纳盒");
     }
 
     [RelayCommand]
@@ -754,145 +767,54 @@ public partial class FileOrganizerViewModel :
         }
     }
 
-    public void ReorderPartition(PartitionViewModel source, PartitionViewModel target, bool insertAfter = false)
+    public async Task ReorderPartition(
+        PartitionViewModel source,
+        PartitionViewModel target,
+        bool insertAfter = false)
     {
         if (source == null || target == null || source == target) return;
         if (!IsPersonalizedView) return;
 
-        using (var context = new AppDbContext())
-        {
-            var partitions = context.DesktopPartitions.OrderBy(p => p.OrderIndex).ToList();
-            var srcP = partitions.FirstOrDefault(p => p.Name == source.Name);
-            var tgtP = partitions.FirstOrDefault(p => p.Name == target.Name);
-            
-            if (srcP != null && tgtP != null)
-            {
-                // Determine Target Column and Order
-                int targetColumn = tgtP.ColumnIndex; 
-                
-                // If we are dragging to a different column, update source column
-                if (srcP.ColumnIndex != targetColumn)
-                {
-                    srcP.ColumnIndex = targetColumn;
-                }
-                
-                // Get all partitions in the target column, ordered by index
-                var colPartitions = partitions.Where(p => p.ColumnIndex == targetColumn).OrderBy(p => p.OrderIndex).ToList();
-                
-                // Remove source if it's already in this list (same column move)
-                // Note: We need to remove it first to calculate correct insertion index
-                if (colPartitions.Contains(srcP))
-                {
-                    colPartitions.Remove(srcP);
-                }
-                
-                // Find index of target
-                int targetIndex = colPartitions.IndexOf(tgtP);
-                
-                if (targetIndex != -1)
-                {
-                    if (insertAfter)
-                    {
-                        // Insert AFTER target
-                        if (targetIndex + 1 < colPartitions.Count)
-                            colPartitions.Insert(targetIndex + 1, srcP);
-                        else
-                            colPartitions.Add(srcP);
-                    }
-                    else
-                    {
-                        // Insert BEFORE target
-                        colPartitions.Insert(targetIndex, srcP);
-                    }
-                }
-                else
-                {
-                    // Fallback
-                    colPartitions.Add(srcP);
-                }
-                
-                // Re-index this column
-                for (int i = 0; i < colPartitions.Count; i++)
-                {
-                    colPartitions[i].OrderIndex = i;
-                }
-                
-                // Re-index old column if needed
-                if (source.ColumnIndex != targetColumn)
-                {
-                    var oldColPartitions = partitions.Where(p => p.ColumnIndex == source.ColumnIndex && p != srcP).OrderBy(p => p.OrderIndex).ToList();
-                    for (int i = 0; i < oldColPartitions.Count; i++)
-                    {
-                        oldColPartitions[i].OrderIndex = i;
-                    }
-                }
-                
-                context.SaveChanges();
-            }
-        }
-        RequestLayoutRefresh();
+        await RunLayoutMutationAsync(
+            () =>
+                _layoutRepository.ReorderPartition(
+                    source.Name,
+                    target.Name,
+                    insertAfter),
+            "调整收纳盒顺序");
     }
 
-    public void MovePartitionToColumn(PartitionViewModel source, int targetColumn)
+    public async Task MovePartitionToColumn(
+        PartitionViewModel source,
+        int targetColumn)
     {
         if (source == null || !IsPersonalizedView) return;
         if (source.ColumnIndex == targetColumn) return; // Already in column, no change if just dropped on empty space
 
-        using (var context = new AppDbContext())
-        {
-            var p = context.DesktopPartitions.FirstOrDefault(dp => dp.Name == source.Name);
-            if (p != null)
-            {
-                p.ColumnIndex = targetColumn;
-                
-                // Set order to max + 1
-                var colPartitions = context.DesktopPartitions.Where(dp => dp.ColumnIndex == targetColumn).ToList();
-                int maxOrder = colPartitions.Any() ? colPartitions.Max(dp => dp.OrderIndex) : -1;
-                p.OrderIndex = maxOrder + 1;
-                
-                context.SaveChanges();
-            }
-        }
-        RequestLayoutRefresh();
+        await RunLayoutMutationAsync(
+            () =>
+                _layoutRepository
+                    .MovePartitionToColumn(
+                        source.Name,
+                        targetColumn),
+            "移动收纳盒");
     }
 
     [RelayCommand]
-    private void AssignToPartition(string partitionName)
+    private async Task AssignToPartition(
+        string partitionName)
     {
         if (SelectedFile == null) return;
-        
-        using (var context = new AppDbContext())
-        {
-            var pref = context.DesktopFilePreferences.FirstOrDefault(fp => fp.FilePath == SelectedFile.Name);
-            
-            if (string.IsNullOrEmpty(partitionName))
-            {
-                if (pref != null)
-                {
-                    if (pref.IsHiddenFromDesktop)
-                        pref.PartitionName = "";
-                    else
-                        context.DesktopFilePreferences.Remove(pref);
-                }
-            }
-            else
-            {
-                if (pref == null)
-                {
-                    pref = new DesktopFilePreference { FilePath = SelectedFile.Name, PartitionName = "" };
-                    context.DesktopFilePreferences.Add(pref);
-                }
-                pref.PartitionName = partitionName;
-                
-                if (!context.DesktopPartitions.Any(dp => dp.Name == partitionName))
-                {
-                    int maxOrder = context.DesktopPartitions.Any() ? context.DesktopPartitions.Max(dp => dp.OrderIndex) : -1;
-                    context.DesktopPartitions.Add(new DesktopPartition { Name = partitionName, OrderIndex = maxOrder + 1 });
-                }
-            }
-            context.SaveChanges();
-        }
-        RequestLayoutRefresh();
+
+        string fileName = SelectedFile.Name;
+        await RunLayoutMutationAsync(
+            () =>
+                _layoutRepository
+                    .AssignFileToPartition(
+                        fileName,
+                        partitionName
+                        ?? string.Empty),
+            "更新文件分类");
     }
 
     [RelayCommand]
@@ -1063,6 +985,18 @@ public partial class FileOrganizerViewModel :
         _layoutSaveQueue.CompleteAsync()
             .GetAwaiter()
             .GetResult();
+        try
+        {
+            _layoutMutationTracker.CompleteAsync()
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                "Complete organizer layout mutation failed: "
+                + ex.Message);
+        }
         _fileService.Dispose();
     }
 }

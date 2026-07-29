@@ -179,6 +179,69 @@ public sealed class FileOrganizerLifecycleContractTests
             repository);
     }
 
+    [Fact]
+    public void PartitionMutations_UseSharedBackgroundRepositoryAndDragLease()
+    {
+        string root = FindRepositoryRoot();
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+        string repository = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "OrganizerLayoutRepository.cs"));
+        string viewCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FileOrganizerView.xaml.cs"));
+
+        Assert.DoesNotContain(
+            "new AppDbContext",
+            viewModel);
+        Assert.Contains(
+            "RunLayoutMutationAsync",
+            viewModel);
+        Assert.Contains(
+            "Task.Run(mutation)",
+            viewModel);
+        Assert.Contains(
+            "_layoutMutationTracker.TryStart",
+            viewModel);
+        Assert.Contains(
+            "_layoutMutationTracker.CompleteAsync()",
+            viewModel);
+        Assert.Contains(
+            "_layoutRepository.ReorderPartition",
+            viewModel);
+        Assert.Contains(
+            ".MovePartitionToColumn(",
+            viewModel);
+        Assert.Contains(
+            ".AssignFileToPartition(",
+            viewModel);
+        Assert.Contains(
+            "CreatePartitionCore",
+            repository);
+        Assert.Contains(
+            "RenamePartitionCore",
+            repository);
+        Assert.Contains(
+            "DeletePartitionCore",
+            repository);
+        Assert.Contains(
+            "OrganizerPartitionOrdering.Reorder",
+            repository);
+        Assert.True(
+            Regex.Matches(
+                viewCode,
+                @"StartPartitionDrop\(\s*\(\) => vm\.(ReorderPartition|MovePartitionToColumn)")
+            .Count >= 3);
+    }
+
     private static string ReadService()
     {
         string root = FindRepositoryRoot();

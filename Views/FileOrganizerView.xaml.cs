@@ -435,8 +435,11 @@ public partial class FileOrganizerView : UserControl
                 {
                      if (sourcePartition != partition)
                      {
-                         // Pass the insertAfter flag
-                         vm.ReorderPartition(sourcePartition, partition, isBottom);
+                         StartPartitionDrop(
+                             () => vm.ReorderPartition(
+                                 sourcePartition,
+                                 partition,
+                                 isBottom));
                      }
                 }
             }
@@ -485,7 +488,10 @@ public partial class FileOrganizerView : UserControl
             e.Handled = true; // Mark as handled so it doesn't bubble up to Partition_Drop if they overlap
             if (sourcePartition != targetPartition)
             {
-                vm.ReorderPartition(sourcePartition, targetPartition);
+                StartPartitionDrop(
+                    () => vm.ReorderPartition(
+                        sourcePartition,
+                        targetPartition));
             }
         }
     }
@@ -508,7 +514,10 @@ public partial class FileOrganizerView : UserControl
         {
             e.Handled = true;
             // Move to end of target column
-            vm.MovePartitionToColumn(sourcePartition, targetColumn);
+            StartPartitionDrop(
+                () => vm.MovePartitionToColumn(
+                    sourcePartition,
+                    targetColumn));
         }
     }
 

@@ -53,6 +53,90 @@ internal interface IOrganizerLayoutRepository
 
     void SaveOptions(
         OrganizerLayoutOptions options);
+
+    bool CreatePartition(string name);
+
+    bool RenamePartition(
+        string oldName,
+        string newName);
+
+    bool DeletePartition(string name);
+
+    bool ReorderPartition(
+        string sourceName,
+        string targetName,
+        bool insertAfter);
+
+    bool MovePartitionToColumn(
+        string sourceName,
+        int targetColumn);
+
+    bool AssignFileToPartition(
+        string fileName,
+        string partitionName);
+}
+
+internal sealed record OrganizerLayoutMutationHandlers(
+    Func<string, bool> CreatePartition,
+    Func<string, string, bool> RenamePartition,
+    Func<string, bool> DeletePartition,
+    Func<string, string, bool, bool> ReorderPartition,
+    Func<string, int, bool> MovePartitionToColumn,
+    Func<string, string, bool> AssignFileToPartition)
+{
+    internal static OrganizerLayoutMutationHandlers
+        Default { get; } =
+        new(
+            CreatePartitionCore,
+            RenamePartitionCore,
+            DeletePartitionCore,
+            ReorderPartitionCore,
+            MovePartitionToColumnCore,
+            AssignFileToPartitionCore);
+
+    private static bool CreatePartitionCore(
+        string name) =>
+        OrganizerLayoutRepository
+            .CreatePartitionCore(name);
+
+    private static bool RenamePartitionCore(
+        string oldName,
+        string newName) =>
+        OrganizerLayoutRepository
+            .RenamePartitionCore(
+                oldName,
+                newName);
+
+    private static bool DeletePartitionCore(
+        string name) =>
+        OrganizerLayoutRepository
+            .DeletePartitionCore(name);
+
+    private static bool ReorderPartitionCore(
+        string sourceName,
+        string targetName,
+        bool insertAfter) =>
+        OrganizerLayoutRepository
+            .ReorderPartitionCore(
+                sourceName,
+                targetName,
+                insertAfter);
+
+    private static bool MovePartitionToColumnCore(
+        string sourceName,
+        int targetColumn) =>
+        OrganizerLayoutRepository
+            .MovePartitionToColumnCore(
+                sourceName,
+                targetColumn);
+
+    private static bool AssignFileToPartitionCore(
+        string fileName,
+        string partitionName) =>
+        OrganizerLayoutRepository
+            .AssignFileToPartitionCore(
+                fileName,
+                partitionName);
 }
 
 internal sealed class OrganizerLayoutRepository
@@ -72,11 +156,16 @@ internal sealed class OrganizerLayoutRepository
         OrganizerLayoutSnapshot> _load;
     private readonly Action<OrganizerLayoutOptions>
         _saveOptions;
+    private readonly OrganizerLayoutMutationHandlers
+        _mutations;
     private readonly SemaphoreSlim _gate =
         new(1, 1);
 
     internal OrganizerLayoutRepository()
-        : this(LoadCore, SaveOptionsCore)
+        : this(
+            LoadCore,
+            SaveOptionsCore,
+            OrganizerLayoutMutationHandlers.Default)
     {
     }
 
@@ -84,7 +173,8 @@ internal sealed class OrganizerLayoutRepository
         Func<
             OrganizerLegacyLayout,
             OrganizerLayoutSnapshot> load,
-        Action<OrganizerLayoutOptions>? saveOptions = null)
+        Action<OrganizerLayoutOptions>? saveOptions = null,
+        OrganizerLayoutMutationHandlers? mutations = null)
     {
         _load =
             load
@@ -93,6 +183,9 @@ internal sealed class OrganizerLayoutRepository
         _saveOptions =
             saveOptions
             ?? SaveOptionsCore;
+        _mutations =
+            mutations
+            ?? OrganizerLayoutMutationHandlers.Default;
     }
 
     public OrganizerLayoutSnapshot Load(
@@ -127,6 +220,86 @@ internal sealed class OrganizerLayoutRepository
         {
             _gate.Release();
         }
+    }
+
+    public bool CreatePartition(string name) =>
+        ExecuteMutation(
+            () =>
+                _mutations.CreatePartition(
+                    RequireName(name)));
+
+    public bool RenamePartition(
+        string oldName,
+        string newName) =>
+        ExecuteMutation(
+            () =>
+                _mutations.RenamePartition(
+                    RequireName(oldName),
+                    RequireName(newName)));
+
+    public bool DeletePartition(string name) =>
+        ExecuteMutation(
+            () =>
+                _mutations.DeletePartition(
+                    RequireName(name)));
+
+    public bool ReorderPartition(
+        string sourceName,
+        string targetName,
+        bool insertAfter) =>
+        ExecuteMutation(
+            () =>
+                _mutations.ReorderPartition(
+                    RequireName(sourceName),
+                    RequireName(targetName),
+                    insertAfter));
+
+    public bool MovePartitionToColumn(
+        string sourceName,
+        int targetColumn) =>
+        ExecuteMutation(
+            () =>
+                _mutations.MovePartitionToColumn(
+                    RequireName(sourceName),
+                    targetColumn));
+
+    public bool AssignFileToPartition(
+        string fileName,
+        string partitionName) =>
+        ExecuteMutation(
+            () =>
+                _mutations.AssignFileToPartition(
+                    RequireName(fileName),
+                    partitionName?.Trim()
+                    ?? string.Empty));
+
+    private bool ExecuteMutation(
+        Func<bool> mutation)
+    {
+        _gate.Wait();
+        try
+        {
+            return mutation();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private static string RequireName(string value)
+    {
+        string normalized =
+            value?.Trim()
+            ?? string.Empty;
+        if (normalized.Length == 0)
+        {
+            throw new ArgumentException(
+                "名称不能为空。",
+                nameof(value));
+        }
+
+        return normalized;
     }
 
     private static OrganizerLayoutSnapshot Normalize(
@@ -268,6 +441,240 @@ internal sealed class OrganizerLayoutRepository
             partitions,
             preferences);
     }
+
+    internal static bool CreatePartitionCore(
+        string name)
+    {
+        using var context = new AppDbContext();
+        if (!CreatePartitionInContext(
+                context,
+                name))
+        {
+            return false;
+        }
+
+        context.SaveChanges();
+        return true;
+    }
+
+    internal static bool RenamePartitionCore(
+        string oldName,
+        string newName)
+    {
+        using var context = new AppDbContext();
+        List<DesktopPartition> partitions =
+            context.DesktopPartitions.ToList();
+        DesktopPartition? partition =
+            FindPartition(
+                partitions,
+                oldName);
+        if (partition == null)
+            return false;
+
+        DesktopPartition? duplicate =
+            partitions.FirstOrDefault(item =>
+                !ReferenceEquals(item, partition)
+                && string.Equals(
+                    item.Name,
+                    newName,
+                    StringComparison.OrdinalIgnoreCase));
+        if (duplicate != null)
+        {
+            throw new InvalidOperationException(
+                $"收纳盒“{newName}”已存在。");
+        }
+
+        if (string.Equals(
+                partition.Name,
+                newName,
+                StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        string storedOldName = partition.Name;
+        partition.Name = newName;
+        foreach (DesktopFilePreference preference
+                 in context.DesktopFilePreferences
+                     .ToList()
+                     .Where(item =>
+                         string.Equals(
+                             item.PartitionName,
+                             storedOldName,
+                             StringComparison.OrdinalIgnoreCase)))
+        {
+            preference.PartitionName = newName;
+        }
+        context.SaveChanges();
+        return true;
+    }
+
+    internal static bool DeletePartitionCore(
+        string name)
+    {
+        using var context = new AppDbContext();
+        DesktopPartition? partition =
+            FindPartition(
+                context.DesktopPartitions.ToList(),
+                name);
+        if (partition == null)
+            return false;
+
+        context.DesktopPartitions.Remove(partition);
+        foreach (DesktopFilePreference preference
+                 in context.DesktopFilePreferences
+                     .ToList()
+                     .Where(item =>
+                         string.Equals(
+                             item.PartitionName,
+                             partition.Name,
+                             StringComparison.OrdinalIgnoreCase)))
+        {
+            preference.PartitionName =
+                string.Empty;
+        }
+        context.SaveChanges();
+        return true;
+    }
+
+    internal static bool ReorderPartitionCore(
+        string sourceName,
+        string targetName,
+        bool insertAfter)
+    {
+        using var context = new AppDbContext();
+        List<DesktopPartition> partitions =
+            context.DesktopPartitions.ToList();
+        if (!OrganizerPartitionOrdering.Reorder(
+                partitions,
+                sourceName,
+                targetName,
+                insertAfter))
+        {
+            return false;
+        }
+
+        context.SaveChanges();
+        return true;
+    }
+
+    internal static bool MovePartitionToColumnCore(
+        string sourceName,
+        int targetColumn)
+    {
+        using var context = new AppDbContext();
+        List<DesktopPartition> partitions =
+            context.DesktopPartitions.ToList();
+        if (!OrganizerPartitionOrdering.MoveToColumn(
+                partitions,
+                sourceName,
+                targetColumn))
+        {
+            return false;
+        }
+
+        context.SaveChanges();
+        return true;
+    }
+
+    internal static bool AssignFileToPartitionCore(
+        string fileName,
+        string partitionName)
+    {
+        using var context = new AppDbContext();
+        DesktopFilePreference? preference =
+            context.DesktopFilePreferences
+                .ToList()
+                .Where(item =>
+                    string.Equals(
+                        item.FilePath,
+                        fileName,
+                        StringComparison.OrdinalIgnoreCase))
+                .OrderBy(item => item.Id)
+                .LastOrDefault();
+        if (partitionName.Length == 0)
+        {
+            if (preference == null)
+                return false;
+
+            if (preference.IsHiddenFromDesktop)
+            {
+                if (preference.PartitionName.Length == 0)
+                    return false;
+
+                preference.PartitionName =
+                    string.Empty;
+            }
+            else
+            {
+                context.DesktopFilePreferences.Remove(
+                    preference);
+            }
+            context.SaveChanges();
+            return true;
+        }
+
+        bool partitionCreated =
+            CreatePartitionInContext(
+            context,
+            partitionName);
+        if (preference == null)
+        {
+            preference =
+                new DesktopFilePreference
+                {
+                    FilePath = fileName
+                };
+            context.DesktopFilePreferences.Add(
+                preference);
+        }
+        else if (string.Equals(
+                     preference.PartitionName,
+                     partitionName,
+                     StringComparison.Ordinal))
+        {
+            if (!partitionCreated)
+                return false;
+
+            context.SaveChanges();
+            return true;
+        }
+
+        preference.PartitionName = partitionName;
+        context.SaveChanges();
+        return true;
+    }
+
+    private static bool CreatePartitionInContext(
+        AppDbContext context,
+        string name)
+    {
+        List<DesktopPartition> partitions =
+            context.DesktopPartitions.ToList();
+        if (FindPartition(partitions, name) != null)
+            return false;
+
+        int maxOrder = partitions.Count == 0
+            ? -1
+            : partitions.Max(item =>
+                item.OrderIndex);
+        context.DesktopPartitions.Add(
+            new DesktopPartition
+            {
+                Name = name,
+                OrderIndex = maxOrder + 1
+            });
+        return true;
+    }
+
+    private static DesktopPartition? FindPartition(
+        IEnumerable<DesktopPartition> partitions,
+        string name) =>
+        partitions.FirstOrDefault(item =>
+            string.Equals(
+                item.Name,
+                name,
+                StringComparison.OrdinalIgnoreCase));
 
     private static bool TryReadBoolean(
         IReadOnlyDictionary<string, string> config,
