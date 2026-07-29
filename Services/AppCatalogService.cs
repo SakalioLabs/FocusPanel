@@ -15,7 +15,9 @@ namespace FocusPanel.Services;
 public sealed class AppCatalogService : IAppCatalogService
 {
     private readonly List<AppLaunchItem> _catalog = new();
+    private readonly List<PinnedApp> _pinnedApps = new();
     private readonly object _catalogLock = new();
+    private readonly object _pinnedLock = new();
     private readonly object _indexLock = new();
     private readonly object _iconLock = new();
     private readonly IAppIdentityResolver _identityResolver;
@@ -36,6 +38,7 @@ public sealed class AppCatalogService : IAppCatalogService
     private volatile bool _isIndexing;
     private volatile bool _disposed;
     private bool _iconWorkerRunning;
+    private long _pinnedRevision;
 
     public AppCatalogService() : this(
         new AppIdentityResolver(),
@@ -122,17 +125,27 @@ public sealed class AppCatalogService : IAppCatalogService
     public IReadOnlyList<AppLaunchItem> GetPinned()
     {
         IReadOnlyList<PinnedApp> entities =
-            _pinnedLoader();
+            GetPinnedEntitySnapshot();
+        Dictionary<string, AppLaunchItem>
+            catalogByKey;
+        lock (_catalogLock)
+        {
+            catalogByKey = _catalog
+                .GroupBy(
+                    BuildKey,
+                    StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.First(),
+                    StringComparer.OrdinalIgnoreCase);
+        }
         List<AppLaunchItem> results = entities
             .OrderBy(item => item.OrderIndex)
             .Select(entity =>
             {
-                AppLaunchItem? catalogItem;
-                lock (_catalogLock)
-                {
-                    catalogItem = _catalog.FirstOrDefault(item =>
-                        string.Equals(BuildKey(item), BuildKey(entity), StringComparison.OrdinalIgnoreCase));
-                }
+                catalogByKey.TryGetValue(
+                    BuildKey(entity),
+                    out AppLaunchItem? catalogItem);
                 AppLaunchItem result = catalogItem ?? ToLaunchItem(entity);
                 return result;
             })
@@ -167,15 +180,20 @@ public sealed class AppCatalogService : IAppCatalogService
         EnsureIdentity(app);
         using var context = new AppDbContext();
         string key = BuildKey(app);
-        var existing = context.PinnedApps.AsEnumerable()
+        List<PinnedApp> ordered =
+            context.PinnedApps
+                .OrderBy(item => item.OrderIndex)
+                .ToList();
+        PinnedApp? existing = ordered
             .FirstOrDefault(item => string.Equals(BuildKey(item), key, StringComparison.OrdinalIgnoreCase));
 
         if (pinned && existing == null)
         {
-            int nextOrder = context.PinnedApps.Any()
-                ? context.PinnedApps.Max(item => item.OrderIndex) + 1
-                : 0;
-            context.PinnedApps.Add(new PinnedApp
+            int nextOrder = ordered.Count == 0
+                ? 0
+                : ordered.Max(
+                    item => item.OrderIndex) + 1;
+            var entity = new PinnedApp
             {
                 DisplayName = app.DisplayName,
                 LaunchKind = app.LaunchKind,
@@ -184,14 +202,19 @@ public sealed class AppCatalogService : IAppCatalogService
                 IconKey = app.IconKey,
                 OrderIndex = nextOrder,
                 CreatedAt = DateTime.Now
-            });
+            };
+            context.PinnedApps.Add(entity);
+            ordered.Add(entity);
         }
         else if (!pinned && existing != null)
         {
             context.PinnedApps.Remove(existing);
+            ordered.Remove(existing);
         }
 
         context.SaveChanges();
+        ReplacePinnedCache(ordered);
+        UpdateCatalogPinnedFlags();
         app.IsPinned = pinned;
         return true;
     }
@@ -217,6 +240,8 @@ public sealed class AppCatalogService : IAppCatalogService
         for (int index = 0; index < ordered.Count; index++)
             ordered[index].OrderIndex = index;
         context.SaveChanges();
+        ReplacePinnedCache(ordered);
+        UpdateCatalogPinnedFlags();
         return true;
     }
 
@@ -262,6 +287,122 @@ public sealed class AppCatalogService : IAppCatalogService
         return context.PinnedApps.OrderBy(item => item.OrderIndex).AsNoTracking().ToList();
     }
 
+    private long GetPinnedRevision()
+    {
+        lock (_pinnedLock)
+            return _pinnedRevision;
+    }
+
+    private IReadOnlyList<PinnedApp>
+        GetPinnedEntitySnapshot()
+    {
+        lock (_pinnedLock)
+        {
+            return _pinnedApps
+                .Select(ClonePinnedApp)
+                .ToList();
+        }
+    }
+
+    private bool TryReplacePinnedCache(
+        IEnumerable<PinnedApp> items,
+        long expectedRevision)
+    {
+        lock (_pinnedLock)
+        {
+            if (_pinnedRevision
+                != expectedRevision)
+            {
+                return false;
+            }
+
+            ReplacePinnedCacheCore(items);
+            return true;
+        }
+    }
+
+    private void ReplacePinnedCache(
+        IEnumerable<PinnedApp> items)
+    {
+        lock (_pinnedLock)
+            ReplacePinnedCacheCore(items);
+    }
+
+    private void ReplacePinnedCacheCore(
+        IEnumerable<PinnedApp> items)
+    {
+        _pinnedApps.Clear();
+        _pinnedApps.AddRange(
+            items
+                .OrderBy(item =>
+                    item.OrderIndex)
+                .Select(ClonePinnedApp));
+        _pinnedRevision++;
+    }
+
+    private void ReplaceCatalog(
+        IEnumerable<AppLaunchItem> items)
+    {
+        lock (_pinnedLock)
+        {
+            HashSet<string> pinnedKeys =
+                BuildPinnedKeys();
+            lock (_catalogLock)
+            {
+                _catalog.Clear();
+                _catalog.AddRange(items);
+                ApplyPinnedFlags(
+                    _catalog,
+                    pinnedKeys);
+            }
+        }
+    }
+
+    private void UpdateCatalogPinnedFlags()
+    {
+        lock (_pinnedLock)
+        {
+            HashSet<string> pinnedKeys =
+                BuildPinnedKeys();
+            lock (_catalogLock)
+            {
+                ApplyPinnedFlags(
+                    _catalog,
+                    pinnedKeys);
+            }
+        }
+    }
+
+    private HashSet<string> BuildPinnedKeys() =>
+        _pinnedApps
+            .Select(BuildKey)
+            .ToHashSet(
+                StringComparer.OrdinalIgnoreCase);
+
+    private static void ApplyPinnedFlags(
+        IEnumerable<AppLaunchItem> items,
+        ISet<string> pinnedKeys)
+    {
+        foreach (AppLaunchItem item in items)
+            item.IsPinned =
+                pinnedKeys.Contains(
+                    BuildKey(item));
+    }
+
+    private static PinnedApp ClonePinnedApp(
+        PinnedApp source) =>
+        new()
+        {
+            Id = source.Id,
+            DisplayName = source.DisplayName,
+            LaunchKind = source.LaunchKind,
+            LaunchTarget = source.LaunchTarget,
+            Arguments = source.Arguments,
+            IconKey = source.IconKey,
+            OrderIndex = source.OrderIndex,
+            CreatedAt = source.CreatedAt
+        };
+
     private static AppLaunchItem ToLaunchItem(PinnedApp entity) => new()
     {
         DisplayName = entity.DisplayName,
@@ -284,6 +425,46 @@ public sealed class AppCatalogService : IAppCatalogService
     {
         try
         {
+            long pinnedRevision =
+                GetPinnedRevision();
+            IReadOnlyList<PinnedApp>?
+                loadedPinnedApps = null;
+            try
+            {
+                loadedPinnedApps =
+                    _pinnedLoader();
+            }
+            catch
+            {
+                // Preserve the last valid cache when SQLite is
+                // temporarily unavailable.
+            }
+            cancellation.Token
+                .ThrowIfCancellationRequested();
+            bool pinnedCacheUpdated = false;
+            if (loadedPinnedApps != null)
+            {
+                lock (_indexLock)
+                {
+                    if (_disposed
+                        || !ReferenceEquals(
+                            _indexCancellation,
+                            cancellation)
+                        || cancellation
+                            .IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    pinnedCacheUpdated =
+                        TryReplacePinnedCache(
+                            loadedPinnedApps,
+                            pinnedRevision);
+                }
+            }
+            if (pinnedCacheUpdated)
+                RaiseCatalogChanged();
+
             var candidates =
                 new Dictionary<string, AppLaunchItem>(
                     StringComparer.OrdinalIgnoreCase);
@@ -297,15 +478,8 @@ public sealed class AppCatalogService : IAppCatalogService
                 cancellation.Token);
             cancellation.Token.ThrowIfCancellationRequested();
 
-            IReadOnlyList<PinnedApp> pinnedApps;
-            try
-            {
-                pinnedApps = _pinnedLoader();
-            }
-            catch
-            {
-                pinnedApps = Array.Empty<PinnedApp>();
-            }
+            IReadOnlyList<PinnedApp> pinnedApps =
+                GetPinnedEntitySnapshot();
 
             foreach (PinnedApp pinned in pinnedApps)
             {
@@ -325,18 +499,11 @@ public sealed class AppCatalogService : IAppCatalogService
                     // even if its identity can no longer be resolved.
                 }
             }
-            HashSet<string> pinnedKeys = pinnedApps
-                .Select(BuildKey)
-                .ToHashSet(
-                    StringComparer.OrdinalIgnoreCase);
-
             List<AppLaunchItem> ordered = candidates.Values
                 .OrderBy(
                     item => item.DisplayName,
                     StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
-            foreach (AppLaunchItem app in ordered)
-                app.IsPinned = pinnedKeys.Contains(BuildKey(app));
 
             lock (_indexLock)
             {
@@ -348,11 +515,7 @@ public sealed class AppCatalogService : IAppCatalogService
                 {
                     return;
                 }
-                lock (_catalogLock)
-                {
-                    _catalog.Clear();
-                    _catalog.AddRange(ordered);
-                }
+                ReplaceCatalog(ordered);
             }
         }
         catch (OperationCanceledException)

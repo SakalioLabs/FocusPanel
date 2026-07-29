@@ -35,6 +35,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - Panel 隐藏后暂停完整窗口枚举、时钟、系统状态和任务摘要刷新；右缘热区、全屏抑制、安全恢复和 GitHub 更新检查继续运行。再次唤出时先刷新窗口快照和当前时间，状态中心与日历在打开时即时刷新。
 - 音频、网络、输入法和电池状态通过单消费者后台快照读取；刷新期间的重复请求合并为一次尾随刷新，只有最终快照回到 WPF Dispatcher 后才更新界面。设备读取失败不会阻塞悬停呼出，退出后的迟到结果会被丢弃。
 - 待办数量和日历 42 天专注摘要也在工作线程使用独立 `AppDbContext` 查询；快速翻月时旧月份结果不会覆盖当前网格，SQLite 临时繁忙时保留最后有效摘要而不是闪成 0 项。
+- 固定应用在后台读取后保存为线程安全内存快照；前台切换、窗口标题变化及窗口创建/关闭只组合缓存与运行窗口，不再在 WinEvent 高频路径上反复打开 SQLite。固定、取消固定和排序成功后同步替换缓存。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
 - 应用图标支持 Windows 任务栏常用的新实例手势：`Shift+左键` 或鼠标中键直接启动新实例；没有可靠启动目标的受保护窗口不会显示或执行该动作。工具提示和读屏帮助会同步说明当前可用操作。
 - 多窗口列表精确标记当前前台窗口；同一应用内部切换窗口也会增量更新标记。标题超过 340px 时视觉省略，读屏名称仍保留完整标题并说明“当前窗口”。
@@ -93,6 +94,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![系统状态合并式后台刷新](docs/images/system-status-background-refresh.svg)
 
 ![日历摘要后台查询与月份隔离](docs/images/calendar-summary-background-refresh.svg)
+
+![统一应用栏固定项内存快照](docs/images/pinned-app-memory-snapshot.svg)
 
 ![多窗口应用一层直接列表](docs/images/multi-window-direct-list.svg)
 
@@ -317,7 +320,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.99 `
+  -Version 0.10.0 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -326,7 +329,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.99-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.0-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

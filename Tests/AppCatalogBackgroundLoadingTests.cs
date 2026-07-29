@@ -158,6 +158,194 @@ public sealed class AppCatalogBackgroundLoadingTests
         }
     }
 
+    [Fact]
+    public void Construction_DoesNotWaitForSlowPinnedStorage()
+    {
+        using var loaderEntered =
+            new ManualResetEventSlim();
+        using var releaseLoader =
+            new ManualResetEventSlim();
+        var watch = Stopwatch.StartNew();
+        using var service = new AppCatalogService(
+            new FakeIdentityResolver(),
+            new ImmediateCatalogSource(),
+            new NullIconSource(),
+            () =>
+            {
+                loaderEntered.Set();
+                releaseLoader.Wait(
+                    TimeSpan.FromSeconds(5));
+                return Array.Empty<PinnedApp>();
+            });
+        watch.Stop();
+
+        try
+        {
+            Assert.True(
+                watch.Elapsed
+                    < TimeSpan.FromSeconds(1),
+                $"构造函数等待固定项存储 {watch.ElapsedMilliseconds}ms。");
+            Assert.True(
+                loaderEntered.Wait(
+                    TimeSpan.FromSeconds(3)));
+            Stopwatch getPinnedDuration =
+                Stopwatch.StartNew();
+            Assert.Empty(service.GetPinned());
+            getPinnedDuration.Stop();
+            Assert.True(
+                getPinnedDuration.Elapsed
+                    < TimeSpan.FromMilliseconds(500),
+                $"GetPinned 等待固定项存储 {getPinnedDuration.ElapsedMilliseconds}ms。");
+        }
+        finally
+        {
+            releaseLoader.Set();
+        }
+    }
+
+    [Fact]
+    public void RepeatedGetPinned_UsesOneBackgroundStorageSnapshot()
+    {
+        var source = new BlockingCatalogSource();
+        int loadCount = 0;
+        using var service = new AppCatalogService(
+            new FakeIdentityResolver(),
+            source,
+            new NullIconSource(),
+            () =>
+            {
+                Interlocked.Increment(
+                    ref loadCount);
+                return new[]
+                {
+                    Pinned("Pinned")
+                };
+            });
+
+        try
+        {
+            Assert.True(
+                source.Entered.Wait(
+                    TimeSpan.FromSeconds(3)));
+
+            Assert.Single(service.GetPinned());
+            Assert.Single(service.GetPinned());
+            Assert.Single(service.GetPinned());
+            Assert.Equal(1, loadCount);
+        }
+        finally
+        {
+            source.Release.Set();
+        }
+    }
+
+    [Fact]
+    public void SupersededPinnedLoad_CannotReplaceNewerSnapshot()
+    {
+        using var firstLoaderEntered =
+            new ManualResetEventSlim();
+        using var releaseFirstLoader =
+            new ManualResetEventSlim();
+        int loadCount = 0;
+        using var service = new AppCatalogService(
+            new FakeIdentityResolver(),
+            new ImmediateCatalogSource(),
+            new NullIconSource(),
+            () =>
+            {
+                if (Interlocked.Increment(
+                        ref loadCount) == 1)
+                {
+                    firstLoaderEntered.Set();
+                    releaseFirstLoader.Wait(
+                        TimeSpan.FromSeconds(5));
+                    return new[]
+                    {
+                        Pinned("Stale")
+                    };
+                }
+
+                return new[]
+                {
+                    Pinned("Fresh")
+                };
+            });
+
+        try
+        {
+            Assert.True(
+                firstLoaderEntered.Wait(
+                    TimeSpan.FromSeconds(3)));
+            service.Refresh();
+            Assert.True(
+                SpinWait.SpinUntil(
+                    () =>
+                        service.GetPinned()
+                            .SingleOrDefault()
+                            ?.DisplayName
+                        == "Fresh",
+                    TimeSpan.FromSeconds(3)));
+
+            releaseFirstLoader.Set();
+            Thread.Sleep(50);
+
+            Assert.Equal(
+                "Fresh",
+                Assert.Single(
+                        service.GetPinned())
+                    .DisplayName);
+        }
+        finally
+        {
+            releaseFirstLoader.Set();
+        }
+    }
+
+    [Fact]
+    public void FailedPinnedReload_PreservesLastValidSnapshot()
+    {
+        int loadCount = 0;
+        using var service = new AppCatalogService(
+            new FakeIdentityResolver(),
+            new ImmediateCatalogSource(),
+            new NullIconSource(),
+            () =>
+            {
+                if (Interlocked.Increment(
+                        ref loadCount) == 1)
+                {
+                    return new[]
+                    {
+                        Pinned("Stable")
+                    };
+                }
+
+                throw new InvalidOperationException(
+                    "database is busy");
+            });
+        Assert.True(
+            SpinWait.SpinUntil(
+                () => !service.IsIndexing,
+                TimeSpan.FromSeconds(3)));
+        Assert.Equal(
+            "Stable",
+            Assert.Single(
+                    service.GetPinned())
+                .DisplayName);
+
+        service.Refresh();
+        Assert.True(
+            SpinWait.SpinUntil(
+                () => !service.IsIndexing,
+                TimeSpan.FromSeconds(3)));
+
+        Assert.Equal(
+            "Stable",
+            Assert.Single(
+                    service.GetPinned())
+                .DisplayName);
+    }
+
     private static AppCatalogService CreateService(
         IAppCatalogSource source,
         IAppIconSource icons) =>
@@ -322,4 +510,15 @@ public sealed class AppCatalogBackgroundLoadingTests
         LaunchTarget = $@"C:\{displayName}.exe",
         IconKey = $@"C:\{displayName}.exe"
     };
+
+    private static PinnedApp Pinned(
+        string displayName) =>
+        new()
+        {
+            DisplayName = displayName,
+            LaunchKind = AppLaunchKind.Executable,
+            LaunchTarget =
+                $@"C:\{displayName}.exe",
+            OrderIndex = 0
+        };
 }

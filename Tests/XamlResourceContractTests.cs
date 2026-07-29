@@ -3104,6 +3104,28 @@ public sealed class XamlResourceContractTests
             "bool MovePinned(AppLaunchItem app, int newIndex)",
             appContract);
         Assert.Contains(
+            "GetPinnedEntitySnapshot()",
+            catalog);
+        Assert.Contains(
+            "TryReplacePinnedCache(",
+            catalog);
+        Assert.Contains(
+            "ReplacePinnedCache(ordered);",
+            catalog);
+        int getPinnedStart = catalog.IndexOf(
+            "public IReadOnlyList<AppLaunchItem> GetPinned()",
+            StringComparison.Ordinal);
+        int launchStart = catalog.IndexOf(
+            "public bool Launch(",
+            getPinnedStart,
+            StringComparison.Ordinal);
+        Assert.True(
+            getPinnedStart >= 0
+            && launchStart > getPinnedStart);
+        Assert.DoesNotContain(
+            "_pinnedLoader()",
+            catalog[getPinnedStart..launchStart]);
+        Assert.Contains(
             "SystemActionExecution.Try(",
             catalog);
         Assert.Contains(
