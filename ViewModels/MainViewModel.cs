@@ -489,7 +489,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action? RequestClose;
     public event Action? RequestEnableReplacement;
     public event Action? RequestDisableReplacement;
-    public event Action? RequestApplyUpdate;
+    public event Func<Task>? RequestApplyUpdate;
     public event Action<AppUpdateInfo>? UpdateAvailable;
     public event Action<string>? WorkspaceRequested;
     public event Action<int>? PomodoroCompleted;
@@ -1451,7 +1451,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             UpdateProgress = 100;
             UpdateStatus = "下载完成，正在安全重启并安装…";
-            RequestApplyUpdate?.Invoke();
+            Func<Task>? applyUpdate =
+                RequestApplyUpdate;
+            if (applyUpdate != null)
+                await applyUpdate();
         }
         catch (Exception ex)
         {

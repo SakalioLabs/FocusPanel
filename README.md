@@ -87,6 +87,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 时间入口提供周一开头的 6 周月历，可切换月份、回到今天或直接选择日期；完成过番茄钟的日期显示专注圆点，底部汇总所选日期的专注次数和分钟数。
 - 后台发现 GitHub 新版本后，紧凑栏 Focus 中心入口会显示更新状态点，Focus 中心顶部显示目标版本卡片；点击即可进入设置页一键安装，不再只依赖托盘气泡。
 - Velopack 安装定位和更新管理器在共享工作线程准备，主窗口构造与 XAML 首帧不再等待安装目录扫描；首次自动检查和设置页手动检查都会等待同一个初始化结果，安装版不会因为准备尚未结束而漏掉开机后的更新。
+- 更新包下载完成后，SQLite 完整性检查、在线备份和历史备份清理也在专用工作线程执行；设置页会保持忙碌与 Panel 交互锁，备份完成后才恢复原任务栏、桌面图标并启动 Velopack。准备失败会恢复右缘监测并显示原因，不会让界面停在“正在安全重启”或允许重复提交。
 - 开始按钮左键打开 Windows 开始菜单，右键提供 Win+X 风格系统管理菜单，包括安装的应用、电源选项、事件查看器、系统、设备管理器、网络连接、磁盘管理、计算机管理、终端、管理员终端、任务管理器、设置和文件资源管理器。
 - 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
 
@@ -131,6 +132,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![任务栏恢复会话按需创建](docs/images/taskbar-session-lazy-creation.svg)
 
 ![更新管理器后台准备与首轮检查](docs/images/update-manager-background-initialization.svg)
+
+![更新安装后台备份与安全交接](docs/images/update-install-background-handoff.svg)
 
 ![开机启动注册表后台串行协调](docs/images/auto-startup-background-coordinator.svg)
 
@@ -392,7 +395,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.25 `
+  -Version 0.10.26 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -404,7 +407,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：当前用户默认目录的一键首次安装入口；命令行也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win-CustomSetup.exe`：带图形化文件夹选择器的安装入口；在另一台电脑上需要任意自定义目录时优先下载它。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.25-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.26-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

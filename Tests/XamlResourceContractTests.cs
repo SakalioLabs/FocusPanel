@@ -962,6 +962,49 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void UpdateInstall_PreparesBackupOutsideUiThread()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        string mainViewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        string coordinator = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "UpdateInstallPreparationCoordinator.cs"));
+
+        Assert.Contains(
+            "await _updateInstallPreparation",
+            mainWindow);
+        Assert.Contains(
+            "FocusDialogInteractionLease",
+            mainWindow);
+        Assert.DoesNotContain(
+            "new DatabaseBackupService().PerformStartupBackup()",
+            mainWindow);
+        Assert.Contains(
+            "public event Func<Task>? RequestApplyUpdate",
+            mainViewModel);
+        Assert.Contains(
+            "await applyUpdate()",
+            mainViewModel);
+        Assert.Contains(
+            "Task.Run",
+            coordinator);
+        Assert.Contains(
+            "PerformStartupBackup",
+            coordinator);
+    }
+
+    [Fact]
     public void MainShell_ReadsProtectedFileSettingInBackground()
     {
         string root = FindRepositoryRoot();

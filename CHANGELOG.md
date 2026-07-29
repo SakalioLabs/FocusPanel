@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.10.26 - 2026-07-29
+
+- 更新包下载完成后的数据库在线备份不再由 `MainWindow.ApplyDownloadedUpdate()` 在 WPF 线程同步执行；新的 `UpdateInstallPreparationCoordinator` 在工作线程创建 `DatabaseBackupService`、执行 SQLite `quick_check`、在线备份和滚动清理，大数据库或慢磁盘不会冻结“正在安全重启”界面。
+- `RequestApplyUpdate` 从无法等待的 `Action` 改为 `Func<Task>`；设置页更新命令会等待安装准备、任务栏恢复与 Velopack 启动交接完成后才解除 `IsUpdateBusy`，用户不能在备份仍进行时重复点击更新。
+- 安装准备期间使用现有临时交互租约保持 Panel 展开，并停用右缘监测；成功后按原顺序恢复主屏任务栏、原生桌面图标并启动安装。准备异常会恢复热区、更新失败状态并显示具体原因，当前数据库和已下载更新包保持不动。
+- 协调器在退出阶段停止接受新准备任务，所有异常在后台边界内转换为结果；新增非阻塞、工作线程、异常隔离、退出拒绝及可等待事件源码契约测试。README 增加更新安装后台交接流程图。Release 构建 0 错误、0 警告，全量 720 项测试与界面冒烟通过。
+
 ## v0.10.25 - 2026-07-29
 
 - `EdgeHotZoneMonitor` 不再使用 WPF `DispatcherTimer` 每 30ms 在界面线程读取物理鼠标、目标显示器和前台全屏状态；新的 `PeriodicTimer` 循环在工作线程保持采样节拍，工作区布局、毛玻璃展开动画或 Dispatcher 短暂繁忙时不会直接漏掉 100ms 右缘停留。

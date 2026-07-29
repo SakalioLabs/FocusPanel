@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Media;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -38,6 +39,9 @@ public partial class MainWindow :
     private readonly MainViewModel _viewModel;
     private readonly DispatcherTimer _autoHideTimer;
     private readonly FocusToastManager _toastManager;
+    private readonly
+        UpdateInstallPreparationCoordinator
+        _updateInstallPreparation;
     private readonly DesktopDragSession _desktopDragSession =
         new();
     private EdgeHotZoneMonitor? _hotZoneMonitor;
@@ -65,6 +69,9 @@ public partial class MainWindow :
         DataContext = _viewModel;
         MyNotifyIcon.Icon = SystemIcons.Application;
         _toastManager = new FocusToastManager(this);
+        _updateInstallPreparation =
+            new
+                UpdateInstallPreparationCoordinator();
 
         _viewModel.RequestClose += ForceClose;
         _viewModel.RequestEnableReplacement += EnableTaskbarReplacement;
@@ -961,13 +968,34 @@ public partial class MainWindow :
         }
     }
 
-    private void ApplyDownloadedUpdate()
+    private async Task ApplyDownloadedUpdate()
     {
         _hotZoneMonitor?.Stop();
-
+        using FocusDialogInteractionLease
+            interaction =
+                FocusDialogInteractionLease
+                    .Enter(this);
         try
         {
-            new DatabaseBackupService().PerformStartupBackup();
+            _viewModel.UpdateStatus =
+                "正在后台备份数据库并准备安装…";
+            UpdateInstallPreparationCompletion
+                preparation =
+                    await _updateInstallPreparation
+                        .PrepareAsync();
+            if (_isExit)
+                return;
+            if (!preparation.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    string.IsNullOrWhiteSpace(
+                        preparation.Error)
+                        ? "数据库备份准备失败。"
+                        : preparation.Error);
+            }
+
+            _viewModel.UpdateStatus =
+                "备份完成，正在恢复任务栏并启动安装…";
             _coordinator.RestoreTaskbar();
             DesktopHelper.ToggleDesktopIcons(true);
             _coordinator.Updates.ApplyAndRestart();
@@ -977,6 +1005,8 @@ public partial class MainWindow :
             if (!_hiddenToTray)
                 _hotZoneMonitor?.Start();
 
+            _viewModel.UpdateStatus =
+                $"更新失败：{ex.Message}";
             FocusDialogService.Show(
                 $"更新包已下载，但无法启动安装：{ex.Message}\n"
                 + "Windows 任务栏已经恢复，可稍后重新尝试。",
@@ -1016,6 +1046,8 @@ public partial class MainWindow :
         _edgeIndicator?.Close();
         _edgeIndicator = null;
         _toastManager.Dispose();
+        _ = _updateInstallPreparation
+            .CompleteAsync();
         _coordinator.Taskbar.ReplacementStopped -= Taskbar_ReplacementStopped;
         _viewModel.UpdateAvailable -= ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted -=
