@@ -1107,13 +1107,15 @@ public class FileOrganizerService : IDisposable
                 HideFileFromDesktopPathCore(
                     fullPath,
                     partitionName,
-                    allowCommonDesktopElevation));
+                    allowCommonDesktopElevation,
+                    true));
     }
 
     private async Task HideFileFromDesktopPathCore(
         string fullPath,
         string partitionName,
-        bool allowCommonDesktopElevation)
+        bool allowCommonDesktopElevation,
+        bool updateUi)
     {
         fullPath = Path.GetFullPath(fullPath);
         DesktopDropLocation location = DesktopDropPolicy.Classify(
@@ -1228,26 +1230,29 @@ public class FileOrganizerService : IDisposable
             throw;
         }
 
-        await InvokeOnUiAsync(() =>
+        if (updateUi)
         {
-            if (_disposed)
-                return;
-
-            if (AllFiles.FirstOrDefault(
-                    f => f.Name == fileName)
-                is DesktopFile file)
+            await InvokeOnUiAsync(() =>
             {
-                file.IsHidden = true;
-                file.FullPath = fullPath;
-            }
+                if (_disposed)
+                    return;
 
-            DesktopFile? visibleFile =
-                Files.FirstOrDefault(
-                    f => f.Name == fileName);
-            if (visibleFile != null)
-                Files.Remove(visibleFile);
-            NotifyFilesChanged();
-        }).ConfigureAwait(false);
+                if (AllFiles.FirstOrDefault(
+                        f => f.Name == fileName)
+                    is DesktopFile file)
+                {
+                    file.IsHidden = true;
+                    file.FullPath = fullPath;
+                }
+
+                DesktopFile? visibleFile =
+                    Files.FirstOrDefault(
+                        f => f.Name == fileName);
+                if (visibleFile != null)
+                    Files.Remove(visibleFile);
+                NotifyFilesChanged();
+            }).ConfigureAwait(false);
+        }
 
         IconHelper.ClearCache(fileName);
     }
@@ -1608,30 +1613,66 @@ public class FileOrganizerService : IDisposable
                         candidates,
                         paths);
 
-            DesktopOrganizeResult result =
-                await DesktopAutoOrganizePolicy.ExecuteAsync(
-                    items,
-                    allowCommonDesktopElevation,
-                    async (item, partition, allowElevation) =>
+            await _refreshGate.WaitAsync();
+            try
+            {
+                DesktopOrganizeResult? result = null;
+                await RunVisibilityMutationAsync(
+                    async () =>
                     {
-                        try
-                        {
-                            await HideFileFromDesktopPath(
-                                item.FullPath,
-                                partition,
-                                allowElevation);
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine(
-                                $"Auto organize {item.Name} failed: {ex.Message}");
-                            throw;
-                        }
-                    },
-                    progress);
+                        result =
+                            await DesktopAutoOrganizePolicy
+                                .ExecuteAsync(
+                                    items,
+                                    allowCommonDesktopElevation,
+                                    async (
+                                        item,
+                                        partition,
+                                        allowElevation) =>
+                                    {
+                                        try
+                                        {
+                                            // A bulk organize operation
+                                            // commits file visibility and
+                                            // database state item by item,
+                                            // but publishes the observable
+                                            // desktop collections only once
+                                            // after the batch. This prevents
+                                            // layout re-entry while Explorer
+                                            // is raising attribute changes.
+                                            await HideFileFromDesktopPathCore(
+                                                item.FullPath,
+                                                partition,
+                                                allowElevation,
+                                                false);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            System.Diagnostics.Debug.WriteLine(
+                                                $"Auto organize {item.Name} failed: {ex.Message}");
+                                            throw;
+                                        }
+                                    },
+                                    progress);
+                    });
 
-            await RefreshFiles();
-            return result;
+                // Keep the refresh gate for the complete transaction so
+                // watcher-driven refreshes cannot publish a half-organized
+                // collection. One final snapshot becomes the only UI commit.
+                await RefreshFilesCore()
+                    .ConfigureAwait(false);
+                return result
+                    ?? new DesktopOrganizeResult(
+                        0,
+                        0,
+                        0,
+                        0,
+                        Array.Empty<string>());
+            }
+            finally
+            {
+                _refreshGate.Release();
+            }
         }
         finally
         {

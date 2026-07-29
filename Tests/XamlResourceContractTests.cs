@@ -968,6 +968,20 @@ public sealed class XamlResourceContractTests
                     root,
                     "packaging",
                     "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "parent.GetSubKeyNames()",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "HasInstalledExecutable(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
         Assert.DoesNotContain(
             "--installto",
             File.ReadAllText(

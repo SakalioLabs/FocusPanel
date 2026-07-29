@@ -717,7 +717,6 @@ public partial class FileOrganizerViewModel :
                     }
                 }
 
-                await _fileService.RefreshFiles();
                 RequestLayoutRefresh();
                 int remaining =
                     _fileService.Files.Count;

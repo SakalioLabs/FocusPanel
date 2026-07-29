@@ -28,7 +28,7 @@ namespace FocusPanel.Services
     internal static class InstallerLocationPolicy
     {
         internal const long MinimumRecommendedFreeSpace =
-            2L * 1024 * 1024 * 1024;
+            512L * 1024 * 1024;
 
         internal static string SelectDefaultDirectory(
             IEnumerable<InstallerDriveCandidate> drives,
@@ -109,6 +109,32 @@ namespace FocusPanel.Services
             catch
             {
                 return string.Empty;
+            }
+        }
+
+        internal static bool HasInstalledExecutable(
+            string directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+                return false;
+
+            try
+            {
+                string root =
+                    Path.GetFullPath(directory);
+                return File.Exists(
+                        Path.Combine(
+                            root,
+                            "current",
+                            "FocusPanel.exe"))
+                    || File.Exists(
+                        Path.Combine(
+                            root,
+                            "FocusPanel.exe"));
+            }
+            catch
+            {
+                return false;
             }
         }
     }

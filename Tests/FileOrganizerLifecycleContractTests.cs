@@ -85,7 +85,7 @@ public sealed class FileOrganizerLifecycleContractTests
             "if (_disposed)",
             StringComparison.Ordinal);
         int executeIndex = body.IndexOf(
-            "DesktopAutoOrganizePolicy.ExecuteAsync(",
+            ".ExecuteAsync(",
             StringComparison.Ordinal);
 
         Assert.True(waitIndex >= 0);
@@ -111,7 +111,7 @@ public sealed class FileOrganizerLifecycleContractTests
             "RestoreFileToDesktopCore(",
             service);
         Assert.Equal(
-            2,
+            3,
             Regex.Matches(
                 service,
                 @"await RunVisibilityMutationAsync\(")
@@ -276,6 +276,40 @@ public sealed class FileOrganizerLifecycleContractTests
             StringComparison.Ordinal);
         Assert.True(drainIndex >= 0);
         Assert.True(disposeIndex > drainIndex);
+    }
+
+    [Fact]
+    public void BulkOrganize_PublishesOneFinalDesktopSnapshot()
+    {
+        string service = ReadService();
+        Match organizeBody = Regex.Match(
+            service,
+            @"public async Task<DesktopOrganizeResult> OrganizeFiles\((?<body>[\s\S]*?)\n    public void Dispose\(\)");
+
+        Assert.True(organizeBody.Success);
+        string body =
+            organizeBody.Groups["body"].Value;
+        Assert.Contains(
+            "await _refreshGate.WaitAsync()",
+            body);
+        Assert.Contains(
+            "await RunVisibilityMutationAsync(",
+            body);
+        Assert.Contains(
+            "HideFileFromDesktopPathCore(",
+            body);
+        Assert.Contains(
+            "allowElevation,\n                                                false)",
+            body);
+        Assert.Contains(
+            "await RefreshFilesCore()",
+            body);
+        Assert.DoesNotContain(
+            "await HideFileFromDesktopPath(",
+            body);
+        Assert.DoesNotContain(
+            "await RefreshFiles();",
+            body);
     }
 
     [Fact]

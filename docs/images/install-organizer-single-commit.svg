@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="480" viewBox="0 0 1120 480" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 跨盘安装与自动整理单次提交</title>
+  <desc id="desc">安装器验证所选目录中的真实程序文件，自动整理逐项完成安全事务后只向界面提交一次最终桌面快照。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="480" rx="28" fill="url(#bg)"/>
+  <text x="54" y="60" fill="#f8fafc" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="27" font-weight="700">0.10.44 · 路径和桌面集合都以真实结果为准</text>
+  <text x="54" y="94" fill="#aebed4" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="15">不再相信固定注册项或逐项 UI 刷新：所选盘必须有程序，整批收纳只发布一次最终快照</text>
+
+  <rect x="54" y="130" width="492" height="286" rx="22" fill="#ffffff" fill-opacity=".075" stroke="#7dd3fc" stroke-opacity=".35"/>
+  <text x="82" y="170" fill="#7dd3fc" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="19" font-weight="700">自定义安装目录</text>
+  <rect x="82" y="194" width="185" height="54" rx="14" fill="#0c4a6e"/>
+  <text x="174" y="227" text-anchor="middle" fill="#e0f2fe" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="15">选择 D:\FocusPanel</text>
+  <path d="M277 221h62" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M329 211l12 10-12 10" fill="none" stroke="#818cf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="351" y="194" width="166" height="54" rx="14" fill="#312e81"/>
+  <text x="434" y="217" text-anchor="middle" fill="#e0e7ff" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="14">MSI 双目录属性</text>
+  <text x="434" y="237" text-anchor="middle" fill="#a5b4fc" font-family="Segoe UI,sans-serif" font-size="11">INSTALLFOLDER</text>
+  <rect x="82" y="277" width="435" height="64" rx="15" fill="#052e16"/>
+  <text x="104" y="305" fill="#86efac" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="14">✓ 直接等待 D:\FocusPanel\current\FocusPanel.exe</text>
+  <text x="104" y="327" fill="#bbf7d0" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="12">名称注册项与 MSI GUID 项只用于发现旧版本</text>
+  <text x="82" y="378" fill="#cbd5e1" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="13">所选目录没有真实程序文件 → 明确失败，不写成“安装成功”</text>
+
+  <rect x="574" y="130" width="492" height="286" rx="22" fill="#ffffff" fill-opacity=".075" stroke="#a5b4fc" stroke-opacity=".35"/>
+  <text x="602" y="170" fill="#a5b4fc" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="19" font-weight="700">自动整理桌面</text>
+  <g font-family="Microsoft YaHei UI,Segoe UI,sans-serif">
+    <rect x="602" y="194" width="116" height="54" rx="14" fill="#1e3a8a"/>
+    <text x="660" y="217" text-anchor="middle" fill="#dbeafe" font-size="14">逐项事务</text>
+    <text x="660" y="237" text-anchor="middle" fill="#93c5fd" font-size="11">SQLite + 属性</text>
+    <path d="M728 221h52" stroke="#818cf8" stroke-width="4" stroke-linecap="round"/>
+    <rect x="790" y="194" width="116" height="54" rx="14" fill="#312e81"/>
+    <text x="848" y="217" text-anchor="middle" fill="#e0e7ff" font-size="14">批次闸门</text>
+    <text x="848" y="237" text-anchor="middle" fill="#a5b4fc" font-size="11">拒绝中途刷新</text>
+    <path d="M916 221h42" stroke="#818cf8" stroke-width="4" stroke-linecap="round"/>
+    <rect x="968" y="194" width="70" height="54" rx="14" fill="#14532d"/>
+    <text x="1003" y="217" text-anchor="middle" fill="#dcfce7" font-size="14">一次</text>
+    <text x="1003" y="237" text-anchor="middle" fill="#86efac" font-size="11">UI 提交</text>
+  </g>
+  <rect x="602" y="277" width="436" height="64" rx="15" fill="#172554"/>
+  <text x="624" y="304" fill="#bfdbfe" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="14">文件监视属性事件等待最终快照之后再处理</text>
+  <text x="624" y="327" fill="#93c5fd" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="12">失败项目仍留桌面；已成功项目仍可逐项恢复</text>
+  <text x="602" y="378" fill="#cbd5e1" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="13">结果：不再逐个重组滚动视图，不暴露半完成集合</text>
+</svg>

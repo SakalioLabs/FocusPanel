@@ -37,7 +37,9 @@ internal static class CustomInstallerLauncher
         string existingDirectory =
             FindExistingInstallDirectory();
         using (var dialog = new InstallLocationDialog(
-            GetDefaultInstallDirectory(),
+            string.IsNullOrWhiteSpace(existingDirectory)
+                ? GetDefaultInstallDirectory()
+                : existingDirectory,
             existingDirectory))
         {
             if (dialog.ShowDialog() != DialogResult.OK)
@@ -141,6 +143,7 @@ internal static class CustomInstallerLauncher
                 {
                     string actualDirectory =
                         WaitForInstalledDirectory(
+                            installDirectory,
                             TimeSpan.FromSeconds(30));
                     if (!SamePath(
                             actualDirectory,
@@ -235,10 +238,10 @@ internal static class CustomInstallerLauncher
 
     private static string FindExistingInstallDirectory()
     {
-        string[] subKeys =
+        string[] uninstallRoots =
         {
-            @"Software\Microsoft\Windows\CurrentVersion\Uninstall\FocusPanel",
-            @"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\FocusPanel"
+            @"Software\Microsoft\Windows\CurrentVersion\Uninstall",
+            @"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
         };
         RegistryKey[] roots =
         {
@@ -248,25 +251,56 @@ internal static class CustomInstallerLauncher
 
         foreach (RegistryKey root in roots)
         {
-            foreach (string subKey in subKeys)
+            foreach (string uninstallRoot
+                     in uninstallRoots)
             {
                 try
                 {
-                    using (RegistryKey key =
-                           root.OpenSubKey(subKey))
+                    using (RegistryKey parent =
+                           root.OpenSubKey(
+                               uninstallRoot))
                     {
-                        string location =
-                            key == null
-                                ? string.Empty
-                                : key.GetValue(
-                                    "InstallLocation",
-                                    string.Empty)
-                                    as string;
-                        if (!string.IsNullOrWhiteSpace(
-                                location))
+                        if (parent == null)
+                            continue;
+
+                        // Velopack's EXE registration can use the app
+                        // id, while MSI registrations normally use a
+                        // product-code GUID. Enumerate both instead of
+                        // assuming one fixed subkey name.
+                        foreach (string subKeyName
+                                 in parent.GetSubKeyNames())
                         {
-                            return Path.GetFullPath(
-                                location);
+                            using (RegistryKey key =
+                                   parent.OpenSubKey(
+                                       subKeyName))
+                            {
+                                string displayName =
+                                    ReadRegistryString(
+                                        key,
+                                        "DisplayName");
+                                if (!string.Equals(
+                                        displayName,
+                                        "FocusPanel",
+                                        StringComparison
+                                            .OrdinalIgnoreCase)
+                                    && !string.Equals(
+                                        subKeyName,
+                                        "FocusPanel",
+                                        StringComparison
+                                            .OrdinalIgnoreCase))
+                                {
+                                    continue;
+                                }
+
+                                string location =
+                                    ResolveRegisteredDirectory(
+                                        key);
+                                if (!string.IsNullOrWhiteSpace(
+                                        location))
+                                {
+                                    return location;
+                                }
+                            }
                         }
                     }
                 }
@@ -278,6 +312,76 @@ internal static class CustomInstallerLauncher
         }
 
         return string.Empty;
+    }
+
+    private static string ReadRegistryString(
+        RegistryKey key,
+        string valueName)
+    {
+        if (key == null)
+            return string.Empty;
+        return key.GetValue(
+                valueName,
+                string.Empty)
+            as string
+            ?? string.Empty;
+    }
+
+    private static string ResolveRegisteredDirectory(
+        RegistryKey key)
+    {
+        string location =
+            ReadRegistryString(
+                key,
+                "InstallLocation");
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            try
+            {
+                return Path.GetFullPath(
+                    location.Trim().Trim('"'));
+            }
+            catch
+            {
+                // Fall through to DisplayIcon.
+            }
+        }
+
+        string displayIcon =
+            ReadRegistryString(
+                key,
+                "DisplayIcon");
+        if (string.IsNullOrWhiteSpace(displayIcon))
+            return string.Empty;
+
+        try
+        {
+            string iconPath =
+                displayIcon.Trim();
+            int suffix = iconPath.LastIndexOf(',');
+            if (suffix > 0)
+                iconPath = iconPath.Substring(0, suffix);
+            iconPath = iconPath.Trim().Trim('"');
+            string executableDirectory =
+                Path.GetDirectoryName(
+                    Path.GetFullPath(iconPath))
+                ?? string.Empty;
+            if (string.Equals(
+                    Path.GetFileName(
+                        executableDirectory),
+                    "current",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return Directory.GetParent(
+                        executableDirectory)
+                    .FullName;
+            }
+            return executableDirectory;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     private static bool WaitForUninstallCompletion(
@@ -315,26 +419,36 @@ internal static class CustomInstallerLauncher
     }
 
     private static string WaitForInstalledDirectory(
+        string expectedDirectory,
         TimeSpan timeout)
     {
         DateTime deadline =
             DateTime.UtcNow.Add(timeout);
-        string directory;
         do
         {
-            directory =
-                FindExistingInstallDirectory();
-            if (!string.IsNullOrWhiteSpace(
-                    directory))
+            // The selected drive is the source of truth. Registry
+            // entries differ between Velopack Setup and MSI and may
+            // be committed a little later; the executable cannot
+            // falsely claim that a C: installation landed on D:.
+            if (InstallerLocationPolicy
+                    .HasInstalledExecutable(
+                    expectedDirectory))
             {
-                return directory;
+                return Path.GetFullPath(
+                    expectedDirectory);
             }
 
             Thread.Sleep(250);
         }
         while (DateTime.UtcNow < deadline);
 
-        return string.Empty;
+        string registeredDirectory =
+            FindExistingInstallDirectory();
+        return InstallerLocationPolicy
+                .HasInstalledExecutable(
+                registeredDirectory)
+            ? registeredDirectory
+            : string.Empty;
     }
 
     private static int UninstallExisting(

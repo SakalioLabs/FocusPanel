@@ -43,7 +43,7 @@ public sealed class InstallerLocationPolicyTests
     }
 
     [Fact]
-    public void DefaultLocation_IgnoresSmallRemovableAndOfflineDrives()
+    public void DefaultLocation_UsesViableFixedDriveEvenWhenSpaceIsLimited()
     {
         var drives =
             new List<InstallerDriveCandidate>
@@ -73,7 +73,43 @@ public sealed class InstallerLocationPolicyTests
                     @"C:\Users\Test\AppData\Local");
 
         Assert.Equal(
-            @"C:\Users\Test\AppData\Local\FocusPanel",
+            @"F:\Applications\FocusPanel",
             selected);
+    }
+
+    [Fact]
+    public void InstallVerification_RequiresExecutableUnderSelectedRoot()
+    {
+        string root =
+            Path.Combine(
+                Path.GetTempPath(),
+                "FocusPanelInstallerPolicy",
+                System.Guid.NewGuid().ToString("N"));
+        string current =
+            Path.Combine(
+                root,
+                "current");
+        try
+        {
+            Directory.CreateDirectory(current);
+            Assert.False(
+                InstallerLocationPolicy
+                    .HasInstalledExecutable(root));
+
+            File.WriteAllText(
+                Path.Combine(
+                    current,
+                    "FocusPanel.exe"),
+                string.Empty);
+
+            Assert.True(
+                InstallerLocationPolicy
+                    .HasInstalledExecutable(root));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, true);
+        }
     }
 }
