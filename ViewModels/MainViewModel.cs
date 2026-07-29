@@ -920,9 +920,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RefreshSearchResults();
     }
 
-    public async Task MoveTaskbarApp(
+    internal async Task MoveTaskbarApp(
         TaskbarAppItem source,
-        TaskbarAppItem target)
+        TaskbarAppItem target,
+        TaskbarDropPlacement placement)
     {
         if (ReferenceEquals(source, target))
             return;
@@ -938,14 +939,33 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        int pinnedCount =
+            TaskbarApps.Count(
+                item => item.IsPinned);
+        int sourceIndex = source.IsPinned
+            ? TaskbarApps
+                .TakeWhile(item =>
+                    !ReferenceEquals(
+                        item,
+                        source))
+                .Count(item =>
+                    item.IsPinned)
+            : -1;
         int targetIndex = TaskbarApps
             .TakeWhile(item => !ReferenceEquals(item, target))
             .Count(item => item.IsPinned);
-        if (!target.IsPinned)
-            targetIndex = TaskbarApps.Count(item => item.IsPinned) - 1;
+        int insertionIndex =
+            TaskbarAppDropPolicy
+                .GetInsertionIndex(
+                    source.IsPinned,
+                    sourceIndex,
+                    target.IsPinned,
+                    targetIndex,
+                    pinnedCount,
+                    placement);
         if (!await TryMovePinnedAsync(
                 launch,
-                Math.Max(0, targetIndex)))
+                insertionIndex))
         {
             RefreshTaskbarApps();
             RefreshSearchResults();

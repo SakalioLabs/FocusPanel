@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -57,6 +58,7 @@ public partial class MainWindow :
     private int _transientInteractionDepth;
     private System.Windows.Point _pinnedDragStart;
     private long _lastTaskbarDragScrollTick = -1;
+    private TaskbarAppItem? _taskbarDropCueItem;
 
     public MainWindow()
         : this(null)
@@ -1451,6 +1453,7 @@ public partial class MainWindow :
         }
         finally
         {
+            ClearTaskbarDropCue();
             _lastTaskbarDragScrollTick = -1;
             EndTransientInteraction();
         }
@@ -1503,22 +1506,120 @@ public partial class MainWindow :
                 decision.TargetOffset);
     }
 
+    private void TaskbarAppsHost_PreviewDragLeave(
+        object sender,
+        DragEventArgs e)
+    {
+        System.Windows.Point position =
+            e.GetPosition(TaskbarAppsHost);
+        if (position.X < 0
+            || position.Y < 0
+            || position.X
+                > TaskbarAppsHost.ActualWidth
+            || position.Y
+                > TaskbarAppsHost.ActualHeight)
+        {
+            ClearTaskbarDropCue();
+        }
+    }
+
     private void TaskbarApp_DragOver(object sender, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(typeof(TaskbarAppItem))
-            ? DragDropEffects.Move
-            : DragDropEffects.None;
+        if (sender
+                is not FrameworkElement
+                {
+                    DataContext:
+                        TaskbarAppItem target
+                } element
+            || e.Data.GetData(
+                    typeof(TaskbarAppItem))
+                is not TaskbarAppItem source
+            || ReferenceEquals(
+                source,
+                target))
+        {
+            ClearTaskbarDropCue();
+            e.Effects =
+                DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        bool isFirstUnpinned =
+            !target.IsPinned
+            && ReferenceEquals(
+                _viewModel.TaskbarApps
+                    .FirstOrDefault(item =>
+                        !item.IsPinned),
+                target);
+        TaskbarDropPlacement? cuePlacement =
+            TaskbarAppDropPolicy
+                .GetCuePlacement(
+                    target.IsPinned,
+                    isFirstUnpinned,
+                    e.GetPosition(element).Y,
+                    element.ActualHeight);
+        if (cuePlacement.HasValue)
+        {
+            SetTaskbarDropCue(
+                target,
+                cuePlacement.Value);
+        }
+        else
+        {
+            ClearTaskbarDropCue();
+        }
+        e.Effects = DragDropEffects.Move;
         e.Handled = true;
+    }
+
+    private void TaskbarApp_DragLeave(
+        object sender,
+        DragEventArgs e)
+    {
+        if (sender
+                is not FrameworkElement element
+            || element.DataContext
+                is not TaskbarAppItem target
+            || !ReferenceEquals(
+                target,
+                _taskbarDropCueItem))
+        {
+            return;
+        }
+
+        System.Windows.Point position =
+            e.GetPosition(element);
+        if (position.X < 0
+            || position.Y < 0
+            || position.X
+                > element.ActualWidth
+            || position.Y
+                > element.ActualHeight)
+        {
+            ClearTaskbarDropCue();
+        }
     }
 
     private void TaskbarApp_Drop(object sender, DragEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: TaskbarAppItem target }
+        if (sender
+                is FrameworkElement
+                {
+                    DataContext:
+                        TaskbarAppItem target
+                } element
             && e.Data.GetData(typeof(TaskbarAppItem)) is TaskbarAppItem source)
         {
+            TaskbarDropPlacement placement =
+                TaskbarAppDropPolicy.GetPlacement(
+                    e.GetPosition(element).Y,
+                    element.ActualHeight);
+            ClearTaskbarDropCue();
             StartTaskbarAppDrop(
                 source,
-                target);
+                target,
+                placement);
         }
 
         e.Handled = true;
@@ -1526,14 +1627,16 @@ public partial class MainWindow :
 
     private void StartTaskbarAppDrop(
         TaskbarAppItem source,
-        TaskbarAppItem target)
+        TaskbarAppItem target,
+        TaskbarDropPlacement placement)
     {
         BeginTransientInteraction();
         AsyncInteractionRunner.Start(
             () =>
                 _viewModel.MoveTaskbarApp(
                     source,
-                    target),
+                    target,
+                    placement),
             ex =>
                 FocusDialogService.Show(
                     $"无法保存应用栏顺序：{ex.Message}",
@@ -1541,6 +1644,31 @@ public partial class MainWindow :
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning),
             EndTransientInteraction);
+    }
+
+    private void SetTaskbarDropCue(
+        TaskbarAppItem target,
+        TaskbarDropPlacement placement)
+    {
+        if (!ReferenceEquals(
+                _taskbarDropCueItem,
+                target))
+        {
+            _taskbarDropCueItem
+                ?.SetDropPlacement(null);
+            _taskbarDropCueItem =
+                target;
+        }
+
+        target.SetDropPlacement(
+            placement);
+    }
+
+    private void ClearTaskbarDropCue()
+    {
+        _taskbarDropCueItem
+            ?.SetDropPlacement(null);
+        _taskbarDropCueItem = null;
     }
 
     private static class NativeMethods

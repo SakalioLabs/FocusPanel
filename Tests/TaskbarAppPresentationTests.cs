@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using FocusPanel.Models;
+using FocusPanel.Services;
 using Xunit;
 
 namespace FocusPanel.Tests;
@@ -243,6 +245,48 @@ public sealed class TaskbarAppPresentationTests
         Assert.Equal(
             string.Empty,
             item.WindowPreviewText);
+    }
+
+    [Fact]
+    public void DropPlacement_ExposesOnlyOneCueAndClears()
+    {
+        var item = new TaskbarAppItem();
+        var changes = new List<string?>();
+        item.PropertyChanged +=
+            (_, e) =>
+                changes.Add(
+                    e.PropertyName);
+
+        item.SetDropPlacement(
+            TaskbarDropPlacement.Before);
+
+        Assert.True(item.ShowsDropBefore);
+        Assert.False(item.ShowsDropAfter);
+
+        item.SetDropPlacement(
+            TaskbarDropPlacement.After);
+
+        Assert.False(item.ShowsDropBefore);
+        Assert.True(item.ShowsDropAfter);
+
+        item.SetDropPlacement(null);
+
+        Assert.False(item.ShowsDropBefore);
+        Assert.False(item.ShowsDropAfter);
+        Assert.Equal(
+            3,
+            changes.Count(name =>
+                name
+                == nameof(
+                    TaskbarAppItem
+                        .ShowsDropBefore)));
+        Assert.Equal(
+            3,
+            changes.Count(name =>
+                name
+                == nameof(
+                    TaskbarAppItem
+                        .ShowsDropAfter)));
     }
 
     private static TaskbarAppItem Running(

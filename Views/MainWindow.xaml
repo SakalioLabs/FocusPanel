@@ -758,8 +758,10 @@
                         </StackPanel>
 
                         <Grid Grid.Row="1"
+                              x:Name="TaskbarAppsHost"
                               AllowDrop="True"
-                              PreviewDragOver="TaskbarAppsHost_PreviewDragOver">
+                              PreviewDragOver="TaskbarAppsHost_PreviewDragOver"
+                              PreviewDragLeave="TaskbarAppsHost_PreviewDragLeave">
                             <Button x:Name="TaskbarScrollUpButton"
                                     Panel.ZIndex="2"
                                     Style="{StaticResource FocusIconButton}"
@@ -793,6 +795,7 @@
                                                         PreviewMouseLeftButtonDown="TaskbarApp_PreviewMouseLeftButtonDown"
                                                         PreviewMouseMove="TaskbarApp_PreviewMouseMove"
                                                         DragOver="TaskbarApp_DragOver"
+                                                        DragLeave="TaskbarApp_DragLeave"
                                                         Drop="TaskbarApp_Drop"
                                                         Click="TaskbarApp_Click"
                                                         AutomationProperties.Name="{Binding AccessibleName}"
@@ -879,6 +882,22 @@
                                                         </Style>
                                                     </Border.Style>
                                                 </Border>
+                                                <Border Height="3"
+                                                        Margin="7,-1"
+                                                        Panel.ZIndex="3"
+                                                        CornerRadius="2"
+                                                        VerticalAlignment="Top"
+                                                        Background="{DynamicResource FocusAccentBrightBrush}"
+                                                        IsHitTestVisible="False"
+                                                        Visibility="{Binding ShowsDropBefore, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                <Border Height="3"
+                                                        Margin="7,-1"
+                                                        Panel.ZIndex="3"
+                                                        CornerRadius="2"
+                                                        VerticalAlignment="Bottom"
+                                                        Background="{DynamicResource FocusAccentBrightBrush}"
+                                                        IsHitTestVisible="False"
+                                                        Visibility="{Binding ShowsDropAfter, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

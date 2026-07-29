@@ -1209,6 +1209,18 @@ public sealed class XamlResourceContractTests
             "CompactTaskbarDragScrollPolicy",
             codeBehind);
         Assert.Contains(
+            "TaskbarAppDropPolicy.GetPlacement",
+            codeBehind);
+        Assert.Contains(
+            "ShowsDropBefore",
+            mainWindow);
+        Assert.Contains(
+            "ShowsDropAfter",
+            mainWindow);
+        Assert.Contains(
+            "ClearTaskbarDropCue();",
+            codeBehind);
+        Assert.Contains(
             "BeginTransientInteraction();",
             codeBehind);
         Assert.Matches(

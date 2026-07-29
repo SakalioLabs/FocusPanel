@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FocusPanel.Services;
 
 namespace FocusPanel.Models;
 
@@ -18,6 +19,7 @@ public sealed class TaskbarAppItem : ObservableObject
     private IReadOnlyList<AppLaunchItem> _pinnedLaunches =
         Array.Empty<AppLaunchItem>();
     private WindowTaskItem? _runningTask;
+    private TaskbarDropPlacement? _dropPlacement;
 
     public string IdentityKey { get; init; } = string.Empty;
     public string DisplayName
@@ -95,6 +97,12 @@ public sealed class TaskbarAppItem : ObservableObject
                 : primaryAction;
         }
     }
+    public bool ShowsDropBefore =>
+        _dropPlacement
+        == TaskbarDropPlacement.Before;
+    public bool ShowsDropAfter =>
+        _dropPlacement
+        == TaskbarDropPlacement.After;
 
     private string ComposeWindowPreview()
     {
@@ -189,6 +197,19 @@ public sealed class TaskbarAppItem : ObservableObject
         {
             RaisePresentationChanged();
         }
+    }
+
+    internal void SetDropPlacement(
+        TaskbarDropPlacement? placement)
+    {
+        if (_dropPlacement == placement)
+            return;
+
+        _dropPlacement = placement;
+        OnPropertyChanged(
+            nameof(ShowsDropBefore));
+        OnPropertyChanged(
+            nameof(ShowsDropAfter));
     }
 
     private void RaisePresentationChanged()
