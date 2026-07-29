@@ -42,6 +42,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 主壳启动时在工作线程用一个无跟踪快照读取首次引导、任务栏替代、主题和全屏热区设置，不再阻塞 `MainViewModel` 构造或为四个键重复打开 SQLite。窗口在快照就绪前保持隐藏，热区、托盘唤出和全局快捷键不会提前展开；就绪后才创建热区并决定显示引导或申请一次任务栏接管。运行中写入继续按设置键合并并由单消费者后台队列串行落盘。
 - 任务栏控制器构造只校验恢复会话路径，不再在普通启动期间同步创建 `%LOCALAPPDATA%\FocusPanel` 目录；只有用户真正启用替代模式时，才在隐藏原任务栏之前准备目录并写入恢复快照。任一步失败都会中止接管，避免出现“任务栏已隐藏但没有可恢复会话”。
 - 安全退出采用两阶段关闭：先恢复原生任务栏、停止热区和新的界面操作，再异步排空音频控制、开机启动设置、任务、桌面布局、番茄钟、固定应用与 Shell 设置；完成后才真正销毁窗口。慢磁盘或最后一次拖拽保存不会冻结 WPF Dispatcher，重复退出也只等待同一事务。
+- 正常启动会先在当前线程幂等恢复遗留任务栏会话与原生桌面图标，再把 SQLite 在线启动备份、完整性检查、手工建表、异常库归档和备份恢复作为一个不可拆分事务交给后台协调器。WPF Dispatcher 不再被大数据库或慢磁盘占住；事务通过后才创建主壳，恢复提示与安全停止提示仍回到界面线程显示。
 - Windows 开机启动项的初始注册表读取、启用、禁用和失败复读全部通过串行后台协调器执行，主壳构造与设置开关不再同步访问注册表。快速连续切换会按请求顺序写入并以最后选择为准；启动期迟到读取不能覆盖用户操作，写入失败则回滚到后台复读的真实状态，退出前排空已接收的修改。
 - 番茄钟历史统计在工作线程加载；倒计时归零时立即更新界面、播放提醒并把完整会话交给后台单消费者串行保存。开始新一轮、暂停或重置后，上一轮迟到的保存结果不会覆盖当前提示，退出前会排空已经进入队列的会话。
 - OKR 首次打开时由工作线程一次读取本地目标、飞书配置、同步间隔和最后同步时间；SQLite 较大或暂时繁忙不会阻塞工作区展开。手动飞书同步、配置读写和 AI 预留接口也不再同步等待 WPF Dispatcher，旧加载快照不会覆盖刚完成的本地编辑。
@@ -137,6 +138,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![更新安装后台备份与安全交接](docs/images/update-install-background-handoff.svg)
 
 ![两阶段异步安全退出](docs/images/async-shutdown-drain.svg)
+
+![数据库启动事务后台协调](docs/images/database-startup-background.svg)
 
 ![开机启动注册表后台串行协调](docs/images/auto-startup-background-coordinator.svg)
 
@@ -398,7 +401,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.27 `
+  -Version 0.10.28 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -409,7 +412,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意安装目录，默认值仍为当前用户目录。无需再寻找单独的 CustomSetup。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.27-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.28-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

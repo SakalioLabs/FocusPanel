@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="480" viewBox="0 0 1120 480">
+  <defs>
+    <linearGradient id="bgdb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101825"/>
+      <stop offset="1" stop-color="#252d48"/>
+    </linearGradient>
+    <linearGradient id="worker" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#275873"/>
+      <stop offset="1" stop-color="#354f82"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="480" rx="30" fill="url(#bgdb)"/>
+  <text x="54" y="62" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">数据库启动事务 · 后台完成，安全顺序不变</text>
+  <text x="54" y="98" fill="#b9c8df" font-family="Segoe UI, Microsoft YaHei" font-size="16">系统恢复优先；备份、检查与故障恢复不再占用 WPF Dispatcher</text>
+
+  <rect x="54" y="142" width="246" height="218" rx="22" fill="#203248" stroke="#4d6988"/>
+  <circle cx="91" cy="183" r="18" fill="#3474a5"/>
+  <text x="91" y="190" text-anchor="middle" fill="#ffffff" font-family="Segoe UI" font-size="18" font-weight="700">1</text>
+  <text x="122" y="188" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="700">恢复系统外壳</text>
+  <text x="78" y="234" fill="#c5d5e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">恢复遗留任务栏会话</text>
+  <text x="78" y="266" fill="#c5d5e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">恢复原生桌面图标</text>
+  <text x="78" y="316" fill="#8fd7ff" font-family="Segoe UI, Microsoft YaHei" font-size="13">始终先执行 · 幂等</text>
+
+  <path d="M315 251 H374" stroke="#77cfff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M362 240 L374 251 L362 262" fill="none" stroke="#77cfff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="389" y="122" width="342" height="258" rx="24" fill="url(#worker)" stroke="#78b8dd"/>
+  <circle cx="428" cy="163" r="18" fill="#4f80b6"/>
+  <text x="428" y="170" text-anchor="middle" fill="#ffffff" font-family="Segoe UI" font-size="18" font-weight="700">2</text>
+  <text x="460" y="168" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="700">后台数据库事务</text>
+  <rect x="419" y="199" width="282" height="42" rx="13" fill="#17354b"/>
+  <text x="560" y="225" text-anchor="middle" fill="#bfe8ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">在线备份 + SQLite quick_check</text>
+  <rect x="419" y="254" width="282" height="42" rx="13" fill="#203a58"/>
+  <text x="560" y="280" text-anchor="middle" fill="#d5e7ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">EnsureCreated + EnsureSchema</text>
+  <rect x="419" y="309" width="282" height="42" rx="13" fill="#283b61"/>
+  <text x="560" y="335" text-anchor="middle" fill="#dedbff" font-family="Segoe UI, Microsoft YaHei" font-size="14">归档 → 恢复 → 复检 / 安全停止</text>
+
+  <path d="M746 251 H805" stroke="#8adfbd" stroke-width="4" stroke-linecap="round"/>
+  <path d="M793 240 L805 251 L793 262" fill="none" stroke="#8adfbd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="820" y="142" width="246" height="218" rx="22" fill="#21433e" stroke="#4b8371"/>
+  <circle cx="859" cy="183" r="18" fill="#3b806a"/>
+  <text x="859" y="190" text-anchor="middle" fill="#ffffff" font-family="Segoe UI" font-size="18" font-weight="700">3</text>
+  <text x="891" y="188" fill="#f4fff9" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="700">创建主壳</text>
+  <text x="846" y="234" fill="#c8e8db" font-family="Segoe UI, Microsoft YaHei" font-size="14">数据检查通过后</text>
+  <text x="846" y="266" fill="#c8e8db" font-family="Segoe UI, Microsoft YaHei" font-size="14">才创建 MainWindow</text>
+  <text x="846" y="316" fill="#9be9c9" font-family="Segoe UI, Microsoft YaHei" font-size="13">失败则保留数据并停止</text>
+
+  <rect x="226" y="414" width="668" height="38" rx="15" fill="#332f56" stroke="#6e63a0"/>
+  <text x="560" y="439" text-anchor="middle" fill="#d9d0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">WPF Dispatcher 可继续处理消息 · 后台异常统一回到安全提示与日志</text>
+</svg>

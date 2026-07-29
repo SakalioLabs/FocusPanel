@@ -13,15 +13,21 @@ public partial class App : Application
 {
     private readonly CrashLogService _crashLog =
         new();
+    private readonly DatabaseStartupCoordinator
+        _databaseStartup;
     private bool _handlingFatalException;
 
     public App()
     {
+        _databaseStartup =
+            new DatabaseStartupCoordinator(
+                PrepareDatabase);
         DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
     }
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(
+        StartupEventArgs e)
     {
         base.OnStartup(e);
 
@@ -43,101 +49,34 @@ public partial class App : Application
         // Set working directory to the application's base directory
         System.IO.Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
 
-        var backupService = new DatabaseBackupService();
-
-        // Check for restore flag
-        if (e.Args.Contains("--restore"))
+        DatabaseStartupCompletion completion;
+        try
         {
-            if (backupService.TryRestoreLatestBackup(
-                    out string restoreMessage))
-            {
-                MessageBox.Show(
-                    restoreMessage,
-                    "数据库恢复完成",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show(
-                    restoreMessage,
-                    "数据库恢复失败",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
+            completion =
+                await _databaseStartup.PrepareAsync(
+                    e.Args.Contains("--restore"));
         }
-        else
+        catch (Exception ex)
         {
-            // Perform Startup Backup (only if not restoring)
-            backupService.PerformStartupBackup();
+            LogException(ex);
+            completion =
+                new DatabaseStartupCompletion(
+                    false,
+                    new DatabaseStartupNotice(
+                        "数据库启动失败",
+                        "FocusPanel 无法完成数据库启动检查。"
+                        + "\n\n当前数据没有被继续修改，请保留数据库与日志后再进行人工恢复。"
+                        + $"\n日志：{_crashLog.LogPath}",
+                        DatabaseStartupNoticeKind.Error));
         }
 
-        bool dbInitSuccess =
-            TryInitializeDatabase();
-
-        if (!dbInitSuccess)
+        if (completion.Notice != null)
+            ShowDatabaseStartupNotice(
+                completion.Notice);
+        if (!completion.Succeeded)
         {
-            bool archiveSucceeded =
-                backupService.ArchiveCorruptedDatabase();
-            string recoveryMessage =
-                "没有找到可安全恢复的数据库备份。";
-            bool backupRestored =
-                archiveSucceeded
-                && backupService.TryRestoreLatestBackup(
-                    out recoveryMessage);
-            DatabaseStartupRecoveryAction action =
-                DatabaseStartupRecoveryPolicy.Decide(
-                    archiveSucceeded,
-                    backupRestored);
-
-            if (action
-                == DatabaseStartupRecoveryAction
-                    .ValidateRestoredDatabase)
-            {
-                dbInitSuccess =
-                    TryInitializeDatabase();
-                if (dbInitSuccess)
-                {
-                    MessageBox.Show(
-                        $"检测到数据库异常。{recoveryMessage}",
-                        "数据库已恢复",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-            }
-            else if (action
-                     == DatabaseStartupRecoveryAction
-                         .CreateFreshDatabase)
-            {
-                dbInitSuccess =
-                    TryInitializeDatabase();
-                if (dbInitSuccess)
-                {
-                    MessageBox.Show(
-                        "原数据库无法使用且没有有效备份。"
-                        + "原文件已归档保留，FocusPanel 已创建新的业务数据库。",
-                        "已保留异常数据库",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                }
-            }
-
-            if (!dbInitSuccess)
-            {
-                string detail = action
-                    == DatabaseStartupRecoveryAction
-                        .StopWithoutChanges
-                    ? "FocusPanel 无法安全归档当前数据库，因此没有删除、覆盖或重建任何数据。"
-                    : "数据库恢复后仍未通过应用结构检查，因此没有继续覆盖或重建数据。";
-                MessageBox.Show(
-                    $"{detail}\n\n请保留数据库与日志后再进行人工恢复。"
-                    + $"\n日志：{_crashLog.LogPath}",
-                    "数据库安全保护",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                Shutdown(-1);
-                return;
-            }
+            Shutdown(-1);
+            return;
         }
 
         var mainWindow = new MainWindow();
@@ -216,6 +155,131 @@ public partial class App : Application
 
     private void LogException(Exception ex)
         => _crashLog.TryAppend(ex);
+
+    private DatabaseStartupCompletion PrepareDatabase(
+        bool restoreRequested)
+    {
+        var backupService =
+            new DatabaseBackupService();
+        DatabaseStartupNotice? notice = null;
+
+        if (restoreRequested)
+        {
+            bool restored =
+                backupService.TryRestoreLatestBackup(
+                    out string restoreMessage);
+            notice =
+                new DatabaseStartupNotice(
+                    restored
+                        ? "数据库恢复完成"
+                        : "数据库恢复失败",
+                    restoreMessage,
+                    restored
+                        ? DatabaseStartupNoticeKind
+                            .Information
+                        : DatabaseStartupNoticeKind
+                            .Error);
+        }
+        else
+        {
+            backupService.PerformStartupBackup();
+        }
+
+        bool dbInitSuccess =
+            TryInitializeDatabase();
+        if (dbInitSuccess)
+        {
+            return new DatabaseStartupCompletion(
+                true,
+                notice);
+        }
+
+        bool archiveSucceeded =
+            backupService.ArchiveCorruptedDatabase();
+        string recoveryMessage =
+            "没有找到可安全恢复的数据库备份。";
+        bool backupRestored =
+            archiveSucceeded
+            && backupService.TryRestoreLatestBackup(
+                out recoveryMessage);
+        DatabaseStartupRecoveryAction action =
+            DatabaseStartupRecoveryPolicy.Decide(
+                archiveSucceeded,
+                backupRestored);
+
+        if (action
+            == DatabaseStartupRecoveryAction
+                .ValidateRestoredDatabase)
+        {
+            dbInitSuccess =
+                TryInitializeDatabase();
+            if (dbInitSuccess)
+            {
+                notice =
+                    new DatabaseStartupNotice(
+                        "数据库已恢复",
+                        $"检测到数据库异常。{recoveryMessage}",
+                        DatabaseStartupNoticeKind
+                            .Information);
+            }
+        }
+        else if (action
+                 == DatabaseStartupRecoveryAction
+                     .CreateFreshDatabase)
+        {
+            dbInitSuccess =
+                TryInitializeDatabase();
+            if (dbInitSuccess)
+            {
+                notice =
+                    new DatabaseStartupNotice(
+                        "已保留异常数据库",
+                        "原数据库无法使用且没有有效备份。"
+                        + "原文件已归档保留，FocusPanel 已创建新的业务数据库。",
+                        DatabaseStartupNoticeKind
+                            .Warning);
+            }
+        }
+
+        if (dbInitSuccess)
+        {
+            return new DatabaseStartupCompletion(
+                true,
+                notice);
+        }
+
+        string detail = action
+            == DatabaseStartupRecoveryAction
+                .StopWithoutChanges
+            ? "FocusPanel 无法安全归档当前数据库，因此没有删除、覆盖或重建任何数据。"
+            : "数据库恢复后仍未通过应用结构检查，因此没有继续覆盖或重建数据。";
+        return new DatabaseStartupCompletion(
+            false,
+            new DatabaseStartupNotice(
+                "数据库安全保护",
+                $"{detail}\n\n请保留数据库与日志后再进行人工恢复。"
+                + $"\n日志：{_crashLog.LogPath}",
+                DatabaseStartupNoticeKind.Error));
+    }
+
+    private static void ShowDatabaseStartupNotice(
+        DatabaseStartupNotice notice)
+    {
+        MessageBoxImage image = notice.Kind switch
+        {
+            DatabaseStartupNoticeKind
+                .Information =>
+                MessageBoxImage.Information,
+            DatabaseStartupNoticeKind.Warning =>
+                MessageBoxImage.Warning,
+            _ => MessageBoxImage.Error
+        };
+        MessageBox.Show(
+            notice.Message,
+            notice.Title,
+            MessageBoxButton.OK,
+            image);
+    }
 
     private static void RestoreNativeDesktopIcons()
     {
