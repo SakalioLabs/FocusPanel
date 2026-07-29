@@ -75,6 +75,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string? _lastNotifiedUpdateVersion;
     private bool _isShellVisible;
     private bool _isDisposed;
+    private Task? _disposeTask;
     private bool _loadingShellPreferences;
     private long _workspaceNavigationRevision;
     private DateTime _calendarFocusMonth;
@@ -2164,11 +2165,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
             + "请稍后重试。";
     }
 
-    public void Dispose()
+    internal Task DisposeAsync()
     {
-        if (_isDisposed)
-            return;
+        if (_disposeTask != null)
+            return _disposeTask;
 
+        _disposeTask =
+            DisposeCoreAsync();
+        return _disposeTask;
+    }
+
+    private async Task DisposeCoreAsync()
+    {
         _isDisposed = true;
         _audioControl.Completed -=
             OnAudioControlCompleted;
@@ -2183,19 +2191,34 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _protectedVisibilityRefresh.Dispose();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
-        _audioControl.Dispose();
-        _autoStartup.CompleteAsync()
-            .GetAwaiter()
-            .GetResult();
-        _shellPreferences.Dispose();
-        _tasksViewModel?.Dispose();
+        var completions =
+            new List<Task>
+            {
+                _audioControl.CompleteAsync(),
+                _autoStartup.CompleteAsync(),
+                _shellPreferences.CompleteAsync()
+            };
+        if (_tasksViewModel != null)
+        {
+            completions.Add(
+                _tasksViewModel
+                    .DisposeAsync());
+        }
+
         _okrViewModel?.Dispose();
         _aiAssistantViewModel?.Dispose();
-        _fileOrganizerViewModel?.Dispose();
-        if (_fileOrganizerViewModel == null)
+        if (_fileOrganizerViewModel != null)
         {
-            _ = DisposePreparedFileOrganizerAsync();
+            completions.Add(
+                _fileOrganizerViewModel
+                    .DisposeAsync());
         }
+        else
+        {
+            completions.Add(
+                DisposePreparedFileOrganizerAsync());
+        }
+
         if (_dashboardViewModel != null)
         {
             _dashboardViewModel.NavigationRequested -=
@@ -2208,9 +2231,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 PomodoroViewModel_SessionCompleted;
             _pomodoroViewModel.SessionPersisted -=
                 PomodoroViewModel_SessionPersisted;
-            _pomodoroViewModel.Dispose();
+            completions.Add(
+                _pomodoroViewModel
+                    .DisposeAsync());
+        }
+
+        try
+        {
+            await Task.WhenAll(
+                    completions)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            _audioControl.Dispose();
+            _shellPreferences.Dispose();
         }
     }
+
+    public void Dispose() =>
+        DisposeAsync()
+            .GetAwaiter()
+            .GetResult();
 
     private async Task
         DisposePreparedFileOrganizerAsync()
@@ -2220,7 +2262,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             FileOrganizerViewModel viewModel =
                 await _fileOrganizerInitialization
                     .ConfigureAwait(false);
-            viewModel.Dispose();
+            await viewModel
+                .DisposeAsync()
+                .ConfigureAwait(false);
         }
         catch
         {

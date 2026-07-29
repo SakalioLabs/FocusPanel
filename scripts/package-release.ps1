@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.10.26',
+    [string]$Version = '0.10.27',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -79,7 +79,6 @@ elseif ($ReplaceCurrentVersion) {
         "FocusPanel-$Version-full.nupkg",
         "FocusPanel-$Version-delta.nupkg",
         'FocusPanel-win-Setup.exe',
-        'FocusPanel-win-CustomSetup.exe',
         'FocusPanel-win.msi',
         'FocusPanel-win-Portable.zip',
         'assets.win.json',
@@ -91,6 +90,12 @@ elseif ($ReplaceCurrentVersion) {
             Join-Path $packageDir $target)
     }
 }
+
+# 0.10.27 folds the location picker into the primary Setup.exe.
+# Remove the legacy unversioned launcher so it cannot leak into a
+# later GitHub Release from a reused package directory.
+Remove-GeneratedFile (
+    Join-Path $packageDir 'FocusPanel-win-CustomSetup.exe')
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $unicodeWithBom = New-Object System.Text.UnicodeEncoding($false, $true)
@@ -181,12 +186,11 @@ if ($manifestNotes -cne $expectedNotes) {
     throw 'Release notes changed while packaging. Refusing to publish a manifest with corrupted text.'
 }
 
-$setup = Get-ChildItem -LiteralPath $packageDir -Filter '*Setup.exe' |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
-if ($null -eq $setup) {
+$setupPath = Join-Path $packageDir 'FocusPanel-win-Setup.exe'
+if (-not (Test-Path -LiteralPath $setupPath)) {
     throw 'Packaging completed without producing Setup.exe.'
 }
+$setup = Get-Item -LiteralPath $setupPath
 $msi = Get-ChildItem -LiteralPath $packageDir -Filter '*.msi' |
     Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
@@ -195,16 +199,18 @@ if ($null -eq $msi) {
 }
 
 $customInstallerSource = Join-Path $projectRoot 'packaging\CustomInstallerLauncher.cs'
-$customInstaller = Join-Path $packageDir 'FocusPanel-win-CustomSetup.exe'
+$nativeSetup = Join-Path $packageDir 'FocusPanel-win-NativeSetup.exe'
+$customInstaller = Join-Path $packageDir 'FocusPanel-win-Setup.exe'
 $frameworkCsc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 if (-not (Test-Path -LiteralPath $frameworkCsc)) {
     $frameworkCsc = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
 }
 if (-not (Test-Path -LiteralPath $frameworkCsc)) {
-    throw 'The Windows .NET Framework compiler required for CustomSetup.exe was not found.'
+    throw 'The Windows .NET Framework compiler required for the install-location picker was not found.'
 }
 
 Write-Host 'Creating the custom install-location launcher...'
+Move-Item -LiteralPath $setup.FullName -Destination $nativeSetup -Force
 & $frameworkCsc `
     /nologo `
     /target:winexe `
@@ -212,16 +218,16 @@ Write-Host 'Creating the custom install-location launcher...'
     /reference:System.dll `
     /reference:System.Drawing.dll `
     /reference:System.Windows.Forms.dll `
-    "/resource:$($setup.FullName),FocusPanelSetup" `
+    "/resource:$nativeSetup,FocusPanelSetup" `
     "/out:$customInstaller" `
     $customInstallerSource
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $customInstaller)) {
     throw "Custom installer compilation failed with exit code $LASTEXITCODE."
 }
+Remove-GeneratedFile $nativeSetup
 
 Write-Host ''
-Write-Host "Installer created: $($setup.FullName)"
-Write-Host "Custom-location installer created: $customInstaller"
+Write-Host "Installer with install-location picker created: $customInstaller"
 Write-Host "MSI installer created: $($msi.FullName)"
 Get-ChildItem -LiteralPath $packageDir |
     Sort-Object Name |

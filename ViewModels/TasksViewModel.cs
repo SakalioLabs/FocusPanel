@@ -140,6 +140,7 @@ public partial class TasksViewModel
         _shellOpen;
     private readonly CoalescingAsyncSaveQueue<TodoItem>
         _taskSaveQueue;
+    private Task? _disposeTask;
     private TodoItem? _lastSaveFailureItem;
     private bool _isDisposed;
     private int _loadGeneration;
@@ -1047,10 +1048,10 @@ public partial class TasksViewModel
                 CurrentParentItem?.ColumnsJson));
     }
 
-    public void Dispose()
+    internal Task DisposeAsync()
     {
-        if (_isDisposed)
-            return;
+        if (_disposeTask != null)
+            return _disposeTask;
 
         _isDisposed = true;
         DeactivateCurrentTaskFields();
@@ -1067,16 +1068,27 @@ public partial class TasksViewModel
                 OnTodoItemPropertyChanged;
         }
 
-        _taskSaveQueue.CompleteAsync()
-            .GetAwaiter()
-            .GetResult();
-        _taskService.WaitForIdleAsync()
-            .GetAwaiter()
-            .GetResult();
         _taskSaveQueue.ItemSaved -=
             OnQueuedItemSaved;
         _taskSaveQueue.ItemSaveFailed -=
             OnQueuedItemSaveFailed;
         CloseTaskDetailRequested?.Invoke();
+        _disposeTask =
+            CompleteDisposeAsync();
+        return _disposeTask;
     }
+
+    private async Task CompleteDisposeAsync()
+    {
+        await _taskSaveQueue.CompleteAsync()
+            .ConfigureAwait(false);
+        await _taskService
+            .WaitForIdleAsync()
+            .ConfigureAwait(false);
+    }
+
+    public void Dispose() =>
+        DisposeAsync()
+            .GetAwaiter()
+            .GetResult();
 }

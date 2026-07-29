@@ -55,6 +55,43 @@ internal static class ShellWindowPlacement
         return NormalizeDpi(dpi);
     }
 
+    internal static uint GetTargetDpi(
+        Rectangle screenBounds,
+        IntPtr fallbackWindow)
+    {
+        var rect = new NativeMethods.Rect(
+            screenBounds.Left,
+            screenBounds.Top,
+            screenBounds.Right,
+            screenBounds.Bottom);
+        IntPtr monitor = NativeMethods.MonitorFromRect(
+            ref rect,
+            NativeMethods.MonitorDefaultToNearest);
+        if (monitor != IntPtr.Zero)
+        {
+            try
+            {
+                int result = NativeMethods.GetDpiForMonitor(
+                    monitor,
+                    NativeMethods.MdtEffectiveDpi,
+                    out uint dpiX,
+                    out _);
+                if (result == 0)
+                    return NormalizeDpi(dpiX);
+            }
+            catch (DllNotFoundException)
+            {
+                // Windows 8.1+ normally provides Shcore; keep a
+                // window/system DPI fallback for restricted hosts.
+            }
+            catch (EntryPointNotFoundException)
+            {
+            }
+        }
+
+        return GetWindowDpi(fallbackWindow);
+    }
+
     internal static bool Apply(
         IntPtr hwnd,
         PhysicalWindowBounds bounds)
@@ -78,14 +115,49 @@ internal static class ShellWindowPlacement
 
     private static class NativeMethods
     {
+        internal const uint MonitorDefaultToNearest = 0x00000002;
+        internal const int MdtEffectiveDpi = 0;
         internal const uint SwpNoActivate = 0x0010;
         internal const uint SwpNoOwnerZOrder = 0x0200;
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal readonly struct Rect
+        {
+            internal Rect(
+                int left,
+                int top,
+                int right,
+                int bottom)
+            {
+                Left = left;
+                Top = top;
+                Right = right;
+                Bottom = bottom;
+            }
+
+            internal readonly int Left;
+            internal readonly int Top;
+            internal readonly int Right;
+            internal readonly int Bottom;
+        }
 
         [DllImport("user32.dll")]
         internal static extern uint GetDpiForWindow(IntPtr hwnd);
 
         [DllImport("user32.dll")]
         internal static extern uint GetDpiForSystem();
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr MonitorFromRect(
+            ref Rect rect,
+            uint flags);
+
+        [DllImport("shcore.dll")]
+        internal static extern int GetDpiForMonitor(
+            IntPtr monitor,
+            int dpiType,
+            out uint dpiX,
+            out uint dpiY);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

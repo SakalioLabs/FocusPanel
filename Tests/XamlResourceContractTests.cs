@@ -880,19 +880,19 @@ public sealed class XamlResourceContractTests
             "CustomInstallerLauncher.cs",
             packager);
         Assert.Contains(
-            "FocusPanel-win-CustomSetup.exe",
+            "FocusPanel-win-NativeSetup.exe",
             packager);
         Assert.Contains(
-            "/resource:$($setup.FullName),FocusPanelSetup",
+            "/resource:$nativeSetup,FocusPanelSetup",
             packager);
         Assert.Contains(
-            "'FocusPanel-win-CustomSetup.exe'",
+            "'FocusPanel-win-Setup.exe'",
             publisher);
         Assert.Contains(
             "uploads.github.com",
             publisher);
         Assert.Contains(
-            "-InFile $customInstallerPath",
+            "-InFile $installerPath",
             publisher);
         Assert.Contains(
             "repairing and verifying its assets",
@@ -933,6 +933,15 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "DispatcherPriority.Input",
             hotZone);
+        Assert.Contains(
+            "GetTargetDpi(",
+            mainWindow);
+        Assert.Contains(
+            "WmDpiChanged",
+            mainWindow);
+        Assert.Contains(
+            "GetTargetDpi(",
+            indicator);
     }
 
     [Fact]

@@ -54,6 +54,7 @@ public sealed class AppCatalogService : IAppCatalogService
     private volatile bool _disposed;
     private bool _iconWorkerRunning;
     private long _pinnedRevision;
+    private Task? _disposeTask;
 
     public AppCatalogService() : this(
         new AppIdentityResolver(),
@@ -863,18 +864,28 @@ public sealed class AppCatalogService : IAppCatalogService
             + $"{item.Arguments?.Trim().ToLowerInvariant() ?? string.Empty}";
     }
 
-    public void Dispose()
+    internal Task DisposeAsync()
     {
         lock (_indexLock)
         {
-            if (_disposed)
-                return;
+            if (_disposeTask != null)
+                return _disposeTask;
+
             _disposed = true;
             _isIndexing = false;
             _indexCancellation?.Cancel();
             _indexCancellation = null;
+            _disposeTask =
+                CompleteDisposeAsync();
+            return _disposeTask;
         }
-        _pinnedWriteGate.Wait();
+    }
+
+    private async Task CompleteDisposeAsync()
+    {
+        await _pinnedWriteGate
+            .WaitAsync()
+            .ConfigureAwait(false);
         _pinnedWriteGate.Release();
         lock (_iconLock)
         {
@@ -882,4 +893,9 @@ public sealed class AppCatalogService : IAppCatalogService
             _iconWaiters.Clear();
         }
     }
+
+    public void Dispose() =>
+        DisposeAsync()
+            .GetAwaiter()
+            .GetResult();
 }

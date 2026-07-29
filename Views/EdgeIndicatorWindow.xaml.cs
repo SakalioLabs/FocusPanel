@@ -50,22 +50,14 @@ public partial class EdgeIndicatorWindow : Window
 
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
         uint dpi =
-            ShellWindowPlacement.GetWindowDpi(hwnd);
+            ShellWindowPlacement.GetTargetDpi(
+                targetBounds,
+                hwnd);
         double scale = dpi / 96.0;
         PhysicalWindowBounds bounds =
             ShellWindowPlacement.CalculateIndicator(
                 targetBounds,
                 (int)IndicatorPhysicalWidth);
-        Width = bounds.Width / scale;
-        Height = bounds.Height / scale;
-        ShellWindowPlacement.Apply(hwnd, bounds);
-
-        uint targetDpi =
-            ShellWindowPlacement.GetWindowDpi(hwnd);
-        if (targetDpi == dpi)
-            return;
-
-        scale = targetDpi / 96.0;
         Width = bounds.Width / scale;
         Height = bounds.Height / scale;
         ShellWindowPlacement.Apply(hwnd, bounds);

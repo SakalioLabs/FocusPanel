@@ -122,4 +122,37 @@ public sealed class ShellWindowPlacementTests
         Assert.Equal(3, bounds.Width);
         Assert.Equal(1440, bounds.Height);
     }
+
+    [Fact]
+    public void SideBySideMixedDpi_ExpandedPanelStaysOnTargetDisplay()
+    {
+        var target = new Rectangle(
+            1920,
+            -240,
+            2560,
+            1440);
+
+        PhysicalWindowBounds compact =
+            ShellWindowPlacement.CalculatePanel(
+                target,
+                144,
+                76,
+                12);
+        PhysicalWindowBounds expanded =
+            ShellWindowPlacement.CalculatePanel(
+                target,
+                144,
+                720,
+                12);
+
+        Assert.Equal(
+            target.Right - 18,
+            compact.Left + compact.Width);
+        Assert.Equal(
+            target.Right - 18,
+            expanded.Left + expanded.Width);
+        Assert.True(expanded.Left >= target.Left);
+        Assert.Equal(compact.Top, expanded.Top);
+        Assert.Equal(compact.Height, expanded.Height);
+    }
 }

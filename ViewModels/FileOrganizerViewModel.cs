@@ -43,6 +43,7 @@ public partial class FileOrganizerViewModel :
     private bool _applyingLayoutOptions;
     private long _layoutSettingsRevision;
     private bool _isDisposed;
+    private Task? _disposeTask;
 
     // Split partitions for Masonry/Staggered Layout
     public ObservableCollection<PartitionViewModel> PartitionsCol1 { get; } = new();
@@ -963,10 +964,10 @@ public partial class FileOrganizerViewModel :
             preflight.SkippedDuplicates);
     }
 
-    public void Dispose()
+    internal Task DisposeAsync()
     {
-        if (_isDisposed)
-            return;
+        if (_disposeTask != null)
+            return _disposeTask;
 
         _isDisposed = true;
         _layoutRefresh.Dispose();
@@ -978,14 +979,19 @@ public partial class FileOrganizerViewModel :
             OnLayoutOptionsSaved;
         _layoutSaveQueue.ItemSaveFailed -=
             OnLayoutOptionsSaveFailed;
-        _layoutSaveQueue.CompleteAsync()
-            .GetAwaiter()
-            .GetResult();
+        _disposeTask =
+            CompleteDisposeAsync();
+        return _disposeTask;
+    }
+
+    private async Task CompleteDisposeAsync()
+    {
+        await _layoutSaveQueue.CompleteAsync()
+            .ConfigureAwait(false);
         try
         {
-            _layoutMutationTracker.CompleteAsync()
-                .GetAwaiter()
-                .GetResult();
+            await _layoutMutationTracker.CompleteAsync()
+                .ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -995,6 +1001,11 @@ public partial class FileOrganizerViewModel :
         }
         _fileService.Dispose();
     }
+
+    public void Dispose() =>
+        DisposeAsync()
+            .GetAwaiter()
+            .GetResult();
 }
 
 public sealed record DesktopImportResult(

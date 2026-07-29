@@ -204,6 +204,44 @@ public sealed class AppCatalogPinnedWriteTests
                 TimeSpan.FromSeconds(2));
     }
 
+    [Fact]
+    public async Task DisposeAsync_DoesNotBlockCallerAndDrainsWrite()
+    {
+        using var started =
+            new ManualResetEventSlim();
+        using var release =
+            new ManualResetEventSlim();
+        AppLaunchItem app = Demo("Calendar");
+        var service = CreateService(
+            setPinned: (_, _) =>
+            {
+                started.Set();
+                release.Wait(
+                    TimeSpan.FromSeconds(2));
+                return Success(
+                    new[] { Persisted(app, 0) });
+            });
+
+        Task<bool> write =
+            service.SetPinnedAsync(
+                app,
+                true);
+        Assert.True(
+            started.Wait(
+                TimeSpan.FromSeconds(2)));
+
+        Task dispose =
+            service.DisposeAsync();
+
+        Assert.False(dispose.IsCompleted);
+        release.Set();
+        await Task.WhenAll(
+                write,
+                dispose)
+            .WaitAsync(
+                TimeSpan.FromSeconds(2));
+    }
+
     private static AppCatalogService CreateService(
         Func<AppLaunchItem, bool, PinnedAppMutationResult>?
             setPinned = null,

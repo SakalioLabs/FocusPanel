@@ -30,6 +30,7 @@ public partial class MainWindow :
     private const double CompactTaskbarScrollStep = 46;
     private const int SwShowNoActivate = 4;
     private const int WmHotkey = 0x0312;
+    private const int WmDpiChanged = 0x02E0;
     private const int SummonHotkeyId = 0x4650;
     private const uint ModAlt = 0x0001;
     private const uint ModControl = 0x0002;
@@ -49,6 +50,8 @@ public partial class MainWindow :
     private HwndSource? _windowSource;
     private bool _summonHotkeyRegistered;
     private bool _isExit;
+    private bool _shutdownStarted;
+    private bool _shutdownCompleted;
     private bool _hiddenToTray;
     private bool _isHotZoneAvailable;
     private bool _shellStartupReady;
@@ -258,7 +261,9 @@ public partial class MainWindow :
 
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
         uint dpi =
-            ShellWindowPlacement.GetWindowDpi(hwnd);
+            ShellWindowPlacement.GetTargetDpi(
+                targetBounds,
+                hwnd);
         PhysicalWindowBounds bounds =
             ShellWindowPlacement.CalculatePanel(
                 targetBounds,
@@ -266,19 +271,6 @@ public partial class MainWindow :
                 widthDip,
                 ScreenMargin);
         Height = bounds.Height / (dpi / 96.0);
-        ShellWindowPlacement.Apply(hwnd, bounds);
-
-        uint targetDpi =
-            ShellWindowPlacement.GetWindowDpi(hwnd);
-        if (targetDpi == dpi)
-            return;
-
-        bounds = ShellWindowPlacement.CalculatePanel(
-            targetBounds,
-            targetDpi,
-            widthDip,
-            ScreenMargin);
-        Height = bounds.Height / (targetDpi / 96.0);
         ShellWindowPlacement.Apply(hwnd, bounds);
     }
 
@@ -1018,7 +1010,13 @@ public partial class MainWindow :
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
-        if (!_isExit)
+        ShellClosingAction action =
+            ShellShutdownPolicy.Decide(
+                _isExit,
+                _shutdownStarted,
+                _shutdownCompleted);
+        if (action
+            == ShellClosingAction.HideToTray)
         {
             e.Cancel = true;
             _hiddenToTray = true;
@@ -1029,6 +1027,24 @@ public partial class MainWindow :
             return;
         }
 
+        if (action
+            != ShellClosingAction.AllowClose)
+        {
+            e.Cancel = true;
+            if (action
+                == ShellClosingAction
+                    .BeginAsyncShutdown)
+            {
+                _shutdownStarted = true;
+                BeginShutdownUiPhase();
+                _ = CompleteShutdownAsync();
+            }
+            return;
+        }
+    }
+
+    private void BeginShutdownUiPhase()
+    {
         _autoHideTimer.Stop();
         _transientInteractionDepth = 0;
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
@@ -1046,14 +1062,43 @@ public partial class MainWindow :
         _edgeIndicator?.Close();
         _edgeIndicator = null;
         _toastManager.Dispose();
-        _ = _updateInstallPreparation
-            .CompleteAsync();
         _coordinator.Taskbar.ReplacementStopped -= Taskbar_ReplacementStopped;
+        _viewModel.RequestClose -= ForceClose;
+        _viewModel.RequestEnableReplacement -= EnableTaskbarReplacement;
+        _viewModel.RequestDisableReplacement -= DisableTaskbarReplacement;
+        _viewModel.RequestApplyUpdate -= ApplyDownloadedUpdate;
         _viewModel.UpdateAvailable -= ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted -=
             ViewModel_PomodoroCompleted;
-        _viewModel.Dispose();
-        _coordinator.Dispose();
+        HideShell();
+    }
+
+    private async Task CompleteShutdownAsync()
+    {
+        try
+        {
+            await Task.WhenAll(
+                _viewModel.DisposeAsync(),
+                _updateInstallPreparation
+                    .CompleteAsync(),
+                _coordinator.DisposeAsync());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                "异步退出排空失败："
+                + ex.Message);
+        }
+
+        if (Dispatcher.HasShutdownStarted
+            || Dispatcher.HasShutdownFinished)
+        {
+            return;
+        }
+
+        _shutdownCompleted = true;
+        Close();
+        Application.Current.Shutdown();
     }
 
     public void ShowFromTray()
@@ -1071,11 +1116,13 @@ public partial class MainWindow :
 
     public void ForceClose()
     {
+        if (_isExit)
+            return;
+
         _isExit = true;
         _coordinator.RestoreTaskbar();
         MyNotifyIcon.Dispose();
         Close();
-        Application.Current.Shutdown();
     }
 
     private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
@@ -1117,6 +1164,12 @@ public partial class MainWindow :
             Activate();
             FocusCompactDock();
             handled = true;
+        }
+        else if (message == WmDpiChanged)
+        {
+            _ = Dispatcher.BeginInvoke(
+                new Action(PositionAtTargetRightEdge),
+                DispatcherPriority.Loaded);
         }
 
         return IntPtr.Zero;

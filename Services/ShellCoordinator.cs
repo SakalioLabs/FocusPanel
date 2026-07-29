@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace FocusPanel.Services;
 
@@ -24,12 +25,26 @@ public sealed class ShellCoordinator : IDisposable
 
     public void RestoreTaskbar() => Taskbar.Restore();
 
-    public void Dispose()
+    internal async Task DisposeAsync()
     {
         Taskbar.Dispose();
         Windows.Dispose();
         SystemStatus.Dispose();
-        Apps.Dispose();
         Updates.Dispose();
+        if (Apps is AppCatalogService catalog)
+        {
+            await catalog
+                .DisposeAsync()
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            Apps.Dispose();
+        }
     }
+
+    public void Dispose() =>
+        DisposeAsync()
+            .GetAwaiter()
+            .GetResult();
 }

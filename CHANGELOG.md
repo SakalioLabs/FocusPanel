@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.10.27 - 2026-07-29
+
+- 主窗口安全退出改为明确的两阶段关闭：`ForceClose()` 先幂等恢复原生任务栏并请求关闭，首次 `Closing` 取消窗口销毁、停止热区/计时器/弹层和新操作，然后异步排空后台队列；全部完成后推进状态并第二次关闭。WPF Dispatcher 不再被 `GetResult()` 卡住，窗口消息与系统恢复仍可处理。
+- `MainViewModel` 新增共享 `DisposeAsync()` 生命周期，并行等待音频控制、开机启动注册表、Shell 设置、任务、桌面布局、番茄钟和仍在准备的桌面收纳实例；各子模块先在 UI 阶段停止计时器与事件生产者，再在后台等待最后一次保存，兼容的同步 `Dispose()` 仅保留给非窗口调用方。
+- `AppCatalogService` 的固定应用写入闸门改为异步等待，`ShellCoordinator.DisposeAsync()` 在解除窗口跟踪与系统服务后等待最后一次固定、取消固定或拖动排序提交；不再在界面线程执行 `_pinnedWriteGate.Wait()`。
+- 新增纯逻辑 `ShellShutdownPolicy`，严格区分普通关闭隐藏到托盘、首次异步退出、重复关闭等待和最终允许销毁；重复退出不会启动第二套排空事务。新增慢固定写入异步等待、两阶段状态、主/子 ViewModel 排空和源码契约测试。
+- 测试程序集关闭 xUnit 集合级并行：本项目大量测试共享 WPF Dispatcher，并使用阻塞桩验证线程切换；集合串行可避免线程池饥饿造成随机 2 秒启动信号超时，每个测试内部的真实并发与原有严格超时保持不变。README 增加异步安全退出、统一安装入口和双屏目标 DPI 示意图。Release 构建 0 错误、0 警告，全量 729 项测试与界面冒烟通过。
+- 首次安装不再把路径选择藏在单独的 `CustomSetup.exe`：公开的 `FocusPanel-win-Setup.exe` 本身先显示中文目录向导，再将所选绝对路径交给内嵌的 Velopack 官方安装器；后续一键更新继续沿用该安装根目录。MSI 保留给企业部署。
+- 修复双屏不同缩放比例下展开锚点可能落到屏幕接缝：定位前通过目标显示器句柄读取有效 DPI，一次性计算物理坐标；`WM_DPICHANGED` 到达后按同一最外侧目标重新定位，Panel、热区和 3px 指示条继续共享目标屏幕。
+
 ## v0.10.26 - 2026-07-29
 
 - 更新包下载完成后的数据库在线备份不再由 `MainWindow.ApplyDownloadedUpdate()` 在 WPF 线程同步执行；新的 `UpdateInstallPreparationCoordinator` 在工作线程创建 `DatabaseBackupService`、执行 SQLite `quick_check`、在线备份和滚动清理，大数据库或慢磁盘不会冻结“正在安全重启”界面。

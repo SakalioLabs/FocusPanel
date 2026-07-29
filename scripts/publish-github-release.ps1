@@ -98,34 +98,34 @@ if ($Publish) {
             -Headers $githubHeaders
     }
 
-    $customInstallerName = 'FocusPanel-win-CustomSetup.exe'
-    $customInstallerPath = Join-Path $packageDir $customInstallerName
-    if (-not (Test-Path -LiteralPath $customInstallerPath)) {
-        throw "Custom installer '$customInstallerName' is missing from the package directory."
+    $installerName = 'FocusPanel-win-Setup.exe'
+    $installerPath = Join-Path $packageDir $installerName
+    if (-not (Test-Path -LiteralPath $installerPath)) {
+        throw "Installer '$installerName' is missing from the package directory."
     }
 
-    $existingCustomInstaller = $release.assets |
-        Where-Object { $_.name -eq $customInstallerName } |
+    $existingInstaller = $release.assets |
+        Where-Object { $_.name -eq $installerName } |
         Select-Object -First 1
-    $customInstallerLength = (Get-Item -LiteralPath $customInstallerPath).Length
-    if ($null -ne $existingCustomInstaller -and
-        $existingCustomInstaller.size -ne $customInstallerLength) {
+    $installerLength = (Get-Item -LiteralPath $installerPath).Length
+    if ($null -ne $existingInstaller -and
+        $existingInstaller.size -ne $installerLength) {
         Invoke-RestMethod `
             -Method Delete `
-            -Uri "$apiBaseUrl/releases/assets/$($existingCustomInstaller.id)" `
+            -Uri "$apiBaseUrl/releases/assets/$($existingInstaller.id)" `
             -Headers $githubHeaders | Out-Null
-        $existingCustomInstaller = $null
+        $existingInstaller = $null
     }
 
-    if ($null -eq $existingCustomInstaller) {
-        Write-Host "Uploading $customInstallerName..."
-        $escapedAssetName = [Uri]::EscapeDataString($customInstallerName)
+    if ($null -eq $existingInstaller) {
+        Write-Host "Uploading $installerName..."
+        $escapedAssetName = [Uri]::EscapeDataString($installerName)
         Invoke-RestMethod `
             -Method Post `
             -Uri "https://uploads.github.com/repos/$repositoryOwner/$repositoryName/releases/$($release.id)/assets?name=$escapedAssetName" `
             -Headers $githubHeaders `
             -ContentType 'application/octet-stream' `
-            -InFile $customInstallerPath | Out-Null
+            -InFile $installerPath | Out-Null
     }
 
     Write-Host "Marking $releaseTag as the latest GitHub Release..."
@@ -166,8 +166,8 @@ if ($Publish) {
     if (-not $hasFullPackage) {
         throw "Latest release '$releaseTag' is missing the full Velopack package."
     }
-    if ($assetNames -notcontains $customInstallerName) {
-        throw "Latest release '$releaseTag' is missing the custom-location installer."
+    if ($assetNames -notcontains $installerName) {
+        throw "Latest release '$releaseTag' is missing the install-location picker."
     }
     if ($assetNames -notcontains 'FocusPanel-win.msi') {
         throw "Latest release '$releaseTag' is missing the MSI installer."

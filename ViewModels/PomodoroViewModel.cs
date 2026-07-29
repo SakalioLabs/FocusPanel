@@ -34,6 +34,7 @@ public partial class PomodoroViewModel
     private long _statsRevision;
     private long _sessionUiRevision;
     private bool _disposed;
+    private Task? _disposeTask;
 
     [ObservableProperty]
     private string timerDisplay = "25:00";
@@ -384,24 +385,29 @@ public partial class PomodoroViewModel
     private static void CloseOverlayWindows()
         => PomodoroWindowManager.CloseWindows();
 
-    public void Dispose()
+    internal Task DisposeAsync()
     {
-        if (_disposed)
-            return;
+        if (_disposeTask != null)
+            return _disposeTask;
 
         _disposed = true;
         _timer.Stop();
         _timer.Tick -= Timer_Tick;
         _statsRefresh.Dispose();
-        _sessionSaveQueue.CompleteAsync()
-            .GetAwaiter()
-            .GetResult();
         _sessionSaveQueue.ItemSaved -=
             OnSessionSaved;
         _sessionSaveQueue.ItemSaveFailed -=
             OnSessionSaveFailed;
         CloseOverlayWindows();
+        _disposeTask =
+            _sessionSaveQueue.CompleteAsync();
+        return _disposeTask;
     }
+
+    public void Dispose() =>
+        DisposeAsync()
+            .GetAwaiter()
+            .GetResult();
 
     private readonly record struct
         PendingPomodoroStats(

@@ -41,6 +41,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 固定应用在后台读取后保存为线程安全内存快照；前台切换、窗口标题变化及窗口创建/关闭只组合缓存与运行窗口，不再在 WinEvent 高频路径上反复打开 SQLite。固定、取消固定和拖动排序也通过专用后台闸门串行提交，成功后才原子替换缓存；拖放提交期间保持 Panel 展开，退出会等待在途写入完成。
 - 主壳启动时在工作线程用一个无跟踪快照读取首次引导、任务栏替代、主题和全屏热区设置，不再阻塞 `MainViewModel` 构造或为四个键重复打开 SQLite。窗口在快照就绪前保持隐藏，热区、托盘唤出和全局快捷键不会提前展开；就绪后才创建热区并决定显示引导或申请一次任务栏接管。运行中写入继续按设置键合并并由单消费者后台队列串行落盘。
 - 任务栏控制器构造只校验恢复会话路径，不再在普通启动期间同步创建 `%LOCALAPPDATA%\FocusPanel` 目录；只有用户真正启用替代模式时，才在隐藏原任务栏之前准备目录并写入恢复快照。任一步失败都会中止接管，避免出现“任务栏已隐藏但没有可恢复会话”。
+- 安全退出采用两阶段关闭：先恢复原生任务栏、停止热区和新的界面操作，再异步排空音频控制、开机启动设置、任务、桌面布局、番茄钟、固定应用与 Shell 设置；完成后才真正销毁窗口。慢磁盘或最后一次拖拽保存不会冻结 WPF Dispatcher，重复退出也只等待同一事务。
 - Windows 开机启动项的初始注册表读取、启用、禁用和失败复读全部通过串行后台协调器执行，主壳构造与设置开关不再同步访问注册表。快速连续切换会按请求顺序写入并以最后选择为准；启动期迟到读取不能覆盖用户操作，写入失败则回滚到后台复读的真实状态，退出前排空已接收的修改。
 - 番茄钟历史统计在工作线程加载；倒计时归零时立即更新界面、播放提醒并把完整会话交给后台单消费者串行保存。开始新一轮、暂停或重置后，上一轮迟到的保存结果不会覆盖当前提示，退出前会排空已经进入队列的会话。
 - OKR 首次打开时由工作线程一次读取本地目标、飞书配置、同步间隔和最后同步时间；SQLite 较大或暂时繁忙不会阻塞工作区展开。手动飞书同步、配置读写和 AI 预留接口也不再同步等待 WPF Dispatcher，旧加载快照不会覆盖刚完成的本地编辑。
@@ -134,6 +135,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![更新管理器后台准备与首轮检查](docs/images/update-manager-background-initialization.svg)
 
 ![更新安装后台备份与安全交接](docs/images/update-install-background-handoff.svg)
+
+![两阶段异步安全退出](docs/images/async-shutdown-drain.svg)
 
 ![开机启动注册表后台串行协调](docs/images/auto-startup-background-coordinator.svg)
 
@@ -395,7 +398,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.26 `
+  -Version 0.10.27 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -404,10 +407,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
-- `FocusPanel-win-Setup.exe`：当前用户默认目录的一键首次安装入口；命令行也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
-- `FocusPanel-win-CustomSetup.exe`：带图形化文件夹选择器的安装入口；在另一台电脑上需要任意自定义目录时优先下载它。
+- `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意安装目录，默认值仍为当前用户目录。无需再寻找单独的 CustomSetup。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.26-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.27-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -415,11 +417,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
-正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES`、完整更新包、CustomSetup 和 MSI。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要通过任一安装入口安装过一次，以后即可在设置页直接完成检查、下载、安装和重启。需要图形化选择任意目录时使用 `CustomSetup.exe`，默认目录快速安装时使用 `Setup.exe`，企业部署使用 MSI。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载安装器覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
+正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES`、完整更新包、带路径向导的 Setup 和 MSI。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要安装过一次，以后即可在设置页直接完成检查、下载、安装和重启。个人设备使用 `Setup.exe` 选择目录，企业部署使用 MSI。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载安装器覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
 
 ![GitHub 静态清单一键更新与手动兜底](docs/images/github-static-update-flow.svg)
 
-用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备首次用 EXE 快速安装，或用 CustomSetup 图形化选择目录；后续版本均沿用同一条更新链，不会因自定义目录而回到默认位置。
+用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备首次运行 `Setup.exe` 时即可选择目录；后续版本均沿用同一条更新链，不会因自定义目录而回到默认位置。
 
 ![一键更新流程](docs/images/one-click-update.svg)
 
@@ -427,7 +429,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 ## 多显示器右缘定位
 
-0.10.21 起，Panel、12px 物理热区和 3px 运行指示条共同选择虚拟桌面中最外侧的右屏，而不是盲目使用主屏右缘。这样当主屏在左、副屏在右时，呼出位置位于整套显示器的最右边，不再卡在两屏接缝；副屏在左时则仍落在主屏外侧。每次分辨率、主屏或缩放改变都会重新选择目标屏幕；窗口先移动到目标屏，再用 `GetDpiForWindow` 读取承载屏幕 DPI并精确计算 76/720 DIP 的实际像素宽度。
+0.10.21 起，Panel、12px 物理热区和 3px 运行指示条共同选择虚拟桌面中最外侧的右屏，而不是盲目使用主屏右缘。这样当主屏在左、副屏在右时，呼出位置位于整套显示器的最右边，不再卡在两屏接缝；副屏在左时则仍落在主屏外侧。0.10.27 进一步在移动窗口前直接读取目标显示器的有效 DPI，不再用窗口原来所在屏幕的 DPI 做第一次定位；收到 `WM_DPICHANGED` 后会按同一目标重新锚定。分辨率、主屏或缩放改变时，Panel、热区和指示条会一起重算。
 
 ![双屏外侧右缘选择](docs/images/multi-monitor-edge-target.svg)
 
