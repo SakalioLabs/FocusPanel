@@ -333,6 +333,10 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 
 ![自动收纳异常隔离与防闪退](docs/images/organizer-auto-crash-boundary.svg)
 
+文件较多时，工具栏下方会临时显示实时进度、当前项目和已处理数量；整理按钮同步禁用，防止重复点击排队。手动整理、自动新增收纳和公共桌面授权阶段各自使用独立进度修订，上一阶段迟到的 UI 消息不会覆盖最终摘要。
+
+![桌面整理实时进度与重复触发抑制](docs/images/organizer-progress-feedback.svg)
+
 ![任务列表、真实看板与毛玻璃详情](docs/images/task-workspace.svg)
 
 ![本地优先 OKR 与飞书同步](docs/images/okr-local-sync.svg)
@@ -409,7 +413,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.31 `
+  -Version 0.10.32 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -420,7 +424,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意绝对目录，随后通过标准 Windows Installer 的 `VELOPACK_INSTALLDIR` 属性强制使用该路径。有可用且空间充足的非系统固定盘时会优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版已装在另一目录，向导会先说明并征得确认，再用旧版官方卸载器移除程序文件并安装到新位置；任务、收纳记录和设置保留在用户 AppData。无需再寻找单独的 CustomSetup。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.31-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.32-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

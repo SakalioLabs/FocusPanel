@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
 using FocusPanel.Services;
@@ -51,6 +52,96 @@ public sealed class DesktopAutoOrganizePolicyTests
         Assert.Contains("locked.docx", result.FailedItems);
         Assert.Contains("photo.png:图片", collected);
         Assert.Contains("folder:文件夹", collected);
+    }
+
+    [Fact]
+    public async Task ExecuteReportsStableProgressAfterEveryItem()
+    {
+        var items = new[]
+        {
+            new DesktopAutoOrganizeItem(
+                "one.png",
+                @"C:\Desktop\one.png",
+                "Image"),
+            new DesktopAutoOrganizeItem(
+                "public.lnk",
+                @"C:\Public\Desktop\public.lnk",
+                "Application"),
+            new DesktopAutoOrganizeItem(
+                "locked.txt",
+                @"C:\Desktop\locked.txt",
+                "Document")
+        };
+        var reports =
+            new List<DesktopOrganizeProgress>();
+        var progress =
+            new InlineProgress<DesktopOrganizeProgress>(
+                reports.Add);
+
+        DesktopOrganizeResult result =
+            await DesktopAutoOrganizePolicy
+                .ExecuteAsync(
+                    items,
+                    false,
+                    (item, _, _) =>
+                    {
+                        if (item.Name == "public.lnk")
+                        {
+                            throw new CommonDesktopElevationRequiredException(
+                                item.FullPath);
+                        }
+                        if (item.Name == "locked.txt")
+                            throw new IOException("locked");
+                        return Task.CompletedTask;
+                    },
+                    progress);
+
+        Assert.Equal(
+            new[] { 1, 2, 3 },
+            reports.Select(
+                report => report.Processed));
+        Assert.All(
+            reports,
+            report =>
+                Assert.Equal(3, report.Total));
+        Assert.Equal(1, reports[^1].Collected);
+        Assert.Equal(
+            1,
+            reports[^1]
+                .AuthorizationRequired);
+        Assert.Equal(1, reports[^1].Failed);
+        Assert.Equal(
+            "locked.txt",
+            reports[^1].CurrentItemName);
+        Assert.Equal(1, result.Collected);
+    }
+
+    [Fact]
+    public async Task ProgressObserverFailure_DoesNotUndoCollection()
+    {
+        var items = new[]
+        {
+            new DesktopAutoOrganizeItem(
+                "safe.txt",
+                @"C:\Desktop\safe.txt",
+                "Document")
+        };
+        var progress =
+            new InlineProgress<DesktopOrganizeProgress>(
+                _ => throw new InvalidOperationException(
+                    "presentation failed"));
+
+        DesktopOrganizeResult result =
+            await DesktopAutoOrganizePolicy
+                .ExecuteAsync(
+                    items,
+                    false,
+                    (_, _, _) =>
+                        Task.CompletedTask,
+                    progress);
+
+        Assert.Equal(1, result.Collected);
+        Assert.Equal(0, result.Failed);
     }
 
     [Fact]
@@ -149,5 +240,20 @@ public sealed class DesktopAutoOrganizePolicyTests
             expected,
             DesktopAutoOrganizePolicy
                 .DescribeAutomaticResult(result));
+    }
+
+    private sealed class InlineProgress<T>
+        : IProgress<T>
+    {
+        private readonly Action<T> _report;
+
+        internal InlineProgress(
+            Action<T> report)
+        {
+            _report = report;
+        }
+
+        public void Report(T value) =>
+            _report(value);
     }
 }

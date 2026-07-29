@@ -40,8 +40,12 @@ public partial class FileOrganizerViewModel :
         _desktopDropPreflight = new();
     private readonly ShellPathOpenCoordinator
         _shellOpen;
+    private readonly SemaphoreSlim
+        _organizePresentationGate =
+            new(1, 1);
     private bool _applyingLayoutOptions;
     private long _layoutSettingsRevision;
+    private long _organizePresentationRevision;
     private bool _isDisposed;
     private Task? _disposeTask;
 
@@ -85,6 +89,17 @@ public partial class FileOrganizerViewModel :
     [ObservableProperty]
     private string autoOrganizeStatus =
         "关闭时不会处理新增桌面项目";
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(
+        nameof(OrganizeAllCommand))]
+    private bool isOrganizing;
+
+    [ObservableProperty]
+    private double organizeProgressValue;
+
+    [ObservableProperty]
+    private double organizeProgressMaximum = 1;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CardWidth))]
@@ -291,10 +306,21 @@ public partial class FileOrganizerViewModel :
             return;
         }
 
+        await _organizePresentationGate
+            .WaitAsync();
         try
         {
+            long progressRevision =
+                BeginOrganizePresentation(
+                paths.Count,
+                "正在自动收纳新增项目");
             DesktopOrganizeResult result =
-                await _fileService.OrganizeFiles(paths);
+                await _fileService.OrganizeFiles(
+                    paths,
+                    false,
+                    CreateOrganizeProgress(
+                        "自动收纳",
+                        progressRevision));
             string status =
                 DesktopAutoOrganizePolicy
                     .DescribeAutomaticResult(result);
@@ -312,6 +338,63 @@ public partial class FileOrganizerViewModel :
             System.Diagnostics.Debug.WriteLine(
                 "Auto organize created desktop items failed: "
                 + ex.Message);
+        }
+        finally
+        {
+            EndOrganizePresentation();
+            _organizePresentationGate.Release();
+        }
+    }
+
+    private IProgress<DesktopOrganizeProgress>
+        CreateOrganizeProgress(
+            string operationName,
+            long revision) =>
+        new Progress<DesktopOrganizeProgress>(
+            progress =>
+            {
+                if (_isDisposed
+                    || !IsOrganizing
+                    || revision != Volatile.Read(
+                        ref _organizePresentationRevision))
+                    return;
+
+                OrganizeProgressValue =
+                    progress.Processed;
+                OrganizeProgressMaximum =
+                    Math.Max(1, progress.Total);
+                AutoOrganizeStatus =
+                    $"{operationName} "
+                    + $"{progress.Processed}/"
+                    + $"{progress.Total} · "
+                    + progress.CurrentItemName;
+            });
+
+    private long BeginOrganizePresentation(
+        int total,
+        string status)
+    {
+        long revision =
+            Interlocked.Increment(
+                ref _organizePresentationRevision);
+        IsOrganizing = true;
+        OrganizeProgressValue = 0;
+        OrganizeProgressMaximum =
+            Math.Max(1, total);
+        AutoOrganizeStatus = status;
+        return revision;
+    }
+
+    private void EndOrganizePresentation()
+    {
+        Interlocked.Increment(
+            ref _organizePresentationRevision);
+        IsOrganizing = false;
+        if (OrganizeProgressValue
+            < OrganizeProgressMaximum)
+        {
+            OrganizeProgressValue =
+                OrganizeProgressMaximum;
         }
     }
 
@@ -523,7 +606,11 @@ public partial class FileOrganizerViewModel :
         }
     }
 
-    [RelayCommand]
+    private bool CanOrganizeAll() =>
+        !IsOrganizing;
+
+    [RelayCommand(
+        CanExecute = nameof(CanOrganizeAll))]
     private async Task OrganizeAll()
     {
         try
@@ -548,38 +635,77 @@ public partial class FileOrganizerViewModel :
             if (result != System.Windows.MessageBoxResult.Yes)
                 return;
 
-            DesktopOrganizeResult organizeResult =
-                await _fileService.OrganizeAllFiles();
-            int collected = organizeResult.Collected;
-
-            if (organizeResult.AuthorizationRequired > 0)
+            await _organizePresentationGate
+                .WaitAsync();
+            try
             {
-                var authorize = FocusDialogService.Show(
-                    $"另有 {organizeResult.AuthorizationRequired} 个公共桌面项目需要管理员授权。"
-                    + "\n\n是否继续收纳这些项目？",
-                    "公共桌面授权",
-                    System.Windows.MessageBoxButton.YesNo,
-                    System.Windows.MessageBoxImage.Warning);
-                if (authorize == System.Windows.MessageBoxResult.Yes)
-                {
-                    DesktopOrganizeResult elevatedResult =
-                        await _fileService.OrganizeAllFiles(true);
-                    collected += elevatedResult.Collected;
-                }
-            }
+                int initialTotal =
+                    _fileService.Files.Count;
+                long progressRevision =
+                    BeginOrganizePresentation(
+                    initialTotal,
+                    $"正在整理 0/{initialTotal}");
+                DesktopOrganizeResult organizeResult =
+                    await _fileService.OrganizeAllFiles(
+                        false,
+                        CreateOrganizeProgress(
+                            "正在整理",
+                            progressRevision));
+                int collected =
+                    organizeResult.Collected;
 
-            await _fileService.RefreshFiles();
-            RequestLayoutRefresh();
-            int remaining = _fileService.Files.Count;
-            FocusDialogService.Show(
-                remaining == 0
-                    ? $"已收纳 {collected} 个桌面项目。"
-                    : $"已收纳 {collected} 个桌面项目；仍有 {remaining} 个项目因权限或文件状态未能收纳。",
-                "自动整理完成",
-                System.Windows.MessageBoxButton.OK,
-                remaining == 0
-                    ? System.Windows.MessageBoxImage.Information
-                    : System.Windows.MessageBoxImage.Warning);
+                if (organizeResult.AuthorizationRequired > 0)
+                {
+                    var authorize = FocusDialogService.Show(
+                        $"另有 {organizeResult.AuthorizationRequired} 个公共桌面项目需要管理员授权。"
+                        + "\n\n是否继续收纳这些项目？",
+                        "公共桌面授权",
+                        System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Warning);
+                    if (authorize == System.Windows.MessageBoxResult.Yes)
+                    {
+                        int elevatedTotal =
+                            _fileService.Files.Count;
+                        progressRevision =
+                            BeginOrganizePresentation(
+                            elevatedTotal,
+                            $"正在处理授权项目 0/{elevatedTotal}");
+                        DesktopOrganizeResult elevatedResult =
+                            await _fileService.OrganizeAllFiles(
+                                true,
+                                CreateOrganizeProgress(
+                                    "正在处理授权项目",
+                                    progressRevision));
+                        collected +=
+                            elevatedResult.Collected;
+                    }
+                }
+
+                await _fileService.RefreshFiles();
+                RequestLayoutRefresh();
+                int remaining =
+                    _fileService.Files.Count;
+                AutoOrganizeStatus =
+                    remaining == 0
+                        ? $"已收纳 {collected} 个桌面项目"
+                        : $"已收纳 {collected} 个；"
+                        + $"{remaining} 个仍保留在桌面";
+                FocusDialogService.Show(
+                    remaining == 0
+                        ? $"已收纳 {collected} 个桌面项目。"
+                        : $"已收纳 {collected} 个桌面项目；仍有 {remaining} 个项目因权限或文件状态未能收纳。",
+                    "自动整理完成",
+                    System.Windows.MessageBoxButton.OK,
+                    remaining == 0
+                        ? System.Windows.MessageBoxImage.Information
+                        : System.Windows.MessageBoxImage.Warning);
+            }
+            finally
+            {
+                EndOrganizePresentation();
+                _organizePresentationGate
+                    .Release();
+            }
         }
         catch (Exception ex)
         {

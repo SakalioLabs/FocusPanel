@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="360" viewBox="0 0 1120 360">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1322"/><stop offset="1" stop-color="#172944"/></linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#020617" flood-opacity=".45"/></filter>
+  </defs>
+  <rect width="1120" height="360" rx="28" fill="url(#bg)"/>
+  <text x="52" y="58" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei" font-size="25" font-weight="700">桌面整理有明确进度，不再靠猜</text>
+  <g filter="url(#shadow)" font-family="Segoe UI,Microsoft YaHei">
+    <rect x="52" y="92" width="650" height="210" rx="22" fill="#18283f" stroke="#456184"/>
+    <rect x="52" y="92" width="650" height="58" rx="22" fill="#21334f"/>
+    <path d="M52 128h650v22H52z" fill="#21334f"/>
+    <text x="78" y="128" fill="#e2e8f0" font-size="17" font-weight="600">收纳盒</text>
+    <g transform="translate(574 105)">
+      <rect width="42" height="34" rx="10" fill="#253752" stroke="#4b6385"/>
+      <path d="M14 17h14M21 10v14" stroke="#94a3b8" stroke-width="2"/>
+      <rect x="50" width="42" height="34" rx="10" fill="#132238" stroke="#314764" opacity=".55"/>
+      <path d="M64 12l14 10M78 12L64 22" stroke="#64748b" stroke-width="2"/>
+    </g>
+    <rect x="52" y="150" width="650" height="70" fill="#172e48" stroke="#334c6d" stroke-width="0 0 0 1"/>
+    <text x="78" y="180" fill="#bfdbfe" font-size="15">正在整理 18/42 · 项目方案最终版.pdf</text>
+    <rect x="78" y="195" width="596" height="6" rx="3" fill="#334155"/>
+    <rect x="78" y="195" width="255" height="6" rx="3" fill="url(#bar)"/>
+    <g fill="#1f314b" stroke="#3f5878">
+      <rect x="78" y="246" width="132" height="34" rx="12"/><rect x="222" y="246" width="132" height="34" rx="12"/><rect x="366" y="246" width="132" height="34" rx="12"/>
+    </g>
+    <text x="102" y="269" fill="#a8bad1" font-size="13">图片 · 7</text><text x="246" y="269" fill="#a8bad1" font-size="13">文档 · 9</text><text x="390" y="269" fill="#a8bad1" font-size="13">其他 · 2</text>
+  </g>
+  <g font-family="Segoe UI,Microsoft YaHei">
+    <path d="M742 135h64" stroke="#38bdf8" stroke-width="3"/><path d="M796 126l12 9-12 9" fill="none" stroke="#38bdf8" stroke-width="3"/>
+    <rect x="824" y="92" width="244" height="210" rx="22" fill="#173449" stroke="#22d3ee"/>
+    <text x="850" y="130" fill="#a5f3fc" font-size="18" font-weight="600">操作约束</text>
+    <circle cx="856" cy="169" r="14" fill="#0f766e"/><path d="M849 169l5 5 10-12" fill="none" stroke="#ecfeff" stroke-width="2.5"/>
+    <text x="880" y="174" fill="#e2e8f0" font-size="14">整理按钮临时禁用</text>
+    <circle cx="856" cy="211" r="14" fill="#0f766e"/><path d="M849 211l5 5 10-12" fill="none" stroke="#ecfeff" stroke-width="2.5"/>
+    <text x="880" y="216" fill="#e2e8f0" font-size="14">自动与手动批次串行</text>
+    <circle cx="856" cy="253" r="14" fill="#0f766e"/><path d="M849 253l5 5 10-12" fill="none" stroke="#ecfeff" stroke-width="2.5"/>
+    <text x="880" y="258" fill="#e2e8f0" font-size="14">迟到进度不覆盖结果</text>
+  </g>
+</svg>

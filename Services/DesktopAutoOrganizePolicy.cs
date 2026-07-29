@@ -86,7 +86,8 @@ public static class DesktopAutoOrganizePolicy
     public static async Task<DesktopOrganizeResult> ExecuteAsync(
         IReadOnlyList<DesktopAutoOrganizeItem> items,
         bool allowCommonDesktopElevation,
-        Func<DesktopAutoOrganizeItem, string, bool, Task> collect)
+        Func<DesktopAutoOrganizeItem, string, bool, Task> collect,
+        IProgress<DesktopOrganizeProgress>? progress = null)
     {
         int collected = 0;
         int authorizationRequired = 0;
@@ -114,6 +115,18 @@ public static class DesktopAutoOrganizePolicy
             {
                 failedItems.Add(item.Name);
             }
+
+            ReportProgress(
+                progress,
+                new DesktopOrganizeProgress(
+                    collected
+                    + authorizationRequired
+                    + failedItems.Count,
+                    items.Count,
+                    collected,
+                    authorizationRequired,
+                    failedItems.Count,
+                    item.Name));
         }
 
         return new DesktopOrganizeResult(
@@ -122,6 +135,21 @@ public static class DesktopAutoOrganizePolicy
             authorizationRequired,
             failedItems.Count,
             failedItems);
+    }
+
+    private static void ReportProgress(
+        IProgress<DesktopOrganizeProgress>? progress,
+        DesktopOrganizeProgress value)
+    {
+        try
+        {
+            progress?.Report(value);
+        }
+        catch
+        {
+            // Progress is presentation-only and cannot invalidate
+            // a completed file visibility transaction.
+        }
     }
 
     public static string DescribeAutomaticResult(
@@ -164,3 +192,11 @@ public sealed record DesktopOrganizeResult(
     int AuthorizationRequired,
     int Failed,
     IReadOnlyList<string> FailedItems);
+
+public sealed record DesktopOrganizeProgress(
+    int Processed,
+    int Total,
+    int Collected,
+    int AuthorizationRequired,
+    int Failed,
+    string CurrentItemName);

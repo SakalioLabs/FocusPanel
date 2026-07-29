@@ -1534,7 +1534,8 @@ public class FileOrganizerService : IDisposable
     // One-click organize
     // ============================================================
     public async Task<DesktopOrganizeResult> OrganizeAllFiles(
-        bool allowCommonDesktopElevation = false)
+        bool allowCommonDesktopElevation = false,
+        IProgress<DesktopOrganizeProgress>? progress = null)
         => await OrganizeFiles(
             Files
                 .Where(file =>
@@ -1542,11 +1543,13 @@ public class FileOrganizerService : IDisposable
                     && !file.NeedsRecovery)
                 .Select(file => file.FullPath)
                 .ToArray(),
-            allowCommonDesktopElevation);
+            allowCommonDesktopElevation,
+            progress);
 
     public async Task<DesktopOrganizeResult> OrganizeFiles(
         IReadOnlyList<string> paths,
-        bool allowCommonDesktopElevation = false)
+        bool allowCommonDesktopElevation = false,
+        IProgress<DesktopOrganizeProgress>? progress = null)
     {
         await _organizeGate.WaitAsync();
         try
@@ -1594,7 +1597,8 @@ public class FileOrganizerService : IDisposable
                                 $"Auto organize {item.Name} failed: {ex.Message}");
                             throw;
                         }
-                    });
+                    },
+                    progress);
 
             await RefreshFiles();
             return result;

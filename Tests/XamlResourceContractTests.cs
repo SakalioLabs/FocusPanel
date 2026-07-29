@@ -2671,11 +2671,34 @@ public sealed class XamlResourceContractTests
             "_createdPathSuppression.TryConsume(",
             service);
         Assert.Contains(
-            "OrganizeFiles(paths)",
+            "await _fileService.OrganizeFiles(",
             viewModel);
         Assert.Contains(
             "AutoOrganizeStatus",
             viewModel);
+        Assert.Contains(
+            "NotifyCanExecuteChangedFor(",
+            viewModel);
+        Assert.Contains(
+            "CreateOrganizeProgress(",
+            viewModel);
+        Assert.Contains(
+            "OrganizeProgressMaximum",
+            viewModel);
+        Assert.Contains(
+            "Maximum=\"{Binding OrganizeProgressMaximum}\"",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "FileOrganizerView.xaml")));
+        Assert.Contains(
+            "Visibility=\"{Binding IsOrganizing",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "FileOrganizerView.xaml")));
         Assert.DoesNotContain(
             "AutoOrganizeIfEnabled",
             service);
