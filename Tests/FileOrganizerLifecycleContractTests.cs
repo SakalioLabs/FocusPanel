@@ -291,6 +291,49 @@ public sealed class FileOrganizerLifecycleContractTests
             .Count >= 3);
     }
 
+    [Fact]
+    public void ShellOpenActions_AreBackgroundConcurrentAndLatestRequestWins()
+    {
+        string root = FindRepositoryRoot();
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+        string coordinator = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ShellPathOpenCoordinator.cs"));
+
+        Assert.Contains(
+            "ShellPathOpenCoordinator",
+            viewModel);
+        Assert.Contains(
+            "OpenShellPathAsync(",
+            viewModel);
+        Assert.True(
+            Regex.Matches(
+                viewModel,
+                @"\[RelayCommand\(AllowConcurrentExecutions = true\)\]")
+            .Count >= 2);
+        Assert.DoesNotContain(
+            "Process.Start",
+            viewModel);
+        Assert.DoesNotContain(
+            "explorer.exe",
+            viewModel);
+        Assert.Contains(
+            "Task.Run(",
+            coordinator);
+        Assert.Contains(
+            "AppLaunchExecution.TryStart",
+            coordinator);
+        Assert.Contains(
+            "IsCurrent(",
+            coordinator);
+    }
+
     private static string ReadService()
     {
         string root = FindRepositoryRoot();

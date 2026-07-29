@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.10.16 - 2026-07-29
+
+- 桌面收纳的文件双击与“打开桌面文件夹”不再从 WPF 命令同步调用 `Process.Start`；新的 `ShellPathOpenCoordinator` 在工作线程调用 Windows Shell，慢磁盘、离线路径、失效文件关联或 Explorer 短暂繁忙不会冻结收纳区、滚动或 Panel 自动收起。
+- 两个打开命令显式允许并发执行；一个缓慢路径不会禁用其他文件卡片。调度前复制并规范化路径，每个请求分配单调修订号，只有最后一次点击有资格显示失败提示，旧失败不会覆盖后续成功。
+- Shell 返回失败或抛出同步异常时统一转换为可恢复结果；界面仍使用 FocusPanel Fluent 对话框说明项目可能已移动、删除或无法处理，不让异常逃逸到 WPF 命令并造成 Panel 闪退。
+- 新增后台线程、非阻塞、路径快照、空路径、异常隔离与最新请求所有权测试，并增加 ViewModel 不含同步 `Process.Start`/`explorer.exe` 的源码契约；README 增加桌面文件后台打开流程图。Release 构建 0 错误、0 警告，全量 679 项测试与界面冒烟通过。
+
 ## v0.10.15 - 2026-07-29
 
 - 搜索结果整行启动、未运行固定项点击以及右键/中键“启动新实例”不再在 WPF 命令中同步执行 `_appCatalog.Launch()`；新的 `AppLaunchCoordinator` 在工作线程调用 Windows Shell，网络快捷方式、失效关联或 Explorer 繁忙不会冻结 Panel。

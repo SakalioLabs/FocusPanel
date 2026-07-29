@@ -238,6 +238,7 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 - 桌面监控、拖入拖出、视图切换和手动刷新触发的分区重组不再在 WPF UI 线程读取全部 SQLite 分区与文件偏好；重复请求合并为后台快照，返回后继续使用差量同步器，因此大量记录下滚动、拖拽和 Panel 自动收起保持响应。
 - 图标缩放、列表/网格、个性化/时间线和自动整理开关使用 180ms 合并式后台保存；快速连续调整只写入最后状态，数据库读写严格串行，退出前排空当前设置，保存失败会保留本次会话选择并显示提示。
 - 新建、重命名、删除、拖拽排序、跨列移动和普通文件分类也统一进入同一个后台仓库闸门；操作成功后才刷新布局，失败时原界面和数据库保持原状并显示 Fluent 错误提示，退出前会等待已经进入仓库的写操作完成。
+- 双击文件卡片和“打开桌面文件夹”不再从 WPF 命令同步调用 Windows Shell；每次打开请求独立进入工作线程，慢磁盘、离线路径或失效文件关联不会冻结收纳区。连续打开时只有最后一次请求可以显示失败提示，旧失败不会盖住用户后续的成功操作。
 - 分区拖拽排序持有既有临时交互锁直到 SQLite 提交完成；这段时间 Panel 不会自动收起，重复拖拽不能并发改写顺序。跨列移动会同时连续重排来源列和目标列，不留下重复或跳跃序号。
 - 左右列排序使用 `Move` 更新而非清空重加；同路径文件刷新保留选中状态。数据库瞬时读取失败时保留最后一次有效界面，不把暂时错误显示成“所有收纳盒消失”。
 - 桌面根目录监视器会把 500ms 内重复的创建、写入、删除和重命名通知按路径合并，只读取真正变化的项目；旧仓库变化或监视器缓冲区异常时才安全回退全量扫描。
@@ -284,6 +285,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![桌面收纳文件属性后台事务](docs/images/organizer-visibility-background-io.svg)
 
 ![Explorer 拖入后台路径预检](docs/images/organizer-drop-preflight.svg)
+
+![桌面文件与文件夹后台打开](docs/images/organizer-shell-open-background.svg)
 
 ![桌面拖拽交互锁与异常边界](docs/images/organizer-drag-lifecycle.svg)
 
@@ -365,7 +368,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.15 `
+  -Version 0.10.16 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -376,7 +379,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：默认目录的一键首次安装入口；也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win.msi`：带 Windows 安装向导的自定义目录安装入口，可选择当前用户或整机范围。
-- `FocusPanel-0.10.15-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.16-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

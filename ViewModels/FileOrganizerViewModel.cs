@@ -38,6 +38,8 @@ public partial class FileOrganizerViewModel :
         _layoutMutationTracker = new();
     private readonly DesktopDropPreflight
         _desktopDropPreflight = new();
+    private readonly ShellPathOpenCoordinator
+        _shellOpen;
     private bool _applyingLayoutOptions;
     private long _layoutSettingsRevision;
     private bool _isDisposed;
@@ -191,7 +193,8 @@ public partial class FileOrganizerViewModel :
         SettingsService settingsService,
         FileOrganizerService fileService,
         IOrganizerLayoutRepository layoutRepository,
-        Dispatcher uiDispatcher)
+        Dispatcher uiDispatcher,
+        ShellPathOpenCoordinator? shellOpen = null)
     {
         _settingsService =
             settingsService
@@ -209,6 +212,9 @@ public partial class FileOrganizerViewModel :
             uiDispatcher
             ?? throw new ArgumentNullException(
                 nameof(uiDispatcher));
+        _shellOpen =
+            shellOpen
+            ?? new ShellPathOpenCoordinator();
 
         AppSettings legacySettings =
             _settingsService.CurrentSettings;
@@ -573,16 +579,18 @@ public partial class FileOrganizerViewModel :
         }
     }
 
-    [RelayCommand]
-    private void OpenPartitionFolder(PartitionViewModel partition)
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task OpenPartitionFolder(
+        PartitionViewModel partition)
     {
-        if (partition == null) return;
-        try
-        {
-            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            System.Diagnostics.Process.Start("explorer.exe", desktopPath);
-        }
-        catch { }
+        if (partition == null)
+            return;
+        string desktopPath =
+            Environment.GetFolderPath(
+                Environment.SpecialFolder.Desktop);
+        await OpenShellPathAsync(
+            desktopPath,
+            "桌面文件夹");
     }
 
     [RelayCommand]
@@ -728,18 +736,38 @@ public partial class FileOrganizerViewModel :
         RequestLayoutRefresh();
     }
 
-    [RelayCommand]
-    private void OpenFile(DesktopFile file)
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task OpenFile(DesktopFile file)
     {
-        if (file == null || string.IsNullOrEmpty(file.FullPath)) return;
-        try
+        if (file == null
+            || string.IsNullOrWhiteSpace(
+                file.FullPath))
+            return;
+        await OpenShellPathAsync(
+            file.FullPath,
+            file.Name);
+    }
+
+    private async Task OpenShellPathAsync(
+        string path,
+        string displayName)
+    {
+        ShellPathOpenCompletion completion =
+            await _shellOpen.OpenAsync(path);
+        if (_isDisposed
+            || !_shellOpen.IsCurrent(
+                completion.Revision)
+            || completion.Succeeded)
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file.FullPath) { UseShellExecute = true });
+            return;
         }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to open file: {ex.Message}");
-        }
+
+        FocusDialogService.Show(
+            $"无法打开“{displayName}”。项目可能已被移动、删除，"
+            + "或 Windows 暂时无法处理该文件类型。",
+            "打开失败",
+            System.Windows.MessageBoxButton.OK,
+            System.Windows.MessageBoxImage.Warning);
     }
 
     public async Task ReorderPartition(

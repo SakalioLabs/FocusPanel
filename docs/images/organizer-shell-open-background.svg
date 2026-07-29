@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bgshellopen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101a2a"/>
+      <stop offset="1" stop-color="#28304f"/>
+    </linearGradient>
+    <linearGradient id="flowshellopen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#60c9ff"/>
+      <stop offset="1" stop-color="#a68cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bgshellopen)"/>
+  <text x="54" y="62" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">桌面收纳 · 文件后台打开</text>
+  <text x="54" y="97" fill="#b9cce8" font-family="Segoe UI, Microsoft YaHei" font-size="16">慢磁盘、离线路径与失效文件关联不再占用 WPF 界面线程</text>
+
+  <rect x="54" y="137" width="250" height="250" rx="24" fill="#223650" stroke="#496889"/>
+  <text x="179" y="178" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">收纳工作区</text>
+  <rect x="80" y="210" width="198" height="50" rx="16" fill="#2b4c6e"/>
+  <text x="179" y="241" text-anchor="middle" fill="#a8e0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">双击文件卡片</text>
+  <rect x="80" y="279" width="198" height="50" rx="16" fill="#2b4c6e"/>
+  <text x="179" y="310" text-anchor="middle" fill="#a8e0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">打开桌面文件夹</text>
+  <text x="179" y="359" text-anchor="middle" fill="#bfd0e8" font-family="Segoe UI, Microsoft YaHei" font-size="13">点击后界面立即可继续操作</text>
+
+  <path d="M324 262 H364" stroke="url(#flowshellopen)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M353 251 L367 262 L353 273" fill="none" stroke="#68c6ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="390" y="118" width="340" height="288" rx="26" fill="#2b405f" stroke="#6382aa"/>
+  <text x="560" y="160" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">ShellPathOpenCoordinator</text>
+  <circle cx="430" cy="207" r="9" fill="#68c7ff"/>
+  <text x="454" y="213" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">复制并清理路径字符串</text>
+  <circle cx="430" cy="249" r="9" fill="#8ce4b9"/>
+  <text x="454" y="255" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">每次请求独立进入工作线程</text>
+  <circle cx="430" cy="291" r="9" fill="#ad97ff"/>
+  <text x="454" y="297" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">Shell 异常转换为失败结果</text>
+  <rect x="422" y="337" width="276" height="42" rx="16" fill="#203149"/>
+  <text x="560" y="364" text-anchor="middle" fill="#cbdcf1" font-family="Segoe UI, Microsoft YaHei" font-size="14">修订号只接受最后一次反馈</text>
+
+  <path d="M750 262 H790" stroke="url(#flowshellopen)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M779 251 L793 262 L779 273" fill="none" stroke="#9e90ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="816" y="137" width="250" height="250" rx="24" fill="#293852" stroke="#50698c"/>
+  <text x="941" y="178" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">Windows Shell</text>
+  <rect x="842" y="210" width="198" height="48" rx="16" fill="#294d43"/>
+  <text x="941" y="240" text-anchor="middle" fill="#a2edc5" font-family="Segoe UI, Microsoft YaHei" font-size="14">文件 / 文件夹 / 快捷方式</text>
+  <rect x="842" y="273" width="198" height="48" rx="16" fill="#473f64"/>
+  <text x="941" y="303" text-anchor="middle" fill="#d1c7ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">并发打开互不等待</text>
+  <text x="941" y="351" text-anchor="middle" fill="#bccde5" font-family="Segoe UI, Microsoft YaHei" font-size="13">失败返回 Fluent 提示</text>
+
+  <rect x="54" y="440" width="1012" height="46" rx="17" fill="#20334c" stroke="#426080"/>
+  <text x="560" y="469" text-anchor="middle" fill="#dce9f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">滚动持续响应 · 后续打开不排队 · 旧失败不覆盖新成功 · Shell 异常不闪退</text>
+</svg>
