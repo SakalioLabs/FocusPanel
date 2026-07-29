@@ -927,6 +927,53 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void MainShell_PreparesDesktopOrganizerOutsideUiThread()
+    {
+        string root = FindRepositoryRoot();
+        string mainViewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+        string factory = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FileOrganizerViewModelFactory.cs"));
+
+        Assert.Contains(
+            "organizerFactory.CreateAsync",
+            mainViewModel);
+        Assert.Contains(
+            "WorkspaceLoadApplyPolicy.CanApply",
+            mainViewModel);
+        Assert.DoesNotContain(
+            "_fileOrganizerViewModel = new FileOrganizerViewModel()",
+            mainViewModel);
+        Assert.Contains("Task.Run", factory);
+        Assert.Contains("new SettingsService()", factory);
+        Assert.Contains("new FileOrganizerService()", factory);
+    }
+
+    [Fact]
+    public void MainShell_ReadsProtectedFileSettingInBackground()
+    {
+        string root = FindRepositoryRoot();
+        string mainViewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.Contains(
+            "_protectedVisibilityRefresh.Request()",
+            mainViewModel);
+        Assert.Contains(
+            "ApplyProtectedVisibilityAsync",
+            mainViewModel);
+        Assert.Contains(
+            "_protectedVisibilityRefresh.Dispose()",
+            mainViewModel);
+        Assert.DoesNotContain(
+            "ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles",
+            mainViewModel);
+    }
+
+    [Fact]
     public void UpdateAvailability_IsVisibleFromCompactAndFocusCenters()
     {
         string root = FindRepositoryRoot();

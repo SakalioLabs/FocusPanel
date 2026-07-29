@@ -47,8 +47,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         PendingSystemStatusSnapshot> _systemStatusRefresh;
     private readonly CoalescingBackgroundRefresh<
         TaskSummarySnapshot> _taskSummaryRefresh;
+    private readonly CoalescingBackgroundRefresh<
+        bool> _protectedVisibilityRefresh;
     private readonly Task
         _shellPreferencesInitialization;
+    private readonly Task<FileOrganizerViewModel>
+        _fileOrganizerInitialization;
+    private readonly WorkspaceLoadingViewModel
+        _fileOrganizerLoadingViewModel =
+            new("正在准备桌面收纳…");
     private DashboardViewModel? _dashboardViewModel;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
@@ -69,6 +76,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _isShellVisible;
     private bool _isDisposed;
     private bool _loadingShellPreferences;
+    private long _workspaceNavigationRevision;
     private DateTime _calendarFocusMonth;
     private IReadOnlyDictionary<DateTime, CalendarFocusSummary>
         _calendarFocusByDate =
@@ -294,7 +302,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IShellPreferenceRepository
             shellPreferences,
         SystemActionCoordinator? systemActions = null,
-        AutoStartupCoordinator? autoStartup = null)
+        AutoStartupCoordinator? autoStartup = null,
+        IFileOrganizerViewModelFactory?
+            fileOrganizerFactory = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -323,6 +333,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             OnShellPreferenceSaveFailed;
         _desktopVisibility = new WindowsDesktopItemVisibilityService();
         _uiDispatcher = Dispatcher.CurrentDispatcher;
+        IFileOrganizerViewModelFactory
+            organizerFactory =
+                fileOrganizerFactory
+                ?? new FileOrganizerViewModelFactory();
         _systemStatusRefresh =
             new CoalescingBackgroundRefresh<
                 PendingSystemStatusSnapshot>(
@@ -337,6 +351,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ApplyTaskSummaryAsync,
                 ex => Debug.WriteLine(
                     $"任务摘要刷新失败：{ex}"));
+        _protectedVisibilityRefresh =
+            new CoalescingBackgroundRefresh<bool>(
+                () =>
+                    _desktopVisibility
+                        .ShowsProtectedSystemFiles,
+                ApplyProtectedVisibilityAsync,
+                ex => Debug.WriteLine(
+                    "读取 Explorer 受保护文件设置失败："
+                    + ex));
         IsAppCatalogLoading = _appCatalog.IsIndexing;
 
         CurrentTime = DateTime.Now;
@@ -358,10 +381,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsOnboardingVisible = true;
         _shellPreferencesInitialization =
             LoadShellPreferencesAsync();
-        ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles;
+        ShowsProtectedSystemFiles = false;
+        RequestProtectedVisibilityRefresh();
 
-        _fileOrganizerViewModel = new FileOrganizerViewModel();
-        CurrentViewModel = _fileOrganizerViewModel;
+        _fileOrganizerInitialization =
+            organizerFactory.CreateAsync(
+                _uiDispatcher);
+        CurrentViewModel =
+            _fileOrganizerLoadingViewModel;
+        _ = LoadFileOrganizerWorkspaceAsync(
+            _workspaceNavigationRevision);
 
         // Subscribe before reading the initial background snapshots. A capture
         // can finish while this constructor is still building the shell; the
@@ -637,6 +666,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Navigate(string? destination)
     {
+        if (destination is not (
+                "Dashboard"
+                or "Tasks"
+                or "Pomodoro"
+                or "Files"
+                or "OKR"
+                or "AI"))
+        {
+            return;
+        }
+
+        long navigationRevision =
+            Interlocked.Increment(
+                ref _workspaceNavigationRevision);
         CloseTransientPanels();
         switch (destination)
         {
@@ -671,9 +714,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 CurrentSectionTitle = "番茄钟";
                 break;
             case "Files":
-                _fileOrganizerViewModel ??= new FileOrganizerViewModel();
-                CurrentViewModel = _fileOrganizerViewModel;
+                CurrentViewModel =
+                    _fileOrganizerViewModel != null
+                        ? _fileOrganizerViewModel
+                        : _fileOrganizerLoadingViewModel;
                 CurrentSectionTitle = "桌面收纳";
+                if (_fileOrganizerViewModel == null)
+                {
+                    _ = LoadFileOrganizerWorkspaceAsync(
+                        navigationRevision);
+                }
                 break;
             case "OKR":
                 _okrViewModel ??= new OkrViewModel();
@@ -685,12 +735,53 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 CurrentViewModel = _aiAssistantViewModel;
                 CurrentSectionTitle = "AI 助手";
                 break;
-            default:
-                return;
         }
 
         LastWorkspace = destination;
         WorkspaceRequested?.Invoke(destination);
+    }
+
+    private async Task LoadFileOrganizerWorkspaceAsync(
+        long navigationRevision)
+    {
+        try
+        {
+            FileOrganizerViewModel viewModel =
+                await _fileOrganizerInitialization;
+            if (_isDisposed)
+            {
+                viewModel.Dispose();
+                return;
+            }
+
+            _fileOrganizerViewModel ??=
+                viewModel;
+            if (WorkspaceLoadApplyPolicy.CanApply(
+                    navigationRevision,
+                    Volatile.Read(
+                        ref _workspaceNavigationRevision),
+                    _isDisposed))
+            {
+                CurrentViewModel =
+                    _fileOrganizerViewModel;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(
+                "准备桌面收纳失败："
+                + ex);
+            if (WorkspaceLoadApplyPolicy.CanApply(
+                    navigationRevision,
+                    Volatile.Read(
+                        ref _workspaceNavigationRevision),
+                    _isDisposed))
+            {
+                _fileOrganizerLoadingViewModel.ShowError(
+                    "桌面收纳暂时无法载入；"
+                    + "请收起后重试启动 FocusPanel。");
+            }
+        }
     }
 
     [RelayCommand(AllowConcurrentExecutions = true)]
@@ -961,10 +1052,39 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ToggleSettings()
     {
-        ShowsProtectedSystemFiles = _desktopVisibility.ShowsProtectedSystemFiles;
+        RequestProtectedVisibilityRefresh();
         bool open = !IsSettingsOpen;
         CloseTransientPanels();
         IsSettingsOpen = open;
+    }
+
+    private void
+        RequestProtectedVisibilityRefresh()
+    {
+        if (_isDisposed)
+            return;
+
+        _protectedVisibilityRefresh.Request();
+    }
+
+    private async Task
+        ApplyProtectedVisibilityAsync(
+            bool showsProtectedSystemFiles,
+            CancellationToken cancellationToken)
+    {
+        await _uiDispatcher.InvokeAsync(
+            () =>
+            {
+                if (!_isDisposed
+                    && !cancellationToken
+                        .IsCancellationRequested)
+                {
+                    ShowsProtectedSystemFiles =
+                        showsProtectedSystemFiles;
+                }
+            },
+            DispatcherPriority.Background,
+            cancellationToken);
     }
 
     [RelayCommand]
@@ -2048,6 +2168,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _updateCheckTimer.Stop();
         _systemStatusRefresh.Dispose();
         _taskSummaryRefresh.Dispose();
+        _protectedVisibilityRefresh.Dispose();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
         _audioControl.Dispose();
@@ -2059,6 +2180,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _okrViewModel?.Dispose();
         _aiAssistantViewModel?.Dispose();
         _fileOrganizerViewModel?.Dispose();
+        if (_fileOrganizerViewModel == null)
+        {
+            _ = DisposePreparedFileOrganizerAsync();
+        }
         if (_dashboardViewModel != null)
         {
             _dashboardViewModel.NavigationRequested -=
@@ -2072,6 +2197,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _pomodoroViewModel.SessionPersisted -=
                 PomodoroViewModel_SessionPersisted;
             _pomodoroViewModel.Dispose();
+        }
+    }
+
+    private async Task
+        DisposePreparedFileOrganizerAsync()
+    {
+        try
+        {
+            FileOrganizerViewModel viewModel =
+                await _fileOrganizerInitialization
+                    .ConfigureAwait(false);
+            viewModel.Dispose();
+        }
+        catch
+        {
+            // Initialization failures are already surfaced by the loader.
         }
     }
 

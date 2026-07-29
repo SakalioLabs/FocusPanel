@@ -261,6 +261,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 - 网格与列表中的文件右键菜单按可视卡片隔离实例，并在每次打开时绑定当前右键目标；即使容器经过虚拟化回收，直接右键未选中的文件也会先同步选择，再执行移动、收纳或恢复，不会误操作上一次选中的项目。菜单显式使用同一套深浅色 Fluent 主题。
 - 视图选项、新建收纳盒、收纳盒操作和修复工具使用单一活动弹层：打开新 Popup 会关闭旧 Popup，焦点进入首个可操作控件；在独立弹层内按 `Esc` 会关闭弹层并回到原触发按钮。文件右键菜单、模块切换和页面卸载也会清理活动浮层，不会让自动收起计数残留。
 - 文件监控、手动刷新和自动整理后的刷新共享同一个串行闸门；收纳与取消收纳另用文件属性操作闸门。多次拖放、自动整理和拖出恢复不会并发改写同一项目，退出后的排队操作和迟到 Dispatcher 回调也不会继续触碰已释放界面。
+- 主壳构造不再同步读取桌面收纳 JSON 设置或创建文件监控器；默认工作区先显示轻量 Fluent 加载状态，设置读取、旧目录检查和监控器准备在工作线程完成。准备期间切换到其他模块时，迟到结果只缓存不抢回页面；初始化失败会显示可读状态，退出后完成的实例会立即释放。
+- 设置页用于提示收纳限制的“显示受保护的系统文件”状态也通过合并式后台刷新读取；启动和每次打开设置都不会同步访问 Explorer 注册表，关闭主壳后的迟到结果不会再修改界面。
 - 任务模块使用统一 Fluent 表面，保留项目/子任务、列表和自定义字段语义；看板会按状态生成真实列，任务可前后移动、进入详情、进入子任务或删除。
 - 任务详情使用 Windows 11 原生 DWM 毛玻璃窗口；关闭模块或切换数据上下文时同步解除订阅并关闭详情，避免重复窗口和失效对象残留。
 - 番茄钟提供 25/45/60 分钟预设、准确剩余进度、暂停/继续、完成声音和无激活毛玻璃 Toast；悬浮计时器使用与主壳一致的 Windows 原生毛玻璃，不创建全屏覆盖层。
@@ -292,6 +294,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![桌面右键菜单目标安全链路](docs/images/organizer-context-menu-target.svg)
 
 ![桌面收纳异步生命周期](docs/images/organizer-async-lifecycle.svg)
+
+![桌面收纳后台准备与导航隔离](docs/images/organizer-background-preparation.svg)
 
 ![桌面收纳文件属性后台事务](docs/images/organizer-visibility-background-io.svg)
 
@@ -379,7 +383,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.21 `
+  -Version 0.10.22 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -391,7 +395,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：当前用户默认目录的一键首次安装入口；命令行也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win-CustomSetup.exe`：带图形化文件夹选择器的安装入口；在另一台电脑上需要任意自定义目录时优先下载它。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.21-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.22-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
