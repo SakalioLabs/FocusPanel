@@ -214,6 +214,7 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 
 - 新收纳文件始终保留在原桌面路径，不改名、不移动；FocusPanel 保存原始文件属性并追加 `Hidden + System`，取消收纳时精确恢复原属性。
 - 从 Windows 桌面把文件或文件夹拖入收纳分区，会立即执行同一套隐藏事务；其他目录的项目不会被擅自移动。
+- Explorer 外部拖入会先在工作线程生成一次路径预检快照：规范化并按大小写不敏感身份稳定去重，再检查存在性并区分用户桌面、公共桌面和越界路径。拖放回调不再逐项同步访问磁盘；单个失效或无权限路径不会终止整批，缺失、越界、重复和授权取消会分别计数反馈。
 - 普通“显示隐藏项目”开启时，已收纳图标仍会隐藏；如果同时开启“显示受保护的系统文件”，设置页会提示 Windows 无法保证图标不可见。
 - 不再注入或持续修改 Explorer 的桌面列表；Explorer 刷新、重启和系统重启后按文件属性保持状态。
 - 属性改变后会通知 Shell 更新项目并重新枚举桌面目录，避免图标只变成半透明却仍停留在桌面。
@@ -269,6 +270,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![桌面收纳异步生命周期](docs/images/organizer-async-lifecycle.svg)
 
 ![桌面收纳文件属性后台事务](docs/images/organizer-visibility-background-io.svg)
+
+![Explorer 拖入后台路径预检](docs/images/organizer-drop-preflight.svg)
 
 ![桌面拖拽交互锁与异常边界](docs/images/organizer-drag-lifecycle.svg)
 
@@ -350,7 +353,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.11 `
+  -Version 0.10.12 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -360,7 +363,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.10.11-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.12-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

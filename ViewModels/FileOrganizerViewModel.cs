@@ -36,6 +36,8 @@ public partial class FileOrganizerViewModel :
         _layoutSaveState;
     private readonly InFlightTaskTracker
         _layoutMutationTracker = new();
+    private readonly DesktopDropPreflight
+        _desktopDropPreflight = new();
     private bool _applyingLayoutOptions;
     private long _layoutSettingsRevision;
     private bool _isDisposed;
@@ -894,34 +896,25 @@ public partial class FileOrganizerViewModel :
         string commonDesktopPath = Environment.GetFolderPath(
             Environment.SpecialFolder.CommonDesktopDirectory);
         int collected = 0;
-        int outsideDesktop = 0;
         int failed = 0;
         int authorizationCanceled = 0;
         bool? commonDesktopApproved = null;
+        DesktopDropPreflightResult preflight =
+            await _desktopDropPreflight
+                .ResolveAsync(
+                    filePaths,
+                    desktopPath,
+                    commonDesktopPath);
 
-        foreach (string path in filePaths)
+        foreach (DesktopDropCandidate candidate
+                 in preflight.Candidates)
         {
-            if (!System.IO.File.Exists(path) && !System.IO.Directory.Exists(path))
-            {
-                failed++;
-                continue;
-            }
-
-            string fullPath = System.IO.Path.GetFullPath(path);
-            DesktopDropLocation location = DesktopDropPolicy.Classify(
-                fullPath,
-                desktopPath,
-                commonDesktopPath);
-            if (location == DesktopDropLocation.OutsideDesktop)
-            {
-                outsideDesktop++;
-                continue;
-            }
-
             try
             {
                 bool allowElevation = false;
-                if (location == DesktopDropLocation.CommonDesktop)
+                if (candidate.Location
+                    == DesktopDropLocation
+                        .CommonDesktop)
                 {
                     if (!commonDesktopApproved.HasValue)
                     {
@@ -941,7 +934,7 @@ public partial class FileOrganizerViewModel :
                 }
 
                 await _fileService.HideFileFromDesktopPath(
-                    fullPath,
+                    candidate.FullPath,
                     targetPartitionName,
                     allowElevation);
                 collected++;
@@ -962,9 +955,11 @@ public partial class FileOrganizerViewModel :
         RequestLayoutRefresh();
         return new DesktopImportResult(
             collected,
-            outsideDesktop,
+            preflight.OutsideDesktop,
             failed,
-            authorizationCanceled);
+            authorizationCanceled,
+            preflight.MissingOrInvalid,
+            preflight.SkippedDuplicates);
     }
 
     public void Dispose()
@@ -1005,7 +1000,15 @@ public sealed record DesktopImportResult(
     int Collected = 0,
     int OutsideDesktop = 0,
     int Failed = 0,
-    int AuthorizationCanceled = 0)
+    int AuthorizationCanceled = 0,
+    int MissingOrInvalid = 0,
+    int SkippedDuplicates = 0)
 {
-    public bool HasIssues => OutsideDesktop + Failed + AuthorizationCanceled > 0;
+    public bool HasIssues =>
+        OutsideDesktop
+        + Failed
+        + AuthorizationCanceled
+        + MissingOrInvalid
+        + SkippedDuplicates
+        > 0;
 }

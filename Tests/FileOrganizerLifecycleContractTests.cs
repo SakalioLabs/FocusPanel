@@ -144,6 +144,47 @@ public sealed class FileOrganizerLifecycleContractTests
     }
 
     [Fact]
+    public void ExternalDrop_PreflightsPathsOffUiBeforeCollecting()
+    {
+        string root =
+            FindRepositoryRoot();
+        string viewModel =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "FileOrganizerViewModel.cs"));
+        Match import = Regex.Match(
+            viewModel,
+            @"public async Task<DesktopImportResult> ImportFiles\((?<body>[\s\S]*?)public void Dispose\(\)");
+        Assert.True(import.Success);
+        string body =
+            import.Groups["body"].Value;
+
+        Assert.Contains(
+            "_desktopDropPreflight",
+            body);
+        Assert.Contains(
+            ".ResolveAsync(",
+            body);
+        Assert.DoesNotContain(
+            "System.IO.File.Exists(",
+            body);
+        Assert.DoesNotContain(
+            "System.IO.Directory.Exists(",
+            body);
+        Assert.DoesNotContain(
+            "System.IO.Path.GetFullPath(",
+            body);
+        Assert.Contains(
+            "MissingOrInvalid",
+            viewModel);
+        Assert.Contains(
+            "SkippedDuplicates",
+            viewModel);
+    }
+
+    [Fact]
     public void LayoutRefreshAndSettingsSave_AreBackgroundAndLifecycleAware()
     {
         string root = FindRepositoryRoot();

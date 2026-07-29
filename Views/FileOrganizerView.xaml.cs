@@ -565,6 +565,16 @@ public partial class FileOrganizerView : UserControl
             details.Add(
                 $"{result.Failed} 个项目写入属性失败");
         }
+        if (result.MissingOrInvalid > 0)
+        {
+            details.Add(
+                $"{result.MissingOrInvalid} 个项目不存在或路径无效");
+        }
+        if (result.SkippedDuplicates > 0)
+        {
+            details.Add(
+                $"{result.SkippedDuplicates} 个重复项目已跳过");
+        }
         FocusDialogService.Show(
             $"已收纳 {result.Collected} 个桌面项目。\n"
             + $"{string.Join("；", details)}。\n"
