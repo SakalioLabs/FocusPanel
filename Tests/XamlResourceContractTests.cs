@@ -1258,8 +1258,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains("ObservableCollection<TaskbarAppItem> TaskbarApps", viewModel);
         Assert.DoesNotContain("ObservableCollection<AppLaunchItem> PinnedApps", viewModel);
         Assert.DoesNotContain("ObservableCollection<WindowTaskItem> RunningApps", viewModel);
-        Assert.Contains("TrySetPinned(launch, true)", viewModel);
-        Assert.Contains("TryMovePinned(", viewModel);
+        Assert.Contains("TrySetPinnedAsync(", viewModel);
+        Assert.Contains("TryMovePinnedAsync(", viewModel);
     }
 
     [Fact]
@@ -3166,6 +3166,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "ViewModels",
                 "MainViewModel.cs"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
 
         Assert.Contains(
             "bool ActivateOrMinimize(WindowTaskItem task)",
@@ -3177,10 +3182,10 @@ public sealed class XamlResourceContractTests
             "bool Close(IntPtr handle)",
             windowContract);
         Assert.Contains(
-            "bool SetPinned(AppLaunchItem app, bool pinned)",
+            "Task<bool> SetPinnedAsync(",
             appContract);
         Assert.Contains(
-            "bool MovePinned(AppLaunchItem app, int newIndex)",
+            "Task<bool> MovePinnedAsync(",
             appContract);
         Assert.Contains(
             "GetPinnedEntitySnapshot()",
@@ -3189,7 +3194,7 @@ public sealed class XamlResourceContractTests
             "TryReplacePinnedCache(",
             catalog);
         Assert.Contains(
-            "ReplacePinnedCache(ordered);",
+            "ReplacePinnedCache(",
             catalog);
         int getPinnedStart = catalog.IndexOf(
             "public IReadOnlyList<AppLaunchItem> GetPinned()",
@@ -3205,16 +3210,16 @@ public sealed class XamlResourceContractTests
             "_pinnedLoader()",
             catalog[getPinnedStart..launchStart]);
         Assert.Contains(
-            "SystemActionExecution.Try(",
+            "await Task.Run(",
             catalog);
         Assert.Contains(
             "CompleteTaskbarWindowAction(",
             viewModel);
         Assert.Contains(
-            "TrySetPinned(",
+            "TrySetPinnedAsync(",
             viewModel);
         Assert.Contains(
-            "TryMovePinned(",
+            "TryMovePinnedAsync(",
             viewModel);
         Assert.Contains(
             "Windows 暂时阻止了前台切换",
@@ -3225,6 +3230,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "ReportTaskbarActionFailure(",
             viewModel);
+        Assert.Contains(
+            "StartTaskbarAppDrop(",
+            codeBehind);
+        Assert.Contains(
+            "AsyncInteractionRunner.Start(",
+            codeBehind);
+        Assert.Contains(
+            "BeginTransientInteraction();",
+            codeBehind);
+        Assert.Contains(
+            "EndTransientInteraction",
+            codeBehind);
     }
 
     [Fact]

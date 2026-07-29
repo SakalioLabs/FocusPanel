@@ -1148,10 +1148,31 @@ public partial class MainWindow :
         if (sender is FrameworkElement { DataContext: TaskbarAppItem target }
             && e.Data.GetData(typeof(TaskbarAppItem)) is TaskbarAppItem source)
         {
-            _viewModel.MoveTaskbarApp(source, target);
+            StartTaskbarAppDrop(
+                source,
+                target);
         }
 
         e.Handled = true;
+    }
+
+    private void StartTaskbarAppDrop(
+        TaskbarAppItem source,
+        TaskbarAppItem target)
+    {
+        BeginTransientInteraction();
+        AsyncInteractionRunner.Start(
+            () =>
+                _viewModel.MoveTaskbarApp(
+                    source,
+                    target),
+            ex =>
+                FocusDialogService.Show(
+                    $"无法保存应用栏顺序：{ex.Message}",
+                    "应用栏排序失败",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning),
+            EndTransientInteraction);
     }
 
     private static class NativeMethods

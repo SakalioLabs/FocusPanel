@@ -36,7 +36,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - Panel 隐藏后暂停完整窗口枚举、时钟、系统状态和任务摘要刷新；右缘热区、全屏抑制、安全恢复和 GitHub 更新检查继续运行。再次唤出时先刷新窗口快照和当前时间，状态中心与日历在打开时即时刷新。
 - 音频、网络、输入法和电池状态通过单消费者后台快照读取；刷新期间的重复请求合并为一次尾随刷新，只有最终快照回到 WPF Dispatcher 后才更新界面。设备读取失败不会阻塞悬停呼出，退出后的迟到结果会被丢弃。
 - 待办数量和日历 42 天专注摘要也在工作线程使用独立 `AppDbContext` 查询；快速翻月时旧月份结果不会覆盖当前网格，SQLite 临时繁忙时保留最后有效摘要而不是闪成 0 项。
-- 固定应用在后台读取后保存为线程安全内存快照；前台切换、窗口标题变化及窗口创建/关闭只组合缓存与运行窗口，不再在 WinEvent 高频路径上反复打开 SQLite。固定、取消固定和排序成功后同步替换缓存。
+- 固定应用在后台读取后保存为线程安全内存快照；前台切换、窗口标题变化及窗口创建/关闭只组合缓存与运行窗口，不再在 WinEvent 高频路径上反复打开 SQLite。固定、取消固定和拖动排序也通过专用后台闸门串行提交，成功后才原子替换缓存；拖放提交期间保持 Panel 展开，退出会等待在途写入完成。
 - 番茄钟历史统计在工作线程加载；倒计时归零时立即更新界面、播放提醒并把完整会话交给后台单消费者串行保存。开始新一轮、暂停或重置后，上一轮迟到的保存结果不会覆盖当前提示，退出前会排空已经进入队列的会话。
 - OKR 首次打开时由工作线程一次读取本地目标、飞书配置、同步间隔和最后同步时间；SQLite 较大或暂时繁忙不会阻塞工作区展开。手动飞书同步、配置读写和 AI 预留接口也不再同步等待 WPF Dispatcher，旧加载快照不会覆盖刚完成的本地编辑。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
@@ -101,6 +101,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![日历摘要后台查询与月份隔离](docs/images/calendar-summary-background-refresh.svg)
 
 ![统一应用栏固定项内存快照](docs/images/pinned-app-memory-snapshot.svg)
+
+![统一应用栏固定项后台提交](docs/images/pinned-app-background-write.svg)
 
 ![番茄钟非阻塞统计与安全落盘](docs/images/pomodoro-persistence-lifecycle.svg)
 
@@ -339,7 +341,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.7 `
+  -Version 0.10.8 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -348,7 +350,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.10.7-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.8-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

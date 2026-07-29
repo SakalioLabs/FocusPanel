@@ -618,18 +618,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void TogglePin(AppLaunchItem? app)
+    private async Task TogglePin(
+        AppLaunchItem? app)
     {
         if (app == null)
             return;
 
-        if (!TrySetPinned(app, !app.IsPinned))
+        if (!await TrySetPinnedAsync(
+                app,
+                !app.IsPinned))
+        {
+            return;
+        }
+        if (_isDisposed)
             return;
         RefreshTaskbarApps();
         RefreshSearchResults();
     }
 
-    public void MoveTaskbarApp(TaskbarAppItem source, TaskbarAppItem target)
+    public async Task MoveTaskbarApp(
+        TaskbarAppItem source,
+        TaskbarAppItem target)
     {
         if (ReferenceEquals(source, target))
             return;
@@ -638,7 +647,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (launch == null)
             return;
         if (!source.IsPinned
-            && !TrySetPinned(launch, true))
+            && !await TrySetPinnedAsync(
+                launch,
+                true))
         {
             return;
         }
@@ -648,7 +659,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             .Count(item => item.IsPinned);
         if (!target.IsPinned)
             targetIndex = TaskbarApps.Count(item => item.IsPinned) - 1;
-        if (!TryMovePinned(
+        if (!await TryMovePinnedAsync(
                 launch,
                 Math.Max(0, targetIndex)))
         {
@@ -687,7 +698,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ToggleTaskbarPin(TaskbarAppItem? task)
+    private async Task ToggleTaskbarPin(
+        TaskbarAppItem? task)
     {
         if (task == null)
             return;
@@ -696,8 +708,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             foreach (AppLaunchItem launch in task.PinnedLaunches)
             {
-                if (!TrySetPinned(launch, false))
+                if (!await TrySetPinnedAsync(
+                        launch,
+                        false))
+                {
                     break;
+                }
             }
         }
         else
@@ -705,8 +721,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             AppLaunchItem? launch = task.CreateLaunchItem();
             if (launch == null)
                 return;
-            TrySetPinned(launch, true);
+            await TrySetPinnedAsync(
+                launch,
+                true);
         }
+        if (_isDisposed)
+            return;
         RefreshTaskbarApps();
         RefreshSearchResults();
     }
@@ -1576,12 +1596,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         return false;
     }
 
-    private bool TrySetPinned(
+    private async Task<bool> TrySetPinnedAsync(
         AppLaunchItem app,
         bool pinned)
     {
-        bool succeeded = SystemActionExecution.Try(
-            () => _appCatalog.SetPinned(app, pinned));
+        bool succeeded;
+        try
+        {
+            succeeded =
+                await _appCatalog.SetPinnedAsync(
+                    app,
+                    pinned);
+        }
+        catch
+        {
+            succeeded = false;
+        }
+        if (_isDisposed)
+            return false;
         if (succeeded)
         {
             SystemActionMessage = string.Empty;
@@ -1595,14 +1627,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         return false;
     }
 
-    private bool TryMovePinned(
+    private async Task<bool> TryMovePinnedAsync(
         AppLaunchItem app,
         int newIndex)
     {
-        bool succeeded = SystemActionExecution.Try(
-            () => _appCatalog.MovePinned(
-                app,
-                newIndex));
+        bool succeeded;
+        try
+        {
+            succeeded =
+                await _appCatalog.MovePinnedAsync(
+                    app,
+                    newIndex);
+        }
+        catch
+        {
+            succeeded = false;
+        }
+        if (_isDisposed)
+            return false;
         if (succeeded)
         {
             SystemActionMessage = string.Empty;

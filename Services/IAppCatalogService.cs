@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using FocusPanel.Models;
 
 namespace FocusPanel.Services;
@@ -11,7 +12,11 @@ public interface IAppCatalogService : IDisposable
     IReadOnlyList<AppLaunchItem> Search(string query, int limit = 24);
     IReadOnlyList<AppLaunchItem> GetPinned();
     bool Launch(AppLaunchItem app);
-    bool SetPinned(AppLaunchItem app, bool pinned);
-    bool MovePinned(AppLaunchItem app, int newIndex);
+    Task<bool> SetPinnedAsync(
+        AppLaunchItem app,
+        bool pinned);
+    Task<bool> MovePinnedAsync(
+        AppLaunchItem app,
+        int newIndex);
     void Refresh();
 }

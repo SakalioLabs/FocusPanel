@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using FocusPanel.Data;
@@ -11,6 +12,16 @@ using FocusPanel.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace FocusPanel.Services;
+
+internal sealed record PinnedAppMutationResult(
+    bool Succeeded,
+    IReadOnlyList<PinnedApp> Ordered);
+
+internal sealed record PinnedAppPersistenceHandlers(
+    Func<AppLaunchItem, bool, PinnedAppMutationResult>
+        SetPinned,
+    Func<AppLaunchItem, int, PinnedAppMutationResult>
+        MovePinned);
 
 public sealed class AppCatalogService : IAppCatalogService
 {
@@ -25,6 +36,10 @@ public sealed class AppCatalogService : IAppCatalogService
     private readonly IAppIconSource _iconSource;
     private readonly Func<IReadOnlyList<PinnedApp>>
         _pinnedLoader;
+    private readonly PinnedAppPersistenceHandlers
+        _pinnedPersistence;
+    private readonly SemaphoreSlim _pinnedWriteGate =
+        new(1, 1);
     private readonly Queue<string> _iconQueue = new();
     private readonly Dictionary<string, List<AppLaunchItem>>
         _iconWaiters =
@@ -44,7 +59,8 @@ public sealed class AppCatalogService : IAppCatalogService
         new AppIdentityResolver(),
         new WindowsAppCatalogSource(),
         new WindowsAppIconSource(),
-        LoadPinnedEntities)
+        LoadPinnedEntities,
+        null)
     {
     }
 
@@ -53,7 +69,8 @@ public sealed class AppCatalogService : IAppCatalogService
         identityResolver,
         new WindowsAppCatalogSource(),
         new WindowsAppIconSource(),
-        LoadPinnedEntities)
+        LoadPinnedEntities,
+        null)
     {
     }
 
@@ -61,12 +78,19 @@ public sealed class AppCatalogService : IAppCatalogService
         IAppIdentityResolver identityResolver,
         IAppCatalogSource catalogSource,
         IAppIconSource iconSource,
-        Func<IReadOnlyList<PinnedApp>> pinnedLoader)
+        Func<IReadOnlyList<PinnedApp>> pinnedLoader,
+        PinnedAppPersistenceHandlers?
+            pinnedPersistence = null)
     {
         _identityResolver = identityResolver;
         _catalogSource = catalogSource;
         _iconSource = iconSource;
         _pinnedLoader = pinnedLoader;
+        _pinnedPersistence =
+            pinnedPersistence
+            ?? new PinnedAppPersistenceHandlers(
+                SetPinnedPersistence,
+                MovePinnedPersistence);
         Refresh();
     }
 
@@ -167,17 +191,53 @@ public sealed class AppCatalogService : IAppCatalogService
         return AppLaunchExecution.TryStart(startInfo);
     }
 
-    public bool SetPinned(
-        AppLaunchItem app,
-        bool pinned) =>
-        SystemActionExecution.Try(
-            () => SetPinnedCore(app, pinned));
-
-    private bool SetPinnedCore(
+    public async Task<bool> SetPinnedAsync(
         AppLaunchItem app,
         bool pinned)
     {
+        if (_disposed)
+            return false;
+
         EnsureIdentity(app);
+        await _pinnedWriteGate.WaitAsync()
+            .ConfigureAwait(false);
+        try
+        {
+            if (_disposed)
+                return false;
+
+            PinnedAppMutationResult result =
+                await Task.Run(
+                        () =>
+                            _pinnedPersistence
+                                .SetPinned(
+                                    app,
+                                    pinned))
+                    .ConfigureAwait(false);
+            if (!result.Succeeded)
+                return false;
+
+            ReplacePinnedCache(
+                result.Ordered);
+            UpdateCatalogPinnedFlags();
+            app.IsPinned = pinned;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            _pinnedWriteGate.Release();
+        }
+    }
+
+    private static PinnedAppMutationResult
+        SetPinnedPersistence(
+        AppLaunchItem app,
+        bool pinned)
+    {
         using var context = new AppDbContext();
         string key = BuildKey(app);
         List<PinnedApp> ordered =
@@ -213,19 +273,53 @@ public sealed class AppCatalogService : IAppCatalogService
         }
 
         context.SaveChanges();
-        ReplacePinnedCache(ordered);
-        UpdateCatalogPinnedFlags();
-        app.IsPinned = pinned;
-        return true;
+        return new PinnedAppMutationResult(
+            true,
+            ordered);
     }
 
-    public bool MovePinned(
+    public async Task<bool> MovePinnedAsync(
         AppLaunchItem app,
-        int newIndex) =>
-        SystemActionExecution.Try(
-            () => MovePinnedCore(app, newIndex));
+        int newIndex)
+    {
+        if (_disposed)
+            return false;
 
-    private bool MovePinnedCore(
+        await _pinnedWriteGate.WaitAsync()
+            .ConfigureAwait(false);
+        try
+        {
+            if (_disposed)
+                return false;
+
+            PinnedAppMutationResult result =
+                await Task.Run(
+                        () =>
+                            _pinnedPersistence
+                                .MovePinned(
+                                    app,
+                                    newIndex))
+                    .ConfigureAwait(false);
+            if (!result.Succeeded)
+                return false;
+
+            ReplacePinnedCache(
+                result.Ordered);
+            UpdateCatalogPinnedFlags();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            _pinnedWriteGate.Release();
+        }
+    }
+
+    private static PinnedAppMutationResult
+        MovePinnedPersistence(
         AppLaunchItem app,
         int newIndex)
     {
@@ -234,15 +328,19 @@ public sealed class AppCatalogService : IAppCatalogService
         var target = ordered.FirstOrDefault(item =>
             string.Equals(BuildKey(item), BuildKey(app), StringComparison.OrdinalIgnoreCase));
         if (target == null)
-            return false;
+        {
+            return new PinnedAppMutationResult(
+                false,
+                ordered);
+        }
 
         PinnedAppOrdering.Move(ordered, target, newIndex);
         for (int index = 0; index < ordered.Count; index++)
             ordered[index].OrderIndex = index;
         context.SaveChanges();
-        ReplacePinnedCache(ordered);
-        UpdateCatalogPinnedFlags();
-        return true;
+        return new PinnedAppMutationResult(
+            true,
+            ordered);
     }
 
     internal static IEnumerable<string> SafeEnumerateShortcuts(string root)
@@ -776,6 +874,8 @@ public sealed class AppCatalogService : IAppCatalogService
             _indexCancellation?.Cancel();
             _indexCancellation = null;
         }
+        _pinnedWriteGate.Wait();
+        _pinnedWriteGate.Release();
         lock (_iconLock)
         {
             _iconQueue.Clear();
