@@ -1202,8 +1202,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "TaskbarAppsScrollViewer.ScrollToVerticalOffset",
             codeBehind);
-        Assert.Contains(
-            "CompactTaskbarScrollPolicy.GetRevealOffset",
+        Assert.Matches(
+            @"CompactTaskbarScrollPolicy\s*\.GetRevealOffset",
             codeBehind);
         Assert.Contains(
             "ActiveTaskbarIdentity",
