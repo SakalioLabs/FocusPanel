@@ -20,6 +20,7 @@ public sealed class TaskbarAppItem : ObservableObject
         Array.Empty<AppLaunchItem>();
     private WindowTaskItem? _runningTask;
     private TaskbarDropPlacement? _dropPlacement;
+    private bool _isFileDropTarget;
     private int? _shortcutSlotNumber;
 
     public string IdentityKey { get; init; } = string.Empty;
@@ -144,7 +145,8 @@ public sealed class TaskbarAppItem : ObservableObject
                     : "左键启动，右键管理应用";
             string interaction =
                 CanLaunchNewInstance
-                ? $"{primaryAction}；Shift+左键或中键启动新实例"
+                ? $"{primaryAction}；Shift+左键或中键启动新实例；"
+                  + "可拖入文件用此应用打开"
                 : primaryAction;
             string hint = IsPinned
                 ? $"{interaction}；Alt+↑/↓调整固定顺序"
@@ -161,6 +163,8 @@ public sealed class TaskbarAppItem : ObservableObject
     public bool ShowsDropAfter =>
         _dropPlacement
         == TaskbarDropPlacement.After;
+    public bool IsFileDropTarget =>
+        _isFileDropTarget;
 
     internal void SetShortcutSlot(
         int? slotNumber)
@@ -289,6 +293,21 @@ public sealed class TaskbarAppItem : ObservableObject
             nameof(ShowsDropBefore));
         OnPropertyChanged(
             nameof(ShowsDropAfter));
+    }
+
+    internal void SetFileDropTarget(
+        bool isTarget)
+    {
+        if (_isFileDropTarget
+            == isTarget)
+        {
+            return;
+        }
+
+        _isFileDropTarget =
+            isTarget;
+        OnPropertyChanged(
+            nameof(IsFileDropTarget));
     }
 
     private void RaisePresentationChanged()

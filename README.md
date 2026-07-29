@@ -69,6 +69,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - AI 页面打开时异步读取加密凭据状态与模型配置，不再在构造 WPF 工作区时同步打开 SQLite；发送前解密、保存模型和清除凭据也通过同一个后台闸门严格串行。配置仍使用当前 Windows 用户的 DPAPI 加密，数据库键名与既有数据完全兼容。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
 - 应用图标支持 Windows 任务栏常用的新实例手势：`Shift+左键` 或鼠标中键直接启动新实例；没有可靠启动目标的受保护窗口不会显示或执行该动作。工具提示和读屏帮助会同步说明当前可用操作。
+- 可把 Explorer、桌面或文件管理器中的文件和文件夹直接拖到统一应用栏图标上，用该应用打开；目标图标只显示一层 Fluent 强调反馈，且不会把外部文件误判成固定项排序或桌面收纳。普通可执行文件与快捷方式在后台一次接收最多 32 个路径，尾部反斜杠和空格会按 Windows 命令行规则正确转义；打包应用使用公开的 [`IApplicationActivationManager::ActivateForFile`](https://learn.microsoft.com/zh-cn/windows/win32/api/shobjidl_core/nf-shobjidl_core-iapplicationactivationmanager-activateforfile) 文件激活合约。不存在、不可访问或超出上限的项目会给出部分成功/失败 Toast，退出前会排空已进入边界的打开请求。
 - 多窗口列表精确标记当前前台窗口；同一应用内部切换窗口也会增量更新标记。标题超过 340px 时视觉省略，读屏名称仍保留完整标题并说明“当前窗口”。
 - 开始按钮右键、应用管理、多窗口列表、关机子菜单和托盘菜单统一使用单层 Fluent 圆角菜单；静态 XAML 项显式引用主题，运行时创建项会在创建、挂载和打开三个阶段重新确认应用级 Style。独立 Popup 使用不透明的专用深浅主题表面，并覆盖 WPF 系统菜单的后备背景、文字与选中色；即使 Popup HWND 创建期间短暂解析到系统模板，也不会再出现透明浅底、白字或直角亮蓝选中条。
 - 菜单悬停、键盘焦点、当前窗口勾选、禁用状态和子菜单箭头全部使用动态主题令牌；子菜单保持文字省略与完整辅助功能名称，不增加黑色投影边框。
@@ -135,6 +136,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![DWM 实时窗口缩略预览与安全降级](docs/images/taskbar-dwm-live-preview.svg)
 
 ![应用右键最近项目与原生 Jump List](docs/images/taskbar-jump-list-recents.svg)
+
+![拖文件到应用图标直接打开](docs/images/taskbar-file-drop-launch.svg)
 
 ![任务栏操作结果与失败反馈](docs/images/taskbar-action-feedback.svg)
 
@@ -457,7 +460,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.49 `
+  -Version 0.10.50 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -468,7 +471,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.49-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.50-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

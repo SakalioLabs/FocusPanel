@@ -14,6 +14,8 @@ public sealed class ShellCoordinator : IDisposable
         Updates = new VelopackUpdateService();
         JumpLists =
             new AppJumpListService();
+        AppFiles =
+            new AppFileLaunchService();
     }
 
     public ITaskbarController Taskbar { get; }
@@ -23,6 +25,11 @@ public sealed class ShellCoordinator : IDisposable
     public IAppUpdateService Updates { get; }
     internal IAppJumpListService
         JumpLists
+    {
+        get;
+    }
+    internal IAppFileLaunchService
+        AppFiles
     {
         get;
     }
@@ -39,6 +46,9 @@ public sealed class ShellCoordinator : IDisposable
         SystemStatus.Dispose();
         Updates.Dispose();
         JumpLists.Dispose();
+        await AppFiles
+            .CompleteAsync()
+            .ConfigureAwait(false);
         if (Apps is AppCatalogService catalog)
         {
             await catalog

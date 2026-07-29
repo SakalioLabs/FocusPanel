@@ -1316,6 +1316,92 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TaskbarApps_AcceptExplorerFilesWithoutHijackingReorder()
+    {
+        string root =
+            FindRepositoryRoot();
+        string mainWindow =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "MainWindow.xaml"));
+        string codeBehind =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "MainWindow.xaml.cs"));
+        string service =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Services",
+                    "AppFileLaunchService.cs"));
+        string coordinator =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Services",
+                    "ShellCoordinator.cs"));
+
+        Assert.Contains(
+            "PreviewDragEnter=\"TaskbarAppsHost_PreviewDragEnter\"",
+            mainWindow);
+        Assert.Contains(
+            "PreviewDrop=\"TaskbarAppsHost_PreviewDrop\"",
+            mainWindow);
+        Assert.Contains(
+            "Binding=\"{Binding IsFileDropTarget}\"",
+            mainWindow);
+        Assert.Contains(
+            "DataFormats.FileDrop",
+            codeBehind);
+        Assert.Contains(
+            "typeof(TaskbarAppItem)",
+            codeBehind);
+        Assert.Contains(
+            "StartTaskbarFileDrop(",
+            codeBehind);
+        Assert.Contains(
+            "EndTaskbarExternalFileDrag",
+            codeBehind);
+        Assert.Contains(
+            ".AppFiles",
+            codeBehind);
+        Assert.Contains(
+            ".OpenAsync(",
+            codeBehind);
+        Assert.Contains(
+            "IApplicationActivationManager",
+            service);
+        Assert.Contains(
+            "ActivateForFile(",
+            service);
+        Assert.Contains(
+            "SHCreateShellItemArrayFromIDLists",
+            service);
+        Assert.Contains(
+            "IntPtr itemIdLists",
+            service);
+        Assert.DoesNotContain(
+            "IReadOnlyList<IntPtr>",
+            service);
+        Assert.Contains(
+            "TryBuildDesktopRequest(",
+            service);
+        Assert.DoesNotContain(
+            "Shell_TrayWnd",
+            service);
+        Assert.Contains(
+            "await AppFiles",
+            coordinator);
+        Assert.Contains(
+            ".CompleteAsync()",
+            coordinator);
+    }
+
+    [Fact]
     public void CompactDock_SupportsKeyboardSummonAndAccessibleNavigation()
     {
         string root = FindRepositoryRoot();

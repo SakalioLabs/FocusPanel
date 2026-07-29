@@ -780,8 +780,10 @@
                         <Grid Grid.Row="1"
                               x:Name="TaskbarAppsHost"
                               AllowDrop="True"
+                              PreviewDragEnter="TaskbarAppsHost_PreviewDragEnter"
                               PreviewDragOver="TaskbarAppsHost_PreviewDragOver"
-                              PreviewDragLeave="TaskbarAppsHost_PreviewDragLeave">
+                              PreviewDragLeave="TaskbarAppsHost_PreviewDragLeave"
+                              PreviewDrop="TaskbarAppsHost_PreviewDrop">
                             <Button x:Name="TaskbarScrollUpButton"
                                     Panel.ZIndex="2"
                                     Style="{StaticResource FocusIconButton}"
@@ -832,6 +834,12 @@
                                                                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                                                                     <Setter Property="Background"
                                                                             Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsFileDropTarget}" Value="True">
+                                                                    <Setter Property="Background"
+                                                                            Value="{DynamicResource FocusAccentSoftBrush}"/>
+                                                                    <Setter Property="BorderThickness"
+                                                                            Value="2"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>

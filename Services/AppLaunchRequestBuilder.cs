@@ -42,7 +42,7 @@ internal static class AppLaunchRequestBuilder
         return true;
     }
 
-    private static bool IsApplicationUserModelId(
+    internal static bool IsApplicationUserModelId(
         string target) =>
         !target.StartsWith(
             "shell:",

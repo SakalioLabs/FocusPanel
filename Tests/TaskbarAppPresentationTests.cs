@@ -23,7 +23,8 @@ public sealed class TaskbarAppPresentationTests
             "编辑器，正在使用 · 2 个窗口",
             item.AccessibleName);
         Assert.Equal(
-            "左键打开窗口列表，滚轮切换窗口，右键管理应用；Shift+左键或中键启动新实例",
+            "左键打开窗口列表，滚轮切换窗口，右键管理应用；"
+            + "Shift+左键或中键启动新实例；可拖入文件用此应用打开",
             item.InteractionHint);
     }
 
@@ -38,7 +39,8 @@ public sealed class TaskbarAppPresentationTests
             "正在运行 · 1 个窗口",
             item.StatusSummary);
         Assert.Equal(
-            "左键切换或最小化，右键管理应用；Shift+左键或中键启动新实例",
+            "左键切换或最小化，右键管理应用；"
+            + "Shift+左键或中键启动新实例；可拖入文件用此应用打开",
             item.InteractionHint);
     }
 
@@ -198,6 +200,7 @@ public sealed class TaskbarAppPresentationTests
             item.AccessibleName);
         Assert.Equal(
             "左键启动，右键管理应用；Shift+左键或中键启动新实例；"
+            + "可拖入文件用此应用打开；"
             + "Alt+↑/↓调整固定顺序",
             item.InteractionHint);
     }
@@ -226,6 +229,35 @@ public sealed class TaskbarAppPresentationTests
         Assert.Equal(
             "左键切换或最小化，右键管理应用",
             item.InteractionHint);
+    }
+
+    [Fact]
+    public void FileDropTarget_IsExplicitAndReversible()
+    {
+        var item =
+            new TaskbarAppItem();
+        var changes =
+            new List<string?>();
+        item.PropertyChanged +=
+            (_, args) =>
+                changes.Add(
+                    args.PropertyName);
+
+        item.SetFileDropTarget(true);
+        Assert.True(
+            item.IsFileDropTarget);
+        Assert.Contains(
+            nameof(
+                TaskbarAppItem
+                    .IsFileDropTarget),
+            changes);
+
+        changes.Clear();
+        item.SetFileDropTarget(false);
+        Assert.False(
+            item.IsFileDropTarget);
+        Assert.Single(
+            changes);
     }
 
     [Fact]

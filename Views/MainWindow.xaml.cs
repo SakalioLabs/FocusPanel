@@ -68,6 +68,10 @@ public partial class MainWindow :
     private System.Windows.Point _pinnedDragStart;
     private long _lastTaskbarDragScrollTick = -1;
     private TaskbarAppItem? _taskbarDropCueItem;
+    private TaskbarAppItem?
+        _taskbarFileDropTarget;
+    private bool
+        _taskbarExternalFileDragActive;
     private Button? _taskbarHoverButton;
     private TaskbarAppItem? _taskbarHoverTask;
     private ContextMenu? _taskbarHoverMenu;
@@ -434,6 +438,8 @@ public partial class MainWindow :
     {
         CancelTaskbarHoverPreview(
             closeMenu: true);
+        ClearTaskbarDropCue();
+        EndTaskbarExternalFileDrag();
         _autoHideTimer.Stop();
         CloseOverlayPanels();
         _viewModel.SetShellVisible(false);
@@ -2085,6 +2091,11 @@ public partial class MainWindow :
         CancelTaskbarHoverPreview(
             closeMenu: true);
         CancelJumpListLoad();
+        ClearTaskbarDropCue();
+        SetTaskbarFileDropTarget(
+            null);
+        _taskbarExternalFileDragActive =
+            false;
         _autoHideTimer.Stop();
         _transientInteractionDepth = 0;
         UnregisterTaskbarSlotHotkeys();
@@ -2533,6 +2544,24 @@ public partial class MainWindow :
                 decision.TargetOffset);
     }
 
+    private void TaskbarAppsHost_PreviewDragEnter(
+        object sender,
+        DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(
+                typeof(TaskbarAppItem))
+            || !e.Data.GetDataPresent(
+                DataFormats.FileDrop))
+        {
+            return;
+        }
+
+        BeginTaskbarExternalFileDrag();
+        e.Effects =
+            DragDropEffects.Copy;
+        e.Handled = true;
+    }
+
     private void TaskbarAppsHost_PreviewDragLeave(
         object sender,
         DragEventArgs e)
@@ -2547,11 +2576,54 @@ public partial class MainWindow :
                 > TaskbarAppsHost.ActualHeight)
         {
             ClearTaskbarDropCue();
+            EndTaskbarExternalFileDrag();
         }
+    }
+
+    private void TaskbarAppsHost_PreviewDrop(
+        object sender,
+        DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(
+                DataFormats.FileDrop))
+        {
+            return;
+        }
+
+        Dispatcher.BeginInvoke(
+            EndTaskbarExternalFileDrag,
+            DispatcherPriority.Input);
     }
 
     private void TaskbarApp_DragOver(object sender, DragEventArgs e)
     {
+        if (sender
+                is FrameworkElement
+                {
+                    DataContext:
+                        TaskbarAppItem
+                            fileTarget
+                }
+            && e.Data.GetDataPresent(
+                DataFormats.FileDrop))
+        {
+            bool canOpen =
+                fileTarget
+                    .CreateLaunchItem()
+                != null;
+            SetTaskbarFileDropTarget(
+                canOpen
+                    ? fileTarget
+                    : null);
+            ClearTaskbarDropCue();
+            e.Effects =
+                canOpen
+                    ? DragDropEffects.Copy
+                    : DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
         if (sender
                 is not FrameworkElement
                 {
@@ -2605,6 +2677,32 @@ public partial class MainWindow :
         DragEventArgs e)
     {
         if (sender
+                is FrameworkElement
+                    fileElement
+            && fileElement.DataContext
+                is TaskbarAppItem
+                    fileTarget
+            && ReferenceEquals(
+                fileTarget,
+                _taskbarFileDropTarget))
+        {
+            System.Windows.Point
+                filePosition =
+                    e.GetPosition(
+                        fileElement);
+            if (filePosition.X < 0
+                || filePosition.Y < 0
+                || filePosition.X
+                    > fileElement.ActualWidth
+                || filePosition.Y
+                    > fileElement.ActualHeight)
+            {
+                SetTaskbarFileDropTarget(
+                    null);
+            }
+        }
+
+        if (sender
                 is not FrameworkElement element
             || element.DataContext
                 is not TaskbarAppItem target
@@ -2634,6 +2732,36 @@ public partial class MainWindow :
                 is FrameworkElement
                 {
                     DataContext:
+                        TaskbarAppItem
+                            fileTarget
+                }
+            && e.Data.GetDataPresent(
+                DataFormats.FileDrop))
+        {
+            AppLaunchItem? launch =
+                fileTarget
+                    .CreateLaunchItem();
+            string[] paths =
+                TryGetFileDropPaths(
+                    e.Data);
+            EndTaskbarExternalFileDrag();
+            if (launch != null
+                && paths.Length > 0)
+            {
+                StartTaskbarFileDrop(
+                    fileTarget.DisplayName,
+                    launch,
+                    paths);
+            }
+
+            e.Handled = true;
+            return;
+        }
+
+        if (sender
+                is FrameworkElement
+                {
+                    DataContext:
                         TaskbarAppItem target
                 } element
             && e.Data.GetData(typeof(TaskbarAppItem)) is TaskbarAppItem source)
@@ -2650,6 +2778,126 @@ public partial class MainWindow :
         }
 
         e.Handled = true;
+    }
+
+    private void BeginTaskbarExternalFileDrag()
+    {
+        if (_taskbarExternalFileDragActive)
+            return;
+
+        _taskbarExternalFileDragActive =
+            true;
+        BeginTransientInteraction();
+    }
+
+    private void EndTaskbarExternalFileDrag()
+    {
+        SetTaskbarFileDropTarget(
+            null);
+        if (!_taskbarExternalFileDragActive)
+            return;
+
+        _taskbarExternalFileDragActive =
+            false;
+        EndTransientInteraction();
+    }
+
+    private void SetTaskbarFileDropTarget(
+        TaskbarAppItem? target)
+    {
+        if (ReferenceEquals(
+                _taskbarFileDropTarget,
+                target))
+        {
+            return;
+        }
+
+        _taskbarFileDropTarget
+            ?.SetFileDropTarget(false);
+        _taskbarFileDropTarget =
+            target;
+        _taskbarFileDropTarget
+            ?.SetFileDropTarget(true);
+    }
+
+    private static string[]
+        TryGetFileDropPaths(
+            IDataObject data)
+    {
+        try
+        {
+            return data.GetData(
+                       DataFormats.FileDrop)
+                       is string[] paths
+                ? paths.ToArray()
+                : Array.Empty<string>();
+        }
+        catch
+        {
+            return Array.Empty<string>();
+        }
+    }
+
+    private void StartTaskbarFileDrop(
+        string displayName,
+        AppLaunchItem launch,
+        IReadOnlyList<string> paths)
+    {
+        BeginTransientInteraction();
+        AsyncInteractionRunner.Start(
+            async () =>
+            {
+                AppFileLaunchResult result =
+                    await _coordinator
+                        .AppFiles
+                        .OpenAsync(
+                            launch,
+                            paths);
+                if (_isExit
+                    || result
+                        .IsCompleteSuccess)
+                {
+                    return;
+                }
+
+                if (result.LaunchSucceeded)
+                {
+                    _toastManager.Enqueue(
+                        new FocusToastNotification(
+                            "taskbar-file-drop-partial",
+                            "部分项目已打开",
+                            $"已交给“{displayName}”打开 "
+                            + $"{result.OpenedCount} 个项目；"
+                            + $"{result.IgnoredCount} 个路径"
+                            + "无效、不可访问或超过 32 项上限。",
+                            "\uE7C3",
+                            FocusToastKind.Warning));
+                    return;
+                }
+
+                _toastManager.Enqueue(
+                    new FocusToastNotification(
+                        "taskbar-file-drop-failed",
+                        "无法用目标应用打开",
+                        $"“{displayName}”未能接收这些项目。"
+                        + (string.IsNullOrWhiteSpace(
+                                result.FailureReason)
+                            ? string.Empty
+                            : " "
+                              + result
+                                  .FailureReason),
+                        "\uE783",
+                        FocusToastKind.Warning));
+            },
+            ex =>
+                _toastManager.Enqueue(
+                    new FocusToastNotification(
+                        "taskbar-file-drop-error",
+                        "文件拖放失败",
+                        ex.Message,
+                        "\uE783",
+                        FocusToastKind.Warning)),
+            EndTransientInteraction);
     }
 
     private void StartTaskbarAppDrop(
