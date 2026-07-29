@@ -255,8 +255,8 @@ public partial class MainWindow :
     private void EnsureEdgeIndicator()
     {
         _edgeIndicator ??= new EdgeIndicatorWindow();
-        _edgeIndicator.TargetMode =
-            GetTargetDisplayMode();
+        _edgeIndicator.TargetValue =
+            _viewModel.DisplayTargetMode;
     }
 
     private void PositionAtTargetRightEdge()
@@ -1144,6 +1144,8 @@ public partial class MainWindow :
     {
         Dispatcher.BeginInvoke(() =>
         {
+            _viewModel
+                .RefreshDisplayTargetOptions();
             PositionAtTargetRightEdge();
             _toastManager.Reposition();
             _hotZoneMonitor?.RefreshDisplayBounds();
@@ -1154,19 +1156,19 @@ public partial class MainWindow :
     private void ViewModel_DisplayTargetChanged()
     {
         EnsureEdgeIndicator();
+        if (_edgeIndicator != null)
+        {
+            _edgeIndicator.TargetValue =
+                _viewModel.DisplayTargetMode;
+        }
         PositionAtTargetRightEdge();
         _hotZoneMonitor?.RefreshDisplayBounds();
         _edgeIndicator?.Reposition();
     }
 
-    private ShellDisplayTargetMode
-        GetTargetDisplayMode() =>
-        ShellDisplayTarget.Parse(
-            _viewModel.DisplayTargetMode);
-
     private Rectangle GetTargetDisplayBounds() =>
         ShellDisplayTarget.GetBounds(
-            GetTargetDisplayMode());
+            _viewModel.DisplayTargetMode);
 
     private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
     {

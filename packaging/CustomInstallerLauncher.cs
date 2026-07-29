@@ -4,10 +4,12 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using FocusPanel.Services;
+using Microsoft.Win32;
 
 internal static class CustomInstallerLauncher
 {
-    private const string SetupResourceName = "FocusPanelSetup";
+    private const string MsiResourceName = "FocusPanelMsi";
 
     [STAThread]
     private static int Main()
@@ -15,32 +17,68 @@ internal static class CustomInstallerLauncher
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
-        using (var dialog = new InstallLocationDialog())
+        string existingDirectory =
+            FindExistingInstallDirectory();
+        using (var dialog = new InstallLocationDialog(
+            GetDefaultInstallDirectory(),
+            existingDirectory))
         {
             if (dialog.ShowDialog() != DialogResult.OK)
                 return 0;
 
-            return RunSetup(dialog.InstallDirectory);
+            if (!string.IsNullOrEmpty(
+                    existingDirectory)
+                && !SamePath(
+                    existingDirectory,
+                    dialog.InstallDirectory))
+            {
+                DialogResult relocate =
+                    MessageBox.Show(
+                        "检测到 FocusPanel 当前安装在：\r\n"
+                        + existingDirectory
+                        + "\r\n\r\n要改到：\r\n"
+                        + dialog.InstallDirectory
+                        + "\r\n\r\nWindows 将先卸载旧程序文件，再安装到新目录。"
+                        + "任务、收纳记录和设置位于用户 AppData，不会被删除。是否继续？",
+                        "迁移 FocusPanel 安装位置",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+                if (relocate != DialogResult.Yes)
+                    return 0;
+
+                int uninstallResult =
+                    UninstallExisting(
+                        existingDirectory);
+                if (uninstallResult != 0)
+                    return uninstallResult;
+            }
+
+            return RunInstaller(
+                dialog.InstallDirectory);
         }
     }
 
-    private static int RunSetup(string installDirectory)
+    private static int RunInstaller(
+        string installDirectory)
     {
         string tempDirectory = Path.Combine(
             Path.GetTempPath(),
             "FocusPanelInstaller",
             Guid.NewGuid().ToString("N"));
-        string setupPath = Path.Combine(
+        string msiPath = Path.Combine(
             tempDirectory,
-            "FocusPanel-win-Setup.exe");
+            "FocusPanel-win.msi");
+        string logPath = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel-install.log");
 
         try
         {
             Directory.CreateDirectory(tempDirectory);
             using (Stream input = Assembly
                 .GetExecutingAssembly()
-                .GetManifestResourceStream(SetupResourceName))
-            using (var output = File.Create(setupPath))
+                .GetManifestResourceStream(MsiResourceName))
+            using (var output = File.Create(msiPath))
             {
                 if (input == null)
                     throw new InvalidOperationException("安装程序资源缺失。");
@@ -50,8 +88,12 @@ internal static class CustomInstallerLauncher
             using (Process process = Process.Start(
                 new ProcessStartInfo
                 {
-                    FileName = setupPath,
-                    Arguments = "--installto " + Quote(installDirectory),
+                    FileName = "msiexec.exe",
+                    Arguments =
+                        "/i " + Quote(msiPath)
+                        + " VELOPACK_INSTALLDIR="
+                        + Quote(installDirectory)
+                        + " /L*V " + Quote(logPath),
                     UseShellExecute = true,
                     WorkingDirectory = tempDirectory
                 }))
@@ -59,7 +101,18 @@ internal static class CustomInstallerLauncher
                 if (process == null)
                     throw new InvalidOperationException("无法启动 FocusPanel 安装程序。");
                 process.WaitForExit();
-                return process.ExitCode;
+                if (process.ExitCode == 0
+                    || process.ExitCode == 3010
+                    || process.ExitCode == 1602)
+                {
+                    return 0;
+                }
+
+                throw new InvalidOperationException(
+                    "Windows Installer 返回错误 "
+                    + process.ExitCode
+                    + "。详细日志："
+                    + logPath);
             }
         }
         catch (Exception ex)
@@ -87,14 +140,177 @@ internal static class CustomInstallerLauncher
 
     private static string Quote(string value)
     {
-        return "\"" + value.Replace("\"", "\\\"") + "\"";
+        if (value.IndexOf('"') >= 0)
+            throw new ArgumentException("安装路径不能包含双引号。");
+        return "\"" + value + "\"";
+    }
+
+    private static string GetDefaultInstallDirectory()
+    {
+        var candidates =
+            new System.Collections.Generic
+                .List<InstallerDriveCandidate>();
+        foreach (DriveInfo drive
+                 in DriveInfo.GetDrives())
+        {
+            try
+            {
+                candidates.Add(
+                    new InstallerDriveCandidate(
+                        drive.RootDirectory.FullName,
+                        drive.DriveType,
+                        drive.IsReady,
+                        drive.IsReady
+                            ? drive.AvailableFreeSpace
+                            : 0));
+            }
+            catch
+            {
+                // Ignore a drive that disappeared during enumeration.
+            }
+        }
+
+        return InstallerLocationPolicy
+            .SelectDefaultDirectory(
+                candidates,
+                Path.GetPathRoot(
+                    Environment.SystemDirectory),
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder
+                        .LocalApplicationData));
+    }
+
+    private static string FindExistingInstallDirectory()
+    {
+        string[] subKeys =
+        {
+            @"Software\Microsoft\Windows\CurrentVersion\Uninstall\FocusPanel",
+            @"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\FocusPanel"
+        };
+        RegistryKey[] roots =
+        {
+            Registry.CurrentUser,
+            Registry.LocalMachine
+        };
+
+        foreach (RegistryKey root in roots)
+        {
+            foreach (string subKey in subKeys)
+            {
+                try
+                {
+                    using (RegistryKey key =
+                           root.OpenSubKey(subKey))
+                    {
+                        string location =
+                            key == null
+                                ? string.Empty
+                                : key.GetValue(
+                                    "InstallLocation",
+                                    string.Empty)
+                                    as string;
+                        if (!string.IsNullOrWhiteSpace(
+                                location))
+                        {
+                            return Path.GetFullPath(
+                                location);
+                        }
+                    }
+                }
+                catch
+                {
+                    // A damaged or inaccessible uninstall record is ignored.
+                }
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static int UninstallExisting(
+        string existingDirectory)
+    {
+        string updater = Path.Combine(
+            existingDirectory,
+            "Update.exe");
+        if (!File.Exists(updater))
+        {
+            MessageBox.Show(
+                "找不到旧安装的卸载程序：\r\n"
+                + updater
+                + "\r\n请先在 Windows“已安装的应用”中卸载旧版，再重新运行安装包。",
+                "无法迁移安装位置",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return 1;
+        }
+
+        try
+        {
+            using (Process process = Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = updater,
+                    Arguments = "--uninstall",
+                    UseShellExecute = true,
+                    WorkingDirectory =
+                        existingDirectory
+                }))
+            {
+                if (process == null)
+                    throw new InvalidOperationException("无法启动旧版卸载程序。");
+                process.WaitForExit();
+                if (process.ExitCode == 0)
+                    return 0;
+
+                MessageBox.Show(
+                    "旧版卸载未完成（错误 "
+                    + process.ExitCode
+                    + "）。新版本尚未写入，现有数据保持不变。",
+                    "迁移已停止",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return process.ExitCode;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                "无法卸载旧版 FocusPanel：\r\n"
+                + ex.Message,
+                "迁移已停止",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return 1;
+        }
+    }
+
+    private static bool SamePath(
+        string first,
+        string second)
+    {
+        try
+        {
+            return string.Equals(
+                Path.GetFullPath(first)
+                    .TrimEnd('\\', '/'),
+                Path.GetFullPath(second)
+                    .TrimEnd('\\', '/'),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private sealed class InstallLocationDialog : Form
     {
         private readonly TextBox _pathBox;
 
-        internal InstallLocationDialog()
+        internal InstallLocationDialog(
+            string defaultDirectory,
+            string existingDirectory)
         {
             Text = "安装 FocusPanel";
             Font = new Font("Microsoft YaHei UI", 9F);
@@ -113,7 +329,10 @@ internal static class CustomInstallerLauncher
             };
             var hint = new Label
             {
-                Text = "后续一键更新会继续使用此目录，不会跳回默认位置。",
+                Text = string.IsNullOrWhiteSpace(
+                        existingDirectory)
+                    ? "将使用 Windows Installer 写入所选目录；后续一键更新继续沿用。"
+                    : "已安装版本可迁移到新目录；业务数据和设置不会被删除。",
                 AutoSize = true,
                 ForeColor = SystemColors.GrayText,
                 Location = new Point(26, 58)
@@ -122,10 +341,7 @@ internal static class CustomInstallerLauncher
             {
                 Location = new Point(28, 88),
                 Size = new Size(424, 25),
-                Text = Path.Combine(
-                    Environment.GetFolderPath(
-                        Environment.SpecialFolder.LocalApplicationData),
-                    "FocusPanel")
+                Text = defaultDirectory
             };
             var browse = new Button
             {

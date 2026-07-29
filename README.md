@@ -329,6 +329,10 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 
 ![桌面收纳弹层互斥与键盘路径](docs/images/organizer-popup-keyboard.svg)
 
+自动收纳的文件属性事务、监视器通知和布局刷新现在是同一条可观察异步链：服务先释放文件刷新闸门，再执行新增项目收纳；单个文件失败会留在桌面并进入结果摘要，末尾扫描或 SQLite 竞态也只会显示可恢复错误，不会再把异常抛给 WPF 全局退出策略。
+
+![自动收纳异常隔离与防闪退](docs/images/organizer-auto-crash-boundary.svg)
+
 ![任务列表、真实看板与毛玻璃详情](docs/images/task-workspace.svg)
 
 ![本地优先 OKR 与飞书同步](docs/images/okr-local-sync.svg)
@@ -405,7 +409,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.30 `
+  -Version 0.10.31 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -414,13 +418,15 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
-- `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意安装目录，默认值仍为当前用户目录。无需再寻找单独的 CustomSetup。
+- `FocusPanel-win-Setup.exe`：统一的图形化首次安装入口；双击后可浏览并选择任意绝对目录，随后通过标准 Windows Installer 的 `VELOPACK_INSTALLDIR` 属性强制使用该路径。有可用且空间充足的非系统固定盘时会优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版已装在另一目录，向导会先说明并征得确认，再用旧版官方卸载器移除程序文件并安装到新位置；任务、收纳记录和设置保留在用户 AppData。无需再寻找单独的 CustomSetup。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署可传入 `VELOPACK_INSTALLDIR`。
-- `FocusPanel-0.10.30-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.31-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
 ![一键安装与自定义目录安装](docs/images/custom-install-location.svg)
+
+![Windows Installer 强制自定义目录](docs/images/msi-install-location-flow.svg)
 
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
@@ -436,11 +442,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 ## 多显示器右缘定位
 
-0.10.21 起，Panel、12px 物理热区和 3px 运行指示条默认共同选择虚拟桌面中最外侧的右屏，而不是盲目使用主屏右缘。这样当主屏在左、副屏在右时，呼出位置位于整套显示器的最右边，不再卡在两屏接缝；副屏在左时则仍落在主屏外侧。0.10.27 进一步在移动窗口前直接读取目标显示器的有效 DPI，不再用窗口原来所在屏幕的 DPI 做第一次定位；收到 `WM_DPICHANGED` 后会按同一目标重新锚定。0.10.30 可在设置中改为 Windows 主屏，适合副屏位于左侧、上下排列或希望 Panel 固定跟随主屏的场景；目标切换、分辨率、主屏或缩放改变时，Panel、热区和指示条都会一起重算。
+0.10.21 起，Panel、12px 物理热区和 3px 运行指示条默认共同选择虚拟桌面中最外侧的右屏，而不是盲目使用主屏右缘。这样当主屏在左、副屏在右时，呼出位置位于整套显示器的最右边，不再卡在两屏接缝；副屏在左时则仍落在主屏外侧。0.10.27 进一步在移动窗口前直接读取目标显示器的有效 DPI，不再用窗口原来所在屏幕的 DPI 做第一次定位；收到 `WM_DPICHANGED` 后会按同一目标重新锚定。0.10.31 除了“自动：最右侧屏幕 / Windows 主屏”，还会列出每台已连接显示器的主屏标记、分辨率与虚拟桌面坐标，可以精确固定到上下排列、负坐标或三屏中的任意一台。目标设备断开时临时回退主屏但保留选择；目标切换、设备重连、分辨率、主屏或缩放改变时，Panel、热区和指示条都会一起重算。
 
 ![双屏外侧右缘选择](docs/images/multi-monitor-edge-target.svg)
 
 ![最右侧屏幕与主屏选择](docs/images/display-target-selection.svg)
+
+![设备级显示器选择与断开回退](docs/images/display-device-selection.svg)
 
 将生成的包上传为 GitHub Release 草稿：
 

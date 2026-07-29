@@ -281,7 +281,7 @@ public partial class FileOrganizerViewModel :
         RequestLayoutRefresh();
     }
 
-    private async void FileService_DesktopItemsCreated(
+    private async Task FileService_DesktopItemsCreated(
         IReadOnlyList<string> paths)
     {
         if (!IsAutoOrganizeEnabled
@@ -526,25 +526,28 @@ public partial class FileOrganizerViewModel :
     [RelayCommand]
     private async Task OrganizeAll()
     {
-        if (_fileService.Files.Count == 0)
+        try
         {
-            FocusDialogService.Show(
-                "桌面上没有需要整理的可见项目。",
-                "自动整理",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
-            return;
-        }
+            if (_fileService.Files.Count == 0)
+            {
+                FocusDialogService.Show(
+                    "桌面上没有需要整理的可见项目。",
+                    "自动整理",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+                return;
+            }
 
-        var result = FocusDialogService.Show(
-            $"将 {_fileService.Files.Count} 个可见桌面项目按类型收纳到面板。\n\n"
-            + "文件不会移动或改名，只会写入分类并从原生桌面隐藏。是否继续？",
-            "自动整理桌面",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Question);
+            var result = FocusDialogService.Show(
+                $"将 {_fileService.Files.Count} 个可见桌面项目按类型收纳到面板。\n\n"
+                + "文件不会移动或改名，只会写入分类并从原生桌面隐藏。是否继续？",
+                "自动整理桌面",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
 
-        if (result == System.Windows.MessageBoxResult.Yes)
-        {
+            if (result != System.Windows.MessageBoxResult.Yes)
+                return;
+
             DesktopOrganizeResult organizeResult =
                 await _fileService.OrganizeAllFiles();
             int collected = organizeResult.Collected;
@@ -577,6 +580,21 @@ public partial class FileOrganizerViewModel :
                 remaining == 0
                     ? System.Windows.MessageBoxImage.Information
                     : System.Windows.MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            AutoOrganizeStatus =
+                "自动整理失败；未完成项目仍保留在桌面";
+            System.Diagnostics.Debug.WriteLine(
+                "Manual desktop organize failed: "
+                + ex);
+            FocusDialogService.Show(
+                "自动整理没有完成。已成功收纳的项目仍可在面板中恢复，"
+                + "其余项目保持在桌面。\n\n"
+                + ex.Message,
+                "自动整理失败",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Warning);
         }
     }
 

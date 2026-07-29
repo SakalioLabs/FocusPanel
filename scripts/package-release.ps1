@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.10.30',
+    [string]$Version = '0.10.31',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -199,6 +199,7 @@ if ($null -eq $msi) {
 }
 
 $customInstallerSource = Join-Path $projectRoot 'packaging\CustomInstallerLauncher.cs'
+$installerLocationPolicySource = Join-Path $projectRoot 'Services\InstallerLocationPolicy.cs'
 $nativeSetup = Join-Path $packageDir 'FocusPanel-win-NativeSetup.exe'
 $customInstaller = Join-Path $packageDir 'FocusPanel-win-Setup.exe'
 $frameworkCsc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
@@ -218,9 +219,10 @@ Move-Item -LiteralPath $setup.FullName -Destination $nativeSetup -Force
     /reference:System.dll `
     /reference:System.Drawing.dll `
     /reference:System.Windows.Forms.dll `
-    "/resource:$nativeSetup,FocusPanelSetup" `
+    "/resource:$($msi.FullName),FocusPanelMsi" `
     "/out:$customInstaller" `
-    $customInstallerSource
+    $customInstallerSource `
+    $installerLocationPolicySource
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $customInstaller)) {
     throw "Custom installer compilation failed with exit code $LASTEXITCODE."
 }

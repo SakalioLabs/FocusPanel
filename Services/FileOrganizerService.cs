@@ -49,7 +49,7 @@ public class FileOrganizerService : IDisposable
     public ObservableCollection<DesktopFile> Files { get; private set; } = new();
 
     public event Action? FilesChanged;
-    public event Action<IReadOnlyList<string>>?
+    public event Func<IReadOnlyList<string>, Task>?
         DesktopItemsCreated;
 
     private readonly SemaphoreSlim _organizeGate = new(1, 1);
@@ -289,6 +289,8 @@ public class FileOrganizerService : IDisposable
         if (_disposed)
             return;
 
+        IReadOnlyList<string> createdPaths =
+            Array.Empty<string>();
         await _refreshGate.WaitAsync()
             .ConfigureAwait(false);
         try
@@ -308,14 +310,8 @@ public class FileOrganizerService : IDisposable
             if (!_disposed
                 && batch.CreatedPaths.Count > 0)
             {
-                await InvokeOnUiAsync(() =>
-                {
-                    if (!_disposed)
-                    {
-                        DesktopItemsCreated?.Invoke(
-                            batch.CreatedPaths);
-                    }
-                }).ConfigureAwait(false);
+                createdPaths =
+                    batch.CreatedPaths;
             }
         }
         catch (Exception ex)
@@ -326,6 +322,44 @@ public class FileOrganizerService : IDisposable
         finally
         {
             _refreshGate.Release();
+        }
+
+        if (!_disposed
+            && createdPaths.Count > 0)
+        {
+            await NotifyDesktopItemsCreatedAsync(
+                    createdPaths)
+                .ConfigureAwait(false);
+        }
+    }
+
+    private async Task NotifyDesktopItemsCreatedAsync(
+        IReadOnlyList<string> createdPaths)
+    {
+        Func<IReadOnlyList<string>, Task>?
+            handlers =
+                DesktopItemsCreated;
+        if (handlers == null)
+            return;
+
+        foreach (Delegate handler
+                 in handlers.GetInvocationList())
+        {
+            try
+            {
+                var callback =
+                    (Func<IReadOnlyList<string>, Task>)
+                        handler;
+                await InvokeOnUiAsync(
+                        () => callback(createdPaths))
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    "Desktop created-item handler failed: "
+                    + ex.Message);
+            }
         }
     }
 
@@ -603,6 +637,30 @@ public class FileOrganizerService : IDisposable
         return dispatcher
             .InvokeAsync(action)
             .Task;
+    }
+
+    private static Task InvokeOnUiAsync(
+        Func<Task> action)
+    {
+        Application? application =
+            Application.Current;
+        if (application == null)
+            return action();
+
+        System.Windows.Threading.Dispatcher dispatcher =
+            application.Dispatcher;
+        if (dispatcher.HasShutdownStarted
+            || dispatcher.HasShutdownFinished)
+        {
+            return Task.CompletedTask;
+        }
+        if (dispatcher.CheckAccess())
+            return action();
+
+        return dispatcher
+            .InvokeAsync(action)
+            .Task
+            .Unwrap();
     }
 
     private sealed record DesktopPreferenceSnapshot(

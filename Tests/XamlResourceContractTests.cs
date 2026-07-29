@@ -883,8 +883,46 @@ public sealed class XamlResourceContractTests
             "FocusPanel-win-NativeSetup.exe",
             packager);
         Assert.Contains(
-            "/resource:$nativeSetup,FocusPanelSetup",
+            "/resource:$($msi.FullName),FocusPanelMsi",
             packager);
+        Assert.Contains(
+            "InstallerLocationPolicy.cs",
+            packager);
+        Assert.Contains(
+            "msiexec.exe",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "VELOPACK_INSTALLDIR=",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.DoesNotContain(
+            "--installto",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "\"InstallLocation\"",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "Arguments = \"--uninstall\"",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
         Assert.Contains(
             "'FocusPanel-win-Setup.exe'",
             publisher);
@@ -919,7 +957,7 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Services", "EdgeHotZoneMonitor.cs"));
 
         Assert.Contains("GetTargetDisplayBounds()", mainWindow);
-        Assert.Contains("TargetMode", indicator);
+        Assert.Contains("TargetValue", indicator);
         Assert.Contains("ShellDisplayTarget.GetBounds()", hotZone);
         Assert.Contains("DisplayTargetMode", mainWindow);
         Assert.Contains("RefreshDisplayBounds()", mainWindow);
@@ -2609,8 +2647,20 @@ public sealed class XamlResourceContractTests
             "RefreshChangedPaths(batch.Paths)",
             service);
         Assert.Contains(
-            "DesktopItemsCreated?.Invoke(",
+            "Func<IReadOnlyList<string>, Task>?",
             service);
+        Assert.Contains(
+            "NotifyDesktopItemsCreatedAsync(",
+            service);
+        Assert.Contains(
+            "_refreshGate.Release();",
+            service);
+        Assert.DoesNotContain(
+            "private async void FileService_DesktopItemsCreated",
+            viewModel);
+        Assert.Contains(
+            "private async Task FileService_DesktopItemsCreated",
+            viewModel);
         Assert.Contains(
             "_pendingChanges.RenamePath(",
             service);
@@ -3562,11 +3612,11 @@ public sealed class XamlResourceContractTests
             "SelectedValue=\"{Binding DisplayTargetMode",
             mainXaml);
         Assert.Contains(
-            "Tag=\"OutermostRight\"",
+            "ItemsSource=\"{Binding DisplayTargetOptions}\"",
             mainXaml);
         Assert.Contains(
-            "Tag=\"Primary\"",
-            mainXaml);
+            "ShellDisplayTarget.GetOptions(",
+            viewModel);
 
         string mainWindow = File.ReadAllText(
             Path.Combine(

@@ -41,6 +41,28 @@ public sealed class ShellPreferenceRepositoryTests
     }
 
     [Fact]
+    public async Task Load_PreservesSpecificDisplayDevice()
+    {
+        using var repository =
+            new ShellPreferenceRepository(
+                () =>
+                    new ShellPreferenceSnapshot(
+                        true,
+                        true,
+                        "System",
+                        true,
+                        @"device:  \\.\DISPLAY2  "),
+                (_, _) => { });
+
+        ShellPreferenceSnapshot snapshot =
+            await repository.LoadAsync();
+
+        Assert.Equal(
+            @"Device:\\.\DISPLAY2",
+            snapshot.DisplayTargetMode);
+    }
+
+    [Fact]
     public async Task Load_ReturnsBeforeStorageCompletesAndIsShared()
     {
         using var started =

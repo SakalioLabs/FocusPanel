@@ -77,6 +77,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _isDisposed;
     private Task? _disposeTask;
     private bool _loadingShellPreferences;
+    private bool _refreshingDisplayTargetOptions;
     private long _workspaceNavigationRevision;
     private DateTime _calendarFocusMonth;
     private IReadOnlyDictionary<DateTime, CalendarFocusSummary>
@@ -383,6 +384,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ReplacementStatus =
             "正在读取任务栏替代设置…";
         IsOnboardingVisible = true;
+        RefreshDisplayTargetOptions();
         _shellPreferencesInitialization =
             LoadShellPreferencesAsync();
         ShowsProtectedSystemFiles = false;
@@ -425,6 +427,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<AppLaunchItem> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+    public ObservableCollection<
+        ShellDisplayTargetOption> DisplayTargetOptions
+    {
+        get;
+    } = new();
     public string AppSearchStatusText =>
         IsAppCatalogLoading
             ? "正在载入应用目录…"
@@ -499,6 +506,40 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<string>? WorkspaceRequested;
     public event Action<int>? PomodoroCompleted;
     public event Action? DisplayTargetChanged;
+
+    public void RefreshDisplayTargetOptions()
+    {
+        string selectedValue =
+            DisplayTargetMode;
+        IReadOnlyList<ShellDisplayTargetOption>
+            options =
+                ShellDisplayTarget.GetOptions(
+                    selectedValue);
+        _refreshingDisplayTargetOptions = true;
+        try
+        {
+            DisplayTargetOptions.Clear();
+            foreach (ShellDisplayTargetOption option
+                     in options)
+            {
+                DisplayTargetOptions.Add(option);
+            }
+
+            if (!string.Equals(
+                    DisplayTargetMode,
+                    selectedValue,
+                    StringComparison.Ordinal))
+            {
+                DisplayTargetMode =
+                    selectedValue;
+            }
+        }
+        finally
+        {
+            _refreshingDisplayTargetOptions =
+                false;
+        }
+    }
 
     internal Task WaitForShellPreferencesAsync() =>
         _shellPreferencesInitialization;
@@ -658,6 +699,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnDisplayTargetModeChanged(
         string value)
     {
+        if (_refreshingDisplayTargetOptions)
+            return;
+
         string normalized =
             ShellDisplayTarget.NormalizeValue(
                 value);
@@ -671,6 +715,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         DisplayTargetChanged?.Invoke();
+        RefreshDisplayTargetOptions();
         if (!_loadingShellPreferences)
         {
             QueueShellPreference(

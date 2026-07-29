@@ -116,6 +116,106 @@ public sealed class ShellWindowPlacementTests
     }
 
     [Fact]
+    public void DeviceTarget_SelectsExactDisplayRegardlessOfLayout()
+    {
+        var displays = new List<ShellDisplaySnapshot>
+        {
+            new(
+                new Rectangle(0, 0, 1920, 1080),
+                true,
+                @"\\.\DISPLAY1"),
+            new(
+                new Rectangle(-2560, -300, 2560, 1440),
+                false,
+                @"\\.\DISPLAY2"),
+            new(
+                new Rectangle(1920, 200, 1600, 900),
+                false,
+                @"\\.\DISPLAY3")
+        };
+
+        ShellDisplaySnapshot? target =
+            ShellDisplayTarget.Select(
+                displays,
+                @"Device:\\.\DISPLAY2");
+
+        Assert.NotNull(target);
+        Assert.Equal(displays[1], target.Value);
+    }
+
+    [Fact]
+    public void DisconnectedDeviceTarget_FallsBackToPrimary()
+    {
+        var displays = new List<ShellDisplaySnapshot>
+        {
+            new(
+                new Rectangle(-1920, 0, 1920, 1080),
+                false,
+                @"\\.\DISPLAY2"),
+            new(
+                new Rectangle(0, 0, 2560, 1440),
+                true,
+                @"\\.\DISPLAY1")
+        };
+
+        ShellDisplaySnapshot? target =
+            ShellDisplayTarget.Select(
+                displays,
+                @"Device:\\.\DISPLAY9");
+
+        Assert.NotNull(target);
+        Assert.Equal(displays[1], target.Value);
+    }
+
+    [Fact]
+    public void DisplayOptions_KeepDisconnectedSelectionVisible()
+    {
+        var displays = new List<ShellDisplaySnapshot>
+        {
+            new(
+                new Rectangle(0, 0, 1920, 1080),
+                true,
+                @"\\.\DISPLAY1")
+        };
+
+        IReadOnlyList<ShellDisplayTargetOption> options =
+            ShellDisplayTarget.CreateOptions(
+                displays,
+                @"Device:\\.\DISPLAY2");
+
+        Assert.Contains(
+            options,
+            option =>
+                option.Value
+                    == @"Device:\\.\DISPLAY1"
+                && option.DisplayName
+                    .Contains("1920×1080"));
+        Assert.Contains(
+            options,
+            option =>
+                option.Value
+                    == @"Device:\\.\DISPLAY2"
+                && option.DisplayName
+                    .Contains("已断开"));
+    }
+
+    [Theory]
+    [InlineData(
+        @"Device:\\.\DISPLAY2",
+        @"Device:\\.\DISPLAY2")]
+    [InlineData(
+        "device:  DISPLAY-X  ",
+        "Device:DISPLAY-X")]
+    public void DeviceTarget_NormalizesWithoutLosingIdentity(
+        string value,
+        string expected)
+    {
+        Assert.Equal(
+            expected,
+            ShellDisplayTarget.NormalizeValue(value));
+    }
+
+    [Fact]
     public void MixedDpiOffsetPrimary_UsesPhysicalScreenOrigin()
     {
         var primary = new Rectangle(

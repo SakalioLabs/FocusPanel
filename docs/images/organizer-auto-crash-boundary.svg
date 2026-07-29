@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="320" viewBox="0 0 1120 320">
+  <rect width="1120" height="320" rx="28" fill="#0b1323"/>
+  <text x="50" y="54" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei" font-size="24" font-weight="700">自动收纳：失败留在项目内，不再退出 Panel</text>
+  <g font-family="Segoe UI,Microsoft YaHei">
+    <rect x="50" y="92" width="210" height="150" rx="18" fill="#192941" stroke="#3f587c"/>
+    <text x="74" y="128" fill="#bfdbfe" font-size="17" font-weight="600">桌面新增 / 一键整理</text>
+    <text x="74" y="164" fill="#9fb0c9" font-size="14">路径快照</text><text x="74" y="190" fill="#9fb0c9" font-size="14">文件身份与原属性</text><text x="74" y="216" fill="#9fb0c9" font-size="14">批次结果</text>
+    <path d="M278 168h82" stroke="#60a5fa" stroke-width="3"/><path d="M350 159l12 9-12 9" fill="none" stroke="#60a5fa" stroke-width="3"/>
+    <rect x="378" y="92" width="250" height="150" rx="18" fill="#192941" stroke="#3f587c"/>
+    <text x="402" y="128" fill="#bfdbfe" font-size="17" font-weight="600">释放刷新闸门后执行</text>
+    <text x="402" y="164" fill="#9fb0c9" font-size="14">Hidden + System 属性事务</text><text x="402" y="190" fill="#9fb0c9" font-size="14">逐订阅者 await 与异常隔离</text><text x="402" y="216" fill="#9fb0c9" font-size="14">末尾扫描不形成互锁</text>
+    <path d="M646 168h82" stroke="#60a5fa" stroke-width="3"/><path d="M718 159l12 9-12 9" fill="none" stroke="#60a5fa" stroke-width="3"/>
+    <rect x="746" y="92" width="324" height="150" rx="18" fill="#173448" stroke="#22d3ee"/>
+    <text x="770" y="128" fill="#a5f3fc" font-size="17" font-weight="600">稳定结果</text>
+    <circle cx="792" cy="170" r="19" fill="#0f766e"/><path d="M783 170l6 6 12-14" fill="none" stroke="#ecfeff" stroke-width="3"/>
+    <text x="824" y="175" fill="#e2e8f0" font-size="14">成功项继续显示在面板</text>
+    <circle cx="792" cy="209" r="19" fill="#78350f"/><text x="786" y="215" fill="#fde68a" font-size="18">!</text>
+    <text x="824" y="214" fill="#e2e8f0" font-size="14">失败项留在桌面并显示摘要</text>
+  </g>
+</svg>

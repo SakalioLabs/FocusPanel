@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="360" viewBox="0 0 1120 360">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1220"/><stop offset="1" stop-color="#18243a"/></linearGradient>
+    <filter id="s"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#020617" flood-opacity=".42"/></filter>
+  </defs>
+  <rect width="1120" height="360" rx="28" fill="url(#bg)"/>
+  <text x="52" y="58" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei" font-size="25" font-weight="700">自定义目录现在由 Windows Installer 强制执行</text>
+  <g filter="url(#s)" font-family="Segoe UI,Microsoft YaHei">
+    <rect x="52" y="98" width="270" height="192" rx="20" fill="#1d2b44" stroke="#4b658a"/>
+    <text x="76" y="133" fill="#bfdbfe" font-size="17" font-weight="600">1 · 选择安装位置</text>
+    <rect x="76" y="158" width="222" height="42" rx="10" fill="#0f1b2e" stroke="#60a5fa"/>
+    <text x="90" y="184" fill="#f8fafc" font-size="15">D:\Applications\FocusPanel</text>
+    <text x="76" y="228" fill="#9fb0c9" font-size="13">优先推荐空间最大的非系统固定盘</text>
+    <text x="76" y="252" fill="#9fb0c9" font-size="13">仍可点“浏览”选择其他绝对路径</text>
+    <path d="M336 194h96" stroke="#38bdf8" stroke-width="3"/><path d="M422 185l12 9-12 9" fill="none" stroke="#38bdf8" stroke-width="3"/>
+    <rect x="448" y="98" width="282" height="192" rx="20" fill="#1d2b44" stroke="#4b658a"/>
+    <text x="472" y="133" fill="#bfdbfe" font-size="17" font-weight="600">2 · 标准 MSI 安装</text>
+    <rect x="472" y="157" width="234" height="52" rx="12" fill="#13223a"/>
+    <text x="488" y="180" fill="#7dd3fc" font-family="Cascadia Mono,Consolas" font-size="12">VELOPACK_INSTALLDIR=</text>
+    <text x="488" y="198" fill="#e2e8f0" font-family="Cascadia Mono,Consolas" font-size="12">D:\Applications\FocusPanel</text>
+    <text x="472" y="236" fill="#9fb0c9" font-size="13">不再依赖已有安装可能忽略的弱参数</text>
+    <text x="472" y="260" fill="#9fb0c9" font-size="13">安装日志保留在系统临时目录</text>
+    <path d="M744 194h96" stroke="#38bdf8" stroke-width="3"/><path d="M830 185l12 9-12 9" fill="none" stroke="#38bdf8" stroke-width="3"/>
+    <rect x="856" y="98" width="212" height="192" rx="20" fill="#18354a" stroke="#22d3ee"/>
+    <text x="880" y="133" fill="#a5f3fc" font-size="17" font-weight="600">3 · 路径保持</text>
+    <circle cx="906" cy="184" r="24" fill="#0f766e"/><path d="M895 184l8 8 16-18" fill="none" stroke="#ecfeff" stroke-width="4"/>
+    <text x="942" y="180" fill="#f8fafc" font-size="14">首次安装到 D 盘</text>
+    <text x="942" y="202" fill="#9fb0c9" font-size="13">后续一键更新沿用</text>
+    <text x="880" y="244" fill="#9fb0c9" font-size="13">业务数据库仍在用户 AppData</text>
+    <text x="880" y="266" fill="#9fb0c9" font-size="13">升级不会删除现有数据</text>
+  </g>
+</svg>

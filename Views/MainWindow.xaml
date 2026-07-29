@@ -505,10 +505,10 @@
                                     <TextBlock Text="Panel 所在屏幕"
                                                Margin="0,12,0,5"
                                                Style="{StaticResource FocusCaptionText}"/>
-                                    <ComboBox SelectedValuePath="Tag"
+                                    <ComboBox ItemsSource="{Binding DisplayTargetOptions}"
+                                              DisplayMemberPath="DisplayName"
+                                              SelectedValuePath="Value"
                                               SelectedValue="{Binding DisplayTargetMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                        <ComboBoxItem Content="最右侧屏幕（避免两屏接缝）" Tag="OutermostRight"/>
-                                        <ComboBoxItem Content="Windows 主屏" Tag="Primary"/>
                                     </ComboBox>
                                     <TextBlock Margin="0,5,0,0"
                                                Text="Panel、右缘热区和运行指示条会一起迁移。"
