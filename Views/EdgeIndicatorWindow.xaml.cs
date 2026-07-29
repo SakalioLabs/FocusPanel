@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using FocusPanel.Services;
 using Forms = System.Windows.Forms;
 
 namespace FocusPanel.Views;
@@ -45,13 +46,17 @@ public partial class EdgeIndicatorWindow : Window
         if (primary == null)
             return;
 
-        var source = PresentationSource.FromVisual(this);
-        double dipPerPixelX = source?.CompositionTarget?.TransformFromDevice.M11 ?? 1.0;
-        double dipPerPixelY = source?.CompositionTarget?.TransformFromDevice.M22 ?? 1.0;
-        Width = IndicatorPhysicalWidth * dipPerPixelX;
-        Left = primary.Bounds.Right * dipPerPixelX - Width;
-        Top = primary.Bounds.Top * dipPerPixelY;
-        Height = primary.Bounds.Height * dipPerPixelY;
+        uint dpi = ShellWindowPlacement.GetPrimaryMonitorDpi();
+        double scale = dpi / 96.0;
+        PhysicalWindowBounds bounds =
+            ShellWindowPlacement.CalculateIndicator(
+                primary.Bounds,
+                (int)IndicatorPhysicalWidth);
+        Width = bounds.Width / scale;
+        Height = bounds.Height / scale;
+        ShellWindowPlacement.Apply(
+            new WindowInteropHelper(this).Handle,
+            bounds);
     }
 
     private void ApplyClickThroughStyles()

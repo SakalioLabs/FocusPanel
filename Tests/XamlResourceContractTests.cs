@@ -874,6 +874,14 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Remove-GeneratedFile",
             packager);
+        Assert.Contains("'--msi', 'true'", packager);
+        Assert.Contains("'--instLocation', 'Either'", packager);
+        Assert.Contains(
+            "custom-location MSI",
+            packager);
+        Assert.Contains(
+            "'FocusPanel-win.msi'",
+            publisher);
         Assert.Contains("'RELEASES'", publisher);
         Assert.Contains("-full\\.nupkg", publisher);
     }

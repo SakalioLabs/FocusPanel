@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using FocusPanel.Services;
 using Xunit;
 
@@ -9,40 +10,44 @@ namespace FocusPanel.Tests;
 public sealed class AiSettingsAndContextTests
 {
     [Fact]
-    public void Settings_ProtectsKeyAndAllowsModelOnlyUpdate()
+    public async Task Settings_ProtectsKeyAndAllowsModelOnlyUpdate()
     {
         var store = new MemoryConfigStore();
         var protector = new PrefixProtector();
         var service = new AiSettingsService(store, protector);
 
-        service.Save(" sk-example ", "gpt-test");
+        await service.SaveAsync(" sk-example ", "gpt-test");
 
-        Assert.True(service.HasApiKey);
+        AiSettingsState state = await service.LoadStateAsync();
+        Assert.True(state.HasApiKey);
         Assert.Equal("protected:sk-example",
             store.Values[AiSettingsService.ApiKeyConfigKey]);
-        Assert.Equal("sk-example", service.LoadApiKey());
-        Assert.Equal("gpt-test", service.Model);
+        Assert.Equal("sk-example", await service.LoadApiKeyAsync());
+        Assert.Equal("gpt-test", state.Model);
 
-        service.Save(string.Empty, "gpt-next");
+        await service.SaveAsync(string.Empty, "gpt-next");
 
-        Assert.Equal("sk-example", service.LoadApiKey());
-        Assert.Equal("gpt-next", service.Model);
+        Assert.Equal("sk-example", await service.LoadApiKeyAsync());
+        Assert.Equal(
+            "gpt-next",
+            (await service.LoadStateAsync()).Model);
     }
 
     [Fact]
-    public void Settings_ClearRemovesOnlyApiKey()
+    public async Task Settings_ClearRemovesOnlyApiKey()
     {
         var store = new MemoryConfigStore();
         var service = new AiSettingsService(
             store,
             new PrefixProtector());
-        service.Save("key", "gpt-test");
+        await service.SaveAsync("key", "gpt-test");
 
-        service.ClearApiKey();
+        await service.ClearApiKeyAsync();
 
-        Assert.False(service.HasApiKey);
-        Assert.Null(service.LoadApiKey());
-        Assert.Equal("gpt-test", service.Model);
+        AiSettingsState state = await service.LoadStateAsync();
+        Assert.False(state.HasApiKey);
+        Assert.Null(await service.LoadApiKeyAsync());
+        Assert.Equal("gpt-test", state.Model);
     }
 
     [Fact]

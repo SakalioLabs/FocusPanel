@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bgm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="1" stop-color="#1d3046"/>
+    </linearGradient>
+    <linearGradient id="panelm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#62bfff" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#8a7dff" stop-opacity=".72"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bgm)"/>
+  <text x="54" y="62" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">混合 DPI 双屏 · 物理坐标锚定</text>
+  <text x="54" y="97" fill="#b7cee9" font-family="Segoe UI, Microsoft YaHei" font-size="16">屏幕原点不参与缩放；Panel、热区和指示条始终使用同一块 Windows 主屏</text>
+
+  <rect x="54" y="139" width="388" height="236" rx="22" fill="#23354d" stroke="#496585" stroke-width="2"/>
+  <text x="78" y="176" fill="#c7d6e9" font-family="Segoe UI, Microsoft YaHei" font-size="15">副屏 · 100% · 1920×1080</text>
+  <text x="78" y="203" fill="#8199b8" font-family="Segoe UI, Microsoft YaHei" font-size="13">物理坐标：(-1920, 180)</text>
+  <rect x="88" y="230" width="320" height="105" rx="16" fill="#1b293d"/>
+  <text x="248" y="289" text-anchor="middle" fill="#738ba8" font-family="Segoe UI, Microsoft YaHei" font-size="17">不再用当前窗口 DPI 换算此原点</text>
+
+  <rect x="474" y="121" width="592" height="290" rx="24" fill="#293c59" stroke="#70a9d7" stroke-width="2"/>
+  <text x="500" y="160" fill="#f2f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="700">主屏 · 150% · 2560×1440</text>
+  <text x="500" y="188" fill="#9eb9d8" font-family="Segoe UI, Microsoft YaHei" font-size="13">独立读取主屏 DPI → 直接计算物理矩形</text>
+  <rect x="530" y="225" width="376" height="135" rx="18" fill="#1e2e45"/>
+  <text x="718" y="270" text-anchor="middle" fill="#c6d9f0" font-family="Segoe UI, Microsoft YaHei" font-size="15">展开工作区完整留在主屏内部</text>
+  <text x="718" y="301" text-anchor="middle" fill="#8fbbe5" font-family="Segoe UI, Microsoft YaHei" font-size="14">180ms 每帧重新锚定右缘</text>
+  <rect x="922" y="137" width="126" height="258" rx="22" fill="url(#panelm)"/>
+  <rect x="1045" y="137" width="3" height="258" rx="1.5" fill="#d8f2ff"/>
+  <text x="985" y="257" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="700">Panel</text>
+  <text x="985" y="284" text-anchor="middle" fill="#eef6ff" font-family="Segoe UI, Microsoft YaHei" font-size="13">向左展开</text>
+
+  <rect x="54" y="445" width="1012" height="42" rx="16" fill="#20334c" stroke="#415f80"/>
+  <text x="560" y="472" text-anchor="middle" fill="#dce9f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">主屏在左 / 右 / 上方或负坐标均可 · 分辨率、主屏、缩放变化后即时重算</text>
+</svg>

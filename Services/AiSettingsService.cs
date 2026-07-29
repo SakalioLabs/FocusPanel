@@ -1,18 +1,25 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using FocusPanel.Data;
 using FocusPanel.Models;
 
 namespace FocusPanel.Services;
 
+public readonly record struct AiSettingsState(
+    bool HasApiKey,
+    string Model);
+
 public interface IAiSettingsService
 {
-    bool HasApiKey { get; }
-    string Model { get; }
-    string? LoadApiKey();
-    void Save(string apiKey, string model);
-    void ClearApiKey();
+    Task<AiSettingsState> LoadStateAsync();
+    Task<string?> LoadApiKeyAsync();
+    Task<AiSettingsState> SaveAsync(
+        string apiKey,
+        string model);
+    Task ClearApiKeyAsync();
 }
 
 internal interface IAiConfigStore
@@ -38,6 +45,7 @@ public sealed class AiSettingsService : IAiSettingsService
 
     private readonly IAiConfigStore _store;
     private readonly IApiKeyProtector _protector;
+    private readonly SemaphoreSlim _operationGate = new(1, 1);
 
     public AiSettingsService()
         : this(
@@ -54,54 +62,85 @@ public sealed class AiSettingsService : IAiSettingsService
         _protector = protector;
     }
 
-    public bool HasApiKey =>
-        !string.IsNullOrWhiteSpace(
-            _store.Read(ApiKeyConfigKey));
+    public Task<AiSettingsState> LoadStateAsync() =>
+        RunSerializedAsync(
+            () =>
+            {
+                bool hasApiKey = !string.IsNullOrWhiteSpace(
+                    _store.Read(ApiKeyConfigKey));
+                string? value = _store.Read(ModelConfigKey);
+                string model = string.IsNullOrWhiteSpace(value)
+                    ? DefaultModel
+                    : value;
+                return new AiSettingsState(
+                    hasApiKey,
+                    model);
+            });
 
-    public string Model
-    {
-        get
-        {
-            string? value = _store.Read(ModelConfigKey);
-            return string.IsNullOrWhiteSpace(value)
-                ? DefaultModel
-                : value;
-        }
-    }
+    public Task<string?> LoadApiKeyAsync() =>
+        RunSerializedAsync(
+            () =>
+            {
+                string? encrypted =
+                    _store.Read(ApiKeyConfigKey);
+                if (string.IsNullOrWhiteSpace(encrypted))
+                    return null;
+                try
+                {
+                    return _protector.Unprotect(encrypted);
+                }
+                catch
+                {
+                    return null;
+                }
+            });
 
-    public string? LoadApiKey()
+    public Task<AiSettingsState> SaveAsync(
+        string apiKey,
+        string model) =>
+        RunSerializedAsync(
+            () =>
+            {
+                if (!string.IsNullOrWhiteSpace(apiKey))
+                {
+                    _store.Write(
+                        ApiKeyConfigKey,
+                        _protector.Protect(apiKey.Trim()));
+                }
+
+                string savedModel =
+                    string.IsNullOrWhiteSpace(model)
+                        ? DefaultModel
+                        : model.Trim();
+                _store.Write(ModelConfigKey, savedModel);
+                bool hasApiKey = !string.IsNullOrWhiteSpace(
+                    _store.Read(ApiKeyConfigKey));
+                return new AiSettingsState(
+                    hasApiKey,
+                    savedModel);
+            });
+
+    public Task ClearApiKeyAsync() =>
+        RunSerializedAsync(
+            () =>
+            {
+                _store.Delete(ApiKeyConfigKey);
+                return true;
+            });
+
+    private async Task<T> RunSerializedAsync<T>(
+        Func<T> operation)
     {
-        string? encrypted = _store.Read(ApiKeyConfigKey);
-        if (string.IsNullOrWhiteSpace(encrypted))
-            return null;
+        await _operationGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            return _protector.Unprotect(encrypted);
+            return await Task.Run(operation).ConfigureAwait(false);
         }
-        catch
+        finally
         {
-            return null;
+            _operationGate.Release();
         }
     }
-
-    public void Save(string apiKey, string model)
-    {
-        if (!string.IsNullOrWhiteSpace(apiKey))
-        {
-            _store.Write(
-                ApiKeyConfigKey,
-                _protector.Protect(apiKey.Trim()));
-        }
-
-        _store.Write(
-            ModelConfigKey,
-            string.IsNullOrWhiteSpace(model)
-                ? DefaultModel
-                : model.Trim());
-    }
-
-    public void ClearApiKey() =>
-        _store.Delete(ApiKeyConfigKey);
 }
 
 internal sealed class AppConfigAiStore : IAiConfigStore

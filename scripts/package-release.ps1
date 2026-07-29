@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.10.12',
+    [string]$Version = '0.10.13',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -79,6 +79,7 @@ elseif ($ReplaceCurrentVersion) {
         "FocusPanel-$Version-full.nupkg",
         "FocusPanel-$Version-delta.nupkg",
         'FocusPanel-win-Setup.exe',
+        'FocusPanel-win.msi',
         'FocusPanel-win-Portable.zip',
         'assets.win.json',
         'RELEASES',
@@ -142,7 +143,9 @@ $vpkArguments = @(
     '--channel', 'win',
     '--outputDir', $packageDir,
     '--releaseNotes', $releaseNotes,
-    '--shortcuts', 'Desktop,StartMenuRoot'
+    '--shortcuts', 'Desktop,StartMenuRoot',
+    '--msi', 'true',
+    '--instLocation', 'Either'
 )
 if (-not [string]::IsNullOrWhiteSpace($SignParams)) {
     $vpkArguments += @('--signParams', $SignParams)
@@ -183,9 +186,16 @@ $setup = Get-ChildItem -LiteralPath $packageDir -Filter '*Setup.exe' |
 if ($null -eq $setup) {
     throw 'Packaging completed without producing Setup.exe.'
 }
+$msi = Get-ChildItem -LiteralPath $packageDir -Filter '*.msi' |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+if ($null -eq $msi) {
+    throw 'Packaging completed without producing the custom-location MSI.'
+}
 
 Write-Host ''
 Write-Host "Installer created: $($setup.FullName)"
+Write-Host "Custom-location installer created: $($msi.FullName)"
 Get-ChildItem -LiteralPath $packageDir |
     Sort-Object Name |
     Select-Object Name, Length, LastWriteTime

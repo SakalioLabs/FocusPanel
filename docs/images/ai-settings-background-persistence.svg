@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="1" stop-color="#202846"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#59c5ff"/>
+      <stop offset="1" stop-color="#a68cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">AI 配置 · 后台读取与串行保存</text>
+  <text x="54" y="97" fill="#b8c9e9" font-family="Segoe UI, Microsoft YaHei" font-size="16">页面先响应，SQLite 与 DPAPI 离开 WPF 界面线程；既有密文和配置键保持兼容</text>
+
+  <rect x="54" y="139" width="244" height="244" rx="24" fill="#23324b" stroke="#41597c"/>
+  <text x="176" y="182" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">WPF 工作区</text>
+  <rect x="78" y="210" width="196" height="48" rx="16" fill="#2b4768"/>
+  <text x="176" y="240" text-anchor="middle" fill="#9edcff" font-family="Segoe UI, Microsoft YaHei" font-size="15">立即显示读取状态</text>
+  <rect x="78" y="274" width="196" height="48" rx="16" fill="#2b4768"/>
+  <text x="176" y="304" text-anchor="middle" fill="#9edcff" font-family="Segoe UI, Microsoft YaHei" font-size="15">发送 / 保存 / 清除</text>
+  <text x="176" y="354" text-anchor="middle" fill="#c2d1e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">不等待数据库打开</text>
+
+  <path d="M319 261 H361" stroke="url(#flow)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M350 250 L364 261 L350 272" fill="none" stroke="#65c4ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="387" y="122" width="346" height="278" rx="26" fill="#2b3d5c" stroke="#607ba2"/>
+  <text x="560" y="166" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">单一后台操作闸门</text>
+  <circle cx="426" cy="213" r="9" fill="#65c5ff"/>
+  <text x="451" y="219" fill="#e1eafa" font-family="Segoe UI, Microsoft YaHei" font-size="15">初始化任务只创建一次并被复用</text>
+  <circle cx="426" cy="259" r="9" fill="#8ee3b9"/>
+  <text x="451" y="265" fill="#e1eafa" font-family="Segoe UI, Microsoft YaHei" font-size="15">读取、解密和写入严格串行</text>
+  <circle cx="426" cy="305" r="9" fill="#ad96ff"/>
+  <text x="451" y="311" fill="#e1eafa" font-family="Segoe UI, Microsoft YaHei" font-size="15">每次操作使用短生命周期上下文</text>
+  <rect x="419" y="340" width="282" height="38" rx="15" fill="#20314c"/>
+  <text x="560" y="365" text-anchor="middle" fill="#c5d8f3" font-family="Segoe UI, Microsoft YaHei" font-size="14">异常释放闸门，后续操作可恢复</text>
+
+  <path d="M754 261 H796" stroke="url(#flow)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M785 250 L799 261 L785 272" fill="none" stroke="#9e91ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="822" y="139" width="244" height="244" rx="24" fill="#23324b" stroke="#41597c"/>
+  <text x="944" y="182" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">安全持久化</text>
+  <rect x="846" y="210" width="196" height="48" rx="16" fill="#294b43"/>
+  <text x="944" y="240" text-anchor="middle" fill="#9beac1" font-family="Segoe UI, Microsoft YaHei" font-size="15">AppConfig · SQLite</text>
+  <rect x="846" y="274" width="196" height="48" rx="16" fill="#473f65"/>
+  <text x="944" y="304" text-anchor="middle" fill="#d2c6ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">Windows 用户 DPAPI</text>
+  <text x="944" y="354" text-anchor="middle" fill="#c2d1e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">数据格式保持不变</text>
+
+  <rect x="54" y="438" width="1012" height="47" rx="18" fill="#1f3049" stroke="#41597c"/>
+  <text x="560" y="468" text-anchor="middle" fill="#dbe7f9" font-family="Segoe UI, Microsoft YaHei" font-size="15">慢存储不会卡住模块展开 · 保存返回真实提交状态 · 页面释放后拒绝迟到更新</text>
+</svg>

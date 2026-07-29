@@ -40,6 +40,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 主壳启动时用一个无跟踪快照读取首次引导、任务栏替代、主题和全屏热区设置，不再为四个键重复打开 SQLite；运行中切换主题、热区或替代状态会按设置键合并后由单消费者后台队列串行落盘。界面即时生效，保存失败会保留当前会话并给出提示，后续操作仍可恢复，退出前排空已经接收的设置。
 - 番茄钟历史统计在工作线程加载；倒计时归零时立即更新界面、播放提醒并把完整会话交给后台单消费者串行保存。开始新一轮、暂停或重置后，上一轮迟到的保存结果不会覆盖当前提示，退出前会排空已经进入队列的会话。
 - OKR 首次打开时由工作线程一次读取本地目标、飞书配置、同步间隔和最后同步时间；SQLite 较大或暂时繁忙不会阻塞工作区展开。手动飞书同步、配置读写和 AI 预留接口也不再同步等待 WPF Dispatcher，旧加载快照不会覆盖刚完成的本地编辑。
+- AI 页面打开时异步读取加密凭据状态与模型配置，不再在构造 WPF 工作区时同步打开 SQLite；发送前解密、保存模型和清除凭据也通过同一个后台闸门严格串行。配置仍使用当前 Windows 用户的 DPAPI 加密，数据库键名与既有数据完全兼容。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
 - 应用图标支持 Windows 任务栏常用的新实例手势：`Shift+左键` 或鼠标中键直接启动新实例；没有可靠启动目标的受保护窗口不会显示或执行该动作。工具提示和读屏帮助会同步说明当前可用操作。
 - 多窗口列表精确标记当前前台窗口；同一应用内部切换窗口也会增量更新标记。标题超过 340px 时视觉省略，读屏名称仍保留完整标题并说明“当前窗口”。
@@ -66,6 +67,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 固定、取消固定和拖动排序会确认 SQLite 提交结果；数据库短暂锁定或写入失败不会冲击 UI 线程，也不会把未保存的顺序伪装成成功。
 - 运行项可通过右键固定；拖动未固定运行项会自动创建固定项并保存排序，取消固定后只要窗口仍在就继续显示。
 - 紧凑栏从上到下固定为开始、搜索、统一固定/运行应用列表、任务视图、Focus 中心、状态中心和时间；六个系统入口顺序稳定，中部只承担可滚动应用区。
+- 多屏定位以 Windows 主屏的物理边界和主屏 DPI 为唯一基准；紧凑栏、展开动画、12px 热区和 3px 指示条不会混用窗口当前屏的 WPF DIP。主屏存在负坐标、位于副屏右侧或采用不同缩放时，Panel 仍完整向主屏内部展开。
 - 中部应用列表超出可视高度时显示轻量悬浮上下导航；到达顶部或底部后相应箭头自动消失，点击按一个应用图标步长移动，鼠标滚轮仍可直接滚动。
 - Focus 中心统一承载桌面收纳、任务、番茄钟、OKR、AI、最近使用模块和设置更新；状态中心集中音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
 - 状态中心的快捷设置、通知、输入法、显示桌面、锁定、睡眠与电源操作均返回明确结果；成功后关闭 FocusPanel 弹层以免遮挡 Windows 界面，系统拒绝或启动失败时自动回到状态中心显示可操作的替代方式，不再静默失败或让异常冲击 UI 线程。
@@ -113,6 +115,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![番茄钟非阻塞统计与安全落盘](docs/images/pomodoro-persistence-lifecycle.svg)
 
 ![OKR 后台快照与异步同步边界](docs/images/okr-background-workspace.svg)
+
+![AI 配置后台读取与串行保存](docs/images/ai-settings-background-persistence.svg)
 
 ![多窗口应用一层直接列表](docs/images/multi-window-direct-list.svg)
 
@@ -207,6 +211,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![任务栏安全状态机](docs/images/taskbar-safety-flow.svg)
 
 ![任务栏守护连续异常确认](docs/images/taskbar-guard-confirmation.svg)
+
+![混合 DPI 双屏物理坐标定位](docs/images/multi-monitor-physical-placement.svg)
 
 ![开机启动写入与回滚](docs/images/startup-safety.svg)
 
@@ -353,7 +359,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.12 `
+  -Version 0.10.13 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -362,18 +368,21 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
-- `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.10.12-full.nupkg`：完整更新包。
+- `FocusPanel-win-Setup.exe`：默认目录的一键首次安装入口；也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
+- `FocusPanel-win.msi`：带 Windows 安装向导的自定义目录安装入口，可选择当前用户或整机范围。
+- `FocusPanel-0.10.13-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
+![一键安装与自定义目录安装](docs/images/custom-install-location.svg)
+
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
-正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES` 和完整更新包。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要安装过一次 `Setup.exe`，以后即可在设置页直接完成检查、下载、安装和重启。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载 `FocusPanel-win-Setup.exe` 覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
+正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES`、完整更新包和 MSI。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要通过 `Setup.exe` 或 `Setup.msi` 安装过一次，以后即可在设置页直接完成检查、下载、安装和重启。需要图形化选择目录时使用 MSI；默认目录快速安装时使用 EXE。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载安装器覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
 
 ![GitHub 静态清单一键更新与手动兜底](docs/images/github-static-update-flow.svg)
 
-用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备只需首次安装一次 `FocusPanel-win-Setup.exe`，后续版本均沿用这条更新链。
+用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备首次用 EXE 快速安装，或用 MSI 选择目录；后续版本均沿用同一条更新链，不会因自定义目录而回到默认位置。
 
 ![一键更新流程](docs/images/one-click-update.svg)
 

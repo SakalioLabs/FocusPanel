@@ -224,16 +224,25 @@ public partial class MainWindow :
 
     private void PositionAtPrimaryRightEdge()
     {
+        ApplyPanelPlacement(Width);
+    }
+
+    private void ApplyPanelPlacement(double widthDip)
+    {
         Forms.Screen? primary = Forms.Screen.PrimaryScreen;
         if (primary == null)
             return;
 
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
-        uint dpi = hwnd == IntPtr.Zero ? 96u : NativeMethods.GetDpiForWindow(hwnd);
-        double scale = dpi == 0 ? 1.0 : dpi / 96.0;
-        Left = primary.Bounds.Right / scale - Width - ScreenMargin;
-        Top = primary.Bounds.Top / scale + ScreenMargin;
-        Height = Math.Max(320, primary.Bounds.Height / scale - ScreenMargin * 2);
+        uint dpi = ShellWindowPlacement.GetPrimaryMonitorDpi();
+        PhysicalWindowBounds bounds =
+            ShellWindowPlacement.CalculatePanel(
+                primary.Bounds,
+                dpi,
+                widthDip,
+                ScreenMargin);
+        Height = bounds.Height / (dpi / 96.0);
+        ShellWindowPlacement.Apply(hwnd, bounds);
     }
 
     private void OpenCompactDock()
@@ -268,57 +277,56 @@ public partial class MainWindow :
 
     private void SetShellWidth(double targetWidth, bool workspaceVisible, bool animate)
     {
-        Forms.Screen? primary = Forms.Screen.PrimaryScreen;
-        if (primary == null)
-            return;
-
-        IntPtr hwnd = new WindowInteropHelper(this).Handle;
-        uint dpi = hwnd == IntPtr.Zero ? 96u : NativeMethods.GetDpiForWindow(hwnd);
-        double scale = dpi == 0 ? 1.0 : dpi / 96.0;
-        double targetLeft = primary.Bounds.Right / scale - targetWidth - ScreenMargin;
-        double currentWidth = ActualWidth > 0 ? ActualWidth : Width;
-        double currentLeft = Left;
-        bool reduceMotion = !SystemParameters.ClientAreaAnimation
+        double currentWidth =
+            ActualWidth > 0 ? ActualWidth : Width;
+        bool reduceMotion =
+            !SystemParameters.ClientAreaAnimation
             || SystemParameters.HighContrast;
-
         BeginAnimation(WidthProperty, null);
         BeginAnimation(LeftProperty, null);
         Width = targetWidth;
-        Left = targetLeft;
 
-        if (!animate || reduceMotion || Math.Abs(currentWidth - targetWidth) < 0.5)
+        if (!animate
+            || reduceMotion
+            || Math.Abs(currentWidth - targetWidth) < 0.5)
         {
             WorkspaceHost.Visibility = workspaceVisible
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+            ApplyPanelPlacement(targetWidth);
             return;
         }
 
         if (workspaceVisible)
             WorkspaceHost.Visibility = Visibility.Visible;
 
-        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
-        var duration = new Duration(TimeSpan.FromMilliseconds(180));
-        var widthAnimation = new DoubleAnimation(currentWidth, targetWidth, duration)
+        var widthAnimation = new DoubleAnimation(
+            currentWidth,
+            targetWidth,
+            new Duration(TimeSpan.FromMilliseconds(180)))
         {
-            EasingFunction = easing
+            EasingFunction = new CubicEase
+            {
+                EasingMode = EasingMode.EaseOut
+            }
         };
-        var leftAnimation = new DoubleAnimation(currentLeft, targetLeft, duration)
-        {
-            EasingFunction = easing
-        };
+        widthAnimation.CurrentTimeInvalidated +=
+            (_, _) => ApplyPanelPlacement(Width);
         widthAnimation.Completed += (_, _) =>
         {
             BeginAnimation(WidthProperty, null);
-            BeginAnimation(LeftProperty, null);
             Width = targetWidth;
-            Left = targetLeft;
+            ApplyPanelPlacement(targetWidth);
             if (!workspaceVisible)
-                WorkspaceHost.Visibility = Visibility.Collapsed;
+            {
+                WorkspaceHost.Visibility =
+                    Visibility.Collapsed;
+            }
         };
-
-        BeginAnimation(WidthProperty, widthAnimation, HandoffBehavior.SnapshotAndReplace);
-        BeginAnimation(LeftProperty, leftAnimation, HandoffBehavior.SnapshotAndReplace);
+        BeginAnimation(
+            WidthProperty,
+            widthAnimation,
+            HandoffBehavior.SnapshotAndReplace);
     }
 
     private void HideShell()
@@ -1177,9 +1185,6 @@ public partial class MainWindow :
 
     private static class NativeMethods
     {
-        [DllImport("user32.dll")]
-        internal static extern uint GetDpiForWindow(IntPtr hwnd);
-
         [StructLayout(LayoutKind.Sequential)]
         internal struct Point
         {

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="500" viewBox="0 0 1120 500">
+  <defs>
+    <linearGradient id="bgi" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111928"/>
+      <stop offset="1" stop-color="#242949"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="500" rx="30" fill="url(#bgi)"/>
+  <text x="54" y="62" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">同一更新链 · 两种首次安装入口</text>
+  <text x="54" y="97" fill="#bacbe7" font-family="Segoe UI, Microsoft YaHei" font-size="16">快速默认安装与自定义目录不再互相排斥，后续都由 Velopack 在原安装根目录更新</text>
+
+  <rect x="54" y="137" width="430" height="238" rx="24" fill="#23354f" stroke="#4a678a"/>
+  <circle cx="102" cy="184" r="23" fill="#3474a5"/>
+  <text x="102" y="191" text-anchor="middle" fill="#ffffff" font-family="Segoe UI" font-size="20" font-weight="700">E</text>
+  <text x="144" y="182" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">Setup.exe · 快速安装</text>
+  <text x="82" y="230" fill="#c7d6e9" font-family="Segoe UI, Microsoft YaHei" font-size="15">双击：安装到当前用户默认目录</text>
+  <rect x="82" y="255" width="374" height="48" rx="16" fill="#1d2c43"/>
+  <text x="269" y="285" text-anchor="middle" fill="#92cef7" font-family="Consolas, Microsoft YaHei" font-size="14">--installto "D:\Apps\FocusPanel"</text>
+  <text x="82" y="339" fill="#91a8c5" font-family="Segoe UI, Microsoft YaHei" font-size="13">适合一键安装与脚本部署</text>
+
+  <rect x="636" y="137" width="430" height="238" rx="24" fill="#2d3657" stroke="#7569aa"/>
+  <circle cx="684" cy="184" r="23" fill="#6a59a9"/>
+  <text x="684" y="191" text-anchor="middle" fill="#ffffff" font-family="Segoe UI" font-size="20" font-weight="700">M</text>
+  <text x="726" y="182" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">Setup.msi · 安装向导</text>
+  <text x="664" y="230" fill="#d6d0ed" font-family="Segoe UI, Microsoft YaHei" font-size="15">图形化选择目录与安装范围</text>
+  <rect x="664" y="255" width="374" height="48" rx="16" fill="#252c49"/>
+  <text x="851" y="285" text-anchor="middle" fill="#d2c7ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">当前用户 / 整台电脑 / 自定义路径</text>
+  <text x="664" y="339" fill="#a9a0c8" font-family="Segoe UI, Microsoft YaHei" font-size="13">适合另一台设备首次安装</text>
+
+  <path d="M484 256 H616" stroke="#7db7e9" stroke-width="5" stroke-linecap="round" stroke-dasharray="7 11"/>
+  <rect x="250" y="420" width="620" height="44" rx="17" fill="#23463e" stroke="#3e806b"/>
+  <text x="560" y="448" text-anchor="middle" fill="#a5edc8" font-family="Segoe UI, Microsoft YaHei" font-size="15">以后均可在设置页一键更新 · 自定义目录不会被重置 · 业务数据库保持独立</text>
+</svg>

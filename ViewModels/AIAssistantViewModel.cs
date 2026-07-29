@@ -26,6 +26,7 @@ public partial class AIAssistantViewModel :
     private readonly IAiAssistantService _assistant;
     private readonly IAiSettingsService _settings;
     private readonly IAiLocalContextBuilder _contextBuilder;
+    private readonly Task _initializationTask;
     private CancellationTokenSource? _requestCancellation;
     private bool _disposed;
 
@@ -72,15 +73,14 @@ public partial class AIAssistantViewModel :
         _assistant = assistant;
         _settings = settings;
         _contextBuilder = contextBuilder;
-        HasApiKey = settings.HasApiKey;
-        SelectedModel = settings.Model;
-        StatusText = HasApiKey
-            ? "已就绪 · 对话仅在点击发送后联网"
-            : "先保存 OpenAI API Key 才能开始";
-        IsSettingsOpen = !HasApiKey;
+        SelectedModel = AiSettingsService.DefaultModel;
+        StatusText = "正在读取 AI 配置…";
+        _initializationTask = InitializeSettingsAsync();
         Messages.CollectionChanged +=
             (_, _) => HasMessages = Messages.Count > 0;
     }
+
+    internal Task InitializationTask => _initializationTask;
 
     public ObservableCollection<AiChatMessage> Messages
     {
@@ -100,13 +100,25 @@ public partial class AIAssistantViewModel :
     [RelayCommand]
     private async Task Send()
     {
+        await _initializationTask;
         string userText = Prompt.Trim();
         if (userText.Length > 8000)
             userText = userText[..8000];
         if (string.IsNullOrWhiteSpace(userText) || IsBusy)
             return;
 
-        string? apiKey = _settings.LoadApiKey();
+        string? apiKey;
+        try
+        {
+            apiKey = await _settings.LoadApiKeyAsync();
+        }
+        catch (Exception ex)
+        {
+            HasApiKey = false;
+            IsSettingsOpen = true;
+            StatusText = $"读取 API Key 失败：{ex.Message}";
+            return;
+        }
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             HasApiKey = false;
@@ -188,10 +200,11 @@ public partial class AIAssistantViewModel :
         IsSettingsOpen = !IsSettingsOpen;
 
     [RelayCommand]
-    private void SaveSettings()
+    private async Task SaveSettings()
     {
         try
         {
+            await _initializationTask;
             if (!HasApiKey
                 && string.IsNullOrWhiteSpace(ApiKeyInput))
             {
@@ -199,9 +212,13 @@ public partial class AIAssistantViewModel :
                 return;
             }
 
-            _settings.Save(ApiKeyInput, SelectedModel);
+            AiSettingsState state =
+                await _settings.SaveAsync(
+                    ApiKeyInput,
+                    SelectedModel);
             ApiKeyInput = string.Empty;
-            HasApiKey = _settings.HasApiKey;
+            HasApiKey = state.HasApiKey;
+            SelectedModel = state.Model;
             IsSettingsOpen = !HasApiKey;
             StatusText = HasApiKey
                 ? "配置已加密保存，仅当前 Windows 用户可解密"
@@ -214,14 +231,22 @@ public partial class AIAssistantViewModel :
     }
 
     [RelayCommand]
-    private void ClearApiKey()
+    private async Task ClearApiKey()
     {
         Stop();
-        _settings.ClearApiKey();
-        ApiKeyInput = string.Empty;
-        HasApiKey = false;
-        IsSettingsOpen = true;
-        StatusText = "已移除本机保存的 API Key";
+        try
+        {
+            await _initializationTask;
+            await _settings.ClearApiKeyAsync();
+            ApiKeyInput = string.Empty;
+            HasApiKey = false;
+            IsSettingsOpen = true;
+            StatusText = "已移除本机保存的 API Key";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"移除失败：{ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -243,6 +268,31 @@ public partial class AIAssistantViewModel :
             recent.Select(
                 item =>
                     $"{(item.IsUser ? "用户" : "助手")}：{item.Content}"));
+    }
+
+    private async Task InitializeSettingsAsync()
+    {
+        try
+        {
+            AiSettingsState state =
+                await _settings.LoadStateAsync();
+            if (_disposed)
+                return;
+            HasApiKey = state.HasApiKey;
+            SelectedModel = state.Model;
+            StatusText = HasApiKey
+                ? "已就绪 · 对话仅在点击发送后联网"
+                : "先保存 OpenAI API Key 才能开始";
+            IsSettingsOpen = !HasApiKey;
+        }
+        catch (Exception ex)
+        {
+            if (_disposed)
+                return;
+            HasApiKey = false;
+            IsSettingsOpen = true;
+            StatusText = $"读取配置失败：{ex.Message}";
+        }
     }
 
     public void Dispose()
