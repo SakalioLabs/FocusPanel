@@ -1821,6 +1821,11 @@ public sealed class XamlResourceContractTests
     public void MultiWindowLeftClick_OpensDirectWindowList()
     {
         string root = FindRepositoryRoot();
+        string xaml = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
         string codeBehind = File.ReadAllText(
             Path.Combine(
                 root,
@@ -1857,6 +1862,24 @@ public sealed class XamlResourceContractTests
             codeBehind);
         Assert.Contains(
             "当前窗口，",
+            codeBehind);
+        Assert.Contains(
+            "PreviewMouseWheel=\"TaskbarApp_PreviewMouseWheel\"",
+            xaml);
+        Assert.Contains(
+            "TaskbarWindowCyclePolicy.SelectTarget(",
+            codeBehind);
+        Assert.Contains(
+            "InputGestureText =\n"
+            + "                    \"中键 / Del 关闭\"",
+            codeBehind.Replace(
+                "\r\n",
+                "\n"));
+        Assert.Contains(
+            "TaskbarWindowItem_PreviewMouseDown",
+            codeBehind);
+        Assert.Contains(
+            "TaskbarWindowItem_PreviewKeyDown",
             codeBehind);
         Assert.Contains(
             "item.IsActive))",

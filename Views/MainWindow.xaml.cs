@@ -32,6 +32,8 @@ public partial class MainWindow :
     private const double CompactTaskbarOverflowInset = 30;
     private const int TaskbarHoverOpenDelayMilliseconds = 420;
     private const int TaskbarHoverCloseDelayMilliseconds = 260;
+    private const int TaskbarWindowCycleThrottleMilliseconds = 90;
+    private const int TaskbarWindowCycleMemoryMilliseconds = 2000;
     private const int SwShowNoActivate = 4;
     private const int WmHotkey = 0x0312;
     private const int WmDpiChanged = 0x02E0;
@@ -67,6 +69,9 @@ public partial class MainWindow :
     private Button? _taskbarHoverButton;
     private TaskbarAppItem? _taskbarHoverTask;
     private ContextMenu? _taskbarHoverMenu;
+    private string? _lastTaskbarWindowCycleIdentity;
+    private IntPtr _lastTaskbarWindowCycleHandle;
+    private long _lastTaskbarWindowCycleTick = -1;
 
     public MainWindow()
         : this(null)
@@ -907,6 +912,63 @@ public partial class MainWindow :
         e.Handled = true;
     }
 
+    private void TaskbarApp_PreviewMouseWheel(
+        object sender,
+        MouseWheelEventArgs e)
+    {
+        if (sender
+                is not Button
+                {
+                    DataContext:
+                        TaskbarAppItem task
+                }
+            || task.WindowCount < 2)
+        {
+            return;
+        }
+
+        long now =
+            Environment.TickCount64;
+        bool sameCycleSession =
+            string.Equals(
+                _lastTaskbarWindowCycleIdentity,
+                task.IdentityKey,
+                StringComparison.OrdinalIgnoreCase)
+            && _lastTaskbarWindowCycleTick
+                >= 0
+            && now
+                - _lastTaskbarWindowCycleTick
+                <= TaskbarWindowCycleMemoryMilliseconds;
+        if (sameCycleSession
+            && now
+                - _lastTaskbarWindowCycleTick
+                < TaskbarWindowCycleThrottleMilliseconds)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        WindowReference? target =
+            TaskbarWindowCyclePolicy.SelectTarget(
+                task.Windows,
+                e.Delta,
+                sameCycleSession
+                    ? _lastTaskbarWindowCycleHandle
+                    : IntPtr.Zero);
+        if (target == null)
+            return;
+
+        _lastTaskbarWindowCycleIdentity =
+            task.IdentityKey;
+        _lastTaskbarWindowCycleHandle =
+            target.Handle;
+        _lastTaskbarWindowCycleTick =
+            now;
+        _viewModel.ActivateWindowCommand.Execute(
+            target);
+        e.Handled = true;
+    }
+
     private void TaskbarApp_PreviewKeyDown(
         object sender,
         KeyEventArgs e)
@@ -1066,18 +1128,84 @@ public partial class MainWindow :
                 IsChecked = window.IsActive,
                 Command =
                     _viewModel.ActivateWindowCommand,
-                CommandParameter = window
+                CommandParameter = window,
+                InputGestureText =
+                    "中键 / Del 关闭"
             };
             AutomationProperties.SetName(
                 windowItem,
-                GetWindowAccessibleName(
+                GetWindowQuickActionAccessibleName(
                     window,
                     task.DisplayName));
+            windowItem.Tag =
+                new TaskbarWindowMenuAction(
+                    menu,
+                    window);
+            windowItem.PreviewMouseDown +=
+                TaskbarWindowItem_PreviewMouseDown;
+            windowItem.PreviewKeyDown +=
+                TaskbarWindowItem_PreviewKeyDown;
             menu.Items.Add(windowItem);
         }
 
         FocusMenuTheme.Apply(menu);
         button.ContextMenu = menu;
+    }
+
+    private void TaskbarWindowItem_PreviewMouseDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton
+                != MouseButton.Middle
+            || sender
+                is not MenuItem
+                {
+                    Tag:
+                        TaskbarWindowMenuAction
+                        action
+                })
+        {
+            return;
+        }
+
+        CloseTaskbarWindowFromPreview(
+            action);
+        e.Handled = true;
+    }
+
+    private void TaskbarWindowItem_PreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (e.Key != Key.Delete
+            || sender
+                is not MenuItem
+                {
+                    Tag:
+                        TaskbarWindowMenuAction
+                        action
+                })
+        {
+            return;
+        }
+
+        CloseTaskbarWindowFromPreview(
+            action);
+        e.Handled = true;
+    }
+
+    private void CloseTaskbarWindowFromPreview(
+        TaskbarWindowMenuAction action)
+    {
+        if (_viewModel.CloseWindowCommand
+                .CanExecute(action.Window))
+        {
+            _viewModel.CloseWindowCommand
+                .Execute(action.Window);
+        }
+
+        action.Menu.IsOpen = false;
     }
 
     private void TaskbarApp_MouseEnter(
@@ -1283,6 +1411,15 @@ public partial class MainWindow :
             ? $"当前窗口，{title}"
             : title;
     }
+
+    private static string
+        GetWindowQuickActionAccessibleName(
+            WindowReference window,
+            string fallback) =>
+        GetWindowAccessibleName(
+            window,
+            fallback)
+        + "；中键或 Delete 关闭";
 
     private static string GetWindowTitle(
         WindowReference window,
@@ -1999,6 +2136,11 @@ public partial class MainWindow :
             ?.SetDropPlacement(null);
         _taskbarDropCueItem = null;
     }
+
+    private sealed record
+        TaskbarWindowMenuAction(
+            ContextMenu Menu,
+            WindowReference Window);
 
     private static class NativeMethods
     {

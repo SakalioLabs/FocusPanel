@@ -88,7 +88,7 @@ public sealed class TaskbarAppItem : ObservableObject
         get
         {
             string primaryAction = WindowCount > 1
-                ? "左键打开窗口列表，右键管理应用"
+                ? "左键打开窗口列表，滚轮切换窗口，右键管理应用"
                 : IsRunning
                     ? "左键切换或最小化，右键管理应用"
                     : "左键启动，右键管理应用";

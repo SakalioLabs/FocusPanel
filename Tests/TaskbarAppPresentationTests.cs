@@ -23,7 +23,7 @@ public sealed class TaskbarAppPresentationTests
             "编辑器，正在使用 · 2 个窗口",
             item.AccessibleName);
         Assert.Equal(
-            "左键打开窗口列表，右键管理应用；Shift+左键或中键启动新实例",
+            "左键打开窗口列表，滚轮切换窗口，右键管理应用；Shift+左键或中键启动新实例",
             item.InteractionHint);
     }
 
