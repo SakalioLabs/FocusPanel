@@ -1511,7 +1511,21 @@ public sealed class XamlResourceContractTests
             "SystemColors.Highlight",
             theme);
         Assert.Contains(
-            "ContextMenu menu = button.ContextMenu ?? new ContextMenu();",
+            "x:Key=\"FocusPopupSurfaceBrush\"",
+            theme);
+        Assert.True(
+            Regex.Matches(
+                theme,
+                "Background=\"\\{DynamicResource FocusPopupSurfaceBrush\\}\"").Count
+            >= 3);
+        Assert.Contains(
+            "ContextMenu menu = CreateTaskbarContextMenu();",
+            codeBehind);
+        Assert.Contains(
+            "e.Handled = true;",
+            codeBehind);
+        Assert.Contains(
+            "DispatcherPriority.Input",
             codeBehind);
         Assert.Contains(
             "menu.Items.Add(new MenuItem",

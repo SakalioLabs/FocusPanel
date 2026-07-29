@@ -105,6 +105,9 @@ public static class ThemeService
         SetBrush("FocusSurfaceStrongBrush", translucent
             ? (dark ? "#D020242C" : "#E6FFFFFF")
             : (dark ? "#FF222630" : "#FFFFFFFF"));
+        SetBrush(
+            "FocusPopupSurfaceBrush",
+            dark ? "#FF20242C" : "#FFFFFFFF");
         SetBrush("FocusSurfaceSoftBrush", translucent
             ? (dark ? "#302C313D" : "#38FFFFFF")
             : (dark ? "#FF2C313D" : "#FFE9EDF5"));

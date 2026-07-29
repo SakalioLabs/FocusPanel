@@ -24,6 +24,7 @@ internal static class UiSmokeTestRunner
         "FocusSurfaceBrush",
         "FocusSurfaceSoftBrush",
         "FocusSurfaceStrongBrush",
+        "FocusPopupSurfaceBrush",
         "FocusStrokeBrush",
         "FocusKeyboardFocusBrush",
         "FocusAccentSoftBrush",
@@ -347,7 +348,7 @@ internal static class UiSmokeTestRunner
 
             if (menu.Template.FindName(
                     "MenuSurface",
-                    menu) is not Border)
+                    menu) is not Border menuSurface)
             {
                 failures.Add(
                     "Fluent 菜单缺少单层圆角表面");
@@ -384,6 +385,20 @@ internal static class UiSmokeTestRunner
             {
                 failures.Add(
                     "运行时菜单或子菜单未直接应用 Fluent 深浅主题样式");
+                return;
+            }
+
+            if (!ReferenceEquals(
+                    menuSurface.Background,
+                    Application.Current.FindResource(
+                        "FocusPopupSurfaceBrush"))
+                || menuSurface.Background is not SolidColorBrush
+                {
+                    Color.A: byte.MaxValue
+                })
+            {
+                failures.Add(
+                    "Fluent 菜单未使用独立的不透明主题表面");
                 return;
             }
 
@@ -599,7 +614,7 @@ internal static class UiSmokeTestRunner
                 || !ReferenceEquals(
                     toolTip.Background,
                     Application.Current.FindResource(
-                        "FocusSurfaceStrongBrush"))
+                        "FocusPopupSurfaceBrush"))
                 || !ReferenceEquals(
                     toolTip.Foreground,
                     Application.Current.FindResource(
@@ -858,7 +873,7 @@ internal static class UiSmokeTestRunner
                 || !ReferenceEquals(
                     surface.Background,
                     Application.Current.FindResource(
-                        "FocusSurfaceStrongBrush")))
+                        "FocusPopupSurfaceBrush")))
             {
                 failures.Add(
                     "Fluent 下拉框未使用动态主题资源");

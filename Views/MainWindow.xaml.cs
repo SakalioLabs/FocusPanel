@@ -624,14 +624,25 @@ public partial class MainWindow :
 
     private void TaskbarApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        if (sender is Button { DataContext: TaskbarAppItem task } button)
-            PopulateTaskbarAppContextMenu(button, task);
+        e.Handled = true;
+        if (sender is not Button { DataContext: TaskbarAppItem task } button)
+            return;
+
+        // ContextMenuOpening is raised after WPF has started resolving the
+        // popup's system theme. Recreate it first, apply our theme while it is
+        // detached, then open it on the next input pass.
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                PopulateTaskbarAppContextMenu(button, task);
+                OpenContextMenu(button);
+            }),
+            DispatcherPriority.Input);
     }
 
     private void PopulateTaskbarAppContextMenu(Button button, TaskbarAppItem task)
     {
-        ContextMenu menu = button.ContextMenu ?? new ContextMenu();
-        menu.Items.Clear();
+        ContextMenu menu = CreateTaskbarContextMenu();
 
         if (task.CreateLaunchItem() != null)
         {
@@ -701,9 +712,7 @@ public partial class MainWindow :
         Button button,
         TaskbarAppItem task)
     {
-        ContextMenu menu =
-            button.ContextMenu ?? new ContextMenu();
-        menu.Items.Clear();
+        ContextMenu menu = CreateTaskbarContextMenu();
 
         foreach (WindowReference window in task.Windows)
         {
@@ -728,6 +737,14 @@ public partial class MainWindow :
 
         FocusMenuTheme.Apply(menu);
         button.ContextMenu = menu;
+    }
+
+    private ContextMenu CreateTaskbarContextMenu()
+    {
+        var menu = new ContextMenu();
+        menu.Opened += TransientContextMenu_Opened;
+        menu.Closed += TransientContextMenu_Closed;
+        return menu;
     }
 
     private static TextBlock CreateWindowTitle(

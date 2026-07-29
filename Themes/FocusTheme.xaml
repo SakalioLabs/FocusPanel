@@ -20,6 +20,9 @@
     <SolidColorBrush x:Key="FocusShellTintBrush" Color="{StaticResource FocusShellTintColor}"/>
     <SolidColorBrush x:Key="FocusSurfaceBrush" Color="{StaticResource FocusSurfaceColor}"/>
     <SolidColorBrush x:Key="FocusSurfaceStrongBrush" Color="{StaticResource FocusSurfaceStrongColor}"/>
+    <!-- Popups are separate HWNDs and do not receive the shell's DWM backdrop.
+         Keep their surface opaque so themed text never blends with content behind them. -->
+    <SolidColorBrush x:Key="FocusPopupSurfaceBrush" Color="#FF20242C"/>
     <SolidColorBrush x:Key="FocusSurfaceSoftBrush" Color="{StaticResource FocusSurfaceSoftColor}"/>
     <SolidColorBrush x:Key="FocusStrokeBrush" Color="{StaticResource FocusStrokeColor}"/>
     <SolidColorBrush x:Key="FocusHoverBrush" Color="{StaticResource FocusHoverColor}"/>
@@ -672,7 +675,7 @@
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                     Margin="0,6,0,0"
                                     Padding="4"
-                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                    Background="{DynamicResource FocusPopupSurfaceBrush}"
                                     BorderBrush="{DynamicResource FocusStrokeBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource FocusCardCornerRadius}"
@@ -1301,7 +1304,7 @@
                             MinWidth="188"
                             MaxWidth="420"
                             Padding="4"
-                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                            Background="{DynamicResource FocusPopupSurfaceBrush}"
                             BorderBrush="{DynamicResource FocusStrokeBrush}"
                             BorderThickness="1"
                             CornerRadius="{StaticResource FocusCardCornerRadius}"
@@ -1382,7 +1385,7 @@
                             <Border MinWidth="188"
                                     MaxWidth="420"
                                     Padding="4"
-                                    Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                    Background="{DynamicResource FocusPopupSurfaceBrush}"
                                     BorderBrush="{DynamicResource FocusStrokeBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource FocusCardCornerRadius}"
@@ -1470,7 +1473,7 @@
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="HasDropShadow" Value="False"/>
         <Setter Property="Background"
-                Value="{DynamicResource FocusSurfaceStrongBrush}"/>
+                Value="{DynamicResource FocusPopupSurfaceBrush}"/>
         <Setter Property="Foreground"
                 Value="{DynamicResource FocusTextBrush}"/>
         <Setter Property="BorderBrush"

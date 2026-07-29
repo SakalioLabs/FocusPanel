@@ -30,7 +30,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
 - 应用图标支持 Windows 任务栏常用的新实例手势：`Shift+左键` 或鼠标中键直接启动新实例；没有可靠启动目标的受保护窗口不会显示或执行该动作。工具提示和读屏帮助会同步说明当前可用操作。
 - 多窗口列表精确标记当前前台窗口；同一应用内部切换窗口也会增量更新标记。标题超过 340px 时视觉省略，读屏名称仍保留完整标题并说明“当前窗口”。
-- 开始按钮右键、应用管理、多窗口列表、关机子菜单和托盘菜单统一使用单层 Fluent 圆角菜单；静态 XAML 项显式引用主题，运行时创建项在挂接前直接取得应用级菜单 Style，并递归应用到菜单项、自动容器和分隔线。独立 Popup 不再因视觉树尚未建立而落回浅色系统模板。
+- 开始按钮右键、应用管理、多窗口列表、关机子菜单和托盘菜单统一使用单层 Fluent 圆角菜单；静态 XAML 项显式引用主题，运行时创建项会先在视觉树外完整套用应用级 Style，再交给 WPF 打开。独立 Popup 使用不透明的专用深浅主题表面，不再错误复用只适用于主窗口 DWM 毛玻璃的半透明表面，深色主题不会出现白字叠浅底。
 - 菜单悬停、键盘焦点、当前窗口勾选、禁用状态和子菜单箭头全部使用动态主题令牌；子菜单保持文字省略与完整辅助功能名称，不增加黑色投影边框。
 - 全部工具提示使用单层 Fluent 圆角表面，背景、文字和描边跟随动态深浅色主题；不再复用 WPF 默认矩形模板、硬编码深色底或系统黑色阴影。应用状态与新实例手势等多行提示也保持同一信息层级。
 - 主题、AI 模型、任务字段、OKR 同步间隔等下拉选择统一使用非编辑式 Fluent ComboBox：封闭状态、箭头、键盘焦点、选中标记和展开 Popup 共用动态主题令牌，设置页不再漏回系统默认浅色直角控件。
@@ -89,6 +89,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![统一 Fluent 任务栏菜单](docs/images/fluent-context-menu-system.svg)
 
 ![运行时菜单深色主题解析](docs/images/runtime-menu-theme.svg)
+
+![独立 Popup 与 DWM 壳层主题隔离](docs/images/popup-theme-isolation.svg)
 
 ![统一应用栏鼠标操作](docs/images/taskbar-app-mouse-actions.svg)
 
@@ -288,7 +290,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.89 `
+  -Version 0.9.90 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
