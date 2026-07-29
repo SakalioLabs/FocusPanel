@@ -1129,13 +1129,25 @@ public sealed class XamlResourceContractTests
             "Text=\"{Binding StartupStatus}\"",
             mainWindow);
         Assert.Contains(
-            "AutoStartupService.TrySetStartup",
+            "AutoStartupCoordinator",
             viewModel);
         Assert.Contains(
-            "AutoStartupService.IsStartupEnabled()",
+            "LoadStartupStateAsync",
             viewModel);
         Assert.Contains(
             "_updatingStartupState",
+            viewModel);
+        Assert.Contains(
+            "ApplyStartupPreferenceAsync",
+            viewModel);
+        Assert.Contains(
+            "_autoStartup.CompleteAsync()",
+            viewModel);
+        Assert.DoesNotContain(
+            "AutoStartupService.TrySetStartup",
+            viewModel);
+        Assert.DoesNotContain(
+            "AutoStartupService.IsStartupEnabled()",
             viewModel);
         Assert.DoesNotContain(
             "AutoStartupService.SetStartup",

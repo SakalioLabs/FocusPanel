@@ -34,6 +34,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _appLaunch;
     private readonly SystemActionCoordinator
         _systemActions;
+    private readonly AutoStartupCoordinator
+        _autoStartup;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
@@ -289,7 +291,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IAppUpdateService updateService,
         IShellPreferenceRepository
             shellPreferences,
-        SystemActionCoordinator? systemActions = null)
+        SystemActionCoordinator? systemActions = null,
+        AutoStartupCoordinator? autoStartup = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -301,6 +304,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _systemActions =
             systemActions
             ?? new SystemActionCoordinator();
+        _autoStartup =
+            autoStartup
+            ?? new AutoStartupCoordinator();
         _audioControl =
             new AudioControlCoordinator(
                 _systemStatus.TrySetMasterVolume,
@@ -341,10 +347,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         UpdateStatus = _updateService.CanUpdate
             ? "将自动从 GitHub Releases 检查更新"
             : "当前为开发运行版；安装发布包后可一键更新";
-        StartWithWindows = AutoStartupService.IsStartupEnabled();
-        StartupStatus = StartWithWindows
-            ? "已设置为随 Windows 启动"
-            : "当前不会随 Windows 启动";
+        StartupStatus =
+            "正在读取 Windows 启动项…";
+        _ = LoadStartupStateAsync();
         ShellPreferenceSnapshot preferenceSnapshot =
             _shellPreferences.Load();
         _loadingShellPreferences = true;
@@ -1611,25 +1616,70 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsStatusCenterOpen = true;
     }
 
-    private void ApplyStartupPreference(bool enable)
+    private void ApplyStartupPreference(
+        bool enable)
     {
-        if (AutoStartupService.TrySetStartup(
-                enable,
-                out string? error))
+        StartupStatus = enable
+            ? "正在启用随 Windows 启动…"
+            : "正在关闭随 Windows 启动…";
+        _ = ApplyStartupPreferenceAsync(
+            enable);
+    }
+
+    private async Task LoadStartupStateAsync()
+    {
+        AutoStartupCompletion completion =
+            await _autoStartup.ReadAsync();
+        if (_isDisposed
+            || !_autoStartup.IsCurrent(
+                completion.Revision))
         {
-            StartupStatus = enable
-                ? "已设置为随 Windows 启动"
-                : "当前不会随 Windows 启动";
             return;
         }
 
-        StartupStatus = error
-            ?? "无法更新 Windows 启动项。";
+        SetStartupDisplayState(
+            completion.Enabled);
+        StartupStatus = completion.Succeeded
+            ? completion.Enabled
+                ? "已设置为随 Windows 启动"
+                : "当前不会随 Windows 启动"
+            : "无法读取 Windows 启动项，"
+                + "当前按未启用显示。";
+    }
+
+    private async Task ApplyStartupPreferenceAsync(
+        bool enable)
+    {
+        AutoStartupCompletion completion =
+            await _autoStartup.SetAsync(
+                enable);
+        if (_isDisposed
+            || !_autoStartup.IsCurrent(
+                completion.Revision))
+        {
+            return;
+        }
+
+        SetStartupDisplayState(
+            completion.Enabled);
+        StartupStatus = completion.Succeeded
+            ? completion.Enabled
+                ? "已设置为随 Windows 启动"
+                : "当前不会随 Windows 启动"
+            : string.IsNullOrWhiteSpace(
+                completion.Error)
+                ? "无法更新 Windows 启动项。"
+                : completion.Error;
+    }
+
+    private void SetStartupDisplayState(
+        bool enabled)
+    {
         _updatingStartupState = true;
         try
         {
             StartWithWindows =
-                AutoStartupService.IsStartupEnabled();
+                enabled;
         }
         finally
         {
@@ -1974,6 +2024,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
         _audioControl.Dispose();
+        _autoStartup.CompleteAsync()
+            .GetAwaiter()
+            .GetResult();
         _shellPreferences.Dispose();
         _tasksViewModel?.Dispose();
         _okrViewModel?.Dispose();

@@ -39,6 +39,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 待办数量和日历 42 天专注摘要也在工作线程使用独立 `AppDbContext` 查询；快速翻月时旧月份结果不会覆盖当前网格，SQLite 临时繁忙时保留最后有效摘要而不是闪成 0 项。
 - 固定应用在后台读取后保存为线程安全内存快照；前台切换、窗口标题变化及窗口创建/关闭只组合缓存与运行窗口，不再在 WinEvent 高频路径上反复打开 SQLite。固定、取消固定和拖动排序也通过专用后台闸门串行提交，成功后才原子替换缓存；拖放提交期间保持 Panel 展开，退出会等待在途写入完成。
 - 主壳启动时用一个无跟踪快照读取首次引导、任务栏替代、主题和全屏热区设置，不再为四个键重复打开 SQLite；运行中切换主题、热区或替代状态会按设置键合并后由单消费者后台队列串行落盘。界面即时生效，保存失败会保留当前会话并给出提示，后续操作仍可恢复，退出前排空已经接收的设置。
+- Windows 开机启动项的初始注册表读取、启用、禁用和失败复读全部通过串行后台协调器执行，主壳构造与设置开关不再同步访问注册表。快速连续切换会按请求顺序写入并以最后选择为准；启动期迟到读取不能覆盖用户操作，写入失败则回滚到后台复读的真实状态，退出前排空已接收的修改。
 - 番茄钟历史统计在工作线程加载；倒计时归零时立即更新界面、播放提醒并把完整会话交给后台单消费者串行保存。开始新一轮、暂停或重置后，上一轮迟到的保存结果不会覆盖当前提示，退出前会排空已经进入队列的会话。
 - OKR 首次打开时由工作线程一次读取本地目标、飞书配置、同步间隔和最后同步时间；SQLite 较大或暂时繁忙不会阻塞工作区展开。手动飞书同步、配置读写和 AI 预留接口也不再同步等待 WPF Dispatcher，旧加载快照不会覆盖刚完成的本地编辑。
 - OKR 的新增、编辑、删除目标与关键结果，以及 AI 创建草稿，统一进入同一个后台持久化闸门；界面不再直接创建数据库上下文或执行 schema 检查。读取快照与写入严格互斥，保存成功后才提交生成 ID 和界面集合变化；等待飞书删除同步的目标不会在后台刷新时重新出现。
@@ -119,6 +120,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![统一应用栏固定项后台提交](docs/images/pinned-app-background-write.svg)
 
 ![Panel 设置非阻塞持久化](docs/images/shell-preference-background-write.svg)
+
+![开机启动注册表后台串行协调](docs/images/auto-startup-background-coordinator.svg)
 
 ![番茄钟非阻塞统计与安全落盘](docs/images/pomodoro-persistence-lifecycle.svg)
 
@@ -374,7 +377,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.18 `
+  -Version 0.10.19 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -385,7 +388,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：默认目录的一键首次安装入口；也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win.msi`：带 Windows 安装向导的自定义目录安装入口，可选择当前用户或整机范围。
-- `FocusPanel-0.10.18-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.19-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
