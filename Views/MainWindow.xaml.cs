@@ -69,6 +69,9 @@ public partial class MainWindow :
     private Button? _taskbarHoverButton;
     private TaskbarAppItem? _taskbarHoverTask;
     private ContextMenu? _taskbarHoverMenu;
+    private TaskbarWindowPreviewWindow?
+        _taskbarWindowPreview;
+    private bool _taskbarPreviewInteractionActive;
     private string? _lastTaskbarWindowCycleIdentity;
     private IntPtr _lastTaskbarWindowCycleHandle;
     private long _lastTaskbarWindowCycleTick = -1;
@@ -422,9 +425,9 @@ public partial class MainWindow :
 
     private void HideShell()
     {
-        _autoHideTimer.Stop();
         CancelTaskbarHoverPreview(
             closeMenu: true);
+        _autoHideTimer.Stop();
         CloseOverlayPanels();
         _viewModel.SetShellVisible(false);
         Visibility = Visibility.Hidden;
@@ -1222,6 +1225,16 @@ public partial class MainWindow :
             return;
         }
 
+        if (_taskbarWindowPreview?.IsVisible
+                == true
+            && !ReferenceEquals(
+                _taskbarHoverButton,
+                button))
+        {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
+        }
+
         _taskbarHoverCloseTimer.Stop();
         if (!TaskbarHoverPreviewPolicy.ShouldOpen(
                 task.WindowCount,
@@ -1232,7 +1245,12 @@ public partial class MainWindow :
                     == MouseButtonState.Pressed
                 || Mouse.MiddleButton
                     == MouseButtonState.Pressed,
-                button.ContextMenu?.IsOpen == true))
+                button.ContextMenu?.IsOpen == true
+                || (_taskbarWindowPreview?.IsVisible
+                        == true
+                    && ReferenceEquals(
+                        _taskbarHoverButton,
+                        button))))
         {
             return;
         }
@@ -1279,6 +1297,13 @@ public partial class MainWindow :
             return;
         }
 
+        if (TryOpenTaskbarWindowPreview(
+                button,
+                task))
+        {
+            return;
+        }
+
         PopulateTaskbarWindowList(
             button,
             task);
@@ -1295,6 +1320,144 @@ public partial class MainWindow :
         menu.Closed +=
             TaskbarHoverMenu_Closed;
         OpenContextMenu(button);
+    }
+
+    private bool TryOpenTaskbarWindowPreview(
+        Button button,
+        TaskbarAppItem task)
+    {
+        var preview =
+            new TaskbarWindowPreviewWindow();
+        preview.Configure(task);
+        preview.ActivateRequested +=
+            TaskbarWindowPreview_ActivateRequested;
+        preview.CloseRequested +=
+            TaskbarWindowPreview_CloseRequested;
+        preview.MouseEnter +=
+            TaskbarWindowPreview_MouseEnter;
+        preview.MouseLeave +=
+            TaskbarWindowPreview_MouseLeave;
+        preview.Closed +=
+            TaskbarWindowPreview_Closed;
+        _taskbarWindowPreview =
+            preview;
+
+        try
+        {
+            System.Windows.Point topLeft =
+                button.PointToScreen(
+                    new System.Windows.Point(
+                        0,
+                        0));
+            System.Windows.Point bottomRight =
+                button.PointToScreen(
+                    new System.Windows.Point(
+                        button.ActualWidth,
+                        button.ActualHeight));
+            bool shown =
+                preview.TryShowAt(
+                    this,
+                    GetTargetDisplayBounds(),
+                    (int)Math.Round(
+                        topLeft.X),
+                    (int)Math.Round(
+                        (topLeft.Y
+                         + bottomRight.Y)
+                        / 2));
+            if (!shown)
+                return false;
+
+            _taskbarPreviewInteractionActive =
+                true;
+            BeginTransientInteraction();
+            return true;
+        }
+        catch
+        {
+            try
+            {
+                preview.Close();
+            }
+            catch
+            {
+                TaskbarWindowPreview_Closed(
+                    preview,
+                    EventArgs.Empty);
+            }
+            return false;
+        }
+    }
+
+    private void
+        TaskbarWindowPreview_ActivateRequested(
+            WindowReference window)
+    {
+        if (_viewModel.ActivateWindowCommand
+                .CanExecute(window))
+        {
+            _viewModel.ActivateWindowCommand
+                .Execute(window);
+        }
+    }
+
+    private void
+        TaskbarWindowPreview_CloseRequested(
+            WindowReference window)
+    {
+        if (_viewModel.CloseWindowCommand
+                .CanExecute(window))
+        {
+            _viewModel.CloseWindowCommand
+                .Execute(window);
+        }
+    }
+
+    private void
+        TaskbarWindowPreview_MouseEnter(
+            object sender,
+            MouseEventArgs e) =>
+        _taskbarHoverCloseTimer.Stop();
+
+    private void
+        TaskbarWindowPreview_MouseLeave(
+            object sender,
+            MouseEventArgs e) =>
+        ScheduleTaskbarHoverPreviewClose();
+
+    private void TaskbarWindowPreview_Closed(
+        object? sender,
+        EventArgs e)
+    {
+        if (sender
+            is not TaskbarWindowPreviewWindow
+                preview)
+        {
+            return;
+        }
+
+        preview.ActivateRequested -=
+            TaskbarWindowPreview_ActivateRequested;
+        preview.CloseRequested -=
+            TaskbarWindowPreview_CloseRequested;
+        preview.MouseEnter -=
+            TaskbarWindowPreview_MouseEnter;
+        preview.MouseLeave -=
+            TaskbarWindowPreview_MouseLeave;
+        preview.Closed -=
+            TaskbarWindowPreview_Closed;
+        if (ReferenceEquals(
+                _taskbarWindowPreview,
+                preview))
+        {
+            _taskbarWindowPreview = null;
+        }
+
+        if (_taskbarPreviewInteractionActive)
+        {
+            _taskbarPreviewInteractionActive =
+                false;
+            EndTransientInteraction();
+        }
     }
 
     private void TaskbarHoverMenu_MouseEnter(
@@ -1332,7 +1495,9 @@ public partial class MainWindow :
 
     private void ScheduleTaskbarHoverPreviewClose()
     {
-        if (_taskbarHoverMenu?.IsOpen != true)
+        if (_taskbarHoverMenu?.IsOpen != true
+            && _taskbarWindowPreview?.IsVisible
+                != true)
             return;
 
         _taskbarHoverCloseTimer.Stop();
@@ -1347,6 +1512,8 @@ public partial class MainWindow :
         if (_taskbarHoverButton?.IsMouseOver
                 == true
             || _taskbarHoverMenu?.IsMouseOver
+                == true
+            || _taskbarWindowPreview?.IsMouseOver
                 == true)
         {
             return;
@@ -1367,6 +1534,11 @@ public partial class MainWindow :
         {
             _taskbarHoverMenu.IsOpen =
                 false;
+        }
+        if (_taskbarWindowPreview?.IsVisible
+                == true)
+        {
+            _taskbarWindowPreview.Close();
         }
 
         _taskbarHoverButton = null;
@@ -1664,9 +1836,9 @@ public partial class MainWindow :
 
     private void BeginShutdownUiPhase()
     {
-        _autoHideTimer.Stop();
         CancelTaskbarHoverPreview(
             closeMenu: true);
+        _autoHideTimer.Stop();
         _transientInteractionDepth = 0;
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
         if (_summonHotkeyRegistered && hwnd != IntPtr.Zero)
@@ -1756,6 +1928,8 @@ public partial class MainWindow :
     {
         Dispatcher.BeginInvoke(() =>
         {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
             _viewModel
                 .RefreshDisplayTargetOptions();
             PositionAtTargetRightEdge();
@@ -1767,6 +1941,8 @@ public partial class MainWindow :
 
     private void ViewModel_DisplayTargetChanged()
     {
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
         EnsureEdgeIndicator();
         if (_edgeIndicator != null)
         {
@@ -1786,6 +1962,8 @@ public partial class MainWindow :
     {
         Dispatcher.BeginInvoke(() =>
         {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
             ThemeService.ApplyCurrentTheme();
             ApplyDwmBackdrop();
         });

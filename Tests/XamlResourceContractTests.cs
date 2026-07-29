@@ -1890,6 +1890,83 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TaskbarHover_UsesNoActivateDwmPreviewWithTextFallback()
+    {
+        string root =
+            FindRepositoryRoot();
+        string previewXaml =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "TaskbarWindowPreviewWindow.xaml"));
+        string previewCode =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "TaskbarWindowPreviewWindow.xaml.cs"));
+        string session =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Services",
+                    "DwmThumbnailSession.cs"));
+        string mainWindow =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "ShowActivated=\"False\"",
+            previewXaml);
+        Assert.Contains(
+            "AllowsTransparency=\"False\"",
+            previewXaml);
+        Assert.Contains(
+            "FocusShellTintBrush",
+            previewXaml);
+        Assert.Contains(
+            "ThumbnailSurface",
+            previewXaml);
+        Assert.Contains(
+            "CloseWindowButton_Click",
+            previewXaml);
+        Assert.Contains(
+            "MaximumPreviewCount = 4",
+            previewCode);
+        Assert.Contains(
+            "WsExNoActivate",
+            previewCode);
+        Assert.Contains(
+            "WindowBackdropService.Apply(this)",
+            previewCode);
+        Assert.Contains(
+            "DwmRegisterThumbnail",
+            session);
+        Assert.Contains(
+            "DwmUpdateThumbnailProperties",
+            session);
+        Assert.Contains(
+            "DwmUnregisterThumbnail",
+            session);
+        Assert.Contains(
+            "if (TryOpenTaskbarWindowPreview(",
+            mainWindow);
+        Assert.Contains(
+            "PopulateTaskbarWindowList(",
+            mainWindow);
+        Assert.Contains(
+            "_taskbarWindowPreview?.IsMouseOver",
+            mainWindow);
+        Assert.Contains(
+            "_taskbarWindowPreview.Close();",
+            mainWindow);
+    }
+
+    [Fact]
     public void SearchAndTaskbar_UseTheSameNonBlankIconPresenter()
     {
         string root = FindRepositoryRoot();
