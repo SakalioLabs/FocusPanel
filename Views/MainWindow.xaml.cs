@@ -609,13 +609,13 @@ public partial class MainWindow :
             SearchResultsList.Items.Count,
             SearchResultsList.SelectedIndex);
         if (launchIndex < 0
-            || SearchResultsList.Items[launchIndex] is not AppLaunchItem app
-            || !_viewModel.LaunchAppCommand.CanExecute(app))
+            || SearchResultsList.Items[launchIndex] is not ShellSearchResult result
+            || !_viewModel.ExecuteSearchResultCommand.CanExecute(result))
         {
             return;
         }
 
-        _viewModel.LaunchAppCommand.Execute(app);
+        _viewModel.ExecuteSearchResultCommand.Execute(result);
         e.Handled = true;
     }
 

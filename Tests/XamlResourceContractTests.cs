@@ -2234,6 +2234,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "AppSearchPolicy.cs"));
+        string shellSearchPolicy = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ShellSearchPolicy.cs"));
         Assert.Contains(
             "x:Name=\"SearchResultsList\"",
             mainWindow);
@@ -2247,7 +2252,7 @@ public sealed class XamlResourceContractTests
             "正在载入应用目录…",
             viewModel);
         Assert.Contains(
-            "没有找到匹配的应用",
+            "没有找到匹配的应用或窗口",
             viewModel);
         Assert.Contains(
             "Name = \"FocusPanel.AppCatalog\"",
@@ -2267,6 +2272,15 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "ThenByDescending(result =>",
             searchPolicy);
+        Assert.Contains(
+            "ShellSearchPolicy.Compose(",
+            viewModel);
+        Assert.Contains(
+            "window.Title",
+            shellSearchPolicy);
+        Assert.Contains(
+            "window.IsActive",
+            shellSearchPolicy);
     }
 
     [Fact]
@@ -2303,13 +2317,13 @@ public sealed class XamlResourceContractTests
             "SelectedItem=\"{Binding SelectedSearchResult, Mode=TwoWay}\"",
             mainWindow);
         Assert.Contains(
-            "使用上下方向键选择，按回车启动",
+            "使用上下方向键选择，按回车启动或切换",
             mainWindow);
         Assert.Contains(
             "AppSearchSelectionPolicy.Move(",
             codeBehind);
         Assert.Contains(
-            "_viewModel.LaunchAppCommand.Execute(app);",
+            "_viewModel.ExecuteSearchResultCommand.Execute(result);",
             codeBehind);
         Assert.Contains(
             "SearchBox.SelectAll();",
@@ -2321,8 +2335,14 @@ public sealed class XamlResourceContractTests
             "returnTarget.Focus();",
             codeBehind);
         Assert.Contains(
-            "SelectedSearchResult?.IdentityKey",
+            "SelectedSearchResult?.StableKey",
             viewModel);
+        Assert.Contains(
+            "AutomationProperties.Name=\"应用与窗口搜索结果\"",
+            mainWindow);
+        Assert.Contains(
+            "Command=\"{Binding DataContext.ExecuteSearchResultCommand",
+            mainWindow);
         Assert.Equal(
             "{DynamicResource FocusTextBrush}",
             (string?)resultsList.Attribute("Foreground"));

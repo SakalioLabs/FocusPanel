@@ -124,7 +124,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isSearchOpen;
 
     [ObservableProperty]
-    private AppLaunchItem? selectedSearchResult;
+    private ShellSearchResult? selectedSearchResult;
 
     [ObservableProperty]
     private string? activeTaskbarIdentity;
@@ -444,7 +444,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _updateCheckTimer.Start();
     }
 
-    public ObservableCollection<AppLaunchItem> SearchResults { get; } = new();
+    public ObservableCollection<ShellSearchResult> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
     public ObservableCollection<
         ShellDisplayTargetOption> DisplayTargetOptions
@@ -454,7 +454,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string AppSearchStatusText =>
         IsAppCatalogLoading
             ? "正在载入应用目录…"
-            : "没有找到匹配的应用";
+            : "没有找到匹配的应用或窗口";
     public bool IsAppSearchStatusVisible =>
         SearchResults.Count == 0;
     public string AudioGlyph =>
@@ -931,20 +931,35 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand(AllowConcurrentExecutions = true)]
-    private async Task LaunchApp(
-        AppLaunchItem? app)
+    private async Task ExecuteSearchResult(
+        ShellSearchResult? result)
     {
-        if (app == null)
+        if (result?.Window is WindowReference window)
+        {
+            bool succeeded =
+                SystemActionExecution.Try(
+                    () => _windowTracker.Activate(
+                        window.Handle));
+            CompleteTaskbarWindowAction(
+                succeeded,
+                $"无法切换到“{window.Title}”。窗口可能已经关闭，"
+                + "或 Windows 暂时阻止了前台切换。");
+            if (succeeded)
+                IsSearchOpen = false;
+            return;
+        }
+
+        if (result?.Application is not AppLaunchItem app)
             return;
         if (await TryLaunchAppAsync(app))
             IsSearchOpen = false;
     }
 
     [RelayCommand]
-    private async Task TogglePin(
-        AppLaunchItem? app)
+    private async Task ToggleSearchPin(
+        ShellSearchResult? result)
     {
-        if (app == null)
+        if (result?.Application is not AppLaunchItem app)
             return;
 
         if (!await TrySetPinnedAsync(
@@ -1797,13 +1812,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void RefreshSearchResults()
     {
-        string? selectedIdentity = SelectedSearchResult?.IdentityKey;
-        ReplaceCollection(SearchResults, _appCatalog.Search(SearchQuery));
+        string? selectedKey =
+            SelectedSearchResult?.StableKey;
+        IReadOnlyList<AppLaunchItem> applications =
+            _appCatalog.Search(
+                SearchQuery,
+                ShellSearchPolicy.DefaultLimit);
+        IReadOnlyList<ShellSearchResult> results =
+            ShellSearchPolicy.Compose(
+                applications,
+                _windowTracker.GetSnapshot(),
+                SearchQuery);
+        ReplaceCollection(
+            SearchResults,
+            results);
         SelectedSearchResult = SearchResults.FirstOrDefault(
-            item => !string.IsNullOrWhiteSpace(selectedIdentity)
+            item => !string.IsNullOrWhiteSpace(selectedKey)
                 && string.Equals(
-                    item.IdentityKey,
-                    selectedIdentity,
+                    item.StableKey,
+                    selectedKey,
                     StringComparison.OrdinalIgnoreCase))
             ?? SearchResults.FirstOrDefault();
         OnPropertyChanged(
@@ -1812,7 +1839,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             nameof(AppSearchStatusText));
     }
 
-    private void OnWindowSnapshotChanged(object? sender, EventArgs e) => RefreshTaskbarApps();
+    private void OnWindowSnapshotChanged(
+        object? sender,
+        EventArgs e)
+    {
+        RefreshTaskbarApps();
+        RefreshSearchResults();
+    }
     private void Dashboard_NavigationRequested(
         string destination) =>
         Navigate(destination);

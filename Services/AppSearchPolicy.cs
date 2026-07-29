@@ -56,16 +56,47 @@ internal static class AppSearchPolicy
         AppLaunchItem app,
         SearchText query)
     {
+        return GetTextRank(
+            app.DisplayName,
+            GetExecutableName(
+                app.LaunchTarget),
+            query);
+    }
+
+    internal static int? GetRank(
+        AppLaunchItem app,
+        string? query)
+    {
+        ArgumentNullException.ThrowIfNull(
+            app);
+        return GetRank(
+            app,
+            SearchText.Create(query));
+    }
+
+    internal static int? GetTextRank(
+        string? primary,
+        string? secondary,
+        string? query) =>
+        GetTextRank(
+            primary,
+            secondary,
+            SearchText.Create(query));
+
+    private static int? GetTextRank(
+        string? primary,
+        string? secondary,
+        SearchText query)
+    {
         if (query.IsEmpty)
             return 0;
 
         SearchText display =
             SearchText.Create(
-                app.DisplayName);
+                primary);
         SearchText executable =
             SearchText.Create(
-                GetExecutableName(
-                    app.LaunchTarget));
+                secondary);
 
         if (display.Normalized
             == query.Normalized)
