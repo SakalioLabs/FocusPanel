@@ -39,13 +39,14 @@ public partial class MainWindow :
     private readonly MainViewModel _viewModel;
     private readonly DispatcherTimer _autoHideTimer;
     private readonly FocusToastManager _toastManager;
+    private readonly DesktopDragSession _desktopDragSession =
+        new();
     private EdgeHotZoneMonitor? _hotZoneMonitor;
     private EdgeIndicatorWindow? _edgeIndicator;
     private HwndSource? _windowSource;
     private bool _summonHotkeyRegistered;
     private bool _isExit;
     private bool _hiddenToTray;
-    private bool _isDesktopFileDragging;
     private bool _isHotZoneAvailable;
     private bool _autoHideIgnoresInputFocus;
     private int _transientInteractionDepth;
@@ -85,7 +86,7 @@ public partial class MainWindow :
                     Mouse.Captured != null,
                     HasOpenComboBoxDropDown(this));
             bool shouldHide = ShellAutoHidePolicy.ShouldHide(
-                _isDesktopFileDragging,
+                _desktopDragSession.IsActive,
                 transientSurfaceActive,
                 IsCursorInsideShell(),
                 IsInputFocusActive(),
@@ -258,7 +259,7 @@ public partial class MainWindow :
 
     public void CollapseSidebar()
     {
-        if (_isDesktopFileDragging)
+        if (_desktopDragSession.IsActive)
             return;
 
         CloseOverlayPanels();
@@ -349,7 +350,7 @@ public partial class MainWindow :
         int delayMilliseconds = 350,
         bool ignoreInputFocus = false)
     {
-        if (_isDesktopFileDragging)
+        if (_desktopDragSession.IsActive)
             return;
 
         _autoHideTimer.Stop();
@@ -1064,27 +1065,40 @@ public partial class MainWindow :
         if (e.Data.GetDataPresent(typeof(DesktopFile))
             || e.Data.GetDataPresent(DataFormats.FileDrop))
         {
-            BeginDesktopFileDrag();
+            BeginDesktopFileDrag(
+                e.Data.GetDataPresent(
+                    typeof(DesktopFile)));
         }
     }
 
     private void Sidebar_DragLeave(object sender, DragEventArgs e)
     {
-        if (!_isDesktopFileDragging)
+        if (!IsCursorInsideShell()
+            && _desktopDragSession.EndExternal())
+        {
             ScheduleAutoHide();
+        }
     }
 
-    public void BeginDesktopFileDrag()
+    public void BeginDesktopFileDrag(
+        bool ownedByPanel = true)
     {
-        _isDesktopFileDragging = true;
+        _desktopDragSession.Begin(
+            ownedByPanel);
         _viewModel.NavigateCommand.Execute("Files");
         ExpandSidebar();
     }
 
     public void EndDesktopFileDrag()
     {
-        _isDesktopFileDragging = false;
+        _desktopDragSession.End();
         ScheduleAutoHide();
+    }
+
+    public void EndExternalDesktopFileDrag()
+    {
+        if (_desktopDragSession.EndExternal())
+            ScheduleAutoHide();
     }
 
     private void TaskbarApp_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

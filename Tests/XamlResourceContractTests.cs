@@ -2801,7 +2801,28 @@ public sealed class XamlResourceContractTests
             codeBehind);
         Assert.DoesNotContain("FindVisualChild<ScrollViewer>", codeBehind);
         Assert.Contains("private void StopAutoScroll()", codeBehind);
-        Assert.Contains("private async void Partition_Drop", codeBehind);
+        Assert.Contains("private void Partition_Drop", codeBehind);
+        Assert.Contains(
+            "AsyncInteractionRunner.Start(",
+            codeBehind);
+        Assert.Contains(
+            "BeginTransientSurface();",
+            codeBehind);
+        Assert.Contains(
+            "EndTransientSurface();",
+            codeBehind);
+        Assert.Contains(
+            "shell?.EndDesktopFileDrag();",
+            codeBehind);
+        Assert.Contains(
+            "EndExternalDesktopFileDrag();",
+            codeBehind);
+        Assert.DoesNotContain(
+            "private async void Partition_Drop",
+            codeBehind);
+        Assert.DoesNotContain(
+            "private async void FileCard_MouseMove",
+            codeBehind);
         Assert.Contains("private void Column_Drop", codeBehind);
         Assert.True(
             codeBehind.Split("StopAutoScroll();", StringSplitOptions.None).Length >= 7);

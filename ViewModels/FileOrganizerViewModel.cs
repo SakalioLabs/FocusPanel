@@ -890,7 +890,19 @@ public partial class FileOrganizerViewModel :
     {
         if (SelectedFile == null) return;
 
-        string fileName = SelectedFile.Name;
+        await HideDraggedFileToPanel(
+            SelectedFile,
+            partitionName);
+    }
+
+    public async Task HideDraggedFileToPanel(
+        DesktopFile file,
+        string partitionName)
+    {
+        if (file == null)
+            return;
+
+        string fileName = file.Name;
         string targetPartition = partitionName ?? "Unsorted";
 
         try

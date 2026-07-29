@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -76,7 +77,7 @@ public partial class FileOrganizerView : UserControl
         }
     }
 
-    private async void FileCard_MouseMove(object sender, MouseEventArgs e)
+    private void FileCard_MouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed
             || _fileDragStartPoint is not Point dragStart
@@ -107,20 +108,27 @@ public partial class FileOrganizerView : UserControl
             data.SetData(typeof(DesktopFile), file);
             var shell = Window.GetWindow(this) as MainWindow;
             shell?.BeginDesktopFileDrag();
-            try
-            {
-                DragDrop.DoDragDrop(card, data, DragDropEffects.Move);
-
-                if (file.IsHidden && DesktopHelper.IsCursorOverDesktop())
+            AsyncInteractionRunner.Start(
+                async () =>
                 {
-                    await vm.RestoreDraggedFileToDesktop(file);
-                }
-            }
-            finally
-            {
-                StopAutoScroll();
-                shell?.EndDesktopFileDrag();
-            }
+                    DragDrop.DoDragDrop(
+                        card,
+                        data,
+                        DragDropEffects.Move);
+
+                    if (file.IsHidden
+                        && DesktopHelper.IsCursorOverDesktop())
+                    {
+                        await vm.RestoreDraggedFileToDesktop(
+                            file);
+                    }
+                },
+                ReportDragFailure,
+                () =>
+                {
+                    StopAutoScroll();
+                    shell?.EndDesktopFileDrag();
+                });
         }
     }
 
@@ -181,8 +189,14 @@ public partial class FileOrganizerView : UserControl
         }
     }
 
-    private void Organizer_PreviewDrop(object sender, DragEventArgs e)
-        => StopAutoScroll();
+    private void Organizer_PreviewDrop(
+        object sender,
+        DragEventArgs e)
+    {
+        StopAutoScroll();
+        (Window.GetWindow(this) as MainWindow)
+            ?.EndExternalDesktopFileDrag();
+    }
 
     private void FileDrag_PreviewMouseLeftButtonUp(
         object sender,
@@ -370,7 +384,7 @@ public partial class FileOrganizerView : UserControl
         _transientInteractionOwner = null;
     }
 
-    private async void Partition_Drop(object sender, DragEventArgs e)
+    private void Partition_Drop(object sender, DragEventArgs e)
     {
         StopAutoScroll();
         if (sender is Border border)
@@ -391,32 +405,29 @@ public partial class FileOrganizerView : UserControl
                 if (e.Data.GetData(typeof(DesktopFile)) is DesktopFile file)
                 {
                     vm.SelectedFile = file;
-                    if (vm.HideFileToPanelCommand.CanExecute(partition.Name))
-                    {
-                        vm.HideFileToPanelCommand.Execute(partition.Name);
-                    }
+                    StartPartitionDrop(
+                        () => vm.HideDraggedFileToPanel(
+                            file,
+                            partition.Name));
                 }
                 // Case 2: External File Drop (from Explorer)
                 else if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
                     if (e.Data.GetData(DataFormats.FileDrop) is string[] files)
                     {
-                        var result = await vm.ImportFiles(files, partition.Name);
-                        if (result.HasIssues)
-                        {
-                            var details = new List<string>();
-                            if (result.OutsideDesktop > 0)
-                                details.Add($"{result.OutsideDesktop} 个项目不在桌面根目录");
-                            if (result.AuthorizationCanceled > 0)
-                                details.Add($"{result.AuthorizationCanceled} 个公共桌面项目未获得管理员授权");
-                            if (result.Failed > 0)
-                                details.Add($"{result.Failed} 个项目写入属性失败");
-                            FocusDialogService.Show(
-                                $"已收纳 {result.Collected} 个桌面项目。\n{string.Join("；", details)}。\nFocusPanel 没有移动任何文件。",
-                                "FocusPanel",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Information);
-                        }
+                        string[] capturedFiles =
+                            files.ToArray();
+                        string capturedPartition =
+                            partition.Name;
+                        StartPartitionDrop(
+                            async () =>
+                            {
+                                DesktopImportResult result =
+                                    await vm.ImportFiles(
+                                        capturedFiles,
+                                        capturedPartition);
+                                ReportImportResult(result);
+                            });
                     }
                 }
                 // Case 3: Partition Reordering (Dropped ONTO another partition)
@@ -499,6 +510,69 @@ public partial class FileOrganizerView : UserControl
             // Move to end of target column
             vm.MovePartitionToColumn(sourcePartition, targetColumn);
         }
+    }
+
+    private void StartPartitionDrop(
+        Func<System.Threading.Tasks.Task> operation)
+    {
+        MainWindow? shell =
+            Window.GetWindow(this) as MainWindow;
+        BeginTransientSurface();
+        AsyncInteractionRunner.Start(
+            operation,
+            ReportDragFailure,
+            () =>
+            {
+                try
+                {
+                    EndTransientSurface();
+                }
+                finally
+                {
+                    shell?.EndDesktopFileDrag();
+                }
+            });
+    }
+
+    private static void ReportImportResult(
+        DesktopImportResult result)
+    {
+        if (!result.HasIssues)
+            return;
+
+        var details = new List<string>();
+        if (result.OutsideDesktop > 0)
+        {
+            details.Add(
+                $"{result.OutsideDesktop} 个项目不在桌面根目录");
+        }
+        if (result.AuthorizationCanceled > 0)
+        {
+            details.Add(
+                $"{result.AuthorizationCanceled} 个公共桌面项目未获得管理员授权");
+        }
+        if (result.Failed > 0)
+        {
+            details.Add(
+                $"{result.Failed} 个项目写入属性失败");
+        }
+        FocusDialogService.Show(
+            $"已收纳 {result.Collected} 个桌面项目。\n"
+            + $"{string.Join("；", details)}。\n"
+            + "FocusPanel 没有移动任何文件。",
+            "FocusPanel",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    private static void ReportDragFailure(Exception error)
+    {
+        FocusDialogService.Show(
+            "拖拽操作未完成，FocusPanel 已保留文件和恢复记录。"
+            + $"\n\n{error.Message}",
+            "FocusPanel",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
     }
 
     private void StopAutoScroll()

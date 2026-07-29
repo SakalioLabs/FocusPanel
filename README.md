@@ -13,6 +13,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 离开约 `300ms` 自动收起；只有搜索框、密码框和下拉选择等输入控件持有焦点时保持展开，普通按钮或应用图标焦点不会锁住 Panel，`Esc` 可关闭。
 - 应用右键菜单、多窗口列表、下拉选择和桌面收纳的视图/新建/修复弹层打开时会锁住 Panel；即使 ComboBox Popup 使用独立窗口，展开期间也不会被误判为离开，弹层关闭且鼠标离开后才恢复自动收起。
 - 桌面文件卡片只有移动距离超过 Windows 系统拖拽阈值后才开始拖动；靠近主内容区上下边缘时平滑滚动，移回中部、离开、取消、释放或完成放置后立即停止。
+- 桌面拖入、分区收纳和拖出恢复统一经过受观察的异步交互边界：文件属性操作完成前持续持有 Panel，异常会转为可恢复提示，任何成功、失败或提示异常路径都会释放拖拽与自动收起锁。
+- 从 Explorer 发起的外部拖拽与 Panel 自己发起的拖出使用独立会话语义；外部拖拽取消、离开或落下后立即复位，内部拖拽经过子控件时不会被重复 `DragEnter` 误判为外部操作。
 - 独占或无边框全屏应用前台时默认停用鼠标热区。
 - 全局主动唤出：`Ctrl+Alt+Space`。
 - 主动唤出后焦点落到搜索入口，可使用 Tab、Shift+Tab 或方向键循环浏览紧凑栏，Enter/Space 执行；应用按钮向读屏提供应用名称和窗口摘要，Shift+F10 或菜单键打开右键菜单。
@@ -221,6 +223,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 
 ![桌面收纳异步生命周期](docs/images/organizer-async-lifecycle.svg)
 
+![桌面拖拽交互锁与异常边界](docs/images/organizer-drag-lifecycle.svg)
+
 ![桌面收纳弹层互斥与键盘路径](docs/images/organizer-popup-keyboard.svg)
 
 ![任务列表、真实看板与毛玻璃详情](docs/images/task-workspace.svg)
@@ -299,7 +303,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.93 `
+  -Version 0.9.94 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
