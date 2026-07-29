@@ -1427,12 +1427,6 @@ public class FileOrganizerService : IDisposable
             || attributes.HasFlag(FileAttributes.Hidden);
     }
 
-    public void ToggleDesktopIcons(bool show)
-    {
-        try { DesktopHelper.ToggleDesktopIcons(show); }
-        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"ToggleDesktopIcons error: {ex.Message}"); }
-    }
-
     // ============================================================
     // Rescue (puts loose desktop files into FocusPanel_Recovered)
     // ============================================================

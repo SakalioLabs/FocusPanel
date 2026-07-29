@@ -8,10 +8,8 @@ using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FocusPanel.Data;
 using FocusPanel.Models;
 using FocusPanel.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace FocusPanel.ViewModels;
 
@@ -373,10 +371,11 @@ public partial class OkrViewModel
 
         try
         {
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            context.OkrObjectives.Add(obj);
-            await context.SaveChangesAsync();
+            obj.Id =
+                await _workspaceRepository
+                    .AddObjectiveAsync(
+                        OkrObjectiveWrite
+                            .Capture(obj));
             Interlocked.Increment(
                 ref _dataRevision);
 
@@ -410,24 +409,8 @@ public partial class OkrViewModel
 
         try
         {
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            var dbObj = await context.OkrObjectives.FindAsync(obj.Id);
-            if (dbObj == null)
-                throw new InvalidOperationException(
-                    "数据库中找不到该目标。");
-
-            if (dbObj.SyncStatus == OkrSyncStatus.LocalCreated
-                || dbObj.FeishuObjectiveId == null)
-            {
-                context.OkrObjectives.Remove(dbObj);
-            }
-            else
-            {
-                dbObj.SyncStatus =
-                    OkrSyncStatus.LocalDeleted;
-            }
-            await context.SaveChangesAsync();
+            await _workspaceRepository
+                .DeleteObjectiveAsync(obj.Id);
             Interlocked.Increment(
                 ref _dataRevision);
 
@@ -454,20 +437,10 @@ public partial class OkrViewModel
 
         try
         {
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            var dbObj = await context.OkrObjectives.FindAsync(obj.Id);
-            if (dbObj == null)
-                throw new InvalidOperationException(
-                    "数据库中找不到该目标。");
-
-            dbObj.Name = obj.Name;
-            dbObj.Note = obj.Note;
-            dbObj.Period = obj.Period;
-            dbObj.Weight = obj.Weight;
-            dbObj.UpdatedAt = obj.UpdatedAt;
-            dbObj.SyncStatus = obj.SyncStatus;
-            await context.SaveChangesAsync();
+            await _workspaceRepository
+                .UpdateObjectiveAsync(
+                    OkrObjectiveWrite
+                        .Capture(obj));
             Interlocked.Increment(
                 ref _dataRevision);
             SyncStatusText = "目标信息已保存。";
@@ -527,29 +500,24 @@ public partial class OkrViewModel
                 obj.SyncStatus == OkrSyncStatus.Synced
                     ? OkrSyncStatus.LocalModified
                     : obj.SyncStatus;
-
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            context.Set<OkrKeyResult>().Add(kr);
-            OkrObjective? storedObjective =
-                await context.OkrObjectives
-                    .FindAsync(obj.Id);
-            if (storedObjective == null)
-                throw new InvalidOperationException(
-                    "数据库中找不到所属目标。");
-
-            storedObjective.Progress =
-                objectiveProgress;
-            storedObjective.SyncStatus =
-                objectiveSyncStatus;
-            storedObjective.UpdatedAt = DateTime.Now;
-            await context.SaveChangesAsync();
+            DateTime updatedAt = DateTime.Now;
+            kr.Id =
+                await _workspaceRepository
+                    .AddKeyResultAsync(
+                        OkrKeyResultWrite
+                            .Capture(kr),
+                        new OkrObjectiveAggregateWrite(
+                            obj.Id,
+                            objectiveProgress,
+                            objectiveSyncStatus,
+                            updatedAt));
             Interlocked.Increment(
                 ref _dataRevision);
 
             obj.KeyResults.Add(kr);
             obj.Progress = objectiveProgress;
             obj.SyncStatus = objectiveSyncStatus;
+            obj.UpdatedAt = updatedAt;
             NewKrName = string.Empty;
             NewKrStartValue = 0;
             NewKrTargetValue = 100;
@@ -600,45 +568,22 @@ public partial class OkrViewModel
                     == OkrSyncStatus.Synced
                     ? OkrSyncStatus.LocalModified
                     : parent.SyncStatus;
-
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            var dbKr = await context.Set<OkrKeyResult>().FindAsync(kr.Id);
-            if (dbKr == null)
-                throw new InvalidOperationException(
-                    "数据库中找不到该关键结果。");
-
-            if (dbKr.SyncStatus == OkrSyncStatus.LocalCreated
-                || dbKr.FeishuKrId == null)
-            {
-                context.Set<OkrKeyResult>().Remove(dbKr);
-            }
-            else
-            {
-                dbKr.SyncStatus =
-                    OkrSyncStatus.LocalDeleted;
-                dbKr.IsDeleted = true;
-                dbKr.UpdatedAt = DateTime.Now;
-            }
-
-            OkrObjective? storedObjective =
-                await context.OkrObjectives
-                    .FindAsync(parent.Id);
-            if (storedObjective == null)
-                throw new InvalidOperationException(
-                    "数据库中找不到所属目标。");
-            storedObjective.Progress =
-                objectiveProgress;
-            storedObjective.SyncStatus =
-                objectiveSyncStatus;
-            storedObjective.UpdatedAt = DateTime.Now;
-            await context.SaveChangesAsync();
+            DateTime updatedAt = DateTime.Now;
+            await _workspaceRepository
+                .DeleteKeyResultAsync(
+                    kr.Id,
+                    new OkrObjectiveAggregateWrite(
+                        parent.Id,
+                        objectiveProgress,
+                        objectiveSyncStatus,
+                        updatedAt));
             Interlocked.Increment(
                 ref _dataRevision);
 
             parent.KeyResults.Remove(kr);
             parent.Progress = objectiveProgress;
             parent.SyncStatus = objectiveSyncStatus;
+            parent.UpdatedAt = updatedAt;
             SyncStatusText = "关键结果已删除。";
         }
         catch (Exception ex)
@@ -688,40 +633,22 @@ public partial class OkrViewModel
 
         try
         {
-            using var context = new AppDbContext();
-            context.EnsureSchema();
-            var dbKr = await context.Set<OkrKeyResult>().FindAsync(kr.Id);
-            if (dbKr == null)
-                throw new InvalidOperationException(
-                    "数据库中找不到该关键结果。");
-
-            dbKr.Name = kr.Name;
-            dbKr.CurrentValue = kr.CurrentValue;
-            dbKr.StartValue = kr.StartValue;
-            dbKr.TargetValue = kr.TargetValue;
-            dbKr.Unit = kr.Unit;
-            dbKr.Weight = kr.Weight;
-            dbKr.Progress = kr.Progress;
-            dbKr.UpdatedAt = kr.UpdatedAt;
-            dbKr.SyncStatus = kr.SyncStatus;
-
-            OkrObjective? storedObjective =
-                await context.OkrObjectives
-                    .FindAsync(parent.Id);
-            if (storedObjective == null)
-                throw new InvalidOperationException(
-                    "数据库中找不到所属目标。");
-            storedObjective.Progress =
-                objectiveProgress;
-            storedObjective.SyncStatus =
-                objectiveSyncStatus;
-            storedObjective.UpdatedAt = DateTime.Now;
-            await context.SaveChangesAsync();
+            DateTime updatedAt = DateTime.Now;
+            await _workspaceRepository
+                .UpdateKeyResultAsync(
+                    OkrKeyResultWrite
+                        .Capture(kr),
+                    new OkrObjectiveAggregateWrite(
+                        parent.Id,
+                        objectiveProgress,
+                        objectiveSyncStatus,
+                        updatedAt));
             Interlocked.Increment(
                 ref _dataRevision);
 
             parent.Progress = objectiveProgress;
             parent.SyncStatus = objectiveSyncStatus;
+            parent.UpdatedAt = updatedAt;
             SyncStatusText =
                 "关键结果进度已保存。";
         }
@@ -950,10 +877,9 @@ public partial class OkrViewModel
             });
         }
 
-        await Task.Run(
-            () =>
-                _workspaceRepository.SaveDraft(obj),
-            cancellationToken);
+        OkrObjective persisted =
+            await _workspaceRepository
+                .SaveDraftAsync(obj);
         Interlocked.Increment(
             ref _dataRevision);
         await _uiDispatcher.InvokeAsync(
@@ -962,13 +888,13 @@ public partial class OkrViewModel
                 if (_disposed)
                     return;
 
-                Objectives.Insert(0, obj);
+                Objectives.Insert(0, persisted);
                 OnPropertyChanged(
                     nameof(HasObjectives));
             },
             DispatcherPriority.Background,
             cancellationToken);
-        return obj;
+        return persisted;
     }
 
     public async Task<IReadOnlyList<OkrObjective>>

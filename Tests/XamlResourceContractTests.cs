@@ -2827,8 +2827,8 @@ public sealed class XamlResourceContractTests
             "OnSyncIntervalMinutesChanged",
             viewModel);
         Assert.Contains(
-            "storedObjective.Progress",
-            viewModel);
+            "stored.Progress = source.Progress",
+            workspaceRepository);
         Assert.Contains(
             "CalculateObjectiveProgress",
             viewModel);
@@ -2871,6 +2871,21 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "_syncService.ProgressChanged -= OnSyncProgress",
             viewModel);
+        Assert.DoesNotContain(
+            "new AppDbContext",
+            viewModel);
+        Assert.DoesNotContain(
+            "EnsureSchema",
+            viewModel);
+        Assert.Contains(
+            "AddObjectiveAsync",
+            workspaceRepository);
+        Assert.Contains(
+            "AddKeyResultAsync",
+            workspaceRepository);
+        Assert.Contains(
+            "SemaphoreSlim",
+            workspaceRepository);
         Assert.Contains(
             "_okrViewModel?.Dispose()",
             mainViewModel);
@@ -2885,6 +2900,16 @@ public sealed class XamlResourceContractTests
         string root = FindRepositoryRoot();
         string organizer = File.ReadAllText(
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
+        string organizerViewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+        string organizerService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FileOrganizerService.cs"));
 
         Assert.Contains("<Grid Background=\"Transparent\">", organizer);
         Assert.Contains("IsAutoOrganizeEnabled", organizer);
@@ -2895,6 +2920,12 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("DropShadowEffect", organizer);
         Assert.DoesNotContain("OrganizerCardShadow", organizer);
         Assert.DoesNotContain("ToggleDesktopCommand", organizer);
+        Assert.DoesNotContain(
+            "ToggleDesktop",
+            organizerViewModel);
+        Assert.DoesNotContain(
+            "ToggleDesktopIcons",
+            organizerService);
     }
 
     [Fact]

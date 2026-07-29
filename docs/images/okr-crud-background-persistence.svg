@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bgokr" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="1" stop-color="#24304a"/>
+    </linearGradient>
+    <linearGradient id="flowokr" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#61c6ff"/>
+      <stop offset="1" stop-color="#9a88ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bgokr)"/>
+  <text x="54" y="62" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">OKR CRUD · 后台串行持久化</text>
+  <text x="54" y="97" fill="#b9cce8" font-family="Segoe UI, Microsoft YaHei" font-size="16">目标、关键结果、后台刷新与 AI 草稿共享一个数据库闸门，WPF 只处理已提交结果</text>
+
+  <rect x="54" y="137" width="250" height="250" rx="24" fill="#22354f" stroke="#466487"/>
+  <text x="179" y="178" text-anchor="middle" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">OKR 工作区</text>
+  <rect x="80" y="207" width="198" height="42" rx="15" fill="#2b4a6b"/>
+  <text x="179" y="234" text-anchor="middle" fill="#9edbff" font-family="Segoe UI, Microsoft YaHei" font-size="14">新增 / 编辑 / 删除目标</text>
+  <rect x="80" y="261" width="198" height="42" rx="15" fill="#2b4a6b"/>
+  <text x="179" y="288" text-anchor="middle" fill="#9edbff" font-family="Segoe UI, Microsoft YaHei" font-size="14">新增 / 编辑 / 删除 KR</text>
+  <rect x="80" y="315" width="198" height="42" rx="15" fill="#2b4a6b"/>
+  <text x="179" y="342" text-anchor="middle" fill="#9edbff" font-family="Segoe UI, Microsoft YaHei" font-size="14">AI 草稿 / 后台刷新</text>
+
+  <path d="M324 262 H364" stroke="url(#flowokr)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M353 251 L367 262 L353 273" fill="none" stroke="#67c5ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="390" y="119" width="340" height="286" rx="26" fill="#2c405f" stroke="#617fa8"/>
+  <text x="560" y="161" text-anchor="middle" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">OkrWorkspaceRepository</text>
+  <circle cx="430" cy="209" r="9" fill="#67c7ff"/>
+  <text x="454" y="215" fill="#e1ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">界面先捕获不可变写入快照</text>
+  <circle cx="430" cy="251" r="9" fill="#8ce3b9"/>
+  <text x="454" y="257" fill="#e1ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">读取与写入严格互斥、异常释放</text>
+  <circle cx="430" cy="293" r="9" fill="#ac96ff"/>
+  <text x="454" y="299" fill="#e1ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">短生命周期上下文留在工作线程</text>
+  <rect x="422" y="337" width="276" height="42" rx="16" fill="#20314a"/>
+  <text x="560" y="364" text-anchor="middle" fill="#c8d9f0" font-family="Segoe UI, Microsoft YaHei" font-size="14">提交成功后返回 ID 与稳定结果</text>
+
+  <path d="M750 262 H790" stroke="url(#flowokr)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M779 251 L793 262 L779 273" fill="none" stroke="#9b8eff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="816" y="137" width="250" height="250" rx="24" fill="#273650" stroke="#4c6386"/>
+  <text x="941" y="178" text-anchor="middle" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">稳定提交</text>
+  <rect x="842" y="210" width="198" height="48" rx="16" fill="#294c43"/>
+  <text x="941" y="240" text-anchor="middle" fill="#a0ecc4" font-family="Segoe UI, Microsoft YaHei" font-size="14">SQLite · 真实主键</text>
+  <rect x="842" y="273" width="198" height="48" rx="16" fill="#463f63"/>
+  <text x="941" y="303" text-anchor="middle" fill="#d1c7ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">进度 · 同步状态</text>
+  <text x="941" y="351" text-anchor="middle" fill="#b9cbe4" font-family="Segoe UI, Microsoft YaHei" font-size="13">待删除项刷新不复活</text>
+
+  <rect x="54" y="440" width="1012" height="46" rx="17" fill="#20324b" stroke="#405d7d"/>
+  <text x="560" y="469" text-anchor="middle" fill="#dce8f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">无跨线程 EF 跟踪实体 · 无 UI 线程 schema 检查 · 无读取与保存竞态</text>
+</svg>

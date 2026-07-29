@@ -40,6 +40,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 主壳启动时用一个无跟踪快照读取首次引导、任务栏替代、主题和全屏热区设置，不再为四个键重复打开 SQLite；运行中切换主题、热区或替代状态会按设置键合并后由单消费者后台队列串行落盘。界面即时生效，保存失败会保留当前会话并给出提示，后续操作仍可恢复，退出前排空已经接收的设置。
 - 番茄钟历史统计在工作线程加载；倒计时归零时立即更新界面、播放提醒并把完整会话交给后台单消费者串行保存。开始新一轮、暂停或重置后，上一轮迟到的保存结果不会覆盖当前提示，退出前会排空已经进入队列的会话。
 - OKR 首次打开时由工作线程一次读取本地目标、飞书配置、同步间隔和最后同步时间；SQLite 较大或暂时繁忙不会阻塞工作区展开。手动飞书同步、配置读写和 AI 预留接口也不再同步等待 WPF Dispatcher，旧加载快照不会覆盖刚完成的本地编辑。
+- OKR 的新增、编辑、删除目标与关键结果，以及 AI 创建草稿，统一进入同一个后台持久化闸门；界面不再直接创建数据库上下文或执行 schema 检查。读取快照与写入严格互斥，保存成功后才提交生成 ID 和界面集合变化；等待飞书删除同步的目标不会在后台刷新时重新出现。
 - AI 页面打开时异步读取加密凭据状态与模型配置，不再在构造 WPF 工作区时同步打开 SQLite；发送前解密、保存模型和清除凭据也通过同一个后台闸门严格串行。配置仍使用当前 Windows 用户的 DPAPI 加密，数据库键名与既有数据完全兼容。
 - 未运行的固定项点击启动；单窗口应用点击激活/最小化；多窗口应用左键展开一层文字窗口列表，点击标题即可直接切换，不再进入二级子菜单。右键菜单继续提供启动新实例、固定、逐窗口关闭和关闭全部窗口。
 - 应用图标支持 Windows 任务栏常用的新实例手势：`Shift+左键` 或鼠标中键直接启动新实例；没有可靠启动目标的受保护窗口不会显示或执行该动作。工具提示和读屏帮助会同步说明当前可用操作。
@@ -115,6 +116,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![番茄钟非阻塞统计与安全落盘](docs/images/pomodoro-persistence-lifecycle.svg)
 
 ![OKR 后台快照与异步同步边界](docs/images/okr-background-workspace.svg)
+
+![OKR CRUD 后台串行持久化](docs/images/okr-crud-background-persistence.svg)
 
 ![AI 配置后台读取与串行保存](docs/images/ai-settings-background-persistence.svg)
 
@@ -359,7 +362,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.13 `
+  -Version 0.10.14 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -370,7 +373,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：默认目录的一键首次安装入口；也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win.msi`：带 Windows 安装向导的自定义目录安装入口，可选择当前用户或整机范围。
-- `FocusPanel-0.10.13-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.14-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

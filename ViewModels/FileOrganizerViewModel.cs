@@ -74,11 +74,6 @@ public partial class FileOrganizerViewModel :
     private DesktopFile? selectedFile;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(OrganizeButtonText))]
-    [NotifyPropertyChangedFor(nameof(OrganizeButtonIcon))]
-    private bool isDesktopHidden;
-    
-    [ObservableProperty]
     private bool isListView = false;
 
     [ObservableProperty]
@@ -183,10 +178,6 @@ public partial class FileOrganizerViewModel :
     public double CardHeight => 120 * IconScale;
     public double IconImageSize => 48 * IconScale;
 
-    public string OrganizeButtonText =>
-        IsDesktopHidden ? "显示桌面图标" : "隐藏桌面图标";
-    public string OrganizeButtonIcon => IsDesktopHidden ? "Eye" : "EyeOff";
-
     public FileOrganizerViewModel()
         : this(
             new SettingsService(),
@@ -274,16 +265,6 @@ public partial class FileOrganizerViewModel :
             FileService_FilesChanged;
         _fileService.DesktopItemsCreated +=
             FileService_DesktopItemsCreated;
-
-        // Check initial desktop state
-        try
-        {
-            IsDesktopHidden = !FocusPanel.Helpers.DesktopHelper.IsDesktopIconsVisible();
-        }
-        catch
-        {
-            IsDesktopHidden = false; // Default safe value
-        }
 
         RequestLayoutRefresh();
     }
@@ -519,14 +500,6 @@ public partial class FileOrganizerViewModel :
         RequestLayoutRefresh();
     }
 
-    [RelayCommand]
-    private void ToggleDesktop()
-    {
-        // Toggle Desktop Icons visibility
-        IsDesktopHidden = !IsDesktopHidden;
-        _fileService.ToggleDesktopIcons(!IsDesktopHidden);
-    }
-    
     [RelayCommand]
     private async Task Rescue()
     {
