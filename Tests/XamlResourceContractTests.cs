@@ -1190,6 +1190,7 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
 
         Assert.Contains("x:Name=\"TaskbarAppsScrollViewer\"", mainWindow);
+        Assert.Contains("x:Name=\"TaskbarAppsItemsControl\"", mainWindow);
         Assert.Contains("x:Name=\"TaskbarScrollUpButton\"", mainWindow);
         Assert.Contains("x:Name=\"TaskbarScrollDownButton\"", mainWindow);
         Assert.Contains(
@@ -1201,6 +1202,28 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "TaskbarAppsScrollViewer.ScrollToVerticalOffset",
             codeBehind);
+        Assert.Contains(
+            "CompactTaskbarScrollPolicy.GetRevealOffset",
+            codeBehind);
+        Assert.Contains(
+            "ActiveTaskbarIdentity",
+            codeBehind);
+        Assert.Contains(
+            "DispatcherPriority.Render",
+            codeBehind);
+        Assert.Contains(
+            "_viewModel.PropertyChanged +=",
+            codeBehind);
+        Assert.Contains(
+            "_viewModel.PropertyChanged -=",
+            codeBehind);
+        Assert.Contains(
+            "ActiveTaskbarIdentity =",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs")));
     }
 
     [Fact]

@@ -127,6 +127,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private AppLaunchItem? selectedSearchResult;
 
     [ObservableProperty]
+    private string? activeTaskbarIdentity;
+
+    [ObservableProperty]
     private bool isCalendarOpen;
 
     [ObservableProperty]
@@ -1609,9 +1612,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     private void RefreshTaskbarApps()
-        => TaskbarAppCollectionSynchronizer.Synchronize(
+    {
+        TaskbarAppCollectionSynchronizer.Synchronize(
             TaskbarApps,
             _taskbarComposer.Compose(_appCatalog.GetPinned(), _windowTracker.GetSnapshot()));
+        ActiveTaskbarIdentity =
+            TaskbarApps.FirstOrDefault(
+                item => item.IsActive)
+            ?.IdentityKey;
+    }
 
     private void RefreshSearchResults()
     {

@@ -28,6 +28,7 @@ public partial class MainWindow :
     private const double ExpandedWidth = 720;
     private const double ScreenMargin = 12;
     private const double CompactTaskbarScrollStep = 46;
+    private const double CompactTaskbarOverflowInset = 30;
     private const int SwShowNoActivate = 4;
     private const int WmHotkey = 0x0312;
     private const int WmDpiChanged = 0x02E0;
@@ -92,6 +93,8 @@ public partial class MainWindow :
             ViewModel_DisplayTargetChanged;
         _viewModel.WorkspacePinChanged +=
             ViewModel_WorkspacePinChanged;
+        _viewModel.PropertyChanged +=
+            ViewModel_PropertyChanged;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
         _coordinator.Taskbar.ReplacementStopped += Taskbar_ReplacementStopped;
 
@@ -621,6 +624,113 @@ public partial class MainWindow :
             : Visibility.Collapsed;
     }
 
+    private void ViewModel_PropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName
+            != nameof(
+                MainViewModel
+                    .ActiveTaskbarIdentity))
+        {
+            return;
+        }
+
+        _ = Dispatcher.BeginInvoke(
+            RevealActiveTaskbarApp,
+            DispatcherPriority.Render);
+    }
+
+    private void RevealActiveTaskbarApp()
+    {
+        if (_isExit
+            || string.IsNullOrWhiteSpace(
+                _viewModel
+                    .ActiveTaskbarIdentity))
+        {
+            return;
+        }
+
+        int activeIndex = -1;
+        for (int index = 0;
+             index < _viewModel
+                 .TaskbarApps.Count;
+             index++)
+        {
+            if (string.Equals(
+                    _viewModel
+                        .TaskbarApps[index]
+                        .IdentityKey,
+                    _viewModel
+                        .ActiveTaskbarIdentity,
+                    StringComparison
+                        .OrdinalIgnoreCase))
+            {
+                activeIndex = index;
+                break;
+            }
+        }
+        if (activeIndex < 0
+            || TaskbarAppsItemsControl
+                .ItemContainerGenerator
+                .ContainerFromIndex(
+                    activeIndex)
+                is not FrameworkElement
+                    container)
+        {
+            return;
+        }
+
+        try
+        {
+            double itemTop = container
+                .TransformToAncestor(
+                    TaskbarAppsScrollViewer)
+                .Transform(
+                    new System.Windows.Point())
+                .Y;
+            CompactTaskbarScrollState state =
+                CompactTaskbarScrollPolicy
+                    .GetState(
+                        TaskbarAppsScrollViewer
+                            .VerticalOffset,
+                        TaskbarAppsScrollViewer
+                            .ScrollableHeight);
+            double inset =
+                state.ShowsOverflowControls
+                    ? CompactTaskbarOverflowInset
+                    : 0;
+            double targetOffset =
+                CompactTaskbarScrollPolicy
+                    .GetRevealOffset(
+                        TaskbarAppsScrollViewer
+                            .VerticalOffset,
+                        itemTop,
+                        container.ActualHeight,
+                        TaskbarAppsScrollViewer
+                            .ViewportHeight,
+                        TaskbarAppsScrollViewer
+                            .ScrollableHeight,
+                        inset,
+                        inset);
+            if (Math.Abs(
+                    targetOffset
+                    - TaskbarAppsScrollViewer
+                        .VerticalOffset)
+                > 0.5)
+            {
+                TaskbarAppsScrollViewer
+                    .ScrollToVerticalOffset(
+                        targetOffset);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // The active item changed again while WPF was
+            // regenerating the compact taskbar containers.
+        }
+    }
+
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
     private void PowerButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
     private void SystemButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
@@ -1116,6 +1226,8 @@ public partial class MainWindow :
             ViewModel_DisplayTargetChanged;
         _viewModel.WorkspacePinChanged -=
             ViewModel_WorkspacePinChanged;
+        _viewModel.PropertyChanged -=
+            ViewModel_PropertyChanged;
         HideShell();
     }
 

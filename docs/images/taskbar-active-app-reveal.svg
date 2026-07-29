@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="430" viewBox="0 0 1120 430">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#020617" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="430" rx="28" fill="url(#bg)"/>
+  <text x="54" y="58" fill="#f8fafc" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="26" font-weight="700">活动应用不会消失在溢出列表里</text>
+  <text x="54" y="88" fill="#94a3b8" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="15">只移动被遮住的距离 · 不改应用顺序 · 不持续抢走手动滚动位置</text>
+
+  <g filter="url(#shadow)">
+    <rect x="64" y="118" width="112" height="260" rx="28" fill="#ffffff" fill-opacity=".09" stroke="#93c5fd" stroke-opacity=".34"/>
+  </g>
+  <rect x="88" y="132" width="64" height="28" rx="14" fill="#1e3a8a"/>
+  <path d="M112 150l8-8 8 8" fill="none" stroke="#bfdbfe" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#334155">
+    <rect x="92" y="172" width="56" height="46" rx="14"/>
+    <rect x="92" y="226" width="56" height="46" rx="14"/>
+    <rect x="92" y="280" width="56" height="46" rx="14"/>
+  </g>
+  <rect x="92" y="280" width="56" height="46" rx="14" fill="#1d4ed8"/>
+  <rect x="96" y="291" width="4" height="24" rx="2" fill="#67e8f9"/>
+  <circle cx="120" cy="303" r="10" fill="#bfdbfe"/>
+  <rect x="88" y="338" width="64" height="28" rx="14" fill="#164e63"/>
+  <path d="M112 348l8 8 8-8" fill="none" stroke="#a5f3fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <path d="M196 305C272 305 274 212 350 212" fill="none" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M338 202l14 10-14 10" fill="none" stroke="#22d3ee" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g font-family="Microsoft YaHei UI,Segoe UI,sans-serif">
+    <rect x="382" y="126" width="680" height="238" rx="22" fill="#ffffff" fill-opacity=".075" stroke="#67e8f9" stroke-opacity=".28"/>
+    <text x="416" y="166" fill="#bfdbfe" font-size="18" font-weight="700">前台身份变化</text>
+    <text x="416" y="196" fill="#cbd5e1" font-size="15">窗口快照原位同步后发布稳定 IdentityKey</text>
+    <path d="M416 218H1018" stroke="#334155" stroke-width="1"/>
+
+    <text x="416" y="254" fill="#a5f3fc" font-size="18" font-weight="700">最小位移</text>
+    <text x="416" y="284" fill="#cbd5e1" font-size="15">已完整可见：0px　顶部遮住：只向上补齐　底部遮住：只向下补齐</text>
+    <text x="416" y="314" fill="#cbd5e1" font-size="15">溢出时避开上下 30px 导航区，并夹取到真实滚动边界</text>
+    <rect x="416" y="330" width="602" height="22" rx="11" fill="#0f766e" fill-opacity=".62"/>
+    <text x="717" y="347" text-anchor="middle" fill="#ccfbf1" font-size="13">顺序、容器实例、滚动状态与点击语义全部保留</text>
+  </g>
+  <rect x="50" y="398" width="1020" height="4" rx="2" fill="url(#accent)" opacity=".75"/>
+</svg>

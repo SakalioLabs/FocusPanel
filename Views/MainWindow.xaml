@@ -779,7 +779,8 @@
                                           HorizontalScrollBarVisibility="Disabled"
                                           Focusable="False"
                                           ScrollChanged="TaskbarAppsScrollViewer_ScrollChanged">
-                                <ItemsControl ItemsSource="{Binding TaskbarApps}"
+                                <ItemsControl x:Name="TaskbarAppsItemsControl"
+                                              ItemsSource="{Binding TaskbarApps}"
                                               KeyboardNavigation.DirectionalNavigation="Continue">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
