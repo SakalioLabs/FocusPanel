@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="610" viewBox="0 0 1120 610">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#182842"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#55adff"/>
+      <stop offset="1" stop-color="#8b7cff"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#6f8fb8"/>
+    </marker>
+  </defs>
+  <rect width="1120" height="610" rx="30" fill="url(#bg)"/>
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <text x="56" y="68" fill="#f3f8ff" font-size="28" font-weight="600">完整接管：原任务栏不再从底边抢回交互</text>
+    <text x="56" y="104" fill="#9fb2cc" font-size="17">一次写入、只读守护、完整恢复；不结束 Explorer</text>
+
+    <rect x="56" y="142" width="286" height="292" rx="22" fill="#1d2c43" stroke="#3c506d"/>
+    <rect x="78" y="166" width="242" height="150" rx="14" fill="#263a56"/>
+    <rect x="78" y="290" width="242" height="26" fill="#7d8da3" opacity=".72"/>
+    <path d="M92 298 H306" stroke="#dce8f7" stroke-width="3" stroke-dasharray="7 7"/>
+    <text x="199" y="349" text-anchor="middle" fill="#fff" font-size="20" font-weight="600">接管前</text>
+    <text x="199" y="379" text-anchor="middle" fill="#9fb1c9" font-size="15">Explorer 底边区域可绘制、可命中</text>
+    <text x="199" y="404" text-anchor="middle" fill="#f6bd72" font-size="15">触底可能再次展开</text>
+
+    <path d="M366 288 H438" stroke="#6f8fb8" stroke-width="3" marker-end="url(#arrow)"/>
+
+    <rect x="462" y="142" width="286" height="292" rx="22" fill="#21344f" stroke="#61a8ff" stroke-width="2"/>
+    <rect x="484" y="166" width="242" height="150" rx="14" fill="#293e5c"/>
+    <rect x="484" y="290" width="242" height="26" fill="#17243a" stroke="#67aeff" stroke-dasharray="6 5"/>
+    <path d="M500 303 H710" stroke="#67aeff" stroke-width="2" opacity=".7"/>
+    <path d="M594 294 L616 312 M616 294 L594 312" stroke="#ff8c9a" stroke-width="3" stroke-linecap="round"/>
+    <text x="605" y="349" text-anchor="middle" fill="#fff" font-size="20" font-weight="600">接管中</text>
+    <text x="605" y="379" text-anchor="middle" fill="#b8c9df" font-size="15">AppBar 关闭原生自动隐藏</text>
+    <text x="605" y="404" text-anchor="middle" fill="#8dcbff" font-size="15">空窗口区域：不绘制、不命中</text>
+
+    <path d="M772 288 H844" stroke="#6f8fb8" stroke-width="3" marker-end="url(#arrow)"/>
+
+    <rect x="868" y="142" width="196" height="292" rx="22" fill="#1d2c43" stroke="#3c506d"/>
+    <circle cx="966" cy="228" r="42" fill="url(#accent)"/>
+    <path d="M947 229 l13 13 27-31" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="966" y="306" text-anchor="middle" fill="#fff" font-size="20" font-weight="600">恢复</text>
+    <text x="966" y="340" text-anchor="middle" fill="#9fb1c9" font-size="15">先清除空区域</text>
+    <text x="966" y="368" text-anchor="middle" fill="#9fb1c9" font-size="15">再还原 AppBar</text>
+    <text x="966" y="396" text-anchor="middle" fill="#9fb1c9" font-size="15">工作区与可见性</text>
+
+    <rect x="56" y="474" width="1008" height="82" rx="18" fill="#17253a" stroke="#334966"/>
+    <circle cx="91" cy="515" r="10" fill="#65c98d"/>
+    <text x="116" y="510" fill="#e6f0fb" font-size="16">宿主仅变为 WS_VISIBLE：空区域仍在，继续接管，不重复隐藏</text>
+    <circle cx="615" cy="515" r="10" fill="#ff9a78"/>
+    <text x="640" y="510" fill="#e6f0fb" font-size="16">空区域丢失：立即安全恢复并提示，不进入闪烁循环</text>
+    <text x="56" y="588" fill="#8195af" font-size="14">异常退出与 Ctrl+Alt+Shift+F10 使用同一恢复会话；失败时保留会话供 watchdog 重试</text>
+  </g>
+</svg>

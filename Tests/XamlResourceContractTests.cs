@@ -3842,7 +3842,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void TaskbarExclusiveMode_HidesOnceAndGuardRemainsReadOnly()
+    public void TaskbarExclusiveMode_SuppressesNativeSurfaceOnceAndGuardRemainsReadOnly()
     {
         string root = FindRepositoryRoot();
         string controller = File.ReadAllText(
@@ -3852,7 +3852,19 @@ public sealed class XamlResourceContractTests
 
         Assert.Contains("AbsAutoHide", controller);
         Assert.Contains("UsesNativeAutoHide = false", controller);
+        Assert.Contains(
+            "UsesEmptyWindowRegion = true",
+            controller);
         Assert.Contains("SetTaskbarVisible(taskbar, false)", controller);
+        Assert.Contains(
+            "SetTaskbarSurfaceSuppressed(",
+            controller);
+        Assert.Contains(
+            "CreateRectRgn(",
+            controller);
+        Assert.Contains(
+            "SetWindowRgn(",
+            controller);
         Assert.Contains("ValidateReplacement()", controller);
         Assert.Contains(
             "_native.SetWorkArea(_state.PrimaryBounds)",
@@ -3865,9 +3877,14 @@ public sealed class XamlResourceContractTests
             "_native.SetWorkArea(",
             guard);
         Assert.DoesNotContain(
+            "_native.SetTaskbarSurfaceSuppressed(",
+            guard);
+        Assert.DoesNotContain(
             "ApplyReplacement();",
             guard);
-        Assert.Contains("守护器只验证状态，不反复改写工作区", onboarding);
+        Assert.Contains(
+            "守护器只验证状态，不循环隐藏或反复改写工作区",
+            onboarding);
     }
 
     [Fact]

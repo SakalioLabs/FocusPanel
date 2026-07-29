@@ -8,6 +8,11 @@ internal interface ITaskbarNativeApi
     bool IsWindowVisible(IntPtr taskbar);
     uint GetAppBarState(IntPtr taskbar);
     void SetAppBarState(IntPtr taskbar, uint state);
+    bool IsTaskbarSurfaceSuppressed(
+        IntPtr taskbar);
+    bool SetTaskbarSurfaceSuppressed(
+        IntPtr taskbar,
+        bool suppressed);
     bool SetTaskbarVisible(IntPtr taskbar, bool visible);
     bool TryGetPrimaryMonitorInfo(
         IntPtr taskbar,

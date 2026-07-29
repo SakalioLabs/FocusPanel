@@ -278,7 +278,9 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 
 ## 侧边任务栏完整替代与安全恢复
 
-完整替代模式会先保存主屏原工作区、AppBar 状态和任务栏可见性，再清除 `ABS_AUTOHIDE`、一次性把主屏工作区释放到完整显示器边界，并隐藏主屏 `Shell_TrayWnd`。因此 Explorer 不再保留底边自动隐藏呼出通道，鼠标触底不会重新展开原生任务栏。守护器只读取并验证状态，不会周期性执行 `ShowWindow`、`ABM_SETSTATE` 或 `SPI_SETWORKAREA`，不会与 Explorer 在“占用/释放工作区”之间来回争抢。Windows Shell 面板可能让任务栏窗口短暂变为可见，守护器会要求连续两次、约 4 秒的同类异常才判定替代状态失效；中间恢复正常会清除待确认状态。持续失效后 FocusPanel 只恢复一次原工作区、AppBar 与可见性，不反复隐藏；紧急快捷键不等待确认，立即恢复。
+完整替代模式会先保存主屏原工作区、AppBar 状态和任务栏可见性，再通过公开 [`ABM_SETSTATE`](https://learn.microsoft.com/en-us/windows/win32/shell/abm-setstate) 清除 `ABS_AUTOHIDE`、一次性把主屏工作区释放到完整显示器边界。随后通过公开 [`SetWindowRgn`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowrgn) 为主屏 `Shell_TrayWnd` 设置空窗口区域并隐藏宿主；Windows 文档明确说明窗口区域之外不会被显示，因此 Explorer 后续即使把宿主逻辑可见位重新置起，底边仍不会绘制或接收鼠标。FocusPanel 不结束 Explorer、不修改副屏任务栏，也不读取 Explorer 私有结构。
+
+守护器只读取 AppBar、工作区、宿主句柄和空区域状态，不会周期性执行 `SetWindowRgn`、`ShowWindow`、`ABM_SETSTATE` 或 `SPI_SETWORKAREA`，因此不会与 Explorer 在“隐藏/显示”或“占用/释放工作区”之间来回争抢。仅宿主变为逻辑可见而空区域仍有效时继续稳定接管；空区域丢失属于确定的原生表面恢复，会立即安全恢复并提示。Explorer 宿主或显示布局等其余瞬时变化仍要求连续两次、约 4 秒确认，中间恢复正常会清除待确认状态。
 
 接管成功时会记录当前主屏 `Shell_TrayWnd` 句柄。Explorer 重启并创建新宿主后，即使新窗口碰巧处于隐藏状态，也会准确报告“Explorer 宿主变化”，而不是误报成普通可见性变化。每次恢复和重新接管都会推进会话代际，已经在后台读取中的旧守护结果会自动作废，不会污染新会话或弹出迟到警告。状态中心和设置页会显示停止原因；确认环境正常后，由用户点击“重新接管任务栏”手动启用。
 
@@ -297,6 +299,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![任务栏安全状态机](docs/images/taskbar-safety-flow.svg)
 
 ![任务栏守护连续异常确认](docs/images/taskbar-guard-confirmation.svg)
+
+![原生任务栏空区域接管与恢复](docs/images/taskbar-empty-region-takeover.svg)
 
 ![混合 DPI 双屏物理坐标定位](docs/images/multi-monitor-physical-placement.svg)
 
@@ -463,7 +467,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.51 `
+  -Version 0.10.52 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -474,7 +478,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.51-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.52-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

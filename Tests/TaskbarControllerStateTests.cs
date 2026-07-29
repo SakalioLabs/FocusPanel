@@ -57,9 +57,14 @@ public sealed class TaskbarControllerStateTests
             Assert.Null(error);
             Assert.True(controller.IsReplacementEnabled);
             Assert.False(native.Visible);
+            Assert.True(
+                native.TaskbarSurfaceSuppressed);
             Assert.Equal(1080, native.WorkArea.Bottom);
             Assert.Equal((uint)2, native.AppBarState);
             Assert.True(File.Exists(sessionFile));
+            Assert.Contains(
+                "\"UsesEmptyWindowRegion\":true",
+                File.ReadAllText(sessionFile));
 
             controller.Restore();
             int workAreaWritesAfterFirstRestore = native.WorkAreaWriteCount;
@@ -67,6 +72,8 @@ public sealed class TaskbarControllerStateTests
 
             Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
+            Assert.False(
+                native.TaskbarSurfaceSuppressed);
             Assert.Equal(1040, native.WorkArea.Bottom);
             Assert.Equal((uint)3, native.AppBarState);
             Assert.Equal(workAreaWritesAfterFirstRestore, native.WorkAreaWriteCount);
@@ -137,6 +144,58 @@ public sealed class TaskbarControllerStateTests
         {
             if (Directory.Exists(directory))
                 Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void SurfaceSuppressionFailure_RollsBackBeforeReplacementStarts()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi
+        {
+            SurfaceSuppressionWritesSucceed =
+                false
+        };
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    native,
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+
+            Assert.False(
+                controller.TryEnableReplacement(
+                    out string? error));
+            Assert.Contains(
+                "显示与命中区域",
+                error);
+            Assert.False(
+                controller.IsReplacementEnabled);
+            Assert.False(
+                native.TaskbarSurfaceSuppressed);
+            Assert.True(native.Visible);
+            Assert.Equal(
+                1040,
+                native.WorkArea.Bottom);
+            Assert.False(
+                File.Exists(sessionFile));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(
+                    directory,
+                    true);
+            }
         }
     }
 
@@ -293,6 +352,8 @@ public sealed class TaskbarControllerStateTests
             int workAreaWrites = native.WorkAreaWriteCount;
             int visibilityWrites = native.TaskbarVisibilityWriteCount;
             int appBarWrites = native.AppBarStateWriteCount;
+            int surfaceWrites =
+                native.SurfaceSuppressionWriteCount;
 
             controller.RunGuardOnceForTests();
             controller.RunGuardOnceForTests();
@@ -300,6 +361,9 @@ public sealed class TaskbarControllerStateTests
             Assert.Equal(workAreaWrites, native.WorkAreaWriteCount);
             Assert.Equal(visibilityWrites, native.TaskbarVisibilityWriteCount);
             Assert.Equal(appBarWrites, native.AppBarStateWriteCount);
+            Assert.Equal(
+                surfaceWrites,
+                native.SurfaceSuppressionWriteCount);
         }
         finally
         {
@@ -338,6 +402,59 @@ public sealed class TaskbarControllerStateTests
         {
             if (Directory.Exists(directory))
                 Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void SurfaceRestoreFailure_KeepsSessionForWatchdogRetry()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    native,
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+
+            Assert.True(
+                controller.TryEnableReplacement(
+                    out _));
+            native.SurfaceSuppressionWritesSucceed =
+                false;
+
+            controller.Restore();
+
+            Assert.True(
+                File.Exists(sessionFile));
+            Assert.True(
+                native.TaskbarSurfaceSuppressed);
+
+            TaskbarController.RestoreSessionFile(
+                sessionFile,
+                native);
+
+            Assert.False(
+                native.TaskbarSurfaceSuppressed);
+            Assert.False(
+                File.Exists(sessionFile));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(
+                    directory,
+                    true);
+            }
         }
     }
 
@@ -517,7 +634,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void NativeTaskbarReappearing_StopsReplacementWithoutRehideLoop()
+    public void VisibleTaskbarHost_WithEmptySurface_RemainsSafelySuppressed()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -532,33 +649,82 @@ public sealed class TaskbarControllerStateTests
                 native,
                 new FakeWatchdogLauncher(),
                 sessionFile);
-            TaskbarReplacementStoppedEvent? stopped = null;
-            controller.ReplacementStopped += value => stopped = value;
-
             Assert.True(controller.TryEnableReplacement(out _));
             Assert.Equal(1, native.HideWriteCount);
 
             native.Visible = true;
             controller.RunGuardOnceForTests();
+            controller.RunGuardOnceForTests();
 
             Assert.True(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
             Assert.Equal(1, native.HideWriteCount);
-            Assert.Null(stopped);
-
-            controller.RunGuardOnceForTests();
-
-            Assert.False(controller.IsReplacementEnabled);
-            Assert.True(native.Visible);
-            Assert.Equal(1, native.HideWriteCount);
-            Assert.NotNull(stopped);
-            Assert.Equal(TaskbarReplacementStopReason.WindowsTaskbarReappeared, stopped.Reason);
-            Assert.Contains("重新显示", stopped.Message);
+            Assert.True(
+                native.TaskbarSurfaceSuppressed);
         }
         finally
         {
             if (Directory.Exists(directory))
                 Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void LostTaskbarSurfaceSuppression_StopsWithoutRewriteLoop()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    native,
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+            TaskbarReplacementStoppedEvent? stopped =
+                null;
+            controller.ReplacementStopped +=
+                value => stopped = value;
+
+            Assert.True(
+                controller.TryEnableReplacement(
+                    out _));
+            int writes =
+                native.SurfaceSuppressionWriteCount;
+            native.TaskbarSurfaceSuppressed =
+                false;
+
+            controller.RunGuardOnceForTests();
+
+            Assert.False(
+                controller.IsReplacementEnabled);
+            Assert.NotNull(stopped);
+            Assert.Equal(
+                TaskbarReplacementStopReason
+                    .WindowsTaskbarReappeared,
+                stopped.Reason);
+            Assert.Contains(
+                "显示与命中区域",
+                stopped.Message);
+            Assert.Equal(
+                writes + 1,
+                native.SurfaceSuppressionWriteCount);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(
+                    directory,
+                    true);
+            }
         }
     }
 
@@ -695,6 +861,21 @@ public sealed class TaskbarControllerStateTests
         public int HideWriteCount { get; private set; }
         public int AppBarStateWriteCount { get; private set; }
         public int AppBarStateReadCount { get; private set; }
+        public bool TaskbarSurfaceSuppressed
+        {
+            get;
+            set;
+        }
+        public int SurfaceSuppressionWriteCount
+        {
+            get;
+            private set;
+        }
+        public bool SurfaceSuppressionWritesSucceed
+        {
+            get;
+            set;
+        } = true;
         public bool SetWorkAreaSucceeds { get; set; } = true;
         public bool SetAppBarStateSucceeds { get; set; } = true;
         public bool ShowSucceeds { get; set; } = true;
@@ -747,6 +928,27 @@ public sealed class TaskbarControllerStateTests
             AppBarStateWriteCount++;
             if (SetAppBarStateSucceeds)
                 AppBarState = state;
+        }
+
+        public bool IsTaskbarSurfaceSuppressed(
+            IntPtr taskbar) =>
+            TaskbarSurfaceSuppressed;
+
+        public bool SetTaskbarSurfaceSuppressed(
+            IntPtr taskbar,
+            bool suppressed)
+        {
+            SurfaceSuppressionWriteCount++;
+            if (!SurfaceSuppressionWritesSucceed)
+            {
+                SurfaceSuppressionWritesSucceed =
+                    true;
+                return false;
+            }
+
+            TaskbarSurfaceSuppressed =
+                suppressed;
+            return true;
         }
 
         public bool SetTaskbarVisible(IntPtr taskbar, bool visible)

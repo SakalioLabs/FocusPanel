@@ -101,6 +101,7 @@ public sealed class TaskbarController : ITaskbarController
             OriginalAppBarState = appBarState,
             PrimaryBounds = primaryBounds,
             UsesNativeAutoHide = false,
+            UsesEmptyWindowRegion = true,
             CreatedAt = DateTimeOffset.Now
         };
 
@@ -230,8 +231,19 @@ public sealed class TaskbarController : ITaskbarController
             workAreaRestored = native.SetWorkArea(state.OriginalWorkArea);
 
         bool visibilityRestored = taskbar != IntPtr.Zero;
+        bool surfaceRestored = taskbar != IntPtr.Zero;
         if (taskbar != IntPtr.Zero)
         {
+            if (state?.UsesEmptyWindowRegion == true)
+            {
+                surfaceRestored =
+                    native.SetTaskbarSurfaceSuppressed(
+                        taskbar,
+                        false)
+                    && !native.IsTaskbarSurfaceSuppressed(
+                        taskbar);
+            }
+
             if (state != null)
                 native.SetAppBarState(taskbar, state.OriginalAppBarState);
 
@@ -248,7 +260,9 @@ public sealed class TaskbarController : ITaskbarController
             }
         }
 
-        if (!workAreaRestored || !visibilityRestored)
+        if (!workAreaRestored
+            || !surfaceRestored
+            || !visibilityRestored)
             return;
 
         try
@@ -306,6 +320,22 @@ public sealed class TaskbarController : ITaskbarController
             || !RectsEqual(appliedWorkArea, _state.PrimaryBounds))
         {
             _lastApplyError = "Windows 拒绝释放原生任务栏占用的主屏工作区";
+            return false;
+        }
+
+        // Explorer can make Shell_TrayWnd visible again while opening a
+        // system surface or processing an edge gesture. An empty window
+        // region keeps that host non-drawing and non-interactive even if its
+        // WS_VISIBLE bit changes. This is applied once and restored from the
+        // watchdog session; the guard never rewrites it.
+        if (!_native.SetTaskbarSurfaceSuppressed(
+                taskbar,
+                true)
+            || !_native.IsTaskbarSurfaceSuppressed(
+                taskbar))
+        {
+            _lastApplyError =
+                "Windows 拒绝停用原生任务栏的显示与命中区域";
             return false;
         }
 
@@ -415,8 +445,14 @@ public sealed class TaskbarController : ITaskbarController
 
             if (!valid)
             {
-                if (!_guardConfirmation.ObserveInvalid(
-                        _lastStopReason))
+                bool requiresConfirmation =
+                    _lastStopReason
+                    != TaskbarReplacementStopReason
+                        .WindowsTaskbarReappeared;
+                if (requiresConfirmation
+                    && !_guardConfirmation
+                        .ObserveInvalid(
+                            _lastStopReason))
                 {
                     return;
                 }
@@ -458,9 +494,11 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if (_native.IsWindowVisible(taskbar))
+        if (!_native.IsTaskbarSurfaceSuppressed(
+                taskbar))
         {
-            _lastApplyError = "Windows 已重新显示原生任务栏";
+            _lastApplyError =
+                "Windows 已恢复原生任务栏的显示与命中区域";
             _lastStopReason = TaskbarReplacementStopReason.WindowsTaskbarReappeared;
             return false;
         }
@@ -557,6 +595,11 @@ public sealed class TaskbarController : ITaskbarController
         public uint OriginalAppBarState { get; set; }
         public NativeRect PrimaryBounds { get; set; }
         public bool UsesNativeAutoHide { get; set; }
+        public bool UsesEmptyWindowRegion
+        {
+            get;
+            set;
+        }
         public DateTimeOffset CreatedAt { get; set; }
     }
 
@@ -583,6 +626,69 @@ public sealed class TaskbarController : ITaskbarController
             var data = AppBarData.Create(taskbar);
             data.LParam = new IntPtr(state);
             NativeMethods.SHAppBarMessage(AbmSetState, ref data);
+        }
+
+        public bool IsTaskbarSurfaceSuppressed(
+            IntPtr taskbar)
+        {
+            IntPtr region =
+                NativeMethods.CreateRectRgn(
+                    0,
+                    0,
+                    0,
+                    0);
+            if (region == IntPtr.Zero)
+                return false;
+
+            try
+            {
+                return NativeMethods.GetWindowRgn(
+                        taskbar,
+                        region)
+                    == 1;
+            }
+            finally
+            {
+                NativeMethods.DeleteObject(
+                    region);
+            }
+        }
+
+        public bool SetTaskbarSurfaceSuppressed(
+            IntPtr taskbar,
+            bool suppressed)
+        {
+            if (!suppressed)
+            {
+                return NativeMethods.SetWindowRgn(
+                        taskbar,
+                        IntPtr.Zero,
+                        true)
+                    != 0;
+            }
+
+            IntPtr region =
+                NativeMethods.CreateRectRgn(
+                    0,
+                    0,
+                    0,
+                    0);
+            if (region == IntPtr.Zero)
+                return false;
+
+            if (NativeMethods.SetWindowRgn(
+                    taskbar,
+                    region,
+                    true)
+                != 0)
+            {
+                // After a successful call the system owns the region handle.
+                return true;
+            }
+
+            NativeMethods.DeleteObject(
+                region);
+            return false;
         }
 
         public bool SetTaskbarVisible(IntPtr taskbar, bool visible)
@@ -662,6 +768,30 @@ public sealed class TaskbarController : ITaskbarController
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern int GetWindowRgn(
+            IntPtr hWnd,
+            IntPtr hRgn);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern int SetWindowRgn(
+            IntPtr hWnd,
+            IntPtr hRgn,
+            [MarshalAs(UnmanagedType.Bool)]
+            bool redraw);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        internal static extern IntPtr CreateRectRgn(
+            int left,
+            int top,
+            int right,
+            int bottom);
+
+        [DllImport("gdi32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool DeleteObject(
+            IntPtr handle);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
