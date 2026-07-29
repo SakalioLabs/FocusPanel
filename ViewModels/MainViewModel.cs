@@ -32,6 +32,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IAppUpdateService _updateService;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly TaskbarAppComposer _taskbarComposer = new();
+    private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
     private readonly DispatcherTimer _systemStatusTimer;
     private readonly DispatcherTimer _taskSummaryTimer;
@@ -39,6 +40,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly Dispatcher _uiDispatcher;
     private readonly CoalescingBackgroundRefresh<
         PendingSystemStatusSnapshot> _systemStatusRefresh;
+    private readonly CoalescingBackgroundRefresh<
+        TaskSummarySnapshot> _taskSummaryRefresh;
     private DashboardViewModel? _dashboardViewModel;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
@@ -47,12 +50,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
     private long _audioStateRevision;
+    private long _taskSummaryMonthTicks;
     private float _confirmedMasterVolume;
     private bool _confirmedMuted;
     private bool _updatingStartupState;
     private string? _lastNotifiedUpdateVersion;
     private bool _isShellVisible;
     private bool _isDisposed;
+    private DateTime _calendarFocusMonth;
     private IReadOnlyDictionary<DateTime, CalendarFocusSummary>
         _calendarFocusByDate =
             new Dictionary<DateTime, CalendarFocusSummary>();
@@ -274,6 +279,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ApplySystemStatusAsync,
                 ex => Debug.WriteLine(
                     $"系统状态刷新失败：{ex}"));
+        _taskSummaryRefresh =
+            new CoalescingBackgroundRefresh<
+                TaskSummarySnapshot>(
+                CaptureTaskSummary,
+                ApplyTaskSummaryAsync,
+                ex => Debug.WriteLine(
+                    $"任务摘要刷新失败：{ex}"));
         IsAppCatalogLoading = _appCatalog.IsIndexing;
 
         CurrentTime = DateTime.Now;
@@ -309,7 +321,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RefreshTaskbarApps();
         RefreshSearchResults();
         RequestSystemStatusRefresh();
-        RefreshTaskSummary();
+        RequestTaskSummaryRefresh();
 
         _windowTracker.SnapshotChanged += OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged += OnCatalogChanged;
@@ -321,7 +333,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             (_, _) => RequestSystemStatusRefresh();
 
         _taskSummaryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-        _taskSummaryTimer.Tick += (_, _) => RefreshTaskSummary();
+        _taskSummaryTimer.Tick +=
+            (_, _) => RequestTaskSummaryRefresh();
 
         _updateCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
         _updateCheckTimer.Tick += async (_, _) => await CheckForUpdatesInBackgroundAsync();
@@ -413,7 +426,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnIsCalendarOpenChanged(bool value)
     {
         if (value && _isShellVisible)
-            RefreshTaskSummary();
+            RequestTaskSummaryRefresh();
         UpdateRefreshActivity();
     }
 
@@ -771,7 +784,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 DisplayedCalendarMonth.Year,
                 DisplayedCalendarMonth.Month,
                 1));
-        RefreshTaskSummary();
+        RequestTaskSummaryRefresh();
     }
 
     [RelayCommand]
@@ -784,7 +797,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 DisplayedCalendarMonth.Year,
                 DisplayedCalendarMonth.Month,
                 1));
-        RefreshTaskSummary();
+        RequestTaskSummaryRefresh();
     }
 
     [RelayCommand]
@@ -794,7 +807,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         DisplayedCalendarMonth =
             new DateTime(today.Year, today.Month, 1);
         SelectedCalendarDate = today;
-        RefreshTaskSummary();
+        RequestTaskSummaryRefresh();
     }
 
     [RelayCommand]
@@ -811,7 +824,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     item.Date.Year,
                     item.Date.Month,
                     1);
-            RefreshTaskSummary();
+            RequestTaskSummaryRefresh();
         }
     }
 
@@ -1386,46 +1399,75 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void RefreshTaskSummary()
+    private void RequestTaskSummaryRefresh()
     {
-        try
+        if (_isDisposed)
+            return;
+
+        DateTime month =
+            TaskSummarySnapshot.NormalizeMonth(
+                DisplayedCalendarMonth);
+        if (_calendarFocusMonth != month)
         {
-            using var context = new AppDbContext();
-            OpenTaskCount = context.Todos.Count(
-                item =>
-                    item.ParentId != null
-                    && !item.IsCompleted);
-            DateTime gridStart =
-                CalendarMonthComposer.GetGridStart(
-                    DisplayedCalendarMonth);
-            DateTime gridEnd = gridStart.AddDays(
-                CalendarMonthComposer.DayCount);
-            _calendarFocusByDate =
-                context.PomodoroSessions
-                    .Where(session =>
-                        session.Status == "Completed"
-                        && session.StartTime >= gridStart
-                        && session.StartTime < gridEnd)
-                    .AsEnumerable()
-                    .GroupBy(session =>
-                        session.StartTime.Date)
-                    .ToDictionary(
-                        group => group.Key,
-                        group =>
-                            new CalendarFocusSummary(
-                                group.Count(),
-                                group.Sum(session =>
-                                    session.DurationMinutes)));
-        }
-        catch
-        {
-            OpenTaskCount = 0;
+            _calendarFocusMonth = month;
             _calendarFocusByDate =
                 new Dictionary<
                     DateTime,
                     CalendarFocusSummary>();
+            RefreshCalendarDays();
         }
+        Interlocked.Exchange(
+            ref _taskSummaryMonthTicks,
+            month.Ticks);
+        _taskSummaryRefresh.Request();
+    }
 
+    private TaskSummarySnapshot CaptureTaskSummary()
+    {
+        long monthTicks = Interlocked.Read(
+            ref _taskSummaryMonthTicks);
+        DateTime month = monthTicks > 0
+            ? new DateTime(monthTicks)
+            : DateTime.Today;
+        return _taskSummaryReader.Read(month);
+    }
+
+    private async Task ApplyTaskSummaryAsync(
+        TaskSummarySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        await _uiDispatcher.InvokeAsync(
+            () =>
+            {
+                if (_isDisposed
+                    || cancellationToken
+                        .IsCancellationRequested)
+                {
+                    return;
+                }
+
+                ApplyTaskSummary(snapshot);
+            },
+            DispatcherPriority.Background,
+            cancellationToken);
+    }
+
+    private void ApplyTaskSummary(
+        TaskSummarySnapshot snapshot)
+    {
+        TaskSummaryApplyDecision decision =
+            TaskSummaryApplyPolicy.GetDecision(
+                snapshot,
+                DisplayedCalendarMonth);
+        if (decision.ApplyOpenTaskCount)
+            OpenTaskCount = snapshot.OpenTaskCount;
+        if (!decision.ApplyCalendar)
+            return;
+
+        _calendarFocusByDate =
+            snapshot.FocusByDate;
+        _calendarFocusMonth =
+            snapshot.DisplayedMonth;
         RefreshCalendarDays();
     }
 
@@ -1646,6 +1688,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _taskSummaryTimer.Stop();
         _updateCheckTimer.Stop();
         _systemStatusRefresh.Dispose();
+        _taskSummaryRefresh.Dispose();
         _windowTracker.SnapshotChanged -= OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged -= OnCatalogChanged;
         _tasksViewModel?.Dispose();

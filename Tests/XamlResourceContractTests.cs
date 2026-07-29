@@ -2928,6 +2928,24 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "_systemStatusRefresh.Dispose();",
             viewModel);
+        Assert.Contains(
+            "_taskSummaryRefresh.Dispose();",
+            viewModel);
+        Assert.Contains(
+            "RequestTaskSummaryRefresh();",
+            viewModel);
+        Assert.Contains(
+            "_taskSummaryReader.Read(month)",
+            viewModel);
+        Assert.Contains(
+            "TaskSummaryApplyPolicy.GetDecision(",
+            viewModel);
+        Assert.DoesNotContain(
+            "private void RefreshTaskSummary()",
+            viewModel);
+        Assert.DoesNotContain(
+            "context.PomodoroSessions",
+            viewModel);
         Assert.DoesNotContain(
             "_systemStatus.GetNetworkStatus()",
             viewModel);
