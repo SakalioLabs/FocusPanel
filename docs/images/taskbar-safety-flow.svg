@@ -4,7 +4,7 @@
   <g font-family="Segoe UI, Microsoft YaHei" text-anchor="middle">
     <g transform="translate(55 135)"><rect width="200" height="120" rx="20" fill="#1e3a8a"/><text x="100" y="52" fill="#dbeafe" font-size="18">用户主动启用</text><text x="100" y="84" fill="#93c5fd" font-size="13">检查快捷键与守护进程</text></g>
     <text x="280" y="203" fill="#64748b" font-size="28">→</text>
-    <g transform="translate(320 135)"><rect width="200" height="120" rx="20" fill="#312e81"/><text x="100" y="52" fill="#e0e7ff" font-size="18">一次性接管</text><text x="100" y="84" fill="#a5b4fc" font-size="13">AppBar AutoHide + Hide</text></g>
+    <g transform="translate(320 135)"><rect width="200" height="120" rx="20" fill="#312e81"/><text x="100" y="52" fill="#e0e7ff" font-size="18">一次性接管</text><text x="100" y="78" fill="#a5b4fc" font-size="13">关闭原生边缘呼出</text><text x="100" y="99" fill="#a5b4fc" font-size="13">释放工作区 + Hide</text></g>
     <text x="545" y="203" fill="#64748b" font-size="28">→</text>
     <g transform="translate(585 135)"><rect width="200" height="120" rx="20" fill="#134e4a"/><text x="100" y="52" fill="#ccfbf1" font-size="18">只读验证</text><text x="100" y="84" fill="#5eead4" font-size="13">不循环写工作区</text></g>
     <text x="810" y="203" fill="#64748b" font-size="28">→</text>

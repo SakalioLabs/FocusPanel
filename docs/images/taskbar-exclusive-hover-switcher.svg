@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="dock" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#334155" stop-opacity=".92"/>
+      <stop offset="1" stop-color="#1e293b" stop-opacity=".82"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="500" rx="28" fill="url(#background)"/>
+  <text x="54" y="60" fill="#f8fafc" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="28" font-weight="700">完整接管 · 原生底边不再回弹 · 悬停即可切换窗口</text>
+  <g font-family="Microsoft YaHei UI,Segoe UI,sans-serif">
+    <rect x="54" y="105" width="450" height="310" rx="24" fill="#111827" stroke="#475569"/>
+    <text x="82" y="145" fill="#e2e8f0" font-size="18" font-weight="600">任务栏接管事务</text>
+    <g font-size="15">
+      <rect x="82" y="175" width="180" height="62" rx="16" fill="#1e3a8a"/>
+      <text x="172" y="201" fill="#dbeafe" text-anchor="middle">保存原始状态</text>
+      <text x="172" y="222" fill="#93c5fd" text-anchor="middle" font-size="12">工作区 · AppBar · 可见性</text>
+      <text x="280" y="212" fill="#64748b" font-size="26">→</text>
+      <rect x="315" y="175" width="160" height="62" rx="16" fill="#312e81"/>
+      <text x="395" y="201" fill="#e0e7ff" text-anchor="middle">关闭边缘呼出</text>
+      <text x="395" y="222" fill="#a5b4fc" text-anchor="middle" font-size="12">清除 ABS_AUTOHIDE</text>
+      <path d="M278 244v28" stroke="#64748b" stroke-width="2"/>
+      <path d="M272 266l6 8 6-8" fill="none" stroke="#64748b" stroke-width="2"/>
+      <rect x="82" y="282" width="180" height="62" rx="16" fill="#134e4a"/>
+      <text x="172" y="308" fill="#ccfbf1" text-anchor="middle">释放完整主屏</text>
+      <text x="172" y="329" fill="#5eead4" text-anchor="middle" font-size="12">工作区只写一次</text>
+      <text x="280" y="319" fill="#64748b" font-size="26">→</text>
+      <rect x="315" y="282" width="160" height="62" rx="16" fill="#164e63"/>
+      <text x="395" y="308" fill="#cffafe" text-anchor="middle">隐藏 Shell_TrayWnd</text>
+      <text x="395" y="329" fill="#67e8f9" text-anchor="middle" font-size="12">守护只读，不循环争抢</text>
+    </g>
+    <rect x="550" y="105" width="596" height="310" rx="24" fill="#111827" stroke="#475569"/>
+    <text x="580" y="145" fill="#e2e8f0" font-size="18" font-weight="600">应用图标停留 420ms</text>
+    <rect x="1080" y="165" width="52" height="226" rx="22" fill="url(#dock)" stroke="#64748b"/>
+    <circle cx="1106" cy="206" r="17" fill="#2563eb"/>
+    <path d="M1098 206h16M1106 198v16" stroke="#eff6ff" stroke-width="2" stroke-linecap="round"/>
+    <rect x="1088" y="240" width="36" height="36" rx="11" fill="#0ea5e9"/>
+    <rect x="1088" y="287" width="36" height="36" rx="11" fill="#8b5cf6"/>
+    <rect x="1088" y="334" width="36" height="36" rx="11" fill="#334155"/>
+    <rect x="676" y="175" width="370" height="190" rx="18" fill="#273449" stroke="#64748b"/>
+    <text x="700" y="209" fill="#f8fafc" font-size="16" font-weight="600">Visual Studio Code · 3 个窗口</text>
+    <line x1="700" y1="224" x2="1022" y2="224" stroke="#475569"/>
+    <rect x="690" y="237" width="342" height="36" rx="10" fill="#1d4ed8" fill-opacity=".38"/>
+    <text x="708" y="261" fill="#dbeafe" font-size="14">✓ FocusPanel — MainWindow.xaml.cs</text>
+    <text x="708" y="304" fill="#e2e8f0" font-size="14">README.md — FocusPanel</text>
+    <text x="708" y="344" fill="#e2e8f0" font-size="14">TaskbarController.cs — FocusPanel</text>
+    <path d="M1050 258h26" stroke="#38bdf8" stroke-width="2"/>
+    <path d="M1068 252l8 6-8 6" fill="none" stroke="#38bdf8" stroke-width="2"/>
+    <text x="580" y="390" fill="#94a3b8" font-size="13">点击标题直接切换 · 移出 260ms 自动关闭 · 快速划过和拖拽不误开</text>
+  </g>
+  <text x="54" y="462" fill="#fbbf24" font-family="Microsoft YaHei UI,Segoe UI,sans-serif" font-size="15">异常时仅恢复一次：Ctrl + Alt + Shift + F10 始终保留紧急恢复能力</text>
+</svg>

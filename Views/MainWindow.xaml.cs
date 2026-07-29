@@ -30,6 +30,8 @@ public partial class MainWindow :
     private const double ScreenMargin = 12;
     private const double CompactTaskbarScrollStep = 46;
     private const double CompactTaskbarOverflowInset = 30;
+    private const int TaskbarHoverOpenDelayMilliseconds = 420;
+    private const int TaskbarHoverCloseDelayMilliseconds = 260;
     private const int SwShowNoActivate = 4;
     private const int WmHotkey = 0x0312;
     private const int WmDpiChanged = 0x02E0;
@@ -38,6 +40,8 @@ public partial class MainWindow :
     private readonly ShellCoordinator _coordinator;
     private readonly MainViewModel _viewModel;
     private readonly DispatcherTimer _autoHideTimer;
+    private readonly DispatcherTimer _taskbarHoverOpenTimer;
+    private readonly DispatcherTimer _taskbarHoverCloseTimer;
     private readonly FocusToastManager _toastManager;
     private readonly
         UpdateInstallPreparationCoordinator
@@ -60,6 +64,9 @@ public partial class MainWindow :
     private System.Windows.Point _pinnedDragStart;
     private long _lastTaskbarDragScrollTick = -1;
     private TaskbarAppItem? _taskbarDropCueItem;
+    private Button? _taskbarHoverButton;
+    private TaskbarAppItem? _taskbarHoverTask;
+    private ContextMenu? _taskbarHoverMenu;
 
     public MainWindow()
         : this(null)
@@ -126,6 +133,20 @@ public partial class MainWindow :
 
             HideShell();
         };
+        _taskbarHoverOpenTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(
+                TaskbarHoverOpenDelayMilliseconds)
+        };
+        _taskbarHoverOpenTimer.Tick +=
+            TaskbarHoverOpenTimer_Tick;
+        _taskbarHoverCloseTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(
+                TaskbarHoverCloseDelayMilliseconds)
+        };
+        _taskbarHoverCloseTimer.Tick +=
+            TaskbarHoverCloseTimer_Tick;
 
         WindowStartupLocation = WindowStartupLocation.Manual;
         Width = CompactWidth;
@@ -333,6 +354,8 @@ public partial class MainWindow :
         if (_desktopDragSession.IsActive)
             return;
 
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
         _viewModel.IsWorkspacePinned = false;
         CloseOverlayPanels();
         SetShellWidth(CompactWidth, false, true);
@@ -395,6 +418,8 @@ public partial class MainWindow :
     private void HideShell()
     {
         _autoHideTimer.Stop();
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
         CloseOverlayPanels();
         _viewModel.SetShellVisible(false);
         Visibility = Visibility.Hidden;
@@ -839,6 +864,7 @@ public partial class MainWindow :
 
     private void TaskbarApp_Click(object sender, RoutedEventArgs e)
     {
+        CancelTaskbarHoverPreview();
         if (sender is not Button { DataContext: TaskbarAppItem task } button)
             return;
 
@@ -915,6 +941,7 @@ public partial class MainWindow :
 
     private void TaskbarApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
+        CancelTaskbarHoverPreview(closeMenu: true);
         e.Handled = true;
         if (sender is not Button { DataContext: TaskbarAppItem task } button)
             return;
@@ -1051,6 +1078,176 @@ public partial class MainWindow :
 
         FocusMenuTheme.Apply(menu);
         button.ContextMenu = menu;
+    }
+
+    private void TaskbarApp_MouseEnter(
+        object sender,
+        MouseEventArgs e)
+    {
+        if (sender
+                is not Button
+                {
+                    DataContext:
+                        TaskbarAppItem task
+                } button)
+        {
+            return;
+        }
+
+        _taskbarHoverCloseTimer.Stop();
+        if (!TaskbarHoverPreviewPolicy.ShouldOpen(
+                task.WindowCount,
+                button.IsMouseOver,
+                Mouse.LeftButton
+                    == MouseButtonState.Pressed
+                || Mouse.RightButton
+                    == MouseButtonState.Pressed
+                || Mouse.MiddleButton
+                    == MouseButtonState.Pressed,
+                button.ContextMenu?.IsOpen == true))
+        {
+            return;
+        }
+
+        _taskbarHoverButton = button;
+        _taskbarHoverTask = task;
+        _taskbarHoverOpenTimer.Stop();
+        _taskbarHoverOpenTimer.Start();
+    }
+
+    private void TaskbarApp_MouseLeave(
+        object sender,
+        MouseEventArgs e)
+    {
+        _taskbarHoverOpenTimer.Stop();
+        ScheduleTaskbarHoverPreviewClose();
+    }
+
+    private void TaskbarHoverOpenTimer_Tick(
+        object? sender,
+        EventArgs e)
+    {
+        _taskbarHoverOpenTimer.Stop();
+        Button? button = _taskbarHoverButton;
+        TaskbarAppItem? task =
+            _taskbarHoverTask;
+        if (button == null
+            || task == null
+            || !ReferenceEquals(
+                button.DataContext,
+                task)
+            || !TaskbarHoverPreviewPolicy.ShouldOpen(
+                task.WindowCount,
+                button.IsMouseOver,
+                Mouse.LeftButton
+                    == MouseButtonState.Pressed
+                || Mouse.RightButton
+                    == MouseButtonState.Pressed
+                || Mouse.MiddleButton
+                    == MouseButtonState.Pressed,
+                button.ContextMenu?.IsOpen
+                    == true))
+        {
+            return;
+        }
+
+        PopulateTaskbarWindowList(
+            button,
+            task);
+        ContextMenu? menu =
+            button.ContextMenu;
+        if (menu == null)
+            return;
+
+        _taskbarHoverMenu = menu;
+        menu.MouseEnter +=
+            TaskbarHoverMenu_MouseEnter;
+        menu.MouseLeave +=
+            TaskbarHoverMenu_MouseLeave;
+        menu.Closed +=
+            TaskbarHoverMenu_Closed;
+        OpenContextMenu(button);
+    }
+
+    private void TaskbarHoverMenu_MouseEnter(
+        object sender,
+        MouseEventArgs e) =>
+        _taskbarHoverCloseTimer.Stop();
+
+    private void TaskbarHoverMenu_MouseLeave(
+        object sender,
+        MouseEventArgs e) =>
+        ScheduleTaskbarHoverPreviewClose();
+
+    private void TaskbarHoverMenu_Closed(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is ContextMenu menu)
+        {
+            menu.MouseEnter -=
+                TaskbarHoverMenu_MouseEnter;
+            menu.MouseLeave -=
+                TaskbarHoverMenu_MouseLeave;
+            menu.Closed -=
+                TaskbarHoverMenu_Closed;
+            if (ReferenceEquals(
+                    _taskbarHoverMenu,
+                    menu))
+            {
+                _taskbarHoverMenu = null;
+            }
+        }
+
+        _taskbarHoverCloseTimer.Stop();
+    }
+
+    private void ScheduleTaskbarHoverPreviewClose()
+    {
+        if (_taskbarHoverMenu?.IsOpen != true)
+            return;
+
+        _taskbarHoverCloseTimer.Stop();
+        _taskbarHoverCloseTimer.Start();
+    }
+
+    private void TaskbarHoverCloseTimer_Tick(
+        object? sender,
+        EventArgs e)
+    {
+        _taskbarHoverCloseTimer.Stop();
+        if (_taskbarHoverButton?.IsMouseOver
+                == true
+            || _taskbarHoverMenu?.IsMouseOver
+                == true)
+        {
+            return;
+        }
+
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
+    }
+
+    private void CancelTaskbarHoverPreview(
+        bool closeMenu = false)
+    {
+        _taskbarHoverOpenTimer.Stop();
+        _taskbarHoverCloseTimer.Stop();
+        if (closeMenu
+            && _taskbarHoverMenu?.IsOpen
+                == true)
+        {
+            _taskbarHoverMenu.IsOpen =
+                false;
+        }
+
+        _taskbarHoverButton = null;
+        _taskbarHoverTask = null;
+        if (_taskbarHoverMenu?.IsOpen
+                != true)
+        {
+            _taskbarHoverMenu = null;
+        }
     }
 
     private ContextMenu CreateTaskbarContextMenu()
@@ -1331,6 +1528,8 @@ public partial class MainWindow :
     private void BeginShutdownUiPhase()
     {
         _autoHideTimer.Stop();
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
         _transientInteractionDepth = 0;
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
         if (_summonHotkeyRegistered && hwnd != IntPtr.Zero)

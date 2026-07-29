@@ -18,6 +18,7 @@ public sealed class TaskbarController : ITaskbarController
     private const uint SwpHideWindow = 0x0080;
     private const uint SpiSetWorkArea = 0x002F;
     private const uint SpifSendChange = 0x0002;
+    private const uint MonitorDefaultToNearest = 0x00000002;
     private const uint AbmGetState = 0x00000004;
     private const uint AbmSetState = 0x0000000A;
     private const uint AbsAutoHide = 0x00000001;
@@ -83,12 +84,23 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
+        if (!_native.TryGetPrimaryMonitorInfo(
+                taskbar,
+                out NativeRect originalWorkArea,
+                out NativeRect primaryBounds))
+        {
+            error = "无法读取主屏工作区，已取消任务栏接管。";
+            return false;
+        }
+
         uint appBarState = _native.GetAppBarState(taskbar);
         _state = new TaskbarSessionState
         {
             TaskbarWasVisible = _native.IsWindowVisible(taskbar),
+            OriginalWorkArea = originalWorkArea,
             OriginalAppBarState = appBarState,
-            UsesNativeAutoHide = true,
+            PrimaryBounds = primaryBounds,
+            UsesNativeAutoHide = false,
             CreatedAt = DateTimeOffset.Now
         };
 
@@ -272,17 +284,28 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        // Ask Explorer to release the work area through its documented AppBar
-        // state first. Hide Shell_TrayWnd exactly once after that; the guard is
-        // read-only and never fights Explorer with repeated visibility or
-        // SPI_SETWORKAREA writes.
-        uint desiredState = _state.OriginalAppBarState | AbsAutoHide;
+        // Native auto-hide leaves Explorer's reveal edge active. A replacement
+        // shell must instead disable that edge, release the primary work area
+        // once, and hide Shell_TrayWnd once. The guard below remains read-only
+        // so FocusPanel never enters a hide/show or work-area write loop.
+        uint desiredState = _state.OriginalAppBarState & ~AbsAutoHide;
         if (_native.GetAppBarState(taskbar) != desiredState)
             _native.SetAppBarState(taskbar, desiredState);
 
-        if ((_native.GetAppBarState(taskbar) & AbsAutoHide) == 0)
+        if ((_native.GetAppBarState(taskbar) & AbsAutoHide) != 0)
         {
-            _lastApplyError = "Windows 拒绝启用原生任务栏自动隐藏";
+            _lastApplyError = "Windows 拒绝关闭原生任务栏的边缘呼出";
+            return false;
+        }
+
+        if (!_native.SetWorkArea(_state.PrimaryBounds)
+            || !_native.TryGetPrimaryMonitorInfo(
+                taskbar,
+                out NativeRect appliedWorkArea,
+                out _)
+            || !RectsEqual(appliedWorkArea, _state.PrimaryBounds))
+        {
+            _lastApplyError = "Windows 拒绝释放原生任务栏占用的主屏工作区";
             return false;
         }
 
@@ -442,9 +465,22 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if ((_native.GetAppBarState(taskbar) & AbsAutoHide) == 0)
+        if ((_native.GetAppBarState(taskbar) & AbsAutoHide) != 0)
         {
-            _lastApplyError = "Windows 已取消任务栏自动隐藏状态";
+            _lastApplyError = "Windows 已重新启用原生任务栏的边缘呼出";
+            _lastStopReason = TaskbarReplacementStopReason.Unknown;
+            return false;
+        }
+
+        if (_state == null
+            || !_native.TryGetPrimaryMonitorInfo(
+                taskbar,
+                out NativeRect workArea,
+                out NativeRect bounds)
+            || !RectsEqual(bounds, _state.PrimaryBounds)
+            || !RectsEqual(workArea, _state.PrimaryBounds))
+        {
+            _lastApplyError = "主屏工作区或显示器布局已发生变化";
             _lastStopReason = TaskbarReplacementStopReason.Unknown;
             return false;
         }
@@ -488,6 +524,14 @@ public sealed class TaskbarController : ITaskbarController
         public int Right;
         public int Bottom;
     }
+
+    private static bool RectsEqual(
+        NativeRect left,
+        NativeRect right) =>
+        left.Left == right.Left
+        && left.Top == right.Top
+        && left.Right == right.Right
+        && left.Bottom == right.Bottom;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct AppBarData
@@ -558,12 +602,52 @@ public sealed class TaskbarController : ITaskbarController
             return NativeMethods.IsWindowVisible(taskbar) == visible;
         }
 
+        public bool TryGetPrimaryMonitorInfo(
+            IntPtr taskbar,
+            out NativeRect workArea,
+            out NativeRect bounds)
+        {
+            workArea = default;
+            bounds = default;
+            IntPtr monitor = NativeMethods.MonitorFromWindow(
+                taskbar,
+                MonitorDefaultToNearest);
+            if (monitor == IntPtr.Zero)
+                return false;
+
+            var info = MonitorInfo.Create();
+            if (!NativeMethods.GetMonitorInfo(
+                    monitor,
+                    ref info))
+            {
+                return false;
+            }
+
+            workArea = info.WorkArea;
+            bounds = info.Monitor;
+            return true;
+        }
+
         public bool SetWorkArea(NativeRect workArea)
             => NativeMethods.SetSystemParametersInfo(
                 SpiSetWorkArea,
                 0,
                 ref workArea,
                 SpifSendChange);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MonitorInfo
+    {
+        public uint CbSize;
+        public NativeRect Monitor;
+        public NativeRect WorkArea;
+        public uint Flags;
+
+        public static MonitorInfo Create() => new()
+        {
+            CbSize = (uint)Marshal.SizeOf<MonitorInfo>()
+        };
     }
 
     private static class NativeMethods
@@ -589,6 +673,20 @@ public sealed class TaskbarController : ITaskbarController
             int cx,
             int cy,
             uint flags);
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr MonitorFromWindow(
+            IntPtr hwnd,
+            uint flags);
+
+        [DllImport(
+            "user32.dll",
+            EntryPoint = "GetMonitorInfoW",
+            SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool GetMonitorInfo(
+            IntPtr monitor,
+            ref MonitorInfo info);
 
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

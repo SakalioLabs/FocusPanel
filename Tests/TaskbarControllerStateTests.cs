@@ -57,8 +57,8 @@ public sealed class TaskbarControllerStateTests
             Assert.Null(error);
             Assert.True(controller.IsReplacementEnabled);
             Assert.False(native.Visible);
-            Assert.Equal(1040, native.WorkArea.Bottom);
-            Assert.Equal((uint)3, native.AppBarState);
+            Assert.Equal(1080, native.WorkArea.Bottom);
+            Assert.Equal((uint)2, native.AppBarState);
             Assert.True(File.Exists(sessionFile));
 
             controller.Restore();
@@ -68,7 +68,7 @@ public sealed class TaskbarControllerStateTests
             Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
             Assert.Equal(1040, native.WorkArea.Bottom);
-            Assert.Equal((uint)2, native.AppBarState);
+            Assert.Equal((uint)3, native.AppBarState);
             Assert.Equal(workAreaWritesAfterFirstRestore, native.WorkAreaWriteCount);
             Assert.False(File.Exists(sessionFile));
             Assert.Equal(1, watchdog.StartCount);
@@ -110,7 +110,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void AutoHideFailure_RollsBackInsteadOfEnteringPartialReplacement()
+    public void NativeRevealEdgeReleaseFailure_RollsBackInsteadOfEnteringPartialReplacement()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -132,6 +132,104 @@ public sealed class TaskbarControllerStateTests
             Assert.True(native.Visible);
             Assert.Equal(1040, native.WorkArea.Bottom);
             Assert.False(File.Exists(sessionFile));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void WorkAreaReleaseFailure_RestoresOriginalStateAndKeepsTaskbarVisible()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi
+        {
+            SetWorkAreaSucceeds = false
+        };
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+
+            Assert.False(
+                controller.TryEnableReplacement(
+                    out string? error));
+            Assert.False(
+                string.IsNullOrWhiteSpace(
+                    error));
+            Assert.True(native.Visible);
+            Assert.Equal(
+                1040,
+                native.WorkArea.Bottom);
+            Assert.Equal(
+                (uint)3,
+                native.AppBarState);
+            Assert.False(
+                File.Exists(sessionFile));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void WorkAreaChange_StopsReplacementWithoutRewriteLoop()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+            TaskbarReplacementStoppedEvent? stopped = null;
+            controller.ReplacementStopped +=
+                value => stopped = value;
+
+            Assert.True(
+                controller.TryEnableReplacement(
+                    out _));
+            int writesAfterEnable =
+                native.WorkAreaWriteCount;
+            native.OverrideWorkArea(
+                bottom: 1040);
+
+            controller.RunGuardOnceForTests();
+            Assert.True(
+                controller.IsReplacementEnabled);
+            Assert.Equal(
+                writesAfterEnable,
+                native.WorkAreaWriteCount);
+
+            controller.RunGuardOnceForTests();
+            Assert.False(
+                controller.IsReplacementEnabled);
+            Assert.NotNull(stopped);
+            Assert.True(native.Visible);
+            Assert.Equal(
+                writesAfterEnable + 1,
+                native.WorkAreaWriteCount);
         }
         finally
         {
@@ -395,7 +493,7 @@ public sealed class TaskbarControllerStateTests
             controller.ReplacementStopped += value => stopped = value;
 
             Assert.True(controller.TryEnableReplacement(out _));
-            native.AppBarState = 2;
+            native.AppBarState = 3;
             native.SetAppBarStateSucceeds = false;
 
             controller.RunGuardOnceForTests();
@@ -591,7 +689,7 @@ public sealed class TaskbarControllerStateTests
     {
         public IntPtr TaskbarHandle { get; set; } = new(1);
         public bool Visible { get; set; } = true;
-        public uint AppBarState { get; set; } = 2;
+        public uint AppBarState { get; set; } = 3;
         public int WorkAreaWriteCount { get; private set; }
         public int TaskbarVisibilityWriteCount { get; private set; }
         public int HideWriteCount { get; private set; }
@@ -612,6 +710,13 @@ public sealed class TaskbarControllerStateTests
             Top = 0,
             Right = 1920,
             Bottom = 1040
+        };
+        public TaskbarController.NativeRect PrimaryBounds { get; } = new()
+        {
+            Left = 0,
+            Top = 0,
+            Right = 1920,
+            Bottom = 1080
         };
 
         public IntPtr FindPrimaryTaskbar() => TaskbarHandle;
@@ -659,6 +764,16 @@ public sealed class TaskbarControllerStateTests
             return true;
         }
 
+        public bool TryGetPrimaryMonitorInfo(
+            IntPtr taskbar,
+            out TaskbarController.NativeRect workArea,
+            out TaskbarController.NativeRect bounds)
+        {
+            workArea = WorkArea;
+            bounds = PrimaryBounds;
+            return true;
+        }
+
         public bool SetWorkArea(TaskbarController.NativeRect workArea)
         {
             if (!SetWorkAreaSucceeds)
@@ -670,6 +785,19 @@ public sealed class TaskbarControllerStateTests
             WorkArea = workArea;
             WorkAreaWriteCount++;
             return true;
+        }
+
+        public void OverrideWorkArea(
+            int bottom)
+        {
+            WorkArea =
+                new TaskbarController.NativeRect
+                {
+                    Left = WorkArea.Left,
+                    Top = WorkArea.Top,
+                    Right = WorkArea.Right,
+                    Bottom = bottom
+                };
         }
     }
 }

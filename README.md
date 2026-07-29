@@ -28,7 +28,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![工作区固定展开与自动收起生命周期](docs/images/workspace-pin-lifecycle.svg)
 - 键盘导航使用统一的 2px Fluent 圆角焦点环，轮廓只在键盘操作时出现，不给鼠标点击增加常驻边框；高对比度模式跟随 Windows 系统高亮色。
 - 固定应用与运行应用按 Windows AppUserModelID 或可执行路径合并为单一任务栏图标；固定项保持用户顺序，未固定运行项保持本次运行中的稳定顺序。
-- 同一应用有多个窗口时，图标右上角显示轻量数量角标；悬停工具提示会列出最多 3 个窗口标题及剩余数量，不必先点开菜单才能判断内容。超过 99 个窗口显示 `99+`，长标题按 Unicode 文本元素安全截断。
+- 运行应用图标停留约 `420ms` 会打开可操作的单层窗口切换器：单窗口和多窗口都可直接点击标题切换，当前窗口带勾选标记；移出图标与菜单约 `260ms` 自动关闭。快速划过、按住鼠标拖动和已有右键菜单时不会误开。右上角数量角标继续显示分组规模，超过 99 个窗口显示 `99+`。
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
 - 应用搜索按“完整名称 → 可执行文件名 → 名称前缀 → 缩写 → 多词前缀 → 包含”分级匹配；`vsc` 可命中 Visual Studio Code，`studio co` 可按词查找，标点、大小写和重音符号会被统一规范化。固定状态只在同一匹配等级内作为次级排序，不会再把固定但弱相关的结果压到精确结果前面；不做易误启动的无限模糊纠错。
 - 搜索结果和任务列表统一继承全局 Fluent `ListBox/ListBoxItem`：启动按钮与标题显式使用动态 `FocusTextBrush`，选中项使用 `FocusAccentSoftBrush`、强调描边和主题文字，不再落回 WPF 的系统浅蓝选择背景，因此深色、浅色及系统强调色变化下都保持可读。
@@ -122,6 +122,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![统一应用栏可靠启动链路](docs/images/app-launch-safety.svg)
 
 ![统一应用栏并发后台启动协调](docs/images/app-launch-background-coordinator.svg)
+
+![完整任务栏接管与悬停窗口切换](docs/images/taskbar-exclusive-hover-switcher.svg)
 
 ![任务栏操作结果与失败反馈](docs/images/taskbar-action-feedback.svg)
 
@@ -259,7 +261,7 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 
 ## 侧边任务栏完整替代与安全恢复
 
-完整替代模式先使用微软公开的 `ABM_SETSTATE + ABS_AUTOHIDE` 让 Explorer 释放工作区，再一次性隐藏主屏 `Shell_TrayWnd`。守护器只读取并验证状态，不会周期性执行 `ShowWindow` 或 `SPI_SETWORKAREA`，因此不会与 Explorer 在“占用/释放工作区”之间来回争抢。Windows Shell 面板可能让任务栏窗口短暂变为可见，守护器会要求连续两次、约 4 秒的同类异常才判定替代状态失效；中间恢复正常会清除待确认状态。持续失效后 FocusPanel 只恢复一次原设置，不反复隐藏；紧急快捷键不等待确认，立即恢复。
+完整替代模式会先保存主屏原工作区、AppBar 状态和任务栏可见性，再清除 `ABS_AUTOHIDE`、一次性把主屏工作区释放到完整显示器边界，并隐藏主屏 `Shell_TrayWnd`。因此 Explorer 不再保留底边自动隐藏呼出通道，鼠标触底不会重新展开原生任务栏。守护器只读取并验证状态，不会周期性执行 `ShowWindow`、`ABM_SETSTATE` 或 `SPI_SETWORKAREA`，不会与 Explorer 在“占用/释放工作区”之间来回争抢。Windows Shell 面板可能让任务栏窗口短暂变为可见，守护器会要求连续两次、约 4 秒的同类异常才判定替代状态失效；中间恢复正常会清除待确认状态。持续失效后 FocusPanel 只恢复一次原工作区、AppBar 与可见性，不反复隐藏；紧急快捷键不等待确认，立即恢复。
 
 接管成功时会记录当前主屏 `Shell_TrayWnd` 句柄。Explorer 重启并创建新宿主后，即使新窗口碰巧处于隐藏状态，也会准确报告“Explorer 宿主变化”，而不是误报成普通可见性变化。每次恢复和重新接管都会推进会话代际，已经在后台读取中的旧守护结果会自动作废，不会污染新会话或弹出迟到警告。状态中心和设置页会显示停止原因；确认环境正常后，由用户点击“重新接管任务栏”手动启用。
 
@@ -444,7 +446,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.44 `
+  -Version 0.10.45 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -455,7 +457,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.44-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.45-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

@@ -3518,14 +3518,22 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "MainWindow.xaml"));
 
         Assert.Contains("AbsAutoHide", controller);
-        Assert.Contains("UsesNativeAutoHide = true", controller);
+        Assert.Contains("UsesNativeAutoHide = false", controller);
         Assert.Contains("SetTaskbarVisible(taskbar, false)", controller);
         Assert.Contains("ValidateReplacement()", controller);
-        Assert.DoesNotContain(
+        Assert.Contains(
             "_native.SetWorkArea(_state.PrimaryBounds)",
             controller);
-        Assert.DoesNotContain("ApplyReplacement();", controller[
-            controller.IndexOf("private void GuardReplacementSafely", StringComparison.Ordinal)..]);
+        string guard = controller[
+            controller.IndexOf(
+                "private void GuardReplacementSafely",
+                StringComparison.Ordinal)..];
+        Assert.DoesNotContain(
+            "_native.SetWorkArea(",
+            guard);
+        Assert.DoesNotContain(
+            "ApplyReplacement();",
+            guard);
         Assert.Contains("守护器只验证状态，不反复改写工作区", onboarding);
     }
 
