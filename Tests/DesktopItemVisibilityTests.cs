@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using FocusPanel.Models;
 using FocusPanel.Services;
 using Xunit;
@@ -75,6 +76,129 @@ public sealed class DesktopItemVisibilityTests
     }
 
     [Fact]
+    public async Task VisibilityIo_ReadsAttributesOffCallingThread()
+    {
+        int callerThread =
+            Environment.CurrentManagedThreadId;
+        var visibility =
+            new RecordingVisibilityService
+            {
+                Attributes =
+                    FileAttributes.Archive
+            };
+        var io =
+            new DesktopVisibilityIo(
+                visibility);
+
+        FileAttributes attributes =
+            await io.ReadAttributesAsync(
+                @"C:\Desktop\item.txt");
+
+        Assert.Equal(
+            FileAttributes.Archive,
+            attributes);
+        Assert.NotEqual(
+            callerThread,
+            visibility.LastThreadId);
+        Assert.Equal(
+            1,
+            visibility.ExistsCalls);
+        Assert.Equal(
+            1,
+            visibility.GetAttributesCalls);
+    }
+
+    [Fact]
+    public async Task VisibilityIo_LocalWriteSetsAndNotifiesOffCallingThread()
+    {
+        int callerThread =
+            Environment.CurrentManagedThreadId;
+        var visibility =
+            new RecordingVisibilityService();
+        var io =
+            new DesktopVisibilityIo(
+                visibility);
+
+        await io.ApplyAttributesAsync(
+            @"C:\Desktop\item.txt",
+            FileAttributes.Hidden
+            | FileAttributes.System,
+            false);
+
+        Assert.NotEqual(
+            callerThread,
+            visibility.LastThreadId);
+        Assert.Equal(
+            1,
+            visibility.SetAttributesCalls);
+        Assert.Equal(
+            1,
+            visibility.NotifyCalls);
+    }
+
+    [Fact]
+    public async Task VisibilityIo_ElevatedWriteUsesSameBackgroundBoundary()
+    {
+        int callerThread =
+            Environment.CurrentManagedThreadId;
+        int elevatedThread = callerThread;
+        int elevatedCalls = 0;
+        var visibility =
+            new RecordingVisibilityService();
+        var io =
+            new DesktopVisibilityIo(
+                visibility,
+                (_, _) =>
+                {
+                    elevatedThread =
+                        Environment
+                            .CurrentManagedThreadId;
+                    elevatedCalls++;
+                });
+
+        await io.ApplyAttributesAsync(
+            @"C:\Users\Public\Desktop\item.txt",
+            FileAttributes.Normal,
+            true);
+
+        Assert.Equal(
+            1,
+            elevatedCalls);
+        Assert.NotEqual(
+            callerThread,
+            elevatedThread);
+        Assert.Equal(
+            0,
+            visibility.SetAttributesCalls);
+        Assert.Equal(
+            0,
+            visibility.NotifyCalls);
+    }
+
+    [Fact]
+    public async Task VisibilityIo_MissingItemFailsWithoutAttributeRead()
+    {
+        var visibility =
+            new RecordingVisibilityService
+            {
+                ItemExists = false
+            };
+        var io =
+            new DesktopVisibilityIo(
+                visibility);
+
+        await Assert.ThrowsAsync<
+            FileNotFoundException>(
+            () =>
+                io.ReadAttributesAsync(
+                    @"C:\Desktop\missing.txt"));
+
+        Assert.Equal(
+            0,
+            visibility.GetAttributesCalls);
+    }
+
+    [Fact]
     public void WindowsBoundary_PreservesIdentityAcrossRenameAndRestoresAttributes()
     {
         string directory = Path.Combine(
@@ -125,5 +249,78 @@ public sealed class DesktopItemVisibilityTests
         }
 
         throw new DirectoryNotFoundException("未找到 FocusPanel.csproj。");
+    }
+
+    private sealed class RecordingVisibilityService
+        : IDesktopItemVisibilityService
+    {
+        internal bool ItemExists { get; set; } =
+            true;
+
+        internal FileAttributes Attributes
+        {
+            get;
+            set;
+        } = FileAttributes.Normal;
+
+        internal int LastThreadId { get; private set; }
+
+        internal int ExistsCalls { get; private set; }
+
+        internal int GetAttributesCalls
+        {
+            get;
+            private set;
+        }
+
+        internal int SetAttributesCalls
+        {
+            get;
+            private set;
+        }
+
+        internal int NotifyCalls { get; private set; }
+
+        public bool ShowsProtectedSystemFiles =>
+            false;
+
+        public bool Exists(string path)
+        {
+            RecordThread();
+            ExistsCalls++;
+            return ItemExists;
+        }
+
+        public FileAttributes GetAttributes(
+            string path)
+        {
+            RecordThread();
+            GetAttributesCalls++;
+            return Attributes;
+        }
+
+        public void SetAttributes(
+            string path,
+            FileAttributes attributes)
+        {
+            RecordThread();
+            SetAttributesCalls++;
+            Attributes = attributes;
+        }
+
+        public string? TryGetIdentity(
+            string path) =>
+            null;
+
+        public void NotifyAttributesChanged(
+            string path)
+        {
+            RecordThread();
+            NotifyCalls++;
+        }
+
+        private void RecordThread() =>
+            LastThreadId =
+                Environment.CurrentManagedThreadId;
     }
 }

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1727"/>
+      <stop offset="1" stop-color="#182a42"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#63baff"/>
+      <stop offset="1" stop-color="#9783ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">桌面收纳 · 文件属性后台事务</text>
+  <text x="54" y="97" fill="#abc9ed" font-family="Segoe UI, Microsoft YaHei" font-size="16">存在检查、原属性读取、Hidden + System 写入与 Explorer 通知不再占用 WPF 界面线程</text>
+
+  <rect x="54" y="136" width="244" height="252" rx="24" fill="#22344d" stroke="#405d7f"/>
+  <text x="79" y="178" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">Panel 交互层</text>
+  <rect x="78" y="204" width="196" height="45" rx="16" fill="#2c4b6f"/>
+  <text x="176" y="232" text-anchor="middle" fill="#8fd2ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">拖入 / 自动收纳</text>
+  <rect x="78" y="262" width="196" height="45" rx="16" fill="#2c4b6f"/>
+  <text x="176" y="290" text-anchor="middle" fill="#8fd2ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">保持 Panel 展开</text>
+  <text x="176" y="336" text-anchor="middle" fill="#b8cce6" font-family="Segoe UI, Microsoft YaHei" font-size="14">UI 只更新卡片与提示</text>
+  <text x="176" y="362" text-anchor="middle" fill="#b8cce6" font-family="Segoe UI, Microsoft YaHei" font-size="14">不直接访问文件属性</text>
+
+  <path d="M318 262 H358" stroke="url(#flow)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M348 251 L361 262 L348 273" fill="none" stroke="#72b9ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="382" y="121" width="348" height="284" rx="26" fill="#2a415f" stroke="#5a7da6"/>
+  <text x="556" y="165" text-anchor="middle" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">单一文件属性 I/O 边界</text>
+  <circle cx="421" cy="211" r="9" fill="#69c3ff"/>
+  <text x="445" y="217" fill="#dbe8fa" font-family="Segoe UI, Microsoft YaHei" font-size="15">后台确认项目存在并读取完整原属性</text>
+  <circle cx="421" cy="255" r="9" fill="#73dfb1"/>
+  <text x="445" y="261" fill="#dbe8fa" font-family="Segoe UI, Microsoft YaHei" font-size="15">追加 Hidden + System，不移动实体文件</text>
+  <circle cx="421" cy="299" r="9" fill="#a590ff"/>
+  <text x="445" y="305" fill="#dbe8fa" font-family="Segoe UI, Microsoft YaHei" font-size="15">非提权路径通知 Explorer 刷新属性</text>
+  <rect x="414" y="338" width="284" height="42" rx="18" fill="#20334d"/>
+  <text x="556" y="365" text-anchor="middle" fill="#b9d8fa" font-family="Segoe UI, Microsoft YaHei" font-size="14">与刷新 / 自动整理闸门协同串行</text>
+
+  <path d="M750 262 H790" stroke="url(#flow)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M780 251 L793 262 L780 273" fill="none" stroke="#9188ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="814" y="136" width="252" height="252" rx="24" fill="#22344d" stroke="#405d7f"/>
+  <text x="839" y="178" fill="#f1f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">权限对称恢复</text>
+  <rect x="838" y="204" width="204" height="52" rx="16" fill="#294b43"/>
+  <text x="940" y="226" text-anchor="middle" fill="#9aebc2" font-family="Segoe UI, Microsoft YaHei" font-size="14">用户桌面</text>
+  <text x="940" y="246" text-anchor="middle" fill="#c5e9d7" font-family="Segoe UI, Microsoft YaHei" font-size="13">普通写入 + Shell 通知</text>
+  <rect x="838" y="270" width="204" height="52" rx="16" fill="#45405e"/>
+  <text x="940" y="292" text-anchor="middle" fill="#cec4ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">公共桌面</text>
+  <text x="940" y="312" text-anchor="middle" fill="#d9d3f5" font-family="Segoe UI, Microsoft YaHei" font-size="13">应用与回滚使用同一提权路径</text>
+  <text x="940" y="356" text-anchor="middle" fill="#ffc4d3" font-family="Segoe UI, Microsoft YaHei" font-size="13">失败保留可恢复事务记录</text>
+
+  <rect x="54" y="438" width="1012" height="47" rx="18" fill="#1e3049" stroke="#3d5879"/>
+  <text x="560" y="468" text-anchor="middle" fill="#d9e8fb" font-family="Segoe UI, Microsoft YaHei" font-size="15">数据库先记录“收纳中” · 属性成功后标记稳定 · 任一步失败都按原权限恢复原属性或进入需要恢复状态</text>
+</svg>

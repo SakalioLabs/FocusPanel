@@ -217,6 +217,7 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 - 普通“显示隐藏项目”开启时，已收纳图标仍会隐藏；如果同时开启“显示受保护的系统文件”，设置页会提示 Windows 无法保证图标不可见。
 - 不再注入或持续修改 Explorer 的桌面列表；Explorer 刷新、重启和系统重启后按文件属性保持状态。
 - 属性改变后会通知 Shell 更新项目并重新枚举桌面目录，避免图标只变成半透明却仍停留在桌面。
+- 收纳时的文件存在检查、完整原属性读取、`Hidden + System` 写入及 Explorer 属性通知统一经过后台 I/O 边界，不再在 WPF 调用上下文同步访问文件系统；公共桌面的应用与失败回滚使用同一提权路径，避免属性已经改变但普通权限无法恢复。数据库仍先记录“收纳中”，成功后标记稳定，失败时恢复原属性或保留“需要恢复”记录。
 - 旧版 `.FocusPanel` 仓库继续兼容，升级时不自动移动旧文件。
 - 不创建全屏桌面覆盖窗口；Windows 原生桌面保持可点击，文件收纳操作集中在侧边栏工作区完成。
 - 桌面收纳工具栏、收纳盒、视图选项、新建、修复和重命名已全部使用共享 Fluent 控件；页面不再保留 Material 兼容控件或矩形/圆角双重外框。
@@ -266,6 +267,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 ![桌面右键菜单目标安全链路](docs/images/organizer-context-menu-target.svg)
 
 ![桌面收纳异步生命周期](docs/images/organizer-async-lifecycle.svg)
+
+![桌面收纳文件属性后台事务](docs/images/organizer-visibility-background-io.svg)
 
 ![桌面拖拽交互锁与异常边界](docs/images/organizer-drag-lifecycle.svg)
 
@@ -347,7 +350,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.10 `
+  -Version 0.10.11 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -357,7 +360,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.10.10-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.11-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

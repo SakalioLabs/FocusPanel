@@ -30,6 +30,8 @@ public class FileOrganizerService : IDisposable
     /// <summary>旧版本仓库，仅用于兼容已经被移动的项目。</summary>
     private readonly string _storageRoot;
     private readonly IDesktopItemVisibilityService _visibility;
+    private readonly IDesktopVisibilityIo
+        _visibilityIo;
     private FileSystemWatcher _desktopWatcher = null!;
     private FileSystemWatcher? _commonDesktopWatcher;
     private FileSystemWatcher? _storageWatcher;
@@ -78,6 +80,9 @@ public class FileOrganizerService : IDisposable
         _commonDesktopPath = commonDesktopPath;
         _storageRoot = Path.Combine(_desktopPath, ".FocusPanel");
         _visibility = visibility;
+        _visibilityIo =
+            new DesktopVisibilityIo(
+                visibility);
         _debounceTimer = new System.Threading.Timer(
             _ => _ = ProcessPendingChangesAsync(),
             null,
@@ -1051,10 +1056,10 @@ public class FileOrganizerService : IDisposable
             return;
         }
 
-        if (!_visibility.Exists(fullPath))
-            throw new FileNotFoundException("找不到要收纳的桌面项目。", fullPath);
-
-        FileAttributes originalAttributes = _visibility.GetAttributes(fullPath);
+        FileAttributes originalAttributes =
+            await _visibilityIo
+                .ReadAttributesAsync(fullPath)
+                .ConfigureAwait(false);
         int preferenceId = 0;
 
         await Task.Run(() =>
@@ -1088,13 +1093,14 @@ public class FileOrganizerService : IDisposable
         try
         {
             FileAttributes collectedAttributes = DesktopItemAttributePolicy.Collect(originalAttributes);
-            if (location == DesktopDropLocation.CommonDesktop)
-                DesktopVisibilityElevatedHelper.SetAttributes(fullPath, collectedAttributes);
-            else
-            {
-                _visibility.SetAttributes(fullPath, collectedAttributes);
-                _visibility.NotifyAttributesChanged(fullPath);
-            }
+            await _visibilityIo
+                .ApplyAttributesAsync(
+                    fullPath,
+                    collectedAttributes,
+                    location
+                    == DesktopDropLocation
+                        .CommonDesktop)
+                .ConfigureAwait(false);
 
             await Task.Run(() =>
             {
@@ -1112,8 +1118,14 @@ public class FileOrganizerService : IDisposable
             bool attributesRestored = false;
             try
             {
-                _visibility.SetAttributes(fullPath, originalAttributes);
-                _visibility.NotifyAttributesChanged(fullPath);
+                await _visibilityIo
+                    .ApplyAttributesAsync(
+                        fullPath,
+                        originalAttributes,
+                        location
+                        == DesktopDropLocation
+                            .CommonDesktop)
+                    .ConfigureAwait(false);
                 attributesRestored = true;
             }
             catch { }

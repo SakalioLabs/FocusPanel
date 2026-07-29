@@ -128,6 +128,14 @@ public sealed class FileOrganizerLifecycleContractTests
         Assert.DoesNotContain(
             "Application.Current.Dispatcher",
             service);
+        Assert.Matches(
+            @"_visibilityIo\s*\.ReadAttributesAsync\(",
+            service);
+        Assert.True(
+            Regex.Matches(
+                service,
+                @"_visibilityIo[\s\S]*?\.ApplyAttributesAsync\(")
+            .Count >= 2);
         Assert.True(
             Regex.Matches(
                 service,
