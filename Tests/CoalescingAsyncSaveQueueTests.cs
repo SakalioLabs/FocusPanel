@@ -253,20 +253,32 @@ public sealed class CoalescingAsyncSaveQueueTests
             viewModel.IndexOf(
                 "_taskSaveQueue.CompleteAsync()",
                 StringComparison.Ordinal)
-            < viewModel.IndexOf(
-                "_context.Dispose();",
-                StringComparison.Ordinal));
+            >= 0);
+        Assert.DoesNotContain(
+            "new AppDbContext()",
+            viewModel);
+        Assert.DoesNotContain(
+            "_context.Dispose();",
+            viewModel);
 
         Assert.Contains(
             "SemaphoreSlim _operationGate",
             service);
-        Assert.Equal(
-            7,
-            service.Split(
-                    "ExecuteAsync(",
-                    StringSplitOptions.None)
-                .Length
-            - 1);
+        Assert.Contains(
+            "await Task.Run(operation)",
+            service);
+        Assert.Contains(
+            "using var context = new AppDbContext();",
+            service);
+        Assert.Contains(
+            ".AsNoTracking()",
+            service);
+        Assert.Contains(
+            "LoadGlobalCustomFieldsAsync(",
+            service);
+        Assert.Contains(
+            "SaveGlobalCustomFieldsAsync(",
+            service);
         Assert.Contains(
             "WaitForIdleAsync()",
             service);

@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FocusPanel.Data;
 using FocusPanel.Models;
 using FocusPanel.Services;
 using System.Collections.ObjectModel;
@@ -133,7 +132,6 @@ public partial class TasksViewModel
     : ObservableObject, IDisposable
 {
     private readonly TaskService _taskService;
-    private readonly AppDbContext _context; // Keep context alive
     private readonly SettingsService _settingsService;
     private readonly IFolderPickerService _folderPickerService;
     private readonly IFilePickerService _filePickerService;
@@ -142,6 +140,8 @@ public partial class TasksViewModel
     private TodoItem? _lastSaveFailureItem;
     private bool _isDisposed;
     private int _loadGeneration;
+    private string _globalCustomFieldsJson =
+        string.Empty;
 
     // Unified Items List (Replaces RootItems and ChildItems)
     [ObservableProperty]
@@ -236,8 +236,7 @@ public partial class TasksViewModel
             folderPickerService;
         _filePickerService =
             filePickerService;
-        _context = new AppDbContext();
-        _taskService = new TaskService(_context);
+        _taskService = new TaskService();
         _taskSaveQueue =
             new CoalescingAsyncSaveQueue<TodoItem>(
                 _taskService.UpdateItemAsync,
@@ -248,6 +247,9 @@ public partial class TasksViewModel
             OnQueuedItemSaveFailed;
         _settingsService = new SettingsService();
         ImageSavePath = _settingsService.CurrentSettings.ImageSavePath;
+        _globalCustomFieldsJson =
+            _settingsService.CurrentSettings
+                .GlobalCustomFieldsJson;
         
         _ = InitializeAsync();
     }
@@ -257,6 +259,12 @@ public partial class TasksViewModel
         try
         {
             await LoadCurrentViewItems();
+            _globalCustomFieldsJson =
+                await _taskService
+                    .LoadGlobalCustomFieldsAsync(
+                        _globalCustomFieldsJson);
+            if (_isDisposed)
+                return;
             LoadCustomFieldDefinitions();
         }
         catch (Exception ex)
@@ -472,42 +480,10 @@ public partial class TasksViewModel
     private void LoadCustomFieldDefinitions()
     {
         CustomFieldDefinitions.Clear();
-        string json = string.Empty;
-
-        if (CurrentParentItem != null)
-        {
-            json = CurrentParentItem.CustomFieldsJson;
-        }
-        else
-        {
-            // Global fields (from AppConfig)
-            try
-            {
-                using (var context = new AppDbContext())
-                {
-                    var config = context.AppConfigs.Find("GlobalCustomFieldsJson");
-                    if (config != null)
-                    {
-                        json = config.Value;
-                    }
-                    else
-                    {
-                        // Migration: Load from Settings, and save to DB for next time
-                        json = _settingsService.CurrentSettings.GlobalCustomFieldsJson;
-                        if (!string.IsNullOrEmpty(json))
-                        {
-                            context.AppConfigs.Add(new AppConfig { Key = "GlobalCustomFieldsJson", Value = json });
-                            context.SaveChanges();
-                        }
-                    }
-                }
-            }
-            catch 
-            {
-                // Fallback to settings.json temporarily if DB fails
-                json = _settingsService.CurrentSettings.GlobalCustomFieldsJson;
-            }
-        }
+        string json =
+            CurrentParentItem?
+                .CustomFieldsJson
+            ?? _globalCustomFieldsJson;
 
         if (string.IsNullOrEmpty(json)) return;
 
@@ -568,29 +544,31 @@ public partial class TasksViewModel
         }
         else
         {
-            // Save Global (to AppConfig)
             try
             {
-                using (var context = new AppDbContext())
-                {
-                    var config = await context.AppConfigs.FindAsync("GlobalCustomFieldsJson");
-                    if (config == null)
-                    {
-                        config = new AppConfig { Key = "GlobalCustomFieldsJson", Value = json };
-                        context.AppConfigs.Add(config);
-                    }
-                    else
-                    {
-                        config.Value = json;
-                    }
-                    await context.SaveChangesAsync();
-                }
+                await _taskService
+                    .SaveGlobalCustomFieldsAsync(
+                        json);
+                _globalCustomFieldsJson = json;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                TaskStatusMessage =
+                    $"全局字段保存失败：{ex.Message}";
+                return;
+            }
             
-            // Still save to settings.json as backup/legacy
-            _settingsService.CurrentSettings.GlobalCustomFieldsJson = json;
-            _settingsService.SaveSettings();
+            _settingsService.CurrentSettings
+                .GlobalCustomFieldsJson = json;
+            bool backupSaved =
+                await Task.Run(
+                    _settingsService.SaveSettings);
+            if (!backupSaved)
+            {
+                TaskStatusMessage =
+                    _settingsService.LastError
+                    ?? "全局字段已保存到数据库，但旧设置备份未更新。";
+            }
         }
     }
     
@@ -642,7 +620,7 @@ public partial class TasksViewModel
     // --- Settings Logic ---
     
     [RelayCommand]
-    private void SelectImageSavePath()
+    private async Task SelectImageSavePath()
     {
         FolderPickerResult result =
             _folderPickerService.PickFolder(
@@ -674,7 +652,10 @@ public partial class TasksViewModel
         ImageSavePath = decision.Path;
         _settingsService.CurrentSettings.ImageSavePath =
             ImageSavePath;
-        if (_settingsService.SaveSettings())
+        bool saved =
+            await Task.Run(
+                _settingsService.SaveSettings);
+        if (saved)
             return;
 
         ImageSavePath = previousPath;
@@ -1077,6 +1058,5 @@ public partial class TasksViewModel
         _taskSaveQueue.ItemSaveFailed -=
             OnQueuedItemSaveFailed;
         CloseTaskDetailRequested?.Invoke();
-        _context.Dispose();
     }
 }

@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FocusPanel.Data;
@@ -9,90 +9,95 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FocusPanel.Services;
 
-public class TaskService
+internal sealed record TaskPersistenceHandlers(
+    Func<List<TodoItem>> LoadRootItems,
+    Func<int, List<TodoItem>> LoadChildItems,
+    Func<int, TodoItem?> LoadItemById,
+    Action<TodoItem> AddItem,
+    Action<TodoItem> UpdateItem,
+    Action<TodoItem> DeleteItem,
+    Func<string, string> LoadGlobalCustomFields,
+    Action<string> SaveGlobalCustomFields);
+
+public sealed class TaskService
 {
-    private readonly AppDbContext _context;
+    private const string GlobalCustomFieldsKey =
+        "GlobalCustomFieldsJson";
     private readonly SemaphoreSlim _operationGate =
         new(1, 1);
+    private readonly TaskPersistenceHandlers _handlers;
 
-    public TaskService(AppDbContext context)
+    public TaskService()
+        : this(
+            new TaskPersistenceHandlers(
+                LoadRootItemsCore,
+                LoadChildItemsCore,
+                LoadItemByIdCore,
+                AddItemCore,
+                UpdateItemCore,
+                DeleteItemCore,
+                LoadGlobalCustomFieldsCore,
+                SaveGlobalCustomFieldsCore))
     {
-        _context = context;
     }
 
-    // --- Unified CRUD ---
-
-    public async Task<List<TodoItem>> GetRootItemsAsync()
+    internal TaskService(
+        TaskPersistenceHandlers handlers)
     {
-        return await ExecuteAsync(
-                () =>
-                    _context.Todos
-                        .Where(t => t.ParentId == null)
-                        .OrderBy(t => t.Id)
-                        .ToListAsync())
-            .ConfigureAwait(false);
+        _handlers = handlers
+            ?? throw new ArgumentNullException(
+                nameof(handlers));
     }
 
-    public async Task<List<TodoItem>> GetChildItemsAsync(int parentId)
+    public Task<List<TodoItem>> GetRootItemsAsync() =>
+        ExecuteAsync(
+            _handlers.LoadRootItems);
+
+    public Task<List<TodoItem>> GetChildItemsAsync(
+        int parentId) =>
+        ExecuteAsync(
+            () => _handlers.LoadChildItems(
+                parentId));
+
+    public Task<TodoItem?> GetItemByIdAsync(
+        int id) =>
+        ExecuteAsync(
+            () => _handlers.LoadItemById(id));
+
+    public Task AddItemAsync(
+        TodoItem item) =>
+        ExecuteAsync(
+            () => _handlers.AddItem(item));
+
+    public Task UpdateItemAsync(
+        TodoItem item) =>
+        ExecuteAsync(
+            () => _handlers.UpdateItem(item));
+
+    public Task DeleteItemAsync(
+        TodoItem item)
     {
-        return await ExecuteAsync(
-                () =>
-                    _context.Todos
-                        .Where(t => t.ParentId == parentId)
-                        .OrderByDescending(t => t.CreatedAt)
-                        .ToListAsync())
-            .ConfigureAwait(false);
+        if (item.ParentId == null
+            && item.Id == 1)
+        {
+            return Task.CompletedTask;
+        }
+
+        return ExecuteAsync(
+            () => _handlers.DeleteItem(item));
     }
 
-    public async Task<TodoItem?> GetItemByIdAsync(int id)
-    {
-        return await ExecuteAsync(
-                () =>
-                    _context.Todos
-                        .Include(t => t.Children)
-                        .FirstOrDefaultAsync(t => t.Id == id))
-            .ConfigureAwait(false);
-    }
+    public Task<string> LoadGlobalCustomFieldsAsync(
+        string fallbackJson) =>
+        ExecuteAsync(
+            () => _handlers.LoadGlobalCustomFields(
+                fallbackJson));
 
-    public async Task AddItemAsync(TodoItem item)
-    {
-        await ExecuteAsync(
-                async () =>
-                {
-                    _context.Todos.Add(item);
-                    await _context.SaveChangesAsync()
-                        .ConfigureAwait(false);
-                })
-            .ConfigureAwait(false);
-    }
-
-    public async Task UpdateItemAsync(TodoItem item)
-    {
-        await ExecuteAsync(
-                async () =>
-                {
-                    _context.Todos.Update(item);
-                    await _context.SaveChangesAsync()
-                        .ConfigureAwait(false);
-                })
-            .ConfigureAwait(false);
-    }
-
-    public async Task DeleteItemAsync(TodoItem item)
-    {
-        // Protect Inbox (Root item with Id 1)
-        if (item.ParentId == null && item.Id == 1)
-            return;
-
-        await ExecuteAsync(
-                async () =>
-                {
-                    _context.Todos.Remove(item);
-                    await _context.SaveChangesAsync()
-                        .ConfigureAwait(false);
-                })
-            .ConfigureAwait(false);
-    }
+    public Task SaveGlobalCustomFieldsAsync(
+        string json) =>
+        ExecuteAsync(
+            () => _handlers.SaveGlobalCustomFields(
+                json));
 
     public async Task WaitForIdleAsync()
     {
@@ -102,13 +107,13 @@ public class TaskService
     }
 
     private async Task ExecuteAsync(
-        Func<Task> operation)
+        Action operation)
     {
         await _operationGate.WaitAsync()
             .ConfigureAwait(false);
         try
         {
-            await operation()
+            await Task.Run(operation)
                 .ConfigureAwait(false);
         }
         finally
@@ -118,18 +123,149 @@ public class TaskService
     }
 
     private async Task<TResult> ExecuteAsync<TResult>(
-        Func<Task<TResult>> operation)
+        Func<TResult> operation)
     {
         await _operationGate.WaitAsync()
             .ConfigureAwait(false);
         try
         {
-            return await operation()
+            return await Task.Run(operation)
                 .ConfigureAwait(false);
         }
         finally
         {
             _operationGate.Release();
         }
+    }
+
+    private static List<TodoItem>
+        LoadRootItemsCore()
+    {
+        using var context = new AppDbContext();
+        return context.Todos
+            .AsNoTracking()
+            .Where(item =>
+                item.ParentId == null)
+            .OrderBy(item =>
+                item.Id)
+            .ToList();
+    }
+
+    private static List<TodoItem>
+        LoadChildItemsCore(
+            int parentId)
+    {
+        using var context = new AppDbContext();
+        return context.Todos
+            .AsNoTracking()
+            .Where(item =>
+                item.ParentId == parentId)
+            .OrderByDescending(item =>
+                item.CreatedAt)
+            .ToList();
+    }
+
+    private static TodoItem?
+        LoadItemByIdCore(
+            int id)
+    {
+        using var context = new AppDbContext();
+        return context.Todos
+            .AsNoTrackingWithIdentityResolution()
+            .Include(item =>
+                item.Children)
+            .FirstOrDefault(item =>
+                item.Id == id);
+    }
+
+    private static void AddItemCore(
+        TodoItem item)
+    {
+        using var context = new AppDbContext();
+        context.Todos.Add(item);
+        context.SaveChanges();
+    }
+
+    private static void UpdateItemCore(
+        TodoItem item)
+    {
+        using var context = new AppDbContext();
+        TodoItem persisted =
+            TaskPersistenceMapper
+                .CloneState(item);
+        context.Attach(persisted);
+        context.Entry(persisted).State =
+            EntityState.Modified;
+        context.SaveChanges();
+    }
+
+    private static void DeleteItemCore(
+        TodoItem item)
+    {
+        using var context = new AppDbContext();
+        context.Todos.Remove(
+            new TodoItem
+            {
+                Id = item.Id
+            });
+        context.SaveChanges();
+    }
+
+    private static string
+        LoadGlobalCustomFieldsCore(
+            string fallbackJson)
+    {
+        using var context = new AppDbContext();
+        AppConfig? config =
+            context.AppConfigs
+                .AsNoTracking()
+                .FirstOrDefault(item =>
+                    item.Key
+                    == GlobalCustomFieldsKey);
+        if (config != null)
+            return config.Value
+                ?? string.Empty;
+
+        string fallback =
+            fallbackJson
+            ?? string.Empty;
+        if (fallback.Length == 0)
+            return fallback;
+
+        context.AppConfigs.Add(
+            new AppConfig
+            {
+                Key =
+                    GlobalCustomFieldsKey,
+                Value = fallback
+            });
+        context.SaveChanges();
+        return fallback;
+    }
+
+    private static void
+        SaveGlobalCustomFieldsCore(
+            string json)
+    {
+        using var context = new AppDbContext();
+        AppConfig? config =
+            context.AppConfigs.Find(
+                GlobalCustomFieldsKey);
+        if (config == null)
+        {
+            context.AppConfigs.Add(
+                new AppConfig
+                {
+                    Key =
+                        GlobalCustomFieldsKey,
+                    Value = json
+                });
+        }
+        else
+        {
+            config.Value = json;
+        }
+
+        context.SaveChanges();
     }
 }
