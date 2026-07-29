@@ -195,6 +195,69 @@ public sealed class TaskServiceBackgroundTests
             viewModel);
     }
 
+    [Fact]
+    public void TaskImageActions_UseBackgroundLifecycleAwareBoundaries()
+    {
+        string root = FindRepositoryRoot();
+        string tasks = System.IO.File.ReadAllText(
+            System.IO.Path.Combine(
+                root,
+                "ViewModels",
+                "TasksViewModel.cs"));
+        string customField =
+            System.IO.File.ReadAllText(
+                System.IO.Path.Combine(
+                    root,
+                    "ViewModels",
+                    "CustomFieldValueViewModel.cs"));
+        string importer =
+            System.IO.File.ReadAllText(
+                System.IO.Path.Combine(
+                    root,
+                    "Services",
+                    "TaskImageImportCoordinator.cs"));
+
+        Assert.Contains(
+            "TaskImageImportCoordinator",
+            tasks);
+        Assert.Contains(
+            "await _imageImporter.ImportAsync(",
+            tasks);
+        Assert.Contains(
+            "AllowConcurrentExecutions = true",
+            tasks);
+        Assert.Contains(
+            "DeactivateCurrentTaskFields();",
+            tasks);
+        Assert.DoesNotContain(
+            "Directory.CreateDirectory(",
+            tasks);
+        Assert.DoesNotContain(
+            "File.Copy(",
+            tasks);
+        Assert.Contains(
+            "ShellPathOpenCoordinator",
+            customField);
+        Assert.Contains(
+            "await _shellOpen.OpenAsync(path)",
+            customField);
+        Assert.Contains(
+            "internal void Deactivate()",
+            customField);
+        Assert.DoesNotContain(
+            "Process.Start",
+            customField);
+        Assert.Contains(
+            "Task.Run(",
+            importer);
+        Assert.Contains(
+            "Directory.CreateDirectory(",
+            importer);
+        Assert.Contains(
+            "File.Copy(",
+            importer);
+    }
+
     private static TaskPersistenceHandlers
         CreateHandlers(
             Func<List<TodoItem>>? loadRoots = null,

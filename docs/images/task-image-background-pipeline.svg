@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bgtaskimage" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101a2a"/>
+      <stop offset="1" stop-color="#282f4f"/>
+    </linearGradient>
+    <linearGradient id="flowtaskimage" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#60c9ff"/>
+      <stop offset="1" stop-color="#a68cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1120" height="520" rx="30" fill="url(#bgtaskimage)"/>
+  <text x="54" y="62" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">任务图片 · 后台导入与安全打开</text>
+  <text x="54" y="97" fill="#b9cce8" font-family="Segoe UI, Microsoft YaHei" font-size="16">网络盘、大图片和失效文件关联不再占用 WPF 界面线程</text>
+
+  <rect x="54" y="137" width="250" height="250" rx="24" fill="#223650" stroke="#496889"/>
+  <text x="179" y="178" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">任务详情</text>
+  <rect x="80" y="210" width="198" height="50" rx="16" fill="#2b4c6e"/>
+  <text x="179" y="241" text-anchor="middle" fill="#a8e0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">选择 Markdown 图片</text>
+  <rect x="80" y="279" width="198" height="50" rx="16" fill="#2b4c6e"/>
+  <text x="179" y="310" text-anchor="middle" fill="#a8e0ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">点击已插入图片</text>
+  <text x="179" y="359" text-anchor="middle" fill="#bfd0e8" font-family="Segoe UI, Microsoft YaHei" font-size="13">选择后立即恢复界面响应</text>
+
+  <path d="M324 262 H364" stroke="url(#flowtaskimage)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M353 251 L367 262 L353 273" fill="none" stroke="#68c6ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="390" y="118" width="340" height="288" rx="26" fill="#2b405f" stroke="#6382aa"/>
+  <text x="560" y="157" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="700">后台附件边界</text>
+  <circle cx="430" cy="202" r="9" fill="#68c7ff"/>
+  <text x="454" y="208" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">复制并清理源路径与目标目录</text>
+  <circle cx="430" cy="244" r="9" fill="#8ce4b9"/>
+  <text x="454" y="250" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">工作线程创建目录与复制文件</text>
+  <circle cx="430" cy="286" r="9" fill="#ad97ff"/>
+  <text x="454" y="292" fill="#e2ebfa" font-family="Segoe UI, Microsoft YaHei" font-size="15">Shell 打开异常转换为失败结果</text>
+  <rect x="422" y="332" width="276" height="47" rx="16" fill="#203149"/>
+  <text x="560" y="352" text-anchor="middle" fill="#cbdcf1" font-family="Segoe UI, Microsoft YaHei" font-size="13">仍是当前任务才追加 Markdown</text>
+  <text x="560" y="369" text-anchor="middle" fill="#9fb7d3" font-family="Segoe UI, Microsoft YaHei" font-size="12">关闭或切换后拒绝迟到结果</text>
+
+  <path d="M750 262 H790" stroke="url(#flowtaskimage)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M779 251 L793 262 L779 273" fill="none" stroke="#9e90ff" stroke-width="5" stroke-linejoin="round"/>
+
+  <rect x="816" y="137" width="250" height="250" rx="24" fill="#293852" stroke="#50698c"/>
+  <text x="941" y="178" text-anchor="middle" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="700">安全结果</text>
+  <rect x="842" y="210" width="198" height="48" rx="16" fill="#294d43"/>
+  <text x="941" y="240" text-anchor="middle" fill="#a2edc5" font-family="Segoe UI, Microsoft YaHei" font-size="14">源文件保持不变</text>
+  <rect x="842" y="273" width="198" height="48" rx="16" fill="#473f64"/>
+  <text x="941" y="303" text-anchor="middle" fill="#d1c7ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">目标文件名唯一</text>
+  <text x="941" y="351" text-anchor="middle" fill="#bccde5" font-family="Segoe UI, Microsoft YaHei" font-size="13">错误返回 Fluent 提示</text>
+
+  <rect x="54" y="440" width="1012" height="46" rx="17" fill="#20334c" stroke="#426080"/>
+  <text x="560" y="469" text-anchor="middle" fill="#dce9f8" font-family="Segoe UI, Microsoft YaHei" font-size="15">任务详情持续响应 · 并发导入互不等待 · 迟到结果不串任务 · Shell 异常不闪退</text>
+</svg>

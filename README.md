@@ -23,6 +23,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
 - 搜索结果和任务列表统一继承全局 Fluent `ListBox/ListBoxItem`：启动按钮与标题显式使用动态 `FocusTextBrush`，选中项使用 `FocusAccentSoftBrush`、强调描边和主题文字，不再落回 WPF 的系统浅蓝选择背景，因此深色、浅色及系统强调色变化下都保持可读。
 - 任务标题、完成状态和自定义字段采用 180ms 合并保存；根任务、子任务、增删改和全局字段通过同一个后台数据库闸门严格串行，每次操作创建并释放自己的短生命周期 `AppDbContext`，读取使用无跟踪快照。页面切换会先排空旧范围修改，退出会等待已入队保存完成，避免快速输入触发 EF 并发异常、跨操作跟踪污染或丢失最后一次修改。
+- 任务 Markdown 图片选择完成后，目标目录创建、唯一文件名生成和文件复制全部在工作线程执行；网络盘、云盘占位图片和大文件不会冻结任务详情。任务在复制期间被关闭或切换时，迟到结果不会写入新任务；点击 Markdown 图片也复用后台 Shell 打开边界，失效关联不会造成 Panel 闪退。
 - 开始菜单快捷方式、`shell:AppsFolder` 和应用身份解析在可取消的 STA 后台线程构建；Panel 壳层不再等待完整目录扫描才响应鼠标与键盘。
 - 搜索和固定项会先显示名称与首字符占位，再由单一后台队列按需加载真实图标；Shell 图标提供器响应缓慢时不会卡住搜索输入。索引期间显示“正在载入应用目录”，完成但无匹配项时显示明确空状态。
 - 打开搜索后会立即聚焦并全选搜索框；无需离开键盘即可用上下方向键选择结果、回车启动，`Esc` 关闭后焦点返回紧凑栏搜索入口。应用目录在后台补全时会按稳定身份保留当前选择，不会把光标跳回第一项。
@@ -141,6 +142,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![任务编辑安全落盘生命周期](docs/images/task-save-lifecycle.svg)
 
 ![任务工作区后台短上下文持久化](docs/images/task-background-persistence.svg)
+
+![任务图片后台导入与安全打开](docs/images/task-image-background-pipeline.svg)
 
 ![统一应用栏鼠标操作](docs/images/taskbar-app-mouse-actions.svg)
 
@@ -368,7 +371,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.16 `
+  -Version 0.10.17 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -379,7 +382,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：默认目录的一键首次安装入口；也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win.msi`：带 Windows 安装向导的自定义目录安装入口，可选择当前用户或整机范围。
-- `FocusPanel-0.10.16-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.17-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

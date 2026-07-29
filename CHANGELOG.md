@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.17 - 2026-07-29
+
+- 任务详情的 Markdown 图片导入不再在 WPF 命令中同步执行 `Directory.CreateDirectory` 与 `File.Copy`；新的 `TaskImageImportCoordinator` 在工作线程完成目标目录创建、唯一文件名生成和复制，网络盘、云盘占位文件、大图片或安全软件扫描不会冻结任务详情和 Panel。
+- 图片选择器仍在界面线程以原生模态窗口工作，但选择完成后的每个导入请求可以独立并发；源路径与保存目录在调度前复制并清理，空路径会直接返回可解释错误，文件系统异常统一转换为失败结果而不逃逸异步命令。
+- 导入完成前若用户关闭任务详情、切换任务或退出应用，迟到结果不会再修改已经失效的字段或新任务；正常完成后才在当前长文本末尾追加 Markdown，并继续复用既有任务合并保存队列。
+- 点击 Markdown 图片不再由 `CustomFieldValueViewModel` 同步调用 `Process.Start`，改为复用 `ShellPathOpenCoordinator`；字段离开当前任务时会被停用，迟到打开失败不会弹到其他任务之上，连续打开只允许最后一次请求反馈。
+- 新增非阻塞、后台线程、路径快照、无效输入、异常隔离、并发导入以及真实临时目录逐字节复制测试，并增加 ViewModel 不含同步文件复制与 Shell 启动的源码契约；README 增加任务图片后台管线图。Release 构建 0 错误、0 警告，全量 687 项测试与界面冒烟通过。
+
 ## v0.10.16 - 2026-07-29
 
 - 桌面收纳的文件双击与“打开桌面文件夹”不再从 WPF 命令同步调用 `Process.Start`；新的 `ShellPathOpenCoordinator` 在工作线程调用 Windows Shell，慢磁盘、离线路径、失效文件关联或 Explorer 短暂繁忙不会冻结收纳区、滚动或 Panel 自动收起。

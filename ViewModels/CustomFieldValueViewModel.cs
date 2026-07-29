@@ -7,8 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using FocusPanel.Services;
 
@@ -19,6 +18,8 @@ public partial class CustomFieldValueViewModel : ObservableObject
     public CustomFieldDefinition Definition { get; }
     
     private readonly Action<string, string> _onValueChanged;
+    private readonly ShellPathOpenCoordinator _shellOpen;
+    private bool _isActive = true;
 
     [ObservableProperty]
     private string value = string.Empty;
@@ -47,11 +48,31 @@ public partial class CustomFieldValueViewModel : ObservableObject
     // For Markdown Images
     public ObservableCollection<string> ExtractedImages { get; } = new();
 
-    public CustomFieldValueViewModel(CustomFieldDefinition def, string initialValue, Action<string, string> onValueChanged)
+    public CustomFieldValueViewModel(
+        CustomFieldDefinition def,
+        string initialValue,
+        Action<string, string> onValueChanged)
+        : this(
+            def,
+            initialValue,
+            onValueChanged,
+            new ShellPathOpenCoordinator())
+    {
+    }
+
+    internal CustomFieldValueViewModel(
+        CustomFieldDefinition def,
+        string initialValue,
+        Action<string, string> onValueChanged,
+        ShellPathOpenCoordinator shellOpen)
     {
         Definition = def;
         value = initialValue;
         _onValueChanged = onValueChanged;
+        _shellOpen =
+            shellOpen
+            ?? throw new ArgumentNullException(
+                nameof(shellOpen));
 
         if (IsMultiSelect)
         {
@@ -90,25 +111,32 @@ public partial class CustomFieldValueViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void OpenImage(string path)
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task OpenImage(string path)
     {
-        if (string.IsNullOrWhiteSpace(path)) return;
+        if (string.IsNullOrWhiteSpace(path))
+            return;
 
-        try
+        ShellPathOpenCompletion completion =
+            await _shellOpen.OpenAsync(path);
+        if (!_isActive
+            || !_shellOpen.IsCurrent(
+                completion.Revision)
+            || completion.Succeeded)
         {
-            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            return;
         }
-        catch (Exception ex)
-        {
-            // Handle or log error
-            FocusDialogService.Show(
-                $"无法打开图片：{ex.Message}",
-                "打开图片失败",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
+
+        FocusDialogService.Show(
+            "无法打开图片。文件可能已被移动、删除，"
+            + "或 Windows 暂时无法处理该图片类型。",
+            "打开图片失败",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
     }
+
+    internal void Deactivate() =>
+        _isActive = false;
 
     private void UpdateMultiSelectValue()
     {

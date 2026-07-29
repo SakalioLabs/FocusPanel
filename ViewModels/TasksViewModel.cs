@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Windows;
-using System.IO;
 using System;
 using System.Threading;
 
@@ -135,6 +134,10 @@ public partial class TasksViewModel
     private readonly SettingsService _settingsService;
     private readonly IFolderPickerService _folderPickerService;
     private readonly IFilePickerService _filePickerService;
+    private readonly TaskImageImportCoordinator
+        _imageImporter;
+    private readonly ShellPathOpenCoordinator
+        _shellOpen;
     private readonly CoalescingAsyncSaveQueue<TodoItem>
         _taskSaveQueue;
     private TodoItem? _lastSaveFailureItem;
@@ -230,12 +233,20 @@ public partial class TasksViewModel
 
     internal TasksViewModel(
         IFolderPickerService folderPickerService,
-        IFilePickerService filePickerService)
+        IFilePickerService filePickerService,
+        TaskImageImportCoordinator? imageImporter = null,
+        ShellPathOpenCoordinator? shellOpen = null)
     {
         _folderPickerService =
             folderPickerService;
         _filePickerService =
             filePickerService;
+        _imageImporter =
+            imageImporter
+            ?? new TaskImageImportCoordinator();
+        _shellOpen =
+            shellOpen
+            ?? new ShellPathOpenCoordinator();
         _taskService = new TaskService();
         _taskSaveQueue =
             new CoalescingAsyncSaveQueue<TodoItem>(
@@ -576,6 +587,7 @@ public partial class TasksViewModel
     
     private void LoadCurrentTaskCustomFields(TodoItem task)
     {
+        DeactivateCurrentTaskFields();
         CurrentTaskCustomFields.Clear();
         
         // Load definitions (Project or Global)
@@ -593,7 +605,21 @@ public partial class TasksViewModel
         foreach (var def in CustomFieldDefinitions)
         {
             string val = values.ContainsKey(def.Id) ? values[def.Id] : string.Empty;
-            CurrentTaskCustomFields.Add(new CustomFieldValueViewModel(def, val, OnCustomFieldValueChanged));
+            CurrentTaskCustomFields.Add(
+                new CustomFieldValueViewModel(
+                    def,
+                    val,
+                    OnCustomFieldValueChanged,
+                    _shellOpen));
+        }
+    }
+
+    private void DeactivateCurrentTaskFields()
+    {
+        foreach (CustomFieldValueViewModel field
+                 in CurrentTaskCustomFields)
+        {
+            field.Deactivate();
         }
     }
 
@@ -670,8 +696,9 @@ public partial class TasksViewModel
     }
 
     // --- Image Handling for Markdown ---
-    [RelayCommand]
-    private void InsertImageToMarkdown(CustomFieldValueViewModel fieldViewModel)
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task InsertImageToMarkdown(
+        CustomFieldValueViewModel fieldViewModel)
     {
         if (fieldViewModel == null || !fieldViewModel.IsLongText) return;
 
@@ -702,48 +729,40 @@ public partial class TasksViewModel
             return;
         }
 
-        try
+        TodoItem? targetTask =
+            SelectedTask;
+        TaskImageImportResult import =
+            await _imageImporter.ImportAsync(
+                decision.Path,
+                ImageSavePath);
+        if (_isDisposed
+            || targetTask == null
+            || !ReferenceEquals(
+                targetTask,
+                SelectedTask)
+            || !CurrentTaskCustomFields.Contains(
+                fieldViewModel))
         {
-            string savedPath =
-                SaveImageForMarkdown(
-                    decision.Path);
-            string imageMarkdown =
-                $"![图片]({savedPath})";
-
-            if (string.IsNullOrEmpty(
-                    fieldViewModel.Value))
-            {
-                fieldViewModel.Value =
-                    imageMarkdown;
-            }
-            else
-            {
-                fieldViewModel.Value +=
-                    $"\n{imageMarkdown}";
-            }
+            return;
         }
-        catch (Exception ex)
+        if (!import.Succeeded)
         {
             FocusDialogService.Show(
-                $"插入图片失败：{ex.Message}",
+                $"插入图片失败：{import.Error}",
                 "无法插入图片",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
-        }
-    }
-
-    public string SaveImageForMarkdown(string sourceFilePath)
-    {
-        if (!Directory.Exists(ImageSavePath))
-        {
-            Directory.CreateDirectory(ImageSavePath);
+            return;
         }
 
-        string fileName = Path.GetFileName(sourceFilePath);
-        string destPath = Path.Combine(ImageSavePath, $"{System.Guid.NewGuid()}_{fileName}");
-        
-        File.Copy(sourceFilePath, destPath);
-        return destPath;
+        string imageMarkdown =
+            $"![图片]({import.SavedPath})";
+        fieldViewModel.Value =
+            string.IsNullOrEmpty(
+                fieldViewModel.Value)
+                ? imageMarkdown
+                : fieldViewModel.Value
+                    + $"\n{imageMarkdown}";
     }
 
 
@@ -1034,6 +1053,7 @@ public partial class TasksViewModel
             return;
 
         _isDisposed = true;
+        DeactivateCurrentTaskFields();
         Interlocked.Increment(
             ref _loadGeneration);
         if (CurrentParentItem != null)
