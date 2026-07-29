@@ -33,7 +33,7 @@ public sealed class TaskbarAppCollectionSynchronizerTests
     }
 
     [Fact]
-    public void ActiveStateChange_ReplacesOnlyChangedApplication()
+    public void ActiveStateChange_UpdatesApplicationWithoutReplacingButton()
     {
         TaskbarAppItem first = RunningApp("exe:c:\\one.exe", "一", 1, false);
         TaskbarAppItem second = RunningApp("exe:c:\\two.exe", "二", 2, false);
@@ -49,9 +49,10 @@ public sealed class TaskbarAppCollectionSynchronizerTests
                 RunningApp("exe:c:\\two.exe", "二", 2, false)
             });
 
-        Assert.NotSame(first, items[0]);
+        Assert.Same(first, items[0]);
         Assert.Same(second, items[1]);
-        Assert.Equal(new[] { NotifyCollectionChangedAction.Replace }, actions);
+        Assert.True(items[0].IsActive);
+        Assert.Empty(actions);
     }
 
     [Fact]
@@ -77,7 +78,7 @@ public sealed class TaskbarAppCollectionSynchronizerTests
     }
 
     [Fact]
-    public void ActiveWindowChange_ReplacesOnlyItsApplication()
+    public void ActiveWindowChange_UpdatesExistingApplicationInPlace()
     {
         TaskbarAppItem first =
             MultiWindowApp(
@@ -114,18 +115,81 @@ public sealed class TaskbarAppCollectionSynchronizerTests
                     false)
             });
 
-        Assert.NotSame(first, items[0]);
+        Assert.Same(first, items[0]);
         Assert.Same(second, items[1]);
         Assert.False(
             items[0].Windows[0].IsActive);
         Assert.True(
             items[0].Windows[1].IsActive);
-        Assert.Equal(
+        Assert.Empty(actions);
+    }
+
+    [Fact]
+    public void ActiveStateChange_RaisesPresentationNotifications()
+    {
+        TaskbarAppItem current =
+            RunningApp(
+                "exe:c:\\one.exe",
+                "一",
+                1,
+                false);
+        var items =
+            new ObservableCollection<TaskbarAppItem>
+            {
+                current
+            };
+        var changed =
+            new List<string?>();
+        current.PropertyChanged +=
+            (_, args) => changed.Add(
+                args.PropertyName);
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
             new[]
             {
-                NotifyCollectionChangedAction.Replace
-            },
-            actions);
+                RunningApp(
+                    "exe:c:\\one.exe",
+                    "一",
+                    1,
+                    true)
+            });
+
+        Assert.Same(current, items[0]);
+        Assert.True(current.IsActive);
+        Assert.Contains(
+            nameof(TaskbarAppItem.IsActive),
+            changed);
+        Assert.Contains(
+            nameof(TaskbarAppItem.StatusSummary),
+            changed);
+        Assert.Contains(
+            nameof(TaskbarAppItem.AccessibleName),
+            changed);
+    }
+
+    [Fact]
+    public void DifferentIdentity_IsStillInsertedInsteadOfMerged()
+    {
+        TaskbarAppItem current =
+            App("exe:c:\\one.exe", "一");
+        var items =
+            new ObservableCollection<TaskbarAppItem>
+            {
+                current
+            };
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[]
+            {
+                App("exe:c:\\two.exe", "二")
+            });
+
+        Assert.NotSame(current, items[0]);
+        Assert.Equal(
+            "exe:c:\\two.exe",
+            items[0].IdentityKey);
     }
 
     private static TaskbarAppItem App(string identity, string name) => new()

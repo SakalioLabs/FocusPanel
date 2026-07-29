@@ -25,8 +25,10 @@ internal static class TaskbarAppCollectionSynchronizer
             if (existingIndex != targetIndex)
                 destination.Move(existingIndex, targetIndex);
 
-            if (!AreEquivalent(destination[targetIndex], candidate))
-                destination[targetIndex] = candidate;
+            TaskbarAppItem current =
+                destination[targetIndex];
+            if (!AreEquivalent(current, candidate))
+                current.ApplySnapshot(candidate);
         }
 
         while (destination.Count > desired.Count)
