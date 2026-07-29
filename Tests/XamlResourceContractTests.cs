@@ -1710,6 +1710,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "AppCatalogService.cs"));
+        string searchPolicy = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "AppSearchPolicy.cs"));
         Assert.Contains(
             "x:Name=\"SearchResultsList\"",
             mainWindow);
@@ -1731,6 +1736,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Name = \"FocusPanel.AppIcons\"",
             catalog);
+        Assert.Contains(
+            "AppSearchPolicy.Search(",
+            catalog);
+        Assert.Contains(
+            "GetExecutableName(",
+            searchPolicy);
+        Assert.Contains(
+            "display.Acronym.StartsWith(",
+            searchPolicy);
+        Assert.Contains(
+            "ThenByDescending(result =>",
+            searchPolicy);
     }
 
     [Fact]

@@ -124,25 +124,15 @@ public sealed class AppCatalogService : IAppCatalogService
 
     public IReadOnlyList<AppLaunchItem> Search(string query, int limit = 24)
     {
-        string normalized = query?.Trim() ?? string.Empty;
         List<AppLaunchItem> snapshot;
         lock (_catalogLock)
             snapshot = _catalog.ToList();
 
-        IEnumerable<AppLaunchItem> matches = snapshot;
-        if (normalized.Length > 0)
-        {
-            matches = matches.Where(app =>
-                app.DisplayName.Contains(normalized, StringComparison.CurrentCultureIgnoreCase)
-                || Path.GetFileNameWithoutExtension(app.LaunchTarget)
-                    .Contains(normalized, StringComparison.OrdinalIgnoreCase));
-        }
-
-        List<AppLaunchItem> results = matches
-            .OrderByDescending(app => app.IsPinned)
-            .ThenBy(app => app.DisplayName, StringComparer.CurrentCultureIgnoreCase)
-            .Take(limit)
-            .ToList();
+        IReadOnlyList<AppLaunchItem> results =
+            AppSearchPolicy.Search(
+                snapshot,
+                query,
+                limit);
         QueueIconLoads(results);
         return results;
     }
