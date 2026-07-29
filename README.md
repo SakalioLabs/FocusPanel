@@ -74,6 +74,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 中部应用列表超出可视高度时显示轻量悬浮上下导航；到达顶部或底部后相应箭头自动消失，点击按一个应用图标步长移动，鼠标滚轮仍可直接滚动。
 - Focus 中心统一承载桌面收纳、任务、番茄钟、OKR、AI、最近使用模块和设置更新；状态中心集中音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
 - 状态中心的快捷设置、通知、输入法、显示桌面、锁定、睡眠与电源操作均返回明确结果；成功后关闭 FocusPanel 弹层以免遮挡 Windows 界面，系统拒绝或启动失败时自动回到状态中心显示可操作的替代方式，不再静默失败或让异常冲击 UI 线程。
+- 开始、搜索、任务视图、小组件、运行、Win+X 管理工具、电源设置、显示桌面、锁定、睡眠以及确认后的重启/关机统一通过后台系统动作协调器执行；Explorer 或 Shell 宿主繁忙不会冻结紧凑栏。多个入口连续触发时允许独立执行，但只有最后一次请求能更新状态中心，旧失败不会覆盖新成功；浏览器下载页与数据库恢复交接也使用同一异常边界。
 - 音量和静音使用一次性 Core Audio 快照区分“真实 0%”与“没有默认输出设备”；端点切换或写入失败时滑块回到最后确认值并显示原因。无输出设备时控件自动停用，设备恢复后由状态刷新重新启用；紧凑栏滚轮只有在音量写入成功后才会取消静音。
 - 音量 Slider 的高频变化、静音点击和紧凑栏滚轮改由单消费者后台控制器执行；等待中的音量请求只保留最终值，音量与静音严格串行。每次工作线程操作独立初始化 Core Audio COM、创建并释放端点枚举器，旧修订结果不会覆盖新操作；写入期间暂停旧状态快照回填，最新请求失败才回退到最后真实成功值并提示。
 - 紧凑栏状态入口和状态中心静音按钮会根据当前音量显示 Segoe Fluent 音量、静音或设备不可用图标；工具提示和读屏名称同步显示百分比。Panel 从隐藏状态重新唤出时立即刷新一次，不需要先打开状态中心，也不会在隐藏期间常驻轮询。
@@ -86,6 +87,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
 
 ![六入口紧凑任务栏](docs/images/six-entry-taskbar.svg)
+
+![系统入口后台执行与反馈隔离](docs/images/system-action-background-coordinator.svg)
 
 ![紧凑栏顺序与深色菜单](docs/images/compact-dock-dark-menu.svg)
 
@@ -371,7 +374,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.17 `
+  -Version 0.10.18 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -382,7 +385,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：默认目录的一键首次安装入口；也可通过 `--installto "D:\Apps\FocusPanel"` 指定目录。
 - `FocusPanel-win.msi`：带 Windows 安装向导的自定义目录安装入口，可选择当前用户或整机范围。
-- `FocusPanel-0.10.17-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.18-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using FocusPanel.Services;
 using Xunit;
 
@@ -67,5 +68,87 @@ public sealed class SystemActionExecutionTests
             SystemActionExecution.TryWithFallback(
                 () => throw new InvalidOperationException("primary"),
                 () => throw new InvalidOperationException("fallback")));
+    }
+
+    [Fact]
+    public void MainSystemEntries_UseBackgroundCoordinator()
+    {
+        string root =
+            FindRepositoryRoot();
+        string viewModel =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs"));
+        string coordinator =
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Services",
+                    "SystemActionCoordinator.cs"));
+
+        Assert.Contains(
+            "SystemActionCoordinator",
+            viewModel);
+        Assert.True(
+            CountOccurrences(
+                viewModel,
+                "await RunSystemActionAsync(")
+            >= 15);
+        Assert.Contains(
+            "await _systemActions.ExecuteAsync(",
+            viewModel);
+        Assert.Contains(
+            "_updateService.OpenDownloadPage",
+            viewModel);
+        Assert.Contains(
+            "--restore-after-exit",
+            viewModel);
+        Assert.DoesNotContain(
+            "Process.Start",
+            viewModel);
+        Assert.DoesNotContain(
+            "_systemStatus.OpenQuickSettings()",
+            viewModel);
+        Assert.DoesNotContain(
+            "_systemStatus.OpenManagementTool(tool)",
+            viewModel);
+        Assert.Contains(
+            "Task.Run(",
+            coordinator);
+        Assert.Contains(
+            "IsCurrent(",
+            coordinator);
+    }
+
+    private static int CountOccurrences(
+        string source,
+        string value) =>
+        source.Split(
+                value,
+                StringSplitOptions.None)
+            .Length
+        - 1;
+
+    private static string FindRepositoryRoot()
+    {
+        DirectoryInfo? current =
+            new(AppContext.BaseDirectory);
+        while (current != null)
+        {
+            if (File.Exists(
+                    Path.Combine(
+                        current.FullName,
+                        "FocusPanel.csproj")))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            "Could not locate FocusPanel.csproj.");
     }
 }

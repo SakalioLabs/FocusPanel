@@ -32,6 +32,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _audioControl;
     private readonly AppLaunchCoordinator
         _appLaunch;
+    private readonly SystemActionCoordinator
+        _systemActions;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
@@ -286,7 +288,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ISystemStatusService systemStatus,
         IAppUpdateService updateService,
         IShellPreferenceRepository
-            shellPreferences)
+            shellPreferences,
+        SystemActionCoordinator? systemActions = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -295,6 +298,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _appLaunch =
             new AppLaunchCoordinator(
                 _appCatalog.Launch);
+        _systemActions =
+            systemActions
+            ?? new SystemActionCoordinator();
         _audioControl =
             new AudioControlCoordinator(
                 _systemStatus.TrySetMasterVolume,
@@ -956,103 +962,105 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void OpenQuickSettings()
-        => CompleteSystemAction(
-            _systemStatus.OpenQuickSettings(),
+    private async Task OpenQuickSettings()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenQuickSettings,
             "无法唤起 Windows 快捷设置，请使用 Win+A。");
 
     [RelayCommand]
-    private void OpenNotifications()
-        => CompleteSystemAction(
-            _systemStatus.OpenNotifications(),
+    private async Task OpenNotifications()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenNotifications,
             "无法唤起 Windows 通知中心，请使用 Win+N。");
 
     [RelayCommand]
-    private void OpenInputSwitcher()
-        => CompleteSystemAction(
-            _systemStatus.OpenInputSwitcher(),
+    private async Task OpenInputSwitcher()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenInputSwitcher,
             "无法唤起输入法切换器，请使用 Win+Space。");
 
     [RelayCommand]
-    private void OpenStartMenu()
-        => CompleteSystemAction(
-            _systemStatus.OpenStartMenu(),
+    private async Task OpenStartMenu()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenStartMenu,
             "无法唤起开始菜单，请按 Windows 键。");
 
     [RelayCommand]
-    private void OpenTaskView()
-        => CompleteSystemAction(
-            _systemStatus.OpenTaskView(),
+    private async Task OpenTaskView()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenTaskView,
             "无法唤起任务视图，请使用 Win+Tab。");
 
     [RelayCommand]
-    private void OpenWindowsSearch()
-        => CompleteSystemAction(
-            _systemStatus.OpenWindowsSearch(),
+    private async Task OpenWindowsSearch()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenWindowsSearch,
             "无法唤起 Windows 搜索，请使用 Win+S。");
 
     [RelayCommand]
-    private void OpenWidgets()
-        => CompleteSystemAction(
-            _systemStatus.OpenWidgets(),
+    private async Task OpenWidgets()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenWidgets,
             "无法唤起 Windows 小组件，请使用 Win+W。");
 
     [RelayCommand]
-    private void OpenRunDialog()
-        => CompleteSystemAction(
-            _systemStatus.OpenRunDialog(),
+    private async Task OpenRunDialog()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenRunDialog,
             "无法唤起运行对话框，请使用 Win+R。");
 
     [RelayCommand]
-    private void OpenManagementTool(SystemManagementTool tool)
-        => CompleteSystemAction(
-            _systemStatus.OpenManagementTool(tool),
+    private async Task OpenManagementTool(
+        SystemManagementTool tool)
+        => await RunSystemActionAsync(
+            () => _systemStatus
+                .OpenManagementTool(tool),
             "无法打开所选 Windows 管理工具。当前账户权限或系统版本可能不支持该入口。");
 
     [RelayCommand]
-    private void OpenPowerSettings()
-        => CompleteSystemAction(
-            _systemStatus.OpenPowerSettings(),
+    private async Task OpenPowerSettings()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenPowerSettings,
             "无法打开 Windows 电源设置。");
 
     [RelayCommand]
-    private void ShowDesktop()
-        => CompleteSystemAction(
-            _systemStatus.ShowDesktop(),
+    private async Task ShowDesktop()
+        => await RunSystemActionAsync(
+            _systemStatus.ShowDesktop,
             "无法显示桌面，请使用 Win+D。");
 
     [RelayCommand]
-    private void LockComputer()
-        => CompleteSystemAction(
-            _systemStatus.Lock(),
+    private async Task LockComputer()
+        => await RunSystemActionAsync(
+            _systemStatus.Lock,
             "Windows 拒绝锁定当前会话，请使用 Win+L。");
 
     [RelayCommand]
-    private void SleepComputer()
-        => CompleteSystemAction(
-            _systemStatus.Sleep(),
+    private async Task SleepComputer()
+        => await RunSystemActionAsync(
+            _systemStatus.Sleep,
             "Windows 拒绝进入睡眠，当前电源策略可能不支持该操作。");
 
     [RelayCommand]
-    private void RestartComputer()
+    private async Task RestartComputer()
     {
         if (FocusDialogService.Show("确定要立即重启电脑吗？", "重启电脑", MessageBoxButton.YesNo, MessageBoxImage.Warning)
             == MessageBoxResult.Yes)
         {
-            CompleteSystemAction(
-                _systemStatus.Restart(),
+            await RunSystemActionAsync(
+                _systemStatus.Restart,
                 "无法启动系统重启，当前账户权限或系统策略可能阻止了操作。");
         }
     }
 
     [RelayCommand]
-    private void ShutdownComputer()
+    private async Task ShutdownComputer()
     {
         if (FocusDialogService.Show("确定要立即关闭电脑吗？", "关闭电脑", MessageBoxButton.YesNo, MessageBoxImage.Warning)
             == MessageBoxResult.Yes)
         {
-            CompleteSystemAction(
-                _systemStatus.Shutdown(),
+            await RunSystemActionAsync(
+                _systemStatus.Shutdown,
                 "无法启动系统关机，当前账户权限或系统策略可能阻止了操作。");
         }
     }
@@ -1131,7 +1139,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void RestoreDatabase()
+    private async Task RestoreDatabase()
     {
         var result = FocusDialogService.Show(
             "确定要从最新备份恢复数据库吗？\n任务、番茄钟、桌面收纳和 OKR 数据都会回到备份时的状态，应用将立即重启。",
@@ -1142,28 +1150,48 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (result != MessageBoxResult.Yes)
             return;
 
+        string executable;
         try
         {
-            string executable = Environment.ProcessPath
+            executable = Environment.ProcessPath
                 ?? Process.GetCurrentProcess().MainModule?.FileName
                 ?? throw new InvalidOperationException("无法定位 FocusPanel 可执行文件。");
-            string arguments =
-                $"--restore-after-exit {Environment.ProcessId}";
-            _ = Process.Start(
-                new ProcessStartInfo(
-                    executable,
-                    arguments)
-                {
-                    UseShellExecute = true
-                })
-                ?? throw new InvalidOperationException(
-                    "无法启动数据库恢复交接进程。");
-            RequestClose?.Invoke();
         }
         catch (Exception ex)
         {
             FocusDialogService.Show($"无法重启应用：{ex.Message}", "恢复失败", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
         }
+
+        int processId =
+            Environment.ProcessId;
+        SystemActionCompletion completion =
+            await _systemActions.ExecuteAsync(
+                () => AppLaunchExecution.TryStart(
+                    new ProcessStartInfo(
+                        executable,
+                        $"--restore-after-exit {processId}")
+                    {
+                        UseShellExecute = true
+                    }));
+        if (_isDisposed
+            || !_systemActions.IsCurrent(
+                completion.Revision))
+        {
+            return;
+        }
+        if (completion.Succeeded)
+        {
+            RequestClose?.Invoke();
+            return;
+        }
+
+        FocusDialogService.Show(
+            "无法启动数据库恢复交接进程。"
+            + "系统任务栏和当前数据库保持不变。",
+            "恢复失败",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
     }
 
     public async Task CheckForUpdatesInBackgroundAsync()
@@ -1281,9 +1309,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void OpenUpdateDownloadPage()
+    private async Task OpenUpdateDownloadPage()
     {
-        UpdateStatus = _updateService.OpenDownloadPage()
+        SystemActionCompletion completion =
+            await _systemActions.ExecuteAsync(
+                _updateService.OpenDownloadPage);
+        if (_isDisposed
+            || !_systemActions.IsCurrent(
+                completion.Revision))
+        {
+            return;
+        }
+
+        UpdateStatus = completion.Succeeded
             ? "已在浏览器打开 FocusPanel 官方下载页"
             : "无法打开浏览器，请访问 GitHub 上的 SakalioLabs/FocusPanel Releases";
     }
@@ -1745,6 +1783,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CloseTransientPanels();
         if (!succeeded)
             IsStatusCenterOpen = true;
+    }
+
+    private async Task RunSystemActionAsync(
+        Func<bool> action,
+        string error)
+    {
+        SystemActionCompletion completion =
+            await _systemActions.ExecuteAsync(
+                action);
+        if (_isDisposed
+            || !_systemActions.IsCurrent(
+                completion.Revision))
+        {
+            return;
+        }
+
+        CompleteSystemAction(
+            completion.Succeeded,
+            error);
     }
 
     private async Task<bool> TryLaunchAppAsync(
