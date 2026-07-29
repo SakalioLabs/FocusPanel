@@ -63,12 +63,42 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 if ($Publish) {
-    Write-Host "Marking $releaseTag as the latest GitHub Release..."
     $release = Invoke-RestMethod `
         -Method Get `
         -Uri "$apiBaseUrl/releases/tags/$releaseTag" `
         -Headers $githubHeaders
 
+    $customInstallerName = 'FocusPanel-win-CustomSetup.exe'
+    $customInstallerPath = Join-Path $packageDir $customInstallerName
+    if (-not (Test-Path -LiteralPath $customInstallerPath)) {
+        throw "Custom installer '$customInstallerName' is missing from the package directory."
+    }
+
+    $existingCustomInstaller = $release.assets |
+        Where-Object { $_.name -eq $customInstallerName } |
+        Select-Object -First 1
+    $customInstallerLength = (Get-Item -LiteralPath $customInstallerPath).Length
+    if ($null -ne $existingCustomInstaller
+        -and $existingCustomInstaller.size -ne $customInstallerLength) {
+        Invoke-RestMethod `
+            -Method Delete `
+            -Uri "$apiBaseUrl/releases/assets/$($existingCustomInstaller.id)" `
+            -Headers $githubHeaders | Out-Null
+        $existingCustomInstaller = $null
+    }
+
+    if ($null -eq $existingCustomInstaller) {
+        Write-Host "Uploading $customInstallerName..."
+        $escapedAssetName = [Uri]::EscapeDataString($customInstallerName)
+        Invoke-RestMethod `
+            -Method Post `
+            -Uri "https://uploads.github.com/repos/$repositoryOwner/$repositoryName/releases/$($release.id)/assets?name=$escapedAssetName" `
+            -Headers $githubHeaders `
+            -ContentType 'application/octet-stream' `
+            -InFile $customInstallerPath | Out-Null
+    }
+
+    Write-Host "Marking $releaseTag as the latest GitHub Release..."
     $latestBody = @{
         draft = $false
         prerelease = $false
@@ -106,7 +136,7 @@ if ($Publish) {
     if (-not $hasFullPackage) {
         throw "Latest release '$releaseTag' is missing the full Velopack package."
     }
-    if ($assetNames -notcontains 'FocusPanel-win-CustomSetup.exe') {
+    if ($assetNames -notcontains $customInstallerName) {
         throw "Latest release '$releaseTag' is missing the custom-location installer."
     }
     if ($assetNames -notcontains 'FocusPanel-win.msi') {

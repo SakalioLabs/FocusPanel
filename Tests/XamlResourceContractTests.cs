@@ -889,6 +889,12 @@ public sealed class XamlResourceContractTests
             "'FocusPanel-win-CustomSetup.exe'",
             publisher);
         Assert.Contains(
+            "uploads.github.com",
+            publisher);
+        Assert.Contains(
+            "-InFile $customInstallerPath",
+            publisher);
+        Assert.Contains(
             "'FocusPanel-win.msi'",
             publisher);
         Assert.Contains("'RELEASES'", publisher);
