@@ -1360,6 +1360,7 @@
                                 <ContentPresenter Grid.Column="1"
                                                   Margin="7,0"
                                                   ContentSource="Header"
+                                                  TextElement.Foreground="{TemplateBinding Foreground}"
                                                   RecognizesAccessKey="True"
                                                   VerticalAlignment="Center"
                                                   SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
@@ -1403,13 +1404,17 @@
                                  Value="True">
                             <Setter TargetName="ItemChrome"
                                     Property="Background"
-                                    Value="{DynamicResource FocusHoverBrush}"/>
+                                    Value="{DynamicResource FocusAccentSoftBrush}"/>
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource FocusTextBrush}"/>
                         </Trigger>
                         <Trigger Property="IsKeyboardFocusWithin"
                                  Value="True">
                             <Setter TargetName="ItemChrome"
                                     Property="Background"
-                                    Value="{DynamicResource FocusHoverBrush}"/>
+                                    Value="{DynamicResource FocusAccentSoftBrush}"/>
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource FocusTextBrush}"/>
                         </Trigger>
                         <Trigger Property="IsSubmenuOpen"
                                  Value="True">

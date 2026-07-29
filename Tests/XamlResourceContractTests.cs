@@ -1538,27 +1538,37 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "FocusMenuTheme.Apply(menu);",
             codeBehind);
+        string menuTheme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FocusMenuTheme.cs"));
         Assert.Contains(
             "menu.Style = contextMenuStyle;",
-            File.ReadAllText(
-                Path.Combine(
-                    root,
-                    "Services",
-                    "FocusMenuTheme.cs")));
+            menuTheme);
         Assert.Contains(
             "menuItem.Style = menuItemStyle;",
-            File.ReadAllText(
-                Path.Combine(
-                    root,
-                    "Services",
-                    "FocusMenuTheme.cs")));
+            menuTheme);
         Assert.Contains(
             "separator.Style = separatorStyle;",
-            File.ReadAllText(
-                Path.Combine(
-                    root,
-                    "Services",
-                    "FocusMenuTheme.cs")));
+            menuTheme);
+        Assert.Contains(
+            "menu.SetResourceReference(",
+            menuTheme);
+        Assert.Contains(
+            "menuItem.SetResourceReference(",
+            menuTheme);
+        Assert.Contains(
+            "header.SetResourceReference(",
+            menuTheme);
+        Assert.Contains(
+            "TextElement.Foreground=\"{TemplateBinding Foreground}\"",
+            theme);
+        Assert.True(
+            Regex.Matches(
+                theme,
+                "Value=\"\\{DynamicResource FocusAccentSoftBrush\\}\"").Count
+            >= 3);
         Assert.Contains(
             "<Setter Property=\"FontFamily\" Value=\"Segoe UI Variable Text\"/>",
             theme);

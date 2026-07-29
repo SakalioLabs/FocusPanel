@@ -311,7 +311,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.9.96 `
+  -Version 0.9.97 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet `
   -CleanPackages
@@ -320,7 +320,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：首次安装入口。
-- `FocusPanel-0.9.64-full.nupkg`：完整更新包。
+- `FocusPanel-0.9.97-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

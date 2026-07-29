@@ -304,9 +304,13 @@ internal static class UiSmokeTestRunner
     {
         try
         {
+            var windowTitle = new TextBlock
+            {
+                Text = "packages - 文件资源管理器"
+            };
             var checkedItem = new MenuItem
             {
-                Header = "当前窗口",
+                Header = windowTitle,
                 IsCheckable = true,
                 IsChecked = true
             };
@@ -389,6 +393,24 @@ internal static class UiSmokeTestRunner
             }
 
             if (!ReferenceEquals(
+                    menu.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush"))
+                || !ReferenceEquals(
+                    checkedItem.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush"))
+                || !ReferenceEquals(
+                    windowTitle.Foreground,
+                    Application.Current.FindResource(
+                        "FocusTextBrush")))
+            {
+                failures.Add(
+                    "运行时多窗口标题未显式跟随当前深浅主题文字色");
+                return;
+            }
+
+            if (!ReferenceEquals(
                     menuSurface.Background,
                     Application.Current.FindResource(
                         "FocusPopupSurfaceBrush"))
@@ -403,7 +425,7 @@ internal static class UiSmokeTestRunner
             }
 
             results.Add(
-                "PASS Fluent 菜单叶项、勾选、分隔线与子菜单");
+                "PASS Fluent 菜单窗口标题、勾选、分隔线与子菜单");
         }
         catch (Exception ex)
         {

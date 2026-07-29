@@ -5,6 +5,8 @@ namespace FocusPanel.Services;
 
 public static class FocusMenuTheme
 {
+    private const string TextBrushKey = "FocusTextBrush";
+
     public static bool Apply(ContextMenu menu)
     {
         if (Application.Current?.TryFindResource(
@@ -19,6 +21,9 @@ public static class FocusMenuTheme
 
         menu.Style = contextMenuStyle;
         menu.ItemContainerStyle = menuItemStyle;
+        menu.SetResourceReference(
+            Control.ForegroundProperty,
+            TextBrushKey);
 
         foreach (object item in menu.Items)
         {
@@ -42,6 +47,15 @@ public static class FocusMenuTheme
                 menuItem.Style = menuItemStyle;
                 menuItem.ItemContainerStyle =
                     menuItemStyle;
+                menuItem.SetResourceReference(
+                    Control.ForegroundProperty,
+                    TextBrushKey);
+                if (menuItem.Header is TextBlock header)
+                {
+                    header.SetResourceReference(
+                        TextBlock.ForegroundProperty,
+                        TextBrushKey);
+                }
                 foreach (object child in menuItem.Items)
                 {
                     ApplyItem(
