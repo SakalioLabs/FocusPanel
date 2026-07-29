@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560">
+  <rect width="1120" height="560" rx="28" fill="#0a111e"/>
+  <text x="52" y="62" fill="#f5f8ff" font-family="Segoe UI,Microsoft YaHei" font-size="27" font-weight="700">跨盘安装与自动收纳：两条失败都留在边界内</text>
+  <text x="52" y="96" fill="#9fb0c8" font-family="Segoe UI,Microsoft YaHei" font-size="15">不再以“文件叫 Setup.exe”或“错误提示弹出来了”作为成功依据</text>
+  <rect x="52" y="132" width="492" height="362" rx="24" fill="#111c2d" stroke="#26364d"/>
+  <text x="84" y="176" fill="#93c5fd" font-family="Segoe UI,Microsoft YaHei" font-size="19" font-weight="700">安装位置闭环</text>
+  <g font-family="Segoe UI,Microsoft YaHei" font-size="14">
+    <rect x="84" y="208" width="176" height="54" rx="14" fill="#1d2c43"/><text x="172" y="231" text-anchor="middle" fill="#e7eefb">目录向导探针</text><text x="172" y="250" text-anchor="middle" fill="#8aa0be" font-size="12">不安装 · 返回专用标识</text>
+    <path d="M260 235 H318" stroke="#4f8fd7" stroke-width="3"/><path d="M309 227 L320 235 L309 243" fill="none" stroke="#4f8fd7" stroke-width="3"/>
+    <rect x="320" y="208" width="190" height="54" rx="14" fill="#163448"/><text x="415" y="231" text-anchor="middle" fill="#dff7ff">选择 D:\Apps\FocusPanel</text><text x="415" y="250" text-anchor="middle" fill="#8fc9dd" font-size="12">INSTALLFOLDER + 反查</text>
+    <rect x="84" y="294" width="426" height="70" rx="16" fill="#121f33"/><text x="105" y="321" fill="#cbd7e9">GitHub Release 上传后重新读取资产摘要</text><text x="105" y="345" fill="#7dd3fc" font-family="Consolas,Microsoft YaHei">local SHA-256 == public SHA-256</text>
+    <rect x="84" y="396" width="426" height="62" rx="16" fill="#123426"/><text x="105" y="423" fill="#bbf7d0">通过后才标记 Latest</text><text x="105" y="444" fill="#82d9a1" font-size="12">同名、同大小但内容错误也会被拒绝</text>
+  </g>
+  <rect x="576" y="132" width="492" height="362" rx="24" fill="#111c2d" stroke="#26364d"/>
+  <text x="608" y="176" fill="#86efac" font-family="Segoe UI,Microsoft YaHei" font-size="19" font-weight="700">自动收纳防退出闭环</text>
+  <g font-family="Segoe UI,Microsoft YaHei" font-size="14">
+    <rect x="608" y="208" width="184" height="54" rx="14" fill="#183329"/><text x="700" y="232" text-anchor="middle" fill="#dcfce7">Hidden + System</text><text x="700" y="250" text-anchor="middle" fill="#8dd3aa" font-size="12">属性事务与 SQLite 状态</text>
+    <path d="M792 235 H850" stroke="#54a77a" stroke-width="3"/><path d="M841 227 L852 235 L841 243" fill="none" stroke="#54a77a" stroke-width="3"/>
+    <rect x="852" y="208" width="184" height="54" rx="14" fill="#1d2c43"/><text x="944" y="232" text-anchor="middle" fill="#e7eefb">刷新与结果摘要</text><text x="944" y="250" text-anchor="middle" fill="#8aa0be" font-size="12">逐项失败互相隔离</text>
+    <rect x="608" y="294" width="428" height="70" rx="16" fill="#121f33"/><text x="629" y="321" fill="#cbd7e9">提示窗口创建失败</text><text x="629" y="345" fill="#f9c97c">记录日志 · 确认默认“否” · Panel 继续运行</text>
+    <rect x="608" y="396" width="428" height="62" rx="16" fill="#32231a"/><text x="629" y="423" fill="#fed7aa">后台监视最终边界</text><text x="629" y="444" fill="#d8aa80" font-size="12">关闭竞态与迟到观察者不能逃到全局退出</text>
+  </g>
+</svg>

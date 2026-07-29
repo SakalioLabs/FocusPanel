@@ -1210,7 +1210,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         DateTime today = DateTime.Today;
         DisplayedCalendarMonth =
             new DateTime(today.Year, today.Month, 1);
-        SelectedCalendarDate = today;
+        SelectCalendarDate(today);
         RequestTaskSummaryRefresh();
     }
 
@@ -1220,7 +1220,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (item == null)
             return;
 
-        SelectCalendarDate(item.Date);
         if (!item.IsCurrentMonth)
         {
             DisplayedCalendarMonth =
@@ -1228,8 +1227,39 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     item.Date.Year,
                     item.Date.Month,
                     1);
-            RequestTaskSummaryRefresh();
         }
+        SelectCalendarDate(item.Date);
+        if (!item.IsCurrentMonth)
+            RequestTaskSummaryRefresh();
+    }
+
+    [RelayCommand]
+    private void NavigateCalendar(
+        CalendarNavigationAction action)
+    {
+        DateTime target =
+            CalendarKeyboardNavigationPolicy
+                .GetTargetDate(
+                    SelectedCalendarDate,
+                    action,
+                    DateTime.Today);
+        bool monthChanged =
+            target.Year
+                != DisplayedCalendarMonth.Year
+            || target.Month
+                != DisplayedCalendarMonth.Month;
+        if (monthChanged)
+        {
+            DisplayedCalendarMonth =
+                new DateTime(
+                    target.Year,
+                    target.Month,
+                    1);
+        }
+
+        SelectCalendarDate(target);
+        if (monthChanged)
+            RequestTaskSummaryRefresh();
     }
 
     [RelayCommand]

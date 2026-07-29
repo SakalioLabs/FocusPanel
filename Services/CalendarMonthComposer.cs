@@ -19,6 +19,12 @@ public sealed record CalendarDayItem(
     public bool HasFocus => FocusSessionCount > 0;
     public string AccessibleName =>
         $"{Date:M月d日}"
+        + (IsToday
+            ? "，今天"
+            : string.Empty)
+        + (IsSelected
+            ? "，已选择"
+            : string.Empty)
         + (FocusSessionCount > 0
             ? $"，完成 {FocusSessionCount} 次专注，共 {FocusMinutes} 分钟"
             : "，没有专注记录");

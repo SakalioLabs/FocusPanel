@@ -12,9 +12,25 @@ internal static class CustomInstallerLauncher
 {
     private const string MsiResourceName = "FocusPanelMsi";
 
+    private const string ProbeArgument =
+        "--verify-install-location-picker";
+    private const int ProbeExitCode = 42;
+
     [STAThread]
-    private static int Main()
+    private static int Main(string[] args)
     {
+        if (args.Length == 1
+            && string.Equals(
+                args[0],
+                ProbeArgument,
+                StringComparison.Ordinal))
+        {
+            // Used by packaging and publishing validation. It proves
+            // that the public Setup.exe is this directory-aware
+            // launcher without opening UI or changing the machine.
+            return ProbeExitCode;
+        }
+
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 

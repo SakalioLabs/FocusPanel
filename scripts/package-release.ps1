@@ -2,7 +2,7 @@
 param(
     [Parameter()]
     [ValidatePattern('^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.10.41',
+    [string]$Version = '0.10.42',
 
     [Parameter()]
     [string]$Dotnet8Path,
@@ -225,6 +225,15 @@ Move-Item -LiteralPath $setup.FullName -Destination $nativeSetup -Force
     $installerLocationPolicySource
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $customInstaller)) {
     throw "Custom installer compilation failed with exit code $LASTEXITCODE."
+}
+
+$setupProbe = Start-Process `
+    -FilePath $customInstaller `
+    -ArgumentList '--verify-install-location-picker' `
+    -Wait `
+    -PassThru
+if ($setupProbe.ExitCode -ne 42) {
+    throw "Setup.exe install-location probe returned $($setupProbe.ExitCode), expected 42."
 }
 Remove-GeneratedFile $nativeSetup
 

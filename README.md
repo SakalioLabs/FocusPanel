@@ -99,7 +99,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 电池状态通过单次快照同步读取是否存在、百分比和充电状态；状态中心按 10% 档位显示 Segoe Fluent Battery/BatteryCharging 图标和“充电中”文本。紧凑栏状态入口的一个提示整合网络、音量与电池，不增加额外按钮或破坏六入口布局。
 - 网络状态通过单次快照生成可用性、连接类型、接口名称和详情；状态中心按无线、有线、其他连接显示 WiFi、Ethernet 或 Globe 图标，离线时显示 Error。接口切换或枚举失败不会再把不同采样时刻的在线/离线文案拼在一起，也不读取 Explorer 私有托盘数据。
 - 输入法状态通过一次前台键盘布局读取生成语言和输入法简称；状态中心入口显示“输入法 · 中 / 拼”“输入法 · EN”等，工具提示提供完整状态。点击继续使用 Win+Space，不读取 Explorer 私有托盘结构，也不擅自修改输入法设置。
-- 时间入口提供周一开头的 6 周月历，可切换月份、回到今天或直接选择日期；完成过番茄钟的日期显示专注圆点，底部汇总所选日期的专注次数和分钟数。
+- 时间入口提供周一开头的 6 周月历，可切换月份、回到今天或直接选择日期；方向键按日/周移动，`PageUp` / `PageDown` 跨月，`Ctrl+Home` 回到今天，键盘焦点始终跟随所选日期。完成过番茄钟的日期显示专注圆点，底部汇总所选日期的专注次数和分钟数。
 - 后台发现 GitHub 新版本后，紧凑栏 Focus 中心入口会显示更新状态点，Focus 中心顶部显示目标版本卡片；点击即可进入设置页一键安装，不再只依赖托盘气泡。
 - Velopack 安装定位和更新管理器在共享工作线程准备，主窗口构造与 XAML 首帧不再等待安装目录扫描；首次自动检查和设置页手动检查都会等待同一个初始化结果，安装版不会因为准备尚未结束而漏掉开机后的更新。
 - 更新包下载完成后，SQLite 完整性检查、在线备份和历史备份清理也在专用工作线程执行；设置页会保持忙碌与 Panel 交互锁，备份完成后才恢复原任务栏、桌面图标并启动 Velopack。准备失败会恢复右缘监测并显示原因，不会让界面停在“正在安全重启”或允许重复提交。
@@ -251,6 +251,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 时间弹层只承载日期、专注历史和两个高频动作，不再重复堆放通知、桌面等状态中心入口。月历固定生成 42 个日期，避免不同月份打开时高度跳动；今天使用细描边，选中日期使用单一强调表面，相邻月份降低透明度。专注圆点与摘要直接读取现有 `PomodoroSessions`，不会创建新业务表，也不会修改历史记录。
 
 ![月历与每日专注回顾](docs/images/calendar-focus-history.svg)
+
+![月历键盘导航与焦点跟随](docs/images/calendar-keyboard-navigation.svg)
 
 ## 侧边任务栏完整替代与安全恢复
 
@@ -439,7 +441,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.41 `
+  -Version 0.10.42 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -448,9 +450,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
-- `FocusPanel-win-Setup.exe`：统一的图形化首次安装与跨盘迁移入口；双击后可直接输入或浏览到 D/E 盘任意绝对目录。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，完成后反查 Windows 安装记录核对真实路径。有可用且空间充足的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置；超时则停止而不是写回 C 盘。任务、收纳记录和设置保留在用户 AppData。
+- `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，完成后反查 Windows 安装记录核对真实路径。有可用且空间充足的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。若检测到旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置；超时则停止而不是写回 C 盘。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.41-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.42-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -460,9 +462,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 ![跨盘安装校验与自动收纳退出闭环](docs/images/install-organizer-safety-closure.svg)
 
+![目录安装器与自动收纳发布验收](docs/images/setup-organizer-release-verification.svg)
+
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
-正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES`、完整更新包、带路径向导的 Setup 和 MSI。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要安装过一次，以后即可在设置页直接完成检查、下载、安装和重启。个人设备使用 `Setup.exe` 选择目录，企业部署使用 MSI。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载安装器覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
+正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES`、完整更新包、带路径向导的 Setup 和 MSI。Setup 在打包时以特殊探针参数无安装执行，必须返回目录向导专用标识；上传后还会将 GitHub 公开资产的 SHA-256 与本地文件比较，不能再由同名默认安装器悄悄顶替。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要安装过一次，以后即可在设置页直接完成检查、下载、安装和重启。个人设备使用 `Setup.exe` 选择目录，企业部署使用 MSI。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载安装器覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
 
 ![GitHub 静态清单一键更新与手动兜底](docs/images/github-static-update-flow.svg)
 

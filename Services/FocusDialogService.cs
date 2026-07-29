@@ -1,4 +1,5 @@
 using System.Linq;
+using System;
 using System.Windows;
 using FocusPanel.Views;
 
@@ -11,6 +12,49 @@ public static class FocusDialogService
         string caption = "FocusPanel",
         MessageBoxButton buttons = MessageBoxButton.OK,
         MessageBoxImage image = MessageBoxImage.None)
+    {
+        try
+        {
+            return ShowCore(
+                message,
+                caption,
+                buttons,
+                image);
+        }
+        catch (Exception ex)
+        {
+            // A notification must never become more destructive than
+            // the operation it describes. In particular, organizer
+            // completion/error dialogs can be created while Explorer,
+            // the display topology, or the shell window is changing.
+            // If the custom dialog cannot be built, record the failure
+            // and choose the non-destructive result instead of letting
+            // the exception reach WPF's fatal dispatcher boundary.
+            new CrashLogService().TryAppend(
+                new InvalidOperationException(
+                    $"Focus dialog '{caption}' could not be shown.",
+                    ex));
+            return GetSafeFallbackResult(buttons);
+        }
+    }
+
+    internal static MessageBoxResult GetSafeFallbackResult(
+        MessageBoxButton buttons) =>
+        buttons switch
+        {
+            MessageBoxButton.OK =>
+                MessageBoxResult.OK,
+            MessageBoxButton.YesNo =>
+                MessageBoxResult.No,
+            _ =>
+                MessageBoxResult.Cancel
+        };
+
+    private static MessageBoxResult ShowCore(
+        string message,
+        string caption,
+        MessageBoxButton buttons,
+        MessageBoxImage image)
     {
         Application? application = Application.Current;
         if (application == null)
@@ -25,7 +69,7 @@ public static class FocusDialogService
         if (!application.Dispatcher.CheckAccess())
         {
             return application.Dispatcher.Invoke(
-                () => Show(
+                () => ShowCore(
                     message,
                     caption,
                     buttons,

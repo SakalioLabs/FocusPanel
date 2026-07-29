@@ -13,6 +13,15 @@ public sealed class FileOrganizerLifecycleContractTests
         string service = ReadService();
 
         Assert.Contains(
+            "_ = ProcessPendingChangesSafelyAsync()",
+            service);
+        Assert.Contains(
+            "await ProcessPendingChangesAsync()",
+            service);
+        Assert.Contains(
+            "\"Desktop change processing failed.\"",
+            service);
+        Assert.Contains(
             "public async Task RefreshFiles()",
             service);
         Assert.Contains(

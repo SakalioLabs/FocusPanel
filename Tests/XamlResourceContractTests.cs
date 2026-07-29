@@ -120,6 +120,18 @@ public sealed class XamlResourceContractTests
             "SelectCalendarDateCommand",
             calendar);
         Assert.Contains(
+            "PreviewKeyDown=\"CalendarPanel_PreviewKeyDown\"",
+            calendar);
+        Assert.Contains(
+            "IsVisibleChanged=\"CalendarPanel_IsVisibleChanged\"",
+            calendar);
+        Assert.Contains(
+            "x:Name=\"CalendarDaysItems\"",
+            calendar);
+        Assert.Contains(
+            "PageUp 和 PageDown",
+            calendar);
+        Assert.Contains(
             "SelectedDayFocusSummary",
             calendar);
         Assert.Contains(
@@ -128,6 +140,26 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "<UniformGrid Columns=\"2\"",
             calendar);
+        string calendarCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "CalendarPanelView.xaml.cs"));
+        Assert.Contains(
+            "NavigateCalendarCommand",
+            calendarCode);
+        Assert.Contains(
+            "Key.PageUp",
+            calendarCode);
+        Assert.Contains(
+            "Key.PageDown",
+            calendarCode);
+        Assert.Contains(
+            "ModifierKeys.Control",
+            calendarCode);
+        Assert.Contains(
+            "FocusSelectedDay",
+            calendarCode);
     }
 
     [Fact]
@@ -896,6 +928,19 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
+            "--verify-install-location-picker",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "--verify-install-location-picker",
+            packager);
+        Assert.Contains(
+            "expected 42",
+            packager);
+        Assert.Contains(
             "VELOPACK_INSTALLDIR=",
             File.ReadAllText(
                 Path.Combine(
@@ -952,6 +997,15 @@ public sealed class XamlResourceContractTests
             publisher);
         Assert.Contains(
             "-InFile $installerPath",
+            publisher);
+        Assert.Contains(
+            "Get-FileHash",
+            publisher);
+        Assert.Contains(
+            "publishedInstaller.digest",
+            publisher);
+        Assert.Contains(
+            "does not match the directory-aware installer",
             publisher);
         Assert.Contains(
             "repairing and verifying its assets",

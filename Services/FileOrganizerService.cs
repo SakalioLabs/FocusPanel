@@ -84,7 +84,7 @@ public class FileOrganizerService : IDisposable
             new DesktopVisibilityIo(
                 visibility);
         _debounceTimer = new System.Threading.Timer(
-            _ => _ = ProcessPendingChangesAsync(),
+            _ => _ = ProcessPendingChangesSafelyAsync(),
             null,
             Timeout.Infinite,
             Timeout.Infinite);
@@ -281,6 +281,26 @@ public class FileOrganizerService : IDisposable
         catch (ObjectDisposedException)
         {
             // Shutdown raced the last watcher callback.
+        }
+    }
+
+    private async Task ProcessPendingChangesSafelyAsync()
+    {
+        try
+        {
+            await ProcessPendingChangesAsync()
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Timer callbacks are deliberately fire-and-forget. Keep
+            // one final observation boundary around the entire pump so
+            // a shutdown race or an unexpected observer failure can
+            // never terminate FocusPanel after collecting an item.
+            new CrashLogService().TryAppend(
+                new InvalidOperationException(
+                    "Desktop change processing failed.",
+                    ex));
         }
     }
 

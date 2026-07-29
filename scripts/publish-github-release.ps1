@@ -108,8 +108,25 @@ if ($Publish) {
         Where-Object { $_.name -eq $installerName } |
         Select-Object -First 1
     $installerLength = (Get-Item -LiteralPath $installerPath).Length
+    $installerDigest =
+        'sha256:' + (
+            Get-FileHash `
+                -LiteralPath $installerPath `
+                -Algorithm SHA256
+        ).Hash.ToLowerInvariant()
+    $existingDigest =
+        if ($null -eq $existingInstaller) {
+            ''
+        }
+        else {
+            [string]$existingInstaller.digest
+        }
     if ($null -ne $existingInstaller -and
-        $existingInstaller.size -ne $installerLength) {
+        ($existingInstaller.size -ne $installerLength -or
+         -not [string]::Equals(
+             $existingDigest,
+             $installerDigest,
+             [StringComparison]::OrdinalIgnoreCase))) {
         Invoke-RestMethod `
             -Method Delete `
             -Uri "$apiBaseUrl/releases/assets/$($existingInstaller.id)" `
@@ -126,6 +143,22 @@ if ($Publish) {
             -Headers $githubHeaders `
             -ContentType 'application/octet-stream' `
             -InFile $installerPath | Out-Null
+    }
+
+    $release = Invoke-RestMethod `
+        -Method Get `
+        -Uri "$apiBaseUrl/releases/tags/$releaseTag" `
+        -Headers $githubHeaders
+    $publishedInstaller = $release.assets |
+        Where-Object { $_.name -eq $installerName } |
+        Select-Object -First 1
+    if ($null -eq $publishedInstaller -or
+        $publishedInstaller.size -ne $installerLength -or
+        -not [string]::Equals(
+            [string]$publishedInstaller.digest,
+            $installerDigest,
+            [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Published $installerName does not match the directory-aware installer."
     }
 
     Write-Host "Marking $releaseTag as the latest GitHub Release..."

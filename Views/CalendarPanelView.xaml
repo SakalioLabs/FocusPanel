@@ -4,6 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
+             PreviewKeyDown="CalendarPanel_PreviewKeyDown"
+             IsVisibleChanged="CalendarPanel_IsVisibleChanged"
+             AutomationProperties.Name="月历与今日任务"
+             AutomationProperties.HelpText="方向键按天或周选择，PageUp 和 PageDown 切换月份，Ctrl+Home 返回今天"
              d:DesignWidth="386"
              d:DesignHeight="510">
     <UserControl.Resources>
@@ -115,7 +119,9 @@
             <TextBlock Text="日" HorizontalAlignment="Center" Foreground="{DynamicResource FocusMutedTextBrush}"/>
         </UniformGrid>
 
-        <ItemsControl ItemsSource="{Binding CalendarDays}">
+        <ItemsControl x:Name="CalendarDaysItems"
+                      ItemsSource="{Binding CalendarDays}"
+                      AutomationProperties.Name="日期">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Columns="7"

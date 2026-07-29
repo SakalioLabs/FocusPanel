@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560">
+  <rect width="1120" height="560" rx="28" fill="#0b1220"/>
+  <text x="52" y="62" fill="#f5f8ff" font-family="Segoe UI,Microsoft YaHei" font-size="27" font-weight="700">月历不只可点，也能完整用键盘</text>
+  <text x="52" y="96" fill="#9fb0c8" font-family="Segoe UI,Microsoft YaHei" font-size="15">选中日期、键盘焦点与异步专注摘要分开更新：操作即时反馈，历史数据随后补齐</text>
+  <rect x="52" y="128" width="560" height="374" rx="24" fill="#121c2d" stroke="#24344c"/>
+  <text x="82" y="170" fill="#eef4ff" font-family="Segoe UI,Microsoft YaHei" font-size="19" font-weight="650">2026 年 7 月</text>
+  <text x="548" y="170" text-anchor="end" fill="#7dd3fc" font-family="Segoe UI,Microsoft YaHei" font-size="14">今天</text>
+  <g font-family="Segoe UI,Microsoft YaHei" font-size="13" text-anchor="middle" fill="#8091aa">
+    <text x="103" y="211">一</text><text x="181" y="211">二</text><text x="259" y="211">三</text><text x="337" y="211">四</text><text x="415" y="211">五</text><text x="493" y="211">六</text><text x="571" y="211">日</text>
+  </g>
+  <g font-family="Segoe UI,Microsoft YaHei" font-size="14" text-anchor="middle" fill="#c9d5e8">
+    <text x="103" y="256" fill="#66758b">29</text><text x="181" y="256" fill="#66758b">30</text><text x="259" y="256">1</text><text x="337" y="256">2</text><text x="415" y="256">3</text><text x="493" y="256">4</text><text x="571" y="256">5</text>
+    <text x="103" y="310">6</text><text x="181" y="310">7</text><text x="259" y="310">8</text><text x="337" y="310">9</text><text x="415" y="310">10</text><text x="493" y="310">11</text><text x="571" y="310">12</text>
+    <text x="103" y="364">13</text><text x="181" y="364">14</text><text x="259" y="364">15</text><text x="415" y="364">17</text><text x="493" y="364">18</text><text x="571" y="364">19</text>
+    <text x="103" y="418">20</text><text x="181" y="418">21</text><text x="259" y="418">22</text><text x="337" y="418">23</text><text x="415" y="418">24</text><text x="493" y="418">25</text><text x="571" y="418">26</text>
+  </g>
+  <rect x="308" y="333" width="58" height="48" rx="13" fill="#2563eb" stroke="#7dd3fc" stroke-width="2"/>
+  <text x="337" y="363" text-anchor="middle" fill="#ffffff" font-family="Segoe UI,Microsoft YaHei" font-size="14" font-weight="700">16</text>
+  <circle cx="337" cy="373" r="3" fill="#a5f3fc"/>
+  <text x="82" y="473" fill="#a9bad1" font-family="Segoe UI,Microsoft YaHei" font-size="13">焦点：7 月 16 日，已选择 · 完成 3 次专注 · 75 分钟</text>
+  <rect x="644" y="128" width="424" height="374" rx="24" fill="#101a2a"/>
+  <text x="676" y="172" fill="#eef4ff" font-family="Segoe UI,Microsoft YaHei" font-size="19" font-weight="650">键盘映射</text>
+  <g font-family="Segoe UI,Microsoft YaHei">
+    <rect x="676" y="205" width="100" height="44" rx="12" fill="#1d2b41"/><text x="726" y="233" text-anchor="middle" fill="#93c5fd" font-size="14">← / →</text><text x="802" y="233" fill="#cbd7e9" font-size="14">前后一天</text>
+    <rect x="676" y="265" width="100" height="44" rx="12" fill="#1d2b41"/><text x="726" y="293" text-anchor="middle" fill="#93c5fd" font-size="14">↑ / ↓</text><text x="802" y="293" fill="#cbd7e9" font-size="14">前后一周</text>
+    <rect x="676" y="325" width="132" height="44" rx="12" fill="#1d2b41"/><text x="742" y="353" text-anchor="middle" fill="#93c5fd" font-size="13">PageUp / Down</text><text x="828" y="353" fill="#cbd7e9" font-size="14">跨月</text>
+    <rect x="676" y="385" width="132" height="44" rx="12" fill="#1d2b41"/><text x="742" y="413" text-anchor="middle" fill="#93c5fd" font-size="13">Ctrl + Home</text><text x="828" y="413" fill="#cbd7e9" font-size="14">回到今天</text>
+  </g>
+  <text x="676" y="468" fill="#86efac" font-family="Segoe UI,Microsoft YaHei" font-size="13">跨月后先显示选择，再后台读取 SQLite 摘要</text>
+</svg>

@@ -51,6 +51,12 @@ public sealed class CalendarMonthComposerTests
         Assert.Same(selected, today);
         Assert.True(selected.IsCurrentMonth);
         Assert.Contains(
+            "今天",
+            selected.AccessibleName);
+        Assert.Contains(
+            "已选择",
+            selected.AccessibleName);
+        Assert.Contains(
             days,
             item => !item.IsCurrentMonth);
     }
