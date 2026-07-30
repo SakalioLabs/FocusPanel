@@ -49,6 +49,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _wifiNetworkOperations = new();
     private readonly AppLaunchCoordinator
         _appLaunch;
+    private readonly ElevatedAppLaunchCoordinator
+        _elevatedAppLaunch;
     private readonly SystemActionCoordinator
         _systemActions;
     private readonly ClipboardTextService
@@ -471,7 +473,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             applicationAudio = null,
         ISystemRadioService? radios = null,
         IWifiNetworkService?
-            wifiNetworks = null)
+            wifiNetworks = null,
+        ElevatedAppLaunchCoordinator?
+            elevatedAppLaunch = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -492,6 +496,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _appLaunch =
             new AppLaunchCoordinator(
                 _appCatalog.Launch);
+        _elevatedAppLaunch =
+            elevatedAppLaunch
+            ?? new ElevatedAppLaunchCoordinator(
+                new ElevatedAppLaunchService()
+                    .Launch);
         _systemActions =
             systemActions
             ?? new SystemActionCoordinator();
@@ -1790,6 +1799,52 @@ public partial class MainViewModel : ObservableObject, IDisposable
         AppLaunchItem? launch = task?.CreateLaunchItem();
         if (launch != null)
             await TryLaunchAppAsync(launch);
+    }
+
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task LaunchElevatedTaskbarApp(
+        TaskbarAppItem? task)
+    {
+        AppLaunchItem? launch =
+            task?.CreateElevatedLaunchItem();
+        if (launch == null)
+        {
+            ReportTaskbarActionFailure(
+                $"“{task?.DisplayName ?? "该应用"}”没有可靠的桌面启动目标，"
+                + "Windows 商店应用不能由 Panel 强制提权。");
+            return;
+        }
+
+        ElevatedAppLaunchCompletion completion =
+            await _elevatedAppLaunch
+                .LaunchAsync(launch);
+        if (_isDisposed
+            || !_elevatedAppLaunch.IsCurrent(
+                completion.Revision))
+        {
+            return;
+        }
+
+        switch (completion.Status)
+        {
+            case ElevatedAppLaunchStatus.Started:
+                SystemActionMessage =
+                    string.Empty;
+                break;
+            case ElevatedAppLaunchStatus.Cancelled:
+                SystemActionMessage =
+                    $"已取消以管理员身份启动“{launch.DisplayName}”。";
+                break;
+            case ElevatedAppLaunchStatus.Unsupported:
+                ReportTaskbarActionFailure(
+                    $"“{launch.DisplayName}”不支持以管理员身份启动。");
+                break;
+            default:
+                ReportTaskbarActionFailure(
+                    $"无法以管理员身份启动“{launch.DisplayName}”。"
+                    + "目标可能已移动，或 Windows 阻止了此操作。");
+                break;
+        }
     }
 
     [RelayCommand]

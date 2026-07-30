@@ -56,6 +56,8 @@ public sealed class TaskbarAppItem : ObservableObject
         !string.IsNullOrWhiteSpace(LaunchItem?.LaunchTarget)
         || !string.IsNullOrWhiteSpace(ApplicationUserModelId)
         || !string.IsNullOrWhiteSpace(ExecutablePath);
+    public bool CanLaunchElevated =>
+        CreateElevatedLaunchItem() != null;
     public bool CanPin => IsPinned
         || !string.IsNullOrWhiteSpace(RunningTask?.ApplicationUserModelId)
         || !string.IsNullOrWhiteSpace(RunningTask?.ExecutablePath);
@@ -146,6 +148,9 @@ public sealed class TaskbarAppItem : ObservableObject
             string interaction =
                 CanLaunchNewInstance
                 ? $"{primaryAction}；Shift+左键或中键启动新实例；"
+                  + (CanLaunchElevated
+                      ? "Ctrl+Shift+左键以管理员身份启动；"
+                      : string.Empty)
                   + "可拖入文件用此应用打开"
                 : primaryAction;
             string hint = IsPinned
@@ -316,6 +321,7 @@ public sealed class TaskbarAppItem : ObservableObject
         OnPropertyChanged(nameof(IsRunning));
         OnPropertyChanged(nameof(IsActive));
         OnPropertyChanged(nameof(CanLaunchNewInstance));
+        OnPropertyChanged(nameof(CanLaunchElevated));
         OnPropertyChanged(nameof(CanPin));
         OnPropertyChanged(nameof(Windows));
         OnPropertyChanged(nameof(WindowCount));
@@ -362,6 +368,40 @@ public sealed class TaskbarAppItem : ObservableObject
                 IdentityKey = IdentityKey
             };
         }
+        return null;
+    }
+
+    public AppLaunchItem?
+        CreateElevatedLaunchItem()
+    {
+        if (LaunchItem != null
+            && LaunchItem.LaunchKind
+                is AppLaunchKind.Executable
+                    or AppLaunchKind.Shortcut
+            && !string.IsNullOrWhiteSpace(
+                LaunchItem.LaunchTarget))
+        {
+            return LaunchItem;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                ApplicationUserModelId)
+            && !string.IsNullOrWhiteSpace(
+                ExecutablePath))
+        {
+            return new AppLaunchItem
+            {
+                DisplayName = DisplayName,
+                LaunchKind =
+                    AppLaunchKind.Executable,
+                LaunchTarget =
+                    ExecutablePath,
+                IconKey = ExecutablePath,
+                Icon = Icon,
+                IdentityKey = IdentityKey
+            };
+        }
+
         return null;
     }
 }

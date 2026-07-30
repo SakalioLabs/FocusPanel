@@ -12,6 +12,7 @@ public sealed class TaskbarAppClickPolicyTests
             TaskbarAppClickAction.ActivateOrShowWindows,
             TaskbarAppClickPolicy.FromLeftClick(
                 shiftPressed: false,
+                controlPressed: false,
                 canLaunchNewInstance: true));
     }
 
@@ -22,6 +23,7 @@ public sealed class TaskbarAppClickPolicyTests
             TaskbarAppClickAction.LaunchNewInstance,
             TaskbarAppClickPolicy.FromLeftClick(
                 shiftPressed: true,
+                controlPressed: false,
                 canLaunchNewInstance: true));
     }
 
@@ -32,7 +34,19 @@ public sealed class TaskbarAppClickPolicyTests
             TaskbarAppClickAction.ActivateOrShowWindows,
             TaskbarAppClickPolicy.FromLeftClick(
                 shiftPressed: true,
+                controlPressed: false,
                 canLaunchNewInstance: false));
+    }
+
+    [Fact]
+    public void ControlShiftLeftClick_RequestsAdministratorLaunch()
+    {
+        Assert.Equal(
+            TaskbarAppClickAction.LaunchElevated,
+            TaskbarAppClickPolicy.FromLeftClick(
+                shiftPressed: true,
+                controlPressed: true,
+                canLaunchNewInstance: true));
     }
 
     [Fact]

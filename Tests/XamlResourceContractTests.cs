@@ -2170,6 +2170,15 @@ public sealed class XamlResourceContractTests
             "InputGestureText = \"Alt+↓\"",
             codeBehind);
         Assert.Contains("LaunchNewTaskbarAppCommand.Execute(task)", codeBehind);
+        Assert.Contains(
+            "LaunchElevatedTaskbarAppCommand.Execute(task)",
+            codeBehind);
+        Assert.Contains(
+            "Header = \"以管理员身份运行\"",
+            codeBehind);
+        Assert.Contains(
+            "ModifierKeys.Control",
+            codeBehind);
         Assert.Contains("PopulateTaskbarAppContextMenu", codeBehind);
         Assert.Contains("CloseWindowCommand", codeBehind);
         Assert.Contains("CloseTaskCommand", codeBehind);

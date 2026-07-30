@@ -24,7 +24,9 @@ public sealed class TaskbarAppPresentationTests
             item.AccessibleName);
         Assert.Equal(
             "左键打开窗口列表，滚轮切换窗口，右键管理应用；"
-            + "Shift+左键或中键启动新实例；可拖入文件用此应用打开",
+            + "Shift+左键或中键启动新实例；"
+            + "Ctrl+Shift+左键以管理员身份启动；"
+            + "可拖入文件用此应用打开",
             item.InteractionHint);
     }
 
@@ -40,7 +42,9 @@ public sealed class TaskbarAppPresentationTests
             item.StatusSummary);
         Assert.Equal(
             "左键切换或最小化，右键管理应用；"
-            + "Shift+左键或中键启动新实例；可拖入文件用此应用打开",
+            + "Shift+左键或中键启动新实例；"
+            + "Ctrl+Shift+左键以管理员身份启动；"
+            + "可拖入文件用此应用打开",
             item.InteractionHint);
     }
 
@@ -200,8 +204,34 @@ public sealed class TaskbarAppPresentationTests
             item.AccessibleName);
         Assert.Equal(
             "左键启动，右键管理应用；Shift+左键或中键启动新实例；"
+            + "Ctrl+Shift+左键以管理员身份启动；"
             + "可拖入文件用此应用打开；"
             + "Alt+↑/↓调整固定顺序",
+            item.InteractionHint);
+        Assert.True(item.CanLaunchElevated);
+    }
+
+    [Fact]
+    public void PackagedApplication_DoesNotPromiseElevation()
+    {
+        var item = new TaskbarAppItem
+        {
+            DisplayName = "商店应用",
+            LaunchItem = new AppLaunchItem
+            {
+                DisplayName = "商店应用",
+                LaunchKind =
+                    AppLaunchKind.ShellApp,
+                LaunchTarget =
+                    "Contoso.App_123!App"
+            }
+        };
+
+        Assert.False(item.CanLaunchElevated);
+        Assert.Null(
+            item.CreateElevatedLaunchItem());
+        Assert.DoesNotContain(
+            "管理员",
             item.InteractionHint);
     }
 

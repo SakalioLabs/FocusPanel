@@ -959,7 +959,13 @@ public partial class MainWindow :
 
         TaskbarAppClickAction action = TaskbarAppClickPolicy.FromLeftClick(
             Keyboard.Modifiers.HasFlag(ModifierKeys.Shift),
+            Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
             task.CanLaunchNewInstance);
+        if (action == TaskbarAppClickAction.LaunchElevated)
+        {
+            _viewModel.LaunchElevatedTaskbarAppCommand.Execute(task);
+            return;
+        }
         if (action == TaskbarAppClickAction.LaunchNewInstance)
         {
             _viewModel.LaunchNewTaskbarAppCommand.Execute(task);
@@ -1122,6 +1128,19 @@ public partial class MainWindow :
             {
                 Header = task.IsRunning ? "启动新实例" : "启动",
                 Command = _viewModel.LaunchNewTaskbarAppCommand,
+                CommandParameter = task
+            });
+        }
+        if (task.CanLaunchElevated)
+        {
+            menu.Items.Add(new MenuItem
+            {
+                Header = "以管理员身份运行",
+                InputGestureText =
+                    "Ctrl+Shift+点击",
+                Command =
+                    _viewModel
+                        .LaunchElevatedTaskbarAppCommand,
                 CommandParameter = task
             });
         }
