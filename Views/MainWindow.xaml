@@ -472,6 +472,86 @@
                                                Foreground="{DynamicResource FocusMutedTextBrush}"
                                                TextWrapping="Wrap"/>
                                 </Grid>
+                                <Grid Margin="4,0,4,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="应用音量"
+                                               Style="{StaticResource FocusCardTitleText}"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding ApplicationAudioStatusText}"
+                                               Style="{StaticResource FocusCaptionText}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding ApplicationAudioSessions}"
+                                              Margin="0,0,0,12"
+                                              AutomationProperties.Name="应用音量混音器">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="4,8"
+                                                    BorderBrush="{DynamicResource FocusStrokeBrush}"
+                                                    BorderThickness="0,0,0,1">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="44"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="44"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="52"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.ColumnSpan="2"
+                                                               Margin="6,0,0,2"
+                                                               Text="{Binding DisplayName}"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Style="{StaticResource FocusCardTitleText}">
+                                                        <TextBlock.ToolTip>
+                                                            <TextBlock Text="{Binding DisplayName}"/>
+                                                        </TextBlock.ToolTip>
+                                                    </TextBlock>
+                                                    <TextBlock Grid.Column="2"
+                                                               HorizontalAlignment="Right"
+                                                               Foreground="{DynamicResource FocusAccentBrush}"
+                                                               Text="正在播放"
+                                                               Style="{StaticResource FocusMetaText}"
+                                                               Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <Button Grid.Row="1"
+                                                            Style="{StaticResource FocusIconButton}"
+                                                            Command="{Binding DataContext.ToggleApplicationAudioMuteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="{Binding MuteActionLabel}"
+                                                            AutomationProperties.Name="{Binding MuteActionLabel}">
+                                                        <TextBlock>
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock"
+                                                                       BasedOn="{StaticResource FocusIconText}">
+                                                                    <Setter Property="Text" Value="&#xE767;"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                                            <Setter Property="Text" Value="&#xE74F;"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Button>
+                                                    <Slider Grid.Row="1"
+                                                            Grid.Column="1"
+                                                            Margin="8,0,14,0"
+                                                            Minimum="0"
+                                                            Maximum="1"
+                                                            Value="{Binding Volume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                            AutomationProperties.Name="{Binding DisplayName, StringFormat={}{0} 音量}"/>
+                                                    <TextBlock Grid.Row="1"
+                                                               Grid.Column="2"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding Volume, StringFormat={}{0:P0}}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                                 <Grid Margin="0,0,0,12"
                                       AutomationProperties.Name="{Binding BrightnessSummary}">
                                     <Grid.RowDefinitions>

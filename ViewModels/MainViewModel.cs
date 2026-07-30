@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -26,6 +27,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ISystemStatusService _systemStatus;
     private readonly IDisplayBrightnessService
         _brightness;
+    private readonly IApplicationAudioSessionService
+        _applicationAudio;
     private readonly IAppUpdateService _updateService;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly IShellPreferenceRepository
@@ -34,6 +37,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _audioControl;
     private readonly BrightnessControlCoordinator
         _brightnessControl;
+    private readonly
+        ApplicationAudioControlCoordinator
+        _applicationAudioControl;
     private readonly AppLaunchCoordinator
         _appLaunch;
     private readonly SystemActionCoordinator
@@ -83,6 +89,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private long _brightnessRevision;
     private volatile bool _brightnessWritePending;
     private int _confirmedBrightnessPercent;
+    private long _applicationAudioRevision;
+    private readonly ConcurrentDictionary<
+        string,
+        long> _applicationAudioRevisions =
+            new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<
+        string,
+        byte> _applicationAudioWritePending =
+            new(StringComparer.Ordinal);
     private long _taskSummaryMonthTicks;
     private float _confirmedMasterVolume;
     private bool _confirmedMuted;
@@ -269,6 +284,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "正在读取内置显示器…";
 
     [ObservableProperty]
+    private string applicationAudioStatusText =
+        "正在读取应用音频会话…";
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NetworkGlyph))]
     [NotifyPropertyChangedFor(nameof(NetworkSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
@@ -353,14 +372,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IWindowTracker windowTracker,
         ISystemStatusService systemStatus,
         IAppUpdateService updateService,
-        IDisplayBrightnessService brightness)
+        IDisplayBrightnessService brightness,
+        IApplicationAudioSessionService
+            applicationAudio)
         : this(
             appCatalog,
             windowTracker,
             systemStatus,
             updateService,
             new ShellPreferenceRepository(),
-            brightness: brightness)
+            brightness: brightness,
+            applicationAudio:
+                applicationAudio)
     {
     }
 
@@ -380,7 +403,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         TaskService?
             taskService = null,
         IDisplayBrightnessService?
-            brightness = null)
+            brightness = null,
+        IApplicationAudioSessionService?
+            applicationAudio = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -388,6 +413,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _brightness =
             brightness
             ?? new DisplayBrightnessService();
+        _applicationAudio =
+            applicationAudio
+            ?? new ApplicationAudioSessionService();
         _updateService = updateService;
         _appLaunch =
             new AppLaunchCoordinator(
@@ -421,6 +449,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _brightness.TrySetBrightness);
         _brightnessControl.Completed +=
             OnBrightnessControlCompleted;
+        _applicationAudioControl =
+            new ApplicationAudioControlCoordinator(
+                _applicationAudio.TrySetVolume,
+                _applicationAudio.TrySetMuted);
+        _applicationAudioControl.Completed +=
+            OnApplicationAudioControlCompleted;
         _shellPreferences =
             shellPreferences
             ?? throw new ArgumentNullException(
@@ -517,6 +551,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<ShellSearchResult> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+    public ObservableCollection<
+        ApplicationAudioSessionItem>
+        ApplicationAudioSessions
+    {
+        get;
+    } = new();
+    public bool HasApplicationAudioSessions =>
+        ApplicationAudioSessions.Count > 0;
     public ObservableCollection<
         ShellDisplayTargetOption> DisplayTargetOptions
     {
@@ -2483,6 +2525,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _brightnessWritePending;
         BrightnessStatusSnapshot brightness =
             _brightness.GetStatus();
+        IReadOnlyList<
+            ApplicationAudioSessionSnapshot>
+            applicationAudioSessions =
+                _applicationAudio.GetSessions();
         bool brightnessWritePendingAfterCapture =
             _brightnessWritePending;
         return new PendingSystemStatusSnapshot(
@@ -2493,7 +2539,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             brightness,
             brightnessRevision,
             brightnessWritePendingBeforeCapture
-                || brightnessWritePendingAfterCapture);
+                || brightnessWritePendingAfterCapture,
+            applicationAudioSessions);
     }
 
     private async Task ApplySystemStatusAsync(
@@ -2558,6 +2605,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     brightness.Percent);
             }
         }
+
+        ApplyApplicationAudioSessions(
+            pending.ApplicationAudioSessions);
 
         NetworkStatusSnapshot network =
             snapshot.Network;
@@ -2799,6 +2849,248 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SystemActionMessage = message;
         CloseTransientPanels();
         IsStatusCenterOpen = true;
+    }
+
+    private void ApplyApplicationAudioSessions(
+        IReadOnlyList<
+            ApplicationAudioSessionSnapshot>
+            snapshots)
+    {
+        bool hadSessions =
+            ApplicationAudioSessions.Count > 0;
+        var existing =
+            ApplicationAudioSessions
+                .ToDictionary(
+                    item => item.SessionId,
+                    StringComparer.Ordinal);
+        var incomingIds =
+            new HashSet<string>(
+                snapshots.Select(
+                    snapshot =>
+                        snapshot.SessionId),
+                StringComparer.Ordinal);
+        for (int index = 0;
+             index < snapshots.Count;
+             index++)
+        {
+            ApplicationAudioSessionSnapshot
+                snapshot = snapshots[index];
+            if (!existing.TryGetValue(
+                    snapshot.SessionId,
+                    out ApplicationAudioSessionItem?
+                        item))
+            {
+                item =
+                    new ApplicationAudioSessionItem(
+                        snapshot);
+                item.VolumeRequested +=
+                    ApplicationAudioSession_VolumeRequested;
+                existing[snapshot.SessionId] =
+                    item;
+            }
+            else if (!_applicationAudioWritePending
+                         .ContainsKey(
+                             snapshot.SessionId))
+            {
+                item.ApplySnapshot(snapshot);
+            }
+
+            int currentIndex =
+                ApplicationAudioSessions
+                    .IndexOf(item);
+            if (currentIndex < 0)
+            {
+                ApplicationAudioSessions.Insert(
+                    Math.Min(
+                        index,
+                        ApplicationAudioSessions.Count),
+                    item);
+            }
+            else if (currentIndex != index)
+            {
+                ApplicationAudioSessions.Move(
+                    currentIndex,
+                    index);
+            }
+        }
+
+        for (int index =
+                 ApplicationAudioSessions.Count - 1;
+             index >= 0;
+             index--)
+        {
+            ApplicationAudioSessionItem item =
+                ApplicationAudioSessions[index];
+            if (incomingIds.Contains(item.SessionId)
+                || _applicationAudioWritePending
+                    .ContainsKey(item.SessionId))
+            {
+                continue;
+            }
+
+            item.VolumeRequested -=
+                ApplicationAudioSession_VolumeRequested;
+            ApplicationAudioSessions.RemoveAt(index);
+            _applicationAudioRevisions.TryRemove(
+                item.SessionId,
+                out _);
+        }
+
+        ApplicationAudioStatusText =
+            ApplicationAudioSessions.Count == 0
+                ? IsAudioAvailable
+                    ? "当前没有可调节的应用音频会话"
+                    : "默认音频输出设备暂时不可用"
+                : $"{ApplicationAudioSessions.Count} 个应用音频会话";
+        if (hadSessions
+            != HasApplicationAudioSessions)
+        {
+            OnPropertyChanged(
+                nameof(
+                    HasApplicationAudioSessions));
+        }
+    }
+
+    private void
+        ApplicationAudioSession_VolumeRequested(
+            ApplicationAudioSessionItem item,
+            float volume)
+    {
+        long revision =
+            Interlocked.Increment(
+                ref _applicationAudioRevision);
+        _applicationAudioRevisions[
+            item.SessionId] = revision;
+        _applicationAudioWritePending[
+            item.SessionId] = 0;
+        if (_applicationAudioControl.QueueVolume(
+                item.SessionId,
+                revision,
+                volume))
+        {
+            return;
+        }
+
+        _applicationAudioWritePending.TryRemove(
+            item.SessionId,
+            out _);
+        item.ApplyDisplayedVolume(
+            item.ConfirmedVolume);
+    }
+
+    [RelayCommand]
+    private void ToggleApplicationAudioMute(
+        ApplicationAudioSessionItem? item)
+    {
+        if (item == null)
+            return;
+
+        bool target = !item.IsMuted;
+        item.ApplyDisplayedMuted(target);
+        long revision =
+            Interlocked.Increment(
+                ref _applicationAudioRevision);
+        _applicationAudioRevisions[
+            item.SessionId] = revision;
+        _applicationAudioWritePending[
+            item.SessionId] = 0;
+        if (_applicationAudioControl.QueueMuted(
+                item.SessionId,
+                revision,
+                target))
+        {
+            return;
+        }
+
+        _applicationAudioWritePending.TryRemove(
+            item.SessionId,
+            out _);
+        item.ApplyDisplayedMuted(
+            item.ConfirmedMuted);
+    }
+
+    private void OnApplicationAudioControlCompleted(
+        ApplicationAudioControlOutcome outcome)
+    {
+        _uiDispatcher.BeginInvoke(
+            () =>
+                ApplyApplicationAudioControlOutcome(
+                    outcome),
+            DispatcherPriority.Background);
+    }
+
+    private void ApplyApplicationAudioControlOutcome(
+        ApplicationAudioControlOutcome outcome)
+    {
+        if (_isDisposed)
+            return;
+
+        ApplicationAudioControlMutation mutation =
+            outcome.Mutation;
+        ApplicationAudioSessionItem? item =
+            ApplicationAudioSessions
+                .FirstOrDefault(
+                    candidate =>
+                        string.Equals(
+                            candidate.SessionId,
+                            mutation.SessionId,
+                            StringComparison.Ordinal));
+        if (item != null)
+        {
+            if (mutation.Volume is float volume
+                && outcome.VolumeSucceeded == true)
+            {
+                item.ConfirmVolume(volume);
+            }
+            if (mutation.IsMuted is bool muted
+                && outcome.MuteSucceeded == true)
+            {
+                item.ConfirmMuted(muted);
+            }
+        }
+
+        if (!_applicationAudioRevisions
+                .TryGetValue(
+                    mutation.SessionId,
+                    out long currentRevision)
+            || currentRevision
+                != mutation.Revision)
+        {
+            return;
+        }
+
+        _applicationAudioWritePending.TryRemove(
+            mutation.SessionId,
+            out _);
+        bool failed =
+            outcome.VolumeSucceeded == false
+            || outcome.MuteSucceeded == false;
+        if (item != null && failed)
+        {
+            if (outcome.VolumeSucceeded == false)
+            {
+                item.ApplyDisplayedVolume(
+                    item.ConfirmedVolume);
+            }
+            if (outcome.MuteSucceeded == false)
+            {
+                item.ApplyDisplayedMuted(
+                    item.ConfirmedMuted);
+            }
+        }
+
+        if (failed)
+        {
+            SystemActionMessage =
+                $"无法调整“{item?.DisplayName ?? "该应用"}”的音量。"
+                + "音频会话可能已经结束或默认输出设备正在切换。";
+            IsStatusCenterOpen = true;
+            RequestSystemStatusRefresh();
+            return;
+        }
+
+        SystemActionMessage = string.Empty;
+        RequestSystemStatusRefresh();
     }
 
     private void ApplyStartupPreference(
@@ -3269,6 +3561,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             OnAudioControlCompleted;
         _brightnessControl.Completed -=
             OnBrightnessControlCompleted;
+        _applicationAudioControl.Completed -=
+            OnApplicationAudioControlCompleted;
+        foreach (ApplicationAudioSessionItem item
+                 in ApplicationAudioSessions)
+        {
+            item.VolumeRequested -=
+                ApplicationAudioSession_VolumeRequested;
+        }
         _shellPreferences.SaveFailed -=
             OnShellPreferenceSaveFailed;
         _clockTimer.Stop();
@@ -3285,6 +3585,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 _audioControl.CompleteAsync(),
                 _brightnessControl.CompleteAsync(),
+                _applicationAudioControl
+                    .CompleteAsync(),
                 _autoStartup.CompleteAsync(),
                 _taskCapture.CompleteAsync(),
                 _taskSearch.CompleteAsync(),
@@ -3338,6 +3640,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             _audioControl.Dispose();
             _brightnessControl.Dispose();
+            _applicationAudioControl.Dispose();
             _shellPreferences.Dispose();
         }
     }
@@ -3372,5 +3675,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             bool AudioWritePending,
             BrightnessStatusSnapshot Brightness,
             long BrightnessRevision,
-            bool BrightnessWritePending);
+            bool BrightnessWritePending,
+            IReadOnlyList<
+                ApplicationAudioSessionSnapshot>
+                ApplicationAudioSessions);
 }

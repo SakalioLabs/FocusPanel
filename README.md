@@ -42,6 +42,9 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 状态中心新增内置显示器亮度滑块，不再为了调光先打开 Win+A；统一搜索同步支持 `亮度 35`、`亮度 +10`、`亮度降低 5`、`brightness 60` 和 `brightness down 10`。连续拖动只保留最新目标值并在后台串行写入，旧结果不能覆盖新的滑块位置；读取与写入使用 Windows 公开的 `WmiMonitorBrightness` / `WmiMonitorBrightnessMethods`，只控制系统实际公开的内置显示设备。外接显示器、远程桌面或驱动未公开亮度能力时，控件会禁用并说明原因，仍可点击“快捷设置”，不会调用 DDC 私有协议或假装成功。
 
 ![状态中心与统一搜索直接控制内置屏亮度](docs/images/direct-brightness-control.svg)
+- 状态中心内置应用级音量混音器：直接列出默认输出设备上尚未过期的音频会话，显示正在播放状态，并为每个应用提供独立音量与静音，不必再从任务栏打开快捷设置、进入声音混合器。活动会话优先、名称与会话实例标识稳定，最多显示 12 项并由状态中心整体滚动；系统声音使用明确标签，受保护进程无法读取产品名时降级为进程名，不按窗口标题猜测身份。滑块连续变化按会话合并最后值，不同应用严格串行；写入期间暂停旧快照覆盖，当前会话结束或设备切换时回滚到最后确认值并刷新列表。实现仅使用 Windows 公开的 `IAudioSessionManager2`、`IAudioSessionEnumerator`、`IAudioSessionControl2` 和 `ISimpleAudioVolume`，不读取播放器私有数据，也不影响独占模式音频流。
+
+![状态中心应用级音量混音器](docs/images/application-volume-mixer.svg)
 - 媒体播放也不再依赖原生快捷设置：状态中心提供上一首、播放/暂停、下一首三个 44px 直接按钮，成功后保持状态中心打开，便于连续切歌；紧凑栏状态按钮中键可从任意应用一击播放或暂停，滚轮调音量和右键静音语义保持不变。统一搜索同步支持“上一曲”“播放暂停”“下一首”及英文 `previous track / play pause / next track`。执行使用 Windows SDK 公开的 `VK_MEDIA_*` 虚拟键和现有批量 `SendInput` 按下/释放链，不枚举、注入或读取播放器私有数据；系统阻止模拟输入时进入状态中心明确提示。
 
 ![状态中心、紧凑栏与统一搜索的媒体控制](docs/images/media-transport-controls.svg)
@@ -497,7 +500,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.63 `
+  -Version 0.10.64 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -508,7 +511,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.63-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.64-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
