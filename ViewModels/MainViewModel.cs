@@ -38,6 +38,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _clipboard;
     private readonly AutoStartupCoordinator
         _autoStartup;
+    private readonly TaskService _taskService;
+    private readonly TaskQuickCaptureCoordinator
+        _taskCapture;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
@@ -333,7 +336,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IFileOrganizerViewModelFactory?
             fileOrganizerFactory = null,
         ClipboardTextService?
-            clipboard = null)
+            clipboard = null,
+        TaskService?
+            taskService = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -351,6 +356,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _autoStartup =
             autoStartup
             ?? new AutoStartupCoordinator();
+        _taskService =
+            taskService
+            ?? new TaskService();
+        _taskCapture =
+            new TaskQuickCaptureCoordinator(
+                _taskService);
         _audioControl =
             new AudioControlCoordinator(
                 _systemStatus.TrySetMasterVolume,
@@ -461,7 +472,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string AppSearchStatusText =>
         IsAppCatalogLoading
             ? "正在载入应用目录…"
-            : "没有找到匹配的应用、窗口、系统命令或计算结果";
+            : "没有找到匹配的应用、窗口、命令或快捷结果";
     public bool IsAppSearchStatusVisible =>
         SearchResults.Count == 0;
     public string AudioGlyph =>
@@ -536,6 +547,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<AppUpdateInfo>? UpdateAvailable;
     public event Action<string>? WorkspaceRequested;
     public event Action<int>? PomodoroCompleted;
+    public event Action<int, string>? TaskCaptured;
     public event Action? DisplayTargetChanged;
     public event Action<bool>? WorkspacePinChanged;
 
@@ -849,7 +861,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _ = _dashboardViewModel.RefreshAsync();
                 break;
             case "Tasks":
-                _tasksViewModel ??= new TasksViewModel();
+                _tasksViewModel =
+                    GetOrCreateTasksViewModel();
                 CurrentViewModel = _tasksViewModel;
                 CurrentSectionTitle = "任务";
                 break;
@@ -934,6 +947,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ExecuteSearchResult(
         ShellSearchResult? result)
     {
+        if (result?.TaskCaptureCommand
+            is TaskCaptureCommand taskCapture)
+        {
+            await ExecuteTaskCaptureCommandAsync(
+                taskCapture);
+            return;
+        }
+
         if (result?.FocusCommand
             is PomodoroSearchCommand focusCommand)
         {
@@ -1014,6 +1035,52 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         if (await TryLaunchAppAsync(app))
             IsSearchOpen = false;
+    }
+
+    private TasksViewModel
+        GetOrCreateTasksViewModel()
+    {
+        _tasksViewModel ??=
+            new TasksViewModel(
+                _taskService);
+        return _tasksViewModel;
+    }
+
+    private async Task
+        ExecuteTaskCaptureCommandAsync(
+            TaskCaptureCommand command)
+    {
+        IsSearchOpen = false;
+        TaskQuickCaptureResult result =
+            await _taskCapture
+                .CaptureAsync(
+                    command.Title);
+        if (_isDisposed)
+            return;
+
+        if (result.Succeeded
+            && result.Item != null)
+        {
+            _tasksViewModel
+                ?.ApplyQuickCapturedInboxItem(
+                    result.Item);
+            SystemActionMessage =
+                string.Empty;
+            TaskCaptured?.Invoke(
+                result.Item.Id,
+                result.Item.Title);
+            RequestTaskSummaryRefresh();
+            return;
+        }
+
+        SystemActionMessage =
+            "无法收集任务到 Inbox。"
+            + (string.IsNullOrWhiteSpace(
+                    result.Error)
+                ? "请打开任务工作区后重试。"
+                : $" {result.Error}");
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
     }
 
     private PomodoroViewModel
@@ -2758,6 +2825,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 _audioControl.CompleteAsync(),
                 _autoStartup.CompleteAsync(),
+                _taskCapture.CompleteAsync(),
                 _shellPreferences.CompleteAsync()
             };
         if (_tasksViewModel != null)

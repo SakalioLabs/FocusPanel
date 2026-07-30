@@ -236,7 +236,8 @@ public partial class TasksViewModel
         IFolderPickerService folderPickerService,
         IFilePickerService filePickerService,
         TaskImageImportCoordinator? imageImporter = null,
-        ShellPathOpenCoordinator? shellOpen = null)
+        ShellPathOpenCoordinator? shellOpen = null,
+        TaskService? taskService = null)
     {
         _folderPickerService =
             folderPickerService;
@@ -248,7 +249,9 @@ public partial class TasksViewModel
         _shellOpen =
             shellOpen
             ?? new ShellPathOpenCoordinator();
-        _taskService = new TaskService();
+        _taskService =
+            taskService
+            ?? new TaskService();
         _taskSaveQueue =
             new CoalescingAsyncSaveQueue<TodoItem>(
                 _taskService.UpdateItemAsync,
@@ -264,6 +267,15 @@ public partial class TasksViewModel
                 .GlobalCustomFieldsJson;
         
         _ = InitializeAsync();
+    }
+
+    internal TasksViewModel(
+        TaskService taskService)
+        : this(
+            new ShellFolderPickerService(),
+            new WindowsFilePickerService(),
+            taskService: taskService)
+    {
     }
 
     private async Task InitializeAsync()
@@ -870,6 +882,25 @@ public partial class TasksViewModel
         RefreshBoardColumns();
         
         NewTaskTitle = string.Empty;
+    }
+
+    internal void ApplyQuickCapturedInboxItem(
+        TodoItem item)
+    {
+        if (!TaskInboxSynchronizationPolicy
+            .ShouldInsert(
+                _isDisposed,
+                CurrentParentItem?.Id,
+                CurrentViewItems,
+                item))
+        {
+            return;
+        }
+
+        item.PropertyChanged +=
+            OnTodoItemPropertyChanged;
+        CurrentViewItems.Insert(0, item);
+        RefreshBoardColumns();
     }
 
     [RelayCommand]

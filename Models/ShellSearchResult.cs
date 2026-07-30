@@ -11,7 +11,8 @@ public enum ShellSearchResultKind
     SystemCommand,
     Calculation,
     AudioCommand,
-    FocusCommand
+    FocusCommand,
+    TaskCapture
 }
 
 public sealed record ShellSearchResult
@@ -94,6 +95,12 @@ public sealed record ShellSearchResult
         init;
     }
 
+    internal TaskCaptureCommand? TaskCaptureCommand
+    {
+        get;
+        init;
+    }
+
     public string Glyph
     {
         get;
@@ -120,11 +127,16 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.FocusCommand;
 
+    public bool IsTaskCapture =>
+        Kind
+        == ShellSearchResultKind.TaskCapture;
+
     public bool UsesGlyph =>
         IsSystemCommand
         || IsCalculation
         || IsAudioCommand
-        || IsFocusCommand;
+        || IsFocusCommand
+        || IsTaskCapture;
 
     public bool CanTogglePin =>
         Application != null;
@@ -305,6 +317,28 @@ public sealed record ShellSearchResult
             Glyph =
                 "\uE823",
             FocusCommand =
+                command
+        };
+
+    internal static ShellSearchResult
+        FromTaskCapture(
+            TaskCaptureCommand command) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .TaskCapture,
+            StableKey =
+                command.StableKey,
+            DisplayName =
+                command.DisplayName,
+            SecondaryText =
+                "任务快捷收集 · 点击或按 Enter 保存到 Inbox",
+            AccessibleName =
+                $"保存到任务收件箱 {command.Title}",
+            Glyph =
+                "\uE73E",
+            TaskCaptureCommand =
                 command
         };
 }

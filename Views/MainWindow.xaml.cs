@@ -120,6 +120,8 @@ public partial class MainWindow :
         _viewModel.UpdateAvailable += ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted +=
             ViewModel_PomodoroCompleted;
+        _viewModel.TaskCaptured +=
+            ViewModel_TaskCaptured;
         _viewModel.DisplayTargetChanged +=
             ViewModel_DisplayTargetChanged;
         _viewModel.WorkspacePinChanged +=
@@ -246,6 +248,21 @@ public partial class MainWindow :
                 OpenPomodoroWorkspace));
     }
 
+    private void ViewModel_TaskCaptured(
+        int taskId,
+        string title)
+    {
+        _toastManager.Enqueue(
+            new FocusToastNotification(
+                $"task-captured:{taskId}",
+                "已收集到 Inbox",
+                title,
+                "\uE73E",
+                FocusToastKind.Success,
+                "查看任务",
+                OpenTasksWorkspace));
+    }
+
     private void OpenUpdateSettings()
     {
         _hiddenToTray = false;
@@ -260,6 +277,15 @@ public partial class MainWindow :
         _hiddenToTray = false;
         ExpandSidebar();
         _viewModel.NavigateCommand.Execute("Pomodoro");
+        Activate();
+    }
+
+    private void OpenTasksWorkspace()
+    {
+        _hiddenToTray = false;
+        ExpandSidebar();
+        _viewModel.NavigateCommand.Execute(
+            "Tasks");
         Activate();
     }
 
@@ -2164,6 +2190,8 @@ public partial class MainWindow :
         _viewModel.UpdateAvailable -= ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted -=
             ViewModel_PomodoroCompleted;
+        _viewModel.TaskCaptured -=
+            ViewModel_TaskCaptured;
         _viewModel.DisplayTargetChanged -=
             ViewModel_DisplayTargetChanged;
         _viewModel.WorkspacePinChanged -=

@@ -2346,6 +2346,11 @@ public sealed class XamlResourceContractTests
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
             Path.Combine(root, "Views", "MainWindow.xaml"));
+        string mainWindowCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
         string viewModel = File.ReadAllText(
             Path.Combine(
                 root,
@@ -2404,7 +2409,7 @@ public sealed class XamlResourceContractTests
             "正在载入应用目录…",
             viewModel);
         Assert.Contains(
-            "没有找到匹配的应用、窗口、系统命令或计算结果",
+            "没有找到匹配的应用、窗口、命令或快捷结果",
             viewModel);
         Assert.Contains(
             "Name = \"FocusPanel.AppCatalog\"",
@@ -2491,6 +2496,9 @@ public sealed class XamlResourceContractTests
             "PomodoroSearchCommandParser",
             shellSearchPolicy);
         Assert.Contains(
+            "TaskCaptureCommandParser",
+            shellSearchPolicy);
+        Assert.Contains(
             "ShellSearchResultKind.Calculation",
             searchResult);
         Assert.Contains(
@@ -2498,6 +2506,9 @@ public sealed class XamlResourceContractTests
             searchResult);
         Assert.Contains(
             "ShellSearchResultKind.FocusCommand",
+            searchResult);
+        Assert.Contains(
+            "ShellSearchResultKind.TaskCapture",
             searchResult);
         Assert.Contains(
             "MaximumExpressionLength",
@@ -2532,6 +2543,41 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "TryStartQuickSession(",
             viewModel);
+        Assert.Contains(
+            "ExecuteTaskCaptureCommandAsync(",
+            viewModel);
+        Assert.Contains(
+            "new TaskQuickCaptureCoordinator(",
+            viewModel);
+        Assert.Contains(
+            "new TasksViewModel(",
+            viewModel);
+        Assert.True(
+            Regex.Matches(
+                viewModel,
+                @"_taskService").Count
+            >= 4);
+        Assert.Contains(
+            "TaskCaptured?.Invoke(",
+            viewModel);
+        Assert.Contains(
+            "result.Item.Id,",
+            viewModel);
+        Assert.Contains(
+            "_viewModel.TaskCaptured +=",
+            mainWindowCode);
+        Assert.Contains(
+            "_viewModel.TaskCaptured -=",
+            mainWindowCode);
+        Assert.Contains(
+            "ViewModel_TaskCaptured(",
+            mainWindowCode);
+        Assert.Contains(
+            "\"已收集到 Inbox\"",
+            mainWindowCode);
+        Assert.Contains(
+            "$\"task-captured:{taskId}\"",
+            mainWindowCode);
         Assert.Contains(
             "ShowActivated=\"False\"",
             File.ReadAllText(
@@ -2596,7 +2642,7 @@ public sealed class XamlResourceContractTests
             "SelectedSearchResult?.StableKey",
             viewModel);
         Assert.Contains(
-            "AutomationProperties.Name=\"应用、窗口、系统命令、专注与计算结果\"",
+            "AutomationProperties.Name=\"应用、窗口、系统命令、任务与计算结果\"",
             mainWindow);
         Assert.Contains(
             "Binding=\"{Binding UsesGlyph}\"",

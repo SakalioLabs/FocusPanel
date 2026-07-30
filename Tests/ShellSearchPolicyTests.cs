@@ -389,6 +389,60 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
+    [InlineData("任务 买牛奶", "买牛奶")]
+    [InlineData("todo: write report", "write report")]
+    [InlineData("task: prepare release", "prepare release")]
+    public void Compose_TaskCaptureIsFirstAndExplicit(
+        string query,
+        string title)
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "任务工具",
+                        "exe:c:\\tasks.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                query);
+
+        ShellSearchResult result =
+            results[0];
+        Assert.Equal(
+            ShellSearchResultKind.TaskCapture,
+            result.Kind);
+        Assert.Equal(
+            title,
+            result.TaskCaptureCommand?.Title);
+        Assert.True(result.IsTaskCapture);
+        Assert.True(result.UsesGlyph);
+        Assert.False(result.CanTogglePin);
+        Assert.StartsWith(
+            "task:capture:",
+            result.StableKey);
+    }
+
+    [Fact]
+    public void Compose_TaskManagerAliasIsNotCaptured()
+    {
+        ShellSearchResult result =
+            ShellSearchPolicy.Compose(
+                    Array.Empty<AppLaunchItem>(),
+                    Array.Empty<WindowTaskItem>(),
+                    "task manager")
+                .First();
+
+        Assert.Equal(
+            ShellSearchResultKind.SystemCommand,
+            result.Kind);
+        Assert.Null(result.TaskCaptureCommand);
+        Assert.Equal(
+            SystemManagementTool.TaskManager,
+            result.ManagementTool);
+    }
+
+    [Theory]
     [InlineData("42")]
     [InlineData("calc")]
     [InlineData("1/0")]

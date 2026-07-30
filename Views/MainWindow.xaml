@@ -181,17 +181,17 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Text="应用、窗口、命令、专注与计算"
+                            <TextBlock Text="应用、窗口、命令、任务与计算"
                                        Style="{StaticResource FocusSectionTitleText}"/>
                             <Grid Grid.Row="1" Margin="0,14,0,12">
                                 <TextBox x:Name="SearchBox"
                                          Style="{StaticResource FocusSearchBox}"
                                          Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                          PreviewKeyDown="SearchBox_PreviewKeyDown"
-                                         AutomationProperties.Name="搜索应用、窗口、系统命令、专注与计算"
-                                         AutomationProperties.HelpText="输入应用名、窗口标题、系统工具、音量或专注命令、算式，使用上下方向键选择，按回车执行"
-                                         ToolTip="搜索应用、窗口、系统命令，直接调音量、开始专注或计算"/>
-                                <TextBlock Text="输入应用、窗口、系统工具、音量或专注命令、算式"
+                                         AutomationProperties.Name="搜索应用、窗口、系统命令、任务与计算"
+                                         AutomationProperties.HelpText="输入应用名、窗口标题、系统工具、音量、专注或任务命令、算式，使用上下方向键选择，按回车执行"
+                                         ToolTip="搜索应用、窗口、系统命令，直接收集任务、调音量、开始专注或计算"/>
+                                <TextBlock Text="输入应用、窗口、系统工具、音量、专注或任务命令"
                                            Margin="16,0"
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False">
@@ -214,7 +214,7 @@
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"
                                          Style="{StaticResource FocusListBox}"
                                          Foreground="{DynamicResource FocusTextBrush}"
-                                         AutomationProperties.Name="应用、窗口、系统命令、专注与计算结果"
+                                         AutomationProperties.Name="应用、窗口、系统命令、任务与计算结果"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem"

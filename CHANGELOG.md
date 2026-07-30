@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.10.59 - 2026-07-30 10:34 +08:00
+
+- 统一搜索新增一步任务收集：输入 `任务 买牛奶`、`待办：回复邮件`、`todo book dentist` 或 `task: prepare release`，结果以 `task:capture:` 稳定键和 Fluent 任务图标排在普通应用、窗口与系统命令之前；按 Enter 后立即收起搜索并在后台保存到固定 Inbox（Id=1），成功后显示带“查看任务”动作的 FocusPanel Toast。
+- 新增纯 `TaskCaptureCommandParser`：中文“任务/待办”和英文 `todo` 支持空格或中英文冒号，英文 `task` 只接受显式冒号，因此 `task manager`、`taskmgr` 和“任务管理器”继续命中 Windows 管理工具，不会被误收集。标题限制为 120 个字符并拒绝空内容、换行、制表符、控制字符与歧义输入。
+- 主壳持有唯一 `TaskService`，快速收集与延迟创建的 `TasksViewModel` 共享原有后台串行数据库闸门，不会并发写 SQLite；`TaskQuickCaptureCoordinator` 通过既有 `InFlightTaskTracker` 等待已接收写入并在退出后拒绝新请求。持久化成功后，纯 `TaskInboxSynchronizationPolicy` 只在任务页正显示 Inbox、记录确属 Inbox 且 Id 未重复时增量插入；Toast 使用数据库返回的任务 Id 作为唯一 Key，连续收集不会吞掉后一条反馈。失败保留用户标题并进入状态中心说明。新增解析、系统命令隔离、Inbox 模型、失败、共享读取阻塞、退出排空、迟到拒绝、可视范围同步、Toast 订阅与 XAML 分发契约测试；Release 构建要求 0 错误、0 警告，全量 1071 项测试通过。自动测试使用替代持久化处理器，不读取或写入真实业务数据库，不显示真实 Toast，也不操作任务栏、窗口、文件、音量、计时器或剪贴板。
+
 ## v0.10.58 - 2026-07-30 10:10 +08:00
 
 - 统一搜索新增一步专注命令：输入 `专注 25`、`开始番茄钟 45 分钟`、`focus 30 min` 或 `pomodoro 60`，结果以独立 `focus:start:` 稳定键和 Fluent 计时图标排在普通应用、窗口和系统命令之前；点击或按 Enter 直接开始指定时长，不再经过 Focus 中心、番茄钟页面和预设时长按钮。
