@@ -123,6 +123,90 @@ public sealed class AppJumpListServiceTests
     }
 
     [Fact]
+    public void ComposeGroups_BalancesAndDeduplicatesCategories()
+    {
+        AppJumpListItem[] recent =
+            Enumerable.Range(0, 7)
+                .Select(index =>
+                    new AppJumpListItem(
+                        $"最近 {index}",
+                        $@"C:\Docs\{index}.txt",
+                        null))
+                .ToArray();
+        AppJumpListItem[] frequent =
+            new[]
+            {
+                new AppJumpListItem(
+                    "重复",
+                    @"c:\docs\0.txt",
+                    null)
+            }
+            .Concat(
+                Enumerable.Range(7, 6)
+                    .Select(index =>
+                        new AppJumpListItem(
+                            $"常用 {index}",
+                            $@"C:\Docs\{index}.txt",
+                            null)))
+            .ToArray();
+
+        IReadOnlyList<AppJumpListGroup>
+            groups =
+                AppJumpListPolicy
+                    .ComposeGroups(
+                        recent,
+                        frequent,
+                        8);
+
+        Assert.Equal(2, groups.Count);
+        Assert.Equal(
+            AppJumpListCategory.Recent,
+            groups[0].Category);
+        Assert.Equal(
+            AppJumpListCategory.Frequent,
+            groups[1].Category);
+        Assert.Equal(4, groups[0].Items.Count);
+        Assert.Equal(4, groups[1].Items.Count);
+        Assert.Equal(
+            8,
+            groups.SelectMany(group =>
+                    group.Items)
+                .Select(item =>
+                    item.IdentityKey)
+                .Distinct(
+                    StringComparer
+                        .OrdinalIgnoreCase)
+                .Count());
+    }
+
+    [Fact]
+    public void ComposeGroups_FillsCapacityFromAvailableCategory()
+    {
+        AppJumpListItem[] frequent =
+            Enumerable.Range(0, 8)
+                .Select(index =>
+                    new AppJumpListItem(
+                        $"常用 {index}",
+                        $@"C:\Docs\{index}.txt",
+                        null))
+                .ToArray();
+
+        AppJumpListGroup group =
+            Assert.Single(
+                AppJumpListPolicy
+                    .ComposeGroups(
+                        Array.Empty<
+                            AppJumpListItem>(),
+                        frequent,
+                        8));
+
+        Assert.Equal(
+            AppJumpListCategory.Frequent,
+            group.Category);
+        Assert.Equal(8, group.Items.Count);
+    }
+
+    [Fact]
     public async Task Read_RunsOnStaAndUsesExplicitAppId()
     {
         var native =
@@ -132,14 +216,21 @@ public sealed class AppJumpListServiceTests
                 native,
                 _ => true);
 
-        IReadOnlyList<AppJumpListItem>
+        IReadOnlyList<AppJumpListGroup>
             result =
                 await service
-                    .GetRecentAsync(
+                    .GetDestinationsAsync(
                         "Demo.Editor",
                         8);
 
         Assert.Single(result);
+        Assert.Equal(
+            new[]
+            {
+                AppJumpListCategory.Recent,
+                AppJumpListCategory.Frequent
+            },
+            native.ObservedCategories);
         Assert.Equal(
             "Demo.Editor",
             native.ObservedAppId);
@@ -163,14 +254,40 @@ public sealed class AppJumpListServiceTests
                 },
                 _ => true);
 
-        IReadOnlyList<AppJumpListItem>
+        IReadOnlyList<AppJumpListGroup>
             result =
                 await service
-                    .GetRecentAsync(
+                    .GetDestinationsAsync(
                         "Demo.Editor",
                         8);
 
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task Read_OneCategoryFailureKeepsOtherCategory()
+    {
+        using var service =
+            new AppJumpListService(
+                new FakeJumpListNative
+                {
+                    ThrowCategory =
+                        AppJumpListCategory
+                            .Recent
+                },
+                _ => true);
+
+        AppJumpListGroup group =
+            Assert.Single(
+                await service
+                    .GetDestinationsAsync(
+                        "Demo.Editor",
+                        8));
+
+        Assert.Equal(
+            AppJumpListCategory.Frequent,
+            group.Category);
+        Assert.Single(group.Items);
     }
 
     [Fact]
@@ -190,7 +307,7 @@ public sealed class AppJumpListServiceTests
             OperationCanceledException>(
             async () =>
                 await service
-                    .GetRecentAsync(
+                    .GetDestinationsAsync(
                         "Demo.Editor",
                         8,
                         cancellation.Token));
@@ -218,8 +335,8 @@ public sealed class AppJumpListServiceTests
             new CancellationTokenSource();
 
         Task<IReadOnlyList<
-            AppJumpListItem>> request =
-                service.GetRecentAsync(
+            AppJumpListGroup>> request =
+                service.GetDestinationsAsync(
                     "Demo.Editor",
                     8,
                     cancellation.Token);
@@ -296,10 +413,10 @@ public sealed class AppJumpListServiceTests
                 _ => true);
         service.Dispose();
 
-        IReadOnlyList<AppJumpListItem>
-            recent =
+        IReadOnlyList<AppJumpListGroup>
+            destinations =
                 await service
-                    .GetRecentAsync(
+                    .GetDestinationsAsync(
                         "Demo.Editor",
                         8);
         bool opened =
@@ -310,7 +427,7 @@ public sealed class AppJumpListServiceTests
                     null),
                 null);
 
-        Assert.Empty(recent);
+        Assert.Empty(destinations);
         Assert.False(opened);
         Assert.Equal(
             0,
@@ -443,11 +560,24 @@ public sealed class AppJumpListServiceTests
             init;
         }
 
+        public AppJumpListCategory?
+            ThrowCategory
+        {
+            get;
+            init;
+        }
+
         public int ReadCount
         {
             get;
             private set;
         }
+
+        public List<AppJumpListCategory>
+            ObservedCategories
+        {
+            get;
+        } = new();
 
         public string? ObservedAppId
         {
@@ -469,12 +599,15 @@ public sealed class AppJumpListServiceTests
         }
 
         public IReadOnlyList<
-            AppJumpListItem> ReadRecent(
+            AppJumpListItem> Read(
                 string
                     applicationUserModelId,
+                AppJumpListCategory category,
                 int limit)
         {
             ReadCount++;
+            ObservedCategories.Add(
+                category);
             ObservedAppId =
                 applicationUserModelId;
             ObservedApartment =
@@ -483,7 +616,9 @@ public sealed class AppJumpListServiceTests
             ObservedThreadId =
                 Environment
                     .CurrentManagedThreadId;
-            if (ThrowOnRead)
+            if (ThrowOnRead
+                || ThrowCategory
+                    == category)
             {
                 throw new
                     InvalidOperationException(
@@ -518,9 +653,10 @@ public sealed class AppJumpListServiceTests
         }
 
         public IReadOnlyList<
-            AppJumpListItem> ReadRecent(
+            AppJumpListItem> Read(
                 string
                     applicationUserModelId,
+                AppJumpListCategory category,
                 int limit)
         {
             _started.Set();

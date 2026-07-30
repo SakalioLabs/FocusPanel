@@ -1721,6 +1721,15 @@ public sealed class XamlResourceContractTests
             "LoadJumpListSectionAsync(",
             mainWindow);
         Assert.Contains(
+            "GetDestinationsAsync(",
+            mainWindow);
+        Assert.Contains(
+            "\"最近与常用项目\"",
+            mainWindow);
+        Assert.Contains(
+            "AppJumpListCategory.Frequent",
+            mainWindow);
+        Assert.Contains(
             "menu.Items.Insert(",
             mainWindow);
         Assert.Contains(
@@ -1740,6 +1749,12 @@ public sealed class XamlResourceContractTests
             jumpLists);
         Assert.Contains(
             "GetList(",
+            jumpLists);
+        Assert.Contains(
+            "Frequent = 1",
+            jumpLists);
+        Assert.Contains(
+            "ComposeGroups(",
             jumpLists);
         Assert.Contains(
             "IObjectArray",

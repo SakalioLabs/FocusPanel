@@ -34,7 +34,9 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 统一应用栏补齐管理员启动的原生肌肉记忆：桌面可执行程序和开始菜单快捷方式可用 `Ctrl+Shift+左键` 直接请求管理员启动，也可从右键菜单选择“以管理员身份运行”。请求通过 Windows 公开的 Shell `runas` 动词交给 UAC，Panel 不保存管理员凭据、不绕过同意界面；用户取消会被识别为取消而不是闪退。只有存在可靠桌面启动目标时才显示菜单，`shell:AppsFolder` 商店应用不会伪装支持提权。微软对 `runas` 与 UAC 行为的定义见 [ShellExecuteW 文档](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew)。
 
 ![统一应用栏管理员启动语义](docs/images/elevated-taskbar-launch.svg)
-- 应用图标右键菜单会按需读取 Windows 公开 Jump List 的“最近项目”，最多直接铺开 8 项，不再进入多级子菜单；点击文件时优先复用该应用的可靠启动目标，打包应用则交给 Windows 文件关联安全打开。查询只在菜单打开期间运行于可取消的 STA 后台线程，关闭菜单、更新或退出会丢弃迟到结果；没有明确 AUMID 的应用不按名称猜测，也不读取 Explorer 私有数据。接口依据见 [IApplicationDocumentLists::GetList](https://learn.microsoft.com/zh-cn/windows/win32/api/shobjidl_core/nf-shobjidl_core-iapplicationdocumentlists-getlist)。
+- 应用图标右键菜单会同时按需读取 Windows 公开 Jump List 的“最近项目”和“常用项目”：两类都有记录时优先各展示 4 项，一类不足时由另一类补足，总计最多 8 项；同一目标同时出现在 Recent 与 Frequent 时只保留一次，不让重复文件挤占菜单。点击文件时优先复用该应用的可靠启动目标，打包应用则交给 Windows 文件关联安全打开；单个分类读取失败不会吞掉另一分类。查询只在菜单打开期间运行于可取消的 STA 后台线程，关闭菜单、更新或退出会丢弃迟到结果；没有明确 AUMID 的应用不按名称猜测，也不读取 Explorer 私有数据。微软公开接口仅允许读取 Recent/Frequent，不能读取用户固定项、自定义分类或任务列表，Panel 明确保留此系统边界，依据见 [IApplicationDocumentLists](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-iapplicationdocumentlists) 与 [GetList](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-iapplicationdocumentlists-getlist)。
+
+![应用右键菜单的最近与常用项目](docs/images/recent-frequent-jump-list.svg)
 - 运行应用图标停留约 `420ms` 会打开无激活 DWM 实时窗口预览：画面由 Windows 桌面合成器持续提供，不截屏、不轮询，也不会抢走当前输入焦点；点击画面直接切换，底部标题栏可关闭窗口并标记当前窗口。目标显示器按物理高度和 DPI 自动容纳 1–4 张预览，其余窗口继续通过左键完整文字列表访问。DWM 关闭、远程桌面、受保护窗口或原生注册失败时自动退回现有文字窗口列表。
 - 多窗口应用无需打开列表即可在图标上滚轮切换：向下进入下一个窗口，向上返回上一个窗口，首尾自动环绕。连续滚动会记住刚刚选中的窗口，不等待 WinEvent 快照回写，也用 90ms 节流抑制高分辨率触控板抖动；单窗口应用不会吞掉应用栏滚动。悬停窗口列表中可用中键或 `Delete` 直接关闭目标窗口，仍只发送正常 `WM_CLOSE`。
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
@@ -513,7 +515,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.67 `
+  -Version 0.10.68 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -524,7 +526,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.67-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.68-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

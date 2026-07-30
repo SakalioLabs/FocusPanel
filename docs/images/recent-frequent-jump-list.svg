@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0a1221"/>
+      <stop offset="1" stop-color="#202a43"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffffff" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#8ebeff" stop-opacity=".07"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".36"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="520" rx="34" fill="url(#bg)"/>
+  <circle cx="90" cy="65" r="155" fill="#3478f6" opacity=".13"/>
+  <circle cx="1035" cy="465" r="220" fill="#6fe0c1" opacity=".07"/>
+  <text x="62" y="68" fill="#f6f8ff" font-family="Segoe UI,Microsoft YaHei" font-size="28" font-weight="700">右键一次，最近与常用项目都在手边</text>
+  <text x="62" y="104" fill="#aab8d1" font-family="Segoe UI,Microsoft YaHei" font-size="16">公开 Jump List · 单层直达 · 跨分类去重</text>
+
+  <g filter="url(#shadow)">
+    <rect x="62" y="142" width="380" height="320" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <rect x="84" y="167" width="58" height="270" rx="23" fill="#10192a" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="113" cy="205" r="20" fill="#2f3b53"/>
+    <rect x="104" y="196" width="18" height="18" rx="4" fill="#78b5ff"/>
+    <circle cx="113" cy="258" r="20" fill="#2f3b53"/>
+    <path d="M103 260l7 7 14-18" fill="none" stroke="#80dfc2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="113" cy="311" r="20" fill="#6754d8"/>
+    <path d="M104 302h18v18h-18z" fill="#fff" opacity=".9"/>
+    <circle cx="113" cy="364" r="20" fill="#2f3b53"/>
+    <path d="M104 355h18v18h-18z" fill="#ffc36e"/>
+
+    <rect x="159" y="175" width="250" height="76" rx="18" fill="#0e1829" stroke="#67a9ff" stroke-opacity=".55"/>
+    <rect x="176" y="191" width="44" height="44" rx="13" fill="#6754d8"/>
+    <path d="M187 202h22v22h-22z" fill="#fff" opacity=".9"/>
+    <text x="235" y="207" fill="#f7f9ff" font-family="Segoe UI,Microsoft YaHei" font-size="17" font-weight="600">设计工具</text>
+    <text x="235" y="232" fill="#8fa1be" font-family="Segoe UI,Microsoft YaHei" font-size="13">右键打开 Jump List</text>
+
+    <path d="M270 260l16 24-12 3-7 16-12-5 7-15-13-5z" fill="#f7f9ff" stroke="#1a2438" stroke-width="2"/>
+  </g>
+
+  <path d="M468 302h72" stroke="#79b8ff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M530 292l12 10-12 10" fill="none" stroke="#79b8ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="568" y="142" width="490" height="320" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <rect x="592" y="166" width="442" height="272" rx="20" fill="#101a2c" stroke="#fff" stroke-opacity=".12"/>
+    <text x="618" y="198" fill="#8fa1be" font-family="Segoe UI,Microsoft YaHei" font-size="14" font-weight="600">最近项目</text>
+    <g font-family="Segoe UI,Microsoft YaHei" font-size="15">
+      <rect x="610" y="212" width="406" height="42" rx="11" fill="#3478f6" opacity=".18"/>
+      <rect x="626" y="224" width="18" height="18" rx="4" fill="#6aaaff"/>
+      <text x="659" y="239" fill="#f4f7ff">Panel 重构计划.docx</text>
+      <text x="985" y="239" text-anchor="end" fill="#71829e">刚刚</text>
+      <rect x="626" y="270" width="18" height="18" rx="4" fill="#7fd9bd"/>
+      <text x="659" y="285" fill="#dce5f5">任务栏验收清单.xlsx</text>
+    </g>
+    <line x1="610" y1="306" x2="1016" y2="306" stroke="#fff" stroke-opacity=".11"/>
+    <text x="618" y="335" fill="#8fa1be" font-family="Segoe UI,Microsoft YaHei" font-size="14" font-weight="600">常用项目</text>
+    <g font-family="Segoe UI,Microsoft YaHei" font-size="15">
+      <rect x="626" y="352" width="18" height="18" rx="4" fill="#c68cff"/>
+      <text x="659" y="367" fill="#dce5f5">FocusPanel.sln</text>
+      <rect x="626" y="394" width="18" height="18" rx="4" fill="#ffbd67"/>
+      <text x="659" y="409" fill="#dce5f5">发布说明.md</text>
+    </g>
+  </g>
+
+  <g transform="translate(733 472)">
+    <circle cx="0" cy="0" r="5" fill="#78dabd"/>
+    <text x="14" y="5" fill="#9fb0ca" font-family="Segoe UI,Microsoft YaHei" font-size="13">同一目标跨分类只出现一次 · 一类不足自动补位</text>
+  </g>
+</svg>

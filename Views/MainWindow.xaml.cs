@@ -1235,10 +1235,10 @@ public partial class MainWindow :
         }
 
         CancelJumpListLoad();
-        var recentHeader =
+        var destinationsHeader =
             new MenuItem
             {
-                Header = "最近项目",
+                Header = "最近与常用项目",
                 IsEnabled = false
             };
         var loadingItem =
@@ -1248,7 +1248,7 @@ public partial class MainWindow :
                 IsEnabled = false
             };
         menu.Items.Add(
-            recentHeader);
+            destinationsHeader);
         menu.Items.Add(
             loadingItem);
 
@@ -1270,7 +1270,7 @@ public partial class MainWindow :
         };
         _ = LoadJumpListSectionAsync(
             menu,
-            recentHeader,
+            destinationsHeader,
             loadingItem,
             applicationUserModelId,
             CreateJumpListLaunchSnapshot(
@@ -1283,7 +1283,7 @@ public partial class MainWindow :
     private async Task
         LoadJumpListSectionAsync(
             ContextMenu menu,
-            MenuItem recentHeader,
+            MenuItem destinationsHeader,
             MenuItem loadingItem,
             string applicationUserModelId,
             AppJumpListApplicationLaunch?
@@ -1292,14 +1292,14 @@ public partial class MainWindow :
             CancellationTokenSource
                 cancellation)
     {
-        IReadOnlyList<AppJumpListItem>
-            recent;
+        IReadOnlyList<AppJumpListGroup>
+            groups;
         try
         {
-            recent =
+            groups =
                 await _coordinator
                     .JumpLists
-                    .GetRecentAsync(
+                    .GetDestinationsAsync(
                         applicationUserModelId,
                         AppJumpListPolicy
                             .MaximumItemCount,
@@ -1325,41 +1325,72 @@ public partial class MainWindow :
 
         menu.Items.Remove(
             loadingItem);
-        if (recent.Count == 0)
+        if (groups.Count == 0)
         {
-            recentHeader.Header =
-                "最近项目 · 无可用记录";
+            destinationsHeader.Header =
+                "最近与常用项目 · 无可用记录";
             return;
         }
 
         int insertionIndex =
             menu.Items.IndexOf(
-                recentHeader)
-            + 1;
-        foreach (AppJumpListItem item
-                 in recent)
+                destinationsHeader);
+        bool firstGroup = true;
+        foreach (AppJumpListGroup group
+                 in groups)
         {
-            var recentItem =
-                new MenuItem
-                {
-                    Header =
-                        item.DisplayName,
-                    ToolTip =
-                        item.LaunchTarget,
-                    Tag =
-                        new
-                            TaskbarJumpListMenuAction(
-                                item,
-                                application)
-                };
-            AutomationProperties.SetName(
-                recentItem,
-                $"打开最近项目 {item.DisplayName}");
-            recentItem.Click +=
-                JumpListItem_Click;
-            menu.Items.Insert(
-                insertionIndex++,
-                recentItem);
+            string categoryName =
+                GetJumpListCategoryName(
+                    group.Category);
+            if (firstGroup)
+            {
+                destinationsHeader.Header =
+                    categoryName + "项目";
+                insertionIndex++;
+                firstGroup = false;
+            }
+            else
+            {
+                menu.Items.Insert(
+                    insertionIndex++,
+                    new Separator());
+                menu.Items.Insert(
+                    insertionIndex++,
+                    new MenuItem
+                    {
+                        Header =
+                            categoryName
+                            + "项目",
+                        IsEnabled = false
+                    });
+            }
+
+            foreach (AppJumpListItem item
+                     in group.Items)
+            {
+                var destinationItem =
+                    new MenuItem
+                    {
+                        Header =
+                            item.DisplayName,
+                        ToolTip =
+                            item.LaunchTarget,
+                        Tag =
+                            new
+                                TaskbarJumpListMenuAction(
+                                    item,
+                                    application,
+                                    group.Category)
+                    };
+                AutomationProperties.SetName(
+                    destinationItem,
+                    $"打开{categoryName}项目 {item.DisplayName}");
+                destinationItem.Click +=
+                    JumpListItem_Click;
+                menu.Items.Insert(
+                    insertionIndex++,
+                    destinationItem);
+            }
         }
 
         FocusMenuTheme.Apply(menu);
@@ -1392,12 +1423,23 @@ public partial class MainWindow :
         _toastManager.Enqueue(
             new FocusToastNotification(
                 "jump-list-open-failed",
-                "无法打开最近项目",
+                "无法打开"
+                + GetJumpListCategoryName(
+                    action.Category)
+                + "项目",
                 $"“{action.Item.DisplayName}”可能已移动、删除，"
                 + "或原应用已不再可用。",
                 "\uE783",
                 FocusToastKind.Warning));
     }
+
+    private static string
+        GetJumpListCategoryName(
+            AppJumpListCategory category) =>
+        category
+            == AppJumpListCategory.Frequent
+            ? "常用"
+            : "最近";
 
     private void CancelJumpListLoad()
     {
@@ -3092,7 +3134,8 @@ public partial class MainWindow :
         TaskbarJumpListMenuAction(
             AppJumpListItem Item,
             AppJumpListApplicationLaunch?
-                Application);
+                Application,
+            AppJumpListCategory Category);
 
     private static class NativeMethods
     {

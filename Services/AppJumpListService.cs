@@ -38,6 +38,16 @@ internal enum AppJumpListItemSource
     ShellLink
 }
 
+internal enum AppJumpListCategory
+{
+    Recent,
+    Frequent
+}
+
+internal sealed record AppJumpListGroup(
+    AppJumpListCategory Category,
+    IReadOnlyList<AppJumpListItem> Items);
+
 internal sealed record
     AppJumpListApplicationLaunch(
         AppLaunchKind LaunchKind,
@@ -47,16 +57,17 @@ internal sealed record
 internal interface IAppJumpListNative
 {
     IReadOnlyList<AppJumpListItem>
-        ReadRecent(
+        Read(
             string applicationUserModelId,
+            AppJumpListCategory category,
             int limit);
 }
 
 internal interface IAppJumpListService :
     IDisposable
 {
-    Task<IReadOnlyList<AppJumpListItem>>
-        GetRecentAsync(
+    Task<IReadOnlyList<AppJumpListGroup>>
+        GetDestinationsAsync(
             string applicationUserModelId,
             int limit,
             CancellationToken
@@ -72,6 +83,8 @@ internal interface IAppJumpListService :
 internal static class AppJumpListPolicy
 {
     internal const int MaximumItemCount = 8;
+    internal const int
+        MaximumCategoryItemCount = 4;
     private const int MaximumTitleLength = 96;
 
     internal static IReadOnlyList<
@@ -146,6 +159,133 @@ internal static class AppJumpListPolicy
         }
 
         return result;
+    }
+
+    internal static IReadOnlyList<
+        AppJumpListGroup> ComposeGroups(
+            IEnumerable<AppJumpListItem>?
+                recent,
+            IEnumerable<AppJumpListItem>?
+                frequent,
+            int limit)
+    {
+        int boundedLimit =
+            Math.Min(
+                MaximumItemCount,
+                Math.Max(0, limit));
+        if (boundedLimit == 0)
+        {
+            return Array.Empty<
+                AppJumpListGroup>();
+        }
+
+        IReadOnlyList<AppJumpListItem>
+            normalizedRecent =
+                Normalize(
+                    recent,
+                    boundedLimit);
+        IReadOnlyList<AppJumpListItem>
+            normalizedFrequent =
+                Normalize(
+                    frequent,
+                    boundedLimit);
+        var identities =
+            new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+        var recentItems =
+            new List<AppJumpListItem>();
+        var frequentItems =
+            new List<AppJumpListItem>();
+
+        AddUnique(
+            normalizedRecent,
+            recentItems,
+            identities,
+            Math.Min(
+                MaximumCategoryItemCount,
+                boundedLimit));
+        AddUnique(
+            normalizedFrequent,
+            frequentItems,
+            identities,
+            Math.Min(
+                MaximumCategoryItemCount,
+                boundedLimit
+                - recentItems.Count));
+
+        int remaining =
+            boundedLimit
+            - recentItems.Count
+            - frequentItems.Count;
+        if (remaining > 0)
+        {
+            AddUnique(
+                normalizedRecent,
+                recentItems,
+                identities,
+                recentItems.Count
+                + remaining);
+            remaining =
+                boundedLimit
+                - recentItems.Count
+                - frequentItems.Count;
+        }
+        if (remaining > 0)
+        {
+            AddUnique(
+                normalizedFrequent,
+                frequentItems,
+                identities,
+                frequentItems.Count
+                + remaining);
+        }
+
+        var groups =
+            new List<AppJumpListGroup>(2);
+        if (recentItems.Count > 0)
+        {
+            groups.Add(
+                new AppJumpListGroup(
+                    AppJumpListCategory.Recent,
+                    recentItems));
+        }
+        if (frequentItems.Count > 0)
+        {
+            groups.Add(
+                new AppJumpListGroup(
+                    AppJumpListCategory.Frequent,
+                    frequentItems));
+        }
+        return groups;
+    }
+
+    private static void AddUnique(
+        IEnumerable<AppJumpListItem>
+            source,
+        ICollection<AppJumpListItem>
+            destination,
+        ISet<string> identities,
+        int targetCount)
+    {
+        if (destination.Count >= targetCount)
+            return;
+
+        foreach (AppJumpListItem item
+                 in source)
+        {
+            if (!identities.Add(
+                    item.IdentityKey))
+            {
+                continue;
+            }
+
+            destination.Add(item);
+            if (destination.Count
+                >= targetCount)
+            {
+                return;
+            }
+        }
     }
 
     private static string NormalizeTitle(
@@ -349,8 +489,8 @@ internal sealed class AppJumpListService :
     }
 
     public Task<IReadOnlyList<
-        AppJumpListItem>>
-        GetRecentAsync(
+        AppJumpListGroup>>
+        GetDestinationsAsync(
             string applicationUserModelId,
             int limit,
             CancellationToken
@@ -367,9 +507,9 @@ internal sealed class AppJumpListService :
         {
             return Task.FromResult<
                 IReadOnlyList<
-                    AppJumpListItem>>(
+                    AppJumpListGroup>>(
                 Array.Empty<
-                    AppJumpListItem>());
+                    AppJumpListGroup>());
         }
 
         if (cancellationToken
@@ -377,14 +517,14 @@ internal sealed class AppJumpListService :
         {
             return Task.FromCanceled<
                 IReadOnlyList<
-                    AppJumpListItem>>(
+                    AppJumpListGroup>>(
                 cancellationToken);
         }
 
         var completion =
             new TaskCompletionSource<
                 IReadOnlyList<
-                    AppJumpListItem>>(
+                    AppJumpListGroup>>(
                 TaskCreationOptions
                     .RunContinuationsAsynchronously);
         var thread =
@@ -402,18 +542,34 @@ internal sealed class AppJumpListService :
 
                 try
                 {
+                    int readLimit =
+                        Math.Min(
+                            limit,
+                            AppJumpListPolicy
+                                .MaximumItemCount);
                     IReadOnlyList<
                         AppJumpListItem>
-                        items =
+                        recent =
+                            SafeRead(
+                                appId,
+                                AppJumpListCategory
+                                    .Recent,
+                                readLimit);
+                    IReadOnlyList<
+                        AppJumpListItem>
+                        frequent =
+                            SafeRead(
+                                appId,
+                                AppJumpListCategory
+                                    .Frequent,
+                                readLimit);
+                    IReadOnlyList<
+                        AppJumpListGroup>
+                        groups =
                             AppJumpListPolicy
-                                .Normalize(
-                                    _native
-                                        .ReadRecent(
-                                            appId,
-                                            Math.Min(
-                                                limit,
-                                                AppJumpListPolicy
-                                                    .MaximumItemCount)),
+                                .ComposeGroups(
+                                    recent,
+                                    frequent,
                                     limit);
                     if (_disposed
                         || cancellationToken
@@ -427,7 +583,7 @@ internal sealed class AppJumpListService :
                     {
                         completion
                             .TrySetResult(
-                                items);
+                                groups);
                     }
                 }
                 catch
@@ -435,7 +591,7 @@ internal sealed class AppJumpListService :
                     completion
                         .TrySetResult(
                             Array.Empty<
-                                AppJumpListItem>());
+                                AppJumpListGroup>());
                 }
             })
             {
@@ -447,6 +603,26 @@ internal sealed class AppJumpListService :
             ApartmentState.STA);
         thread.Start();
         return completion.Task;
+    }
+
+    private IReadOnlyList<
+        AppJumpListItem> SafeRead(
+            string applicationUserModelId,
+            AppJumpListCategory category,
+            int limit)
+    {
+        try
+        {
+            return _native.Read(
+                applicationUserModelId,
+                category,
+                limit);
+        }
+        catch
+        {
+            return Array.Empty<
+                AppJumpListItem>();
+        }
     }
 
     public Task<bool> OpenAsync(
@@ -518,8 +694,9 @@ internal sealed class
                 2);
 
     public IReadOnlyList<AppJumpListItem>
-        ReadRecent(
+        Read(
             string applicationUserModelId,
+            AppJumpListCategory category,
             int limit)
     {
         object? documentListsObject =
@@ -544,8 +721,13 @@ internal sealed class
             Guid arrayId =
                 IidIObjectArray;
             if (documentLists.GetList(
-                    AppDocumentListType
-                        .Recent,
+                    category
+                        == AppJumpListCategory
+                            .Frequent
+                        ? AppDocumentListType
+                            .Frequent
+                        : AppDocumentListType
+                            .Recent,
                     (uint)Math.Max(
                         1,
                         limit),
