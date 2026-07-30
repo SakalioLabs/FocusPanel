@@ -29,6 +29,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _brightness;
     private readonly IApplicationAudioSessionService
         _applicationAudio;
+    private readonly ISystemRadioService _radios;
     private readonly IAppUpdateService _updateService;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly IShellPreferenceRepository
@@ -40,6 +41,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly
         ApplicationAudioControlCoordinator
         _applicationAudioControl;
+    private readonly InFlightTaskTracker
+        _radioOperations = new();
     private readonly AppLaunchCoordinator
         _appLaunch;
     private readonly SystemActionCoordinator
@@ -305,6 +308,40 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string networkDetail = "当前没有可用连接";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(WiFiRadioActionText))]
+    [NotifyPropertyChangedFor(
+        nameof(CanToggleWiFiRadio))]
+    private SystemRadioState wiFiRadioState =
+        SystemRadioState.Unavailable;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(BluetoothRadioActionText))]
+    [NotifyPropertyChangedFor(
+        nameof(CanToggleBluetoothRadio))]
+    private SystemRadioState bluetoothRadioState =
+        SystemRadioState.Unavailable;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(WiFiRadioActionText))]
+    [NotifyPropertyChangedFor(
+        nameof(CanToggleWiFiRadio))]
+    private bool isWiFiRadioBusy;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(BluetoothRadioActionText))]
+    [NotifyPropertyChangedFor(
+        nameof(CanToggleBluetoothRadio))]
+    private bool isBluetoothRadioBusy;
+
+    [ObservableProperty]
+    private string radioStatusText =
+        "正在读取 Wi‑Fi 与蓝牙状态…";
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NetworkGlyph))]
     private NetworkConnectionKind networkConnectionKind;
 
@@ -374,7 +411,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IAppUpdateService updateService,
         IDisplayBrightnessService brightness,
         IApplicationAudioSessionService
-            applicationAudio)
+            applicationAudio,
+        ISystemRadioService radios)
         : this(
             appCatalog,
             windowTracker,
@@ -383,7 +421,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             new ShellPreferenceRepository(),
             brightness: brightness,
             applicationAudio:
-                applicationAudio)
+                applicationAudio,
+            radios: radios)
     {
     }
 
@@ -405,7 +444,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IDisplayBrightnessService?
             brightness = null,
         IApplicationAudioSessionService?
-            applicationAudio = null)
+            applicationAudio = null,
+        ISystemRadioService? radios = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -416,6 +456,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _applicationAudio =
             applicationAudio
             ?? new ApplicationAudioSessionService();
+        _radios =
+            radios
+            ?? new SystemRadioService();
         _updateService = updateService;
         _appLaunch =
             new AppLaunchCoordinator(
@@ -598,6 +641,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GetNetworkPresentation().Glyph;
     public string NetworkSummary =>
         GetNetworkPresentation().Summary;
+    public string WiFiRadioActionText =>
+        ComposeRadioActionText(
+            "Wi‑Fi",
+            WiFiRadioState,
+            IsWiFiRadioBusy);
+    public string BluetoothRadioActionText =>
+        ComposeRadioActionText(
+            "蓝牙",
+            BluetoothRadioState,
+            IsBluetoothRadioBusy);
+    public bool CanToggleWiFiRadio =>
+        !IsWiFiRadioBusy
+        && WiFiRadioState
+            is SystemRadioState.On
+            or SystemRadioState.Off;
+    public bool CanToggleBluetoothRadio =>
+        !IsBluetoothRadioBusy
+        && BluetoothRadioState
+            is SystemRadioState.On
+            or SystemRadioState.Off;
     public string BatteryGlyph =>
         GetBatteryPresentation().Glyph;
     public string BatteryValueText =>
@@ -624,6 +687,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
         InputMethodStatus.ButtonLabel;
     public string InputSwitcherSummary =>
         InputMethodStatus.Summary;
+
+    private static string ComposeRadioActionText(
+        string displayName,
+        SystemRadioState state,
+        bool isBusy)
+    {
+        if (isBusy)
+            return $"{displayName}：切换中…";
+
+        string stateText = state switch
+        {
+            SystemRadioState.On => "开",
+            SystemRadioState.Off => "关",
+            SystemRadioState.Disabled =>
+                "硬件禁用",
+            SystemRadioState.Unknown =>
+                "状态未知",
+            _ => "不可用"
+        };
+        return $"{displayName}：{stateText}";
+    }
     public ObservableCollection<CalendarDayItem> CalendarDays
     {
         get;
@@ -2529,6 +2613,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ApplicationAudioSessionSnapshot>
             applicationAudioSessions =
                 _applicationAudio.GetSessions();
+        IReadOnlyList<SystemRadioSnapshot>
+            radioSnapshots =
+                _radios
+                    .GetStatusAsync(
+                        CancellationToken.None)
+                    .GetAwaiter()
+                    .GetResult();
         bool brightnessWritePendingAfterCapture =
             _brightnessWritePending;
         return new PendingSystemStatusSnapshot(
@@ -2540,7 +2631,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             brightnessRevision,
             brightnessWritePendingBeforeCapture
                 || brightnessWritePendingAfterCapture,
-            applicationAudioSessions);
+            applicationAudioSessions,
+            radioSnapshots);
     }
 
     private async Task ApplySystemStatusAsync(
@@ -2608,6 +2700,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         ApplyApplicationAudioSessions(
             pending.ApplicationAudioSessions);
+        ApplySystemRadioSnapshots(
+            pending.RadioSnapshots);
 
         NetworkStatusSnapshot network =
             snapshot.Network;
@@ -2949,6 +3043,153 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 nameof(
                     HasApplicationAudioSessions));
         }
+    }
+
+    private void ApplySystemRadioSnapshots(
+        IReadOnlyList<SystemRadioSnapshot>
+            snapshots)
+    {
+        SystemRadioSnapshot wiFi =
+            snapshots.FirstOrDefault(
+                snapshot =>
+                    snapshot.Kind
+                    == SystemRadioKind.WiFi);
+        SystemRadioSnapshot bluetooth =
+            snapshots.FirstOrDefault(
+                snapshot =>
+                    snapshot.Kind
+                    == SystemRadioKind.Bluetooth);
+        if (!IsWiFiRadioBusy)
+        {
+            WiFiRadioState =
+                wiFi.IsPresent
+                    ? wiFi.State
+                    : SystemRadioState.Unavailable;
+        }
+        if (!IsBluetoothRadioBusy)
+        {
+            BluetoothRadioState =
+                bluetooth.IsPresent
+                    ? bluetooth.State
+                    : SystemRadioState.Unavailable;
+        }
+
+        bool hasAny =
+            wiFi.IsPresent
+            || bluetooth.IsPresent;
+        RadioStatusText = hasAny
+            ? "首次切换时 Windows 可能请求无线控制权限"
+            : "此设备未公开可控制的 Wi‑Fi 或蓝牙 Radio";
+    }
+
+    [RelayCommand]
+    private Task ToggleWiFiRadio() =>
+        ToggleSystemRadioAsync(
+            SystemRadioKind.WiFi);
+
+    [RelayCommand]
+    private Task ToggleBluetoothRadio() =>
+        ToggleSystemRadioAsync(
+            SystemRadioKind.Bluetooth);
+
+    private async Task ToggleSystemRadioAsync(
+        SystemRadioKind kind)
+    {
+        bool isWiFi =
+            kind == SystemRadioKind.WiFi;
+        SystemRadioState current =
+            isWiFi
+                ? WiFiRadioState
+                : BluetoothRadioState;
+        bool canToggle =
+            isWiFi
+                ? CanToggleWiFiRadio
+                : CanToggleBluetoothRadio;
+        if (!canToggle)
+            return;
+
+        bool targetEnabled =
+            current == SystemRadioState.Off;
+        if (isWiFi)
+            IsWiFiRadioBusy = true;
+        else
+            IsBluetoothRadioBusy = true;
+
+        Task<SystemRadioSetResult>? operation =
+            _radioOperations.TryStart(
+                () =>
+                    _radios.SetEnabledAsync(
+                        kind,
+                        targetEnabled,
+                        CancellationToken.None));
+        if (operation == null)
+        {
+            if (isWiFi)
+                IsWiFiRadioBusy = false;
+            else
+                IsBluetoothRadioBusy = false;
+            return;
+        }
+
+        SystemRadioSetResult result =
+            await operation;
+        if (_isDisposed)
+            return;
+
+        if (isWiFi)
+            IsWiFiRadioBusy = false;
+        else
+            IsBluetoothRadioBusy = false;
+        if (result.Succeeded)
+        {
+            SystemRadioState confirmed =
+                targetEnabled
+                    ? SystemRadioState.On
+                    : SystemRadioState.Off;
+            if (isWiFi)
+                WiFiRadioState = confirmed;
+            else
+                BluetoothRadioState = confirmed;
+            SystemActionMessage = string.Empty;
+        }
+        else
+        {
+            SystemActionMessage =
+                ComposeRadioFailureMessage(result);
+            IsStatusCenterOpen = true;
+        }
+
+        RequestSystemStatusRefresh();
+    }
+
+    private static string ComposeRadioFailureMessage(
+        SystemRadioSetResult result)
+    {
+        string name =
+            result.Kind == SystemRadioKind.WiFi
+                ? "Wi‑Fi"
+                : "蓝牙";
+        return result.Status switch
+        {
+            SystemRadioSetStatus.DeniedByUser =>
+                $"Windows 未授予 {name} 控制权限。"
+                + "可使用“快捷设置”手动切换。",
+            SystemRadioSetStatus.DeniedBySystem =>
+                $"{name} 被系统策略禁止由应用控制。"
+                + "可使用“快捷设置”查看原因。",
+            SystemRadioSetStatus.HardwareDisabled =>
+                $"{name} 已被硬件开关或驱动禁用，"
+                + "Panel 无法强制开启。",
+            SystemRadioSetStatus.NotFound =>
+                $"未找到可控制的 {name} Radio。"
+                + "设备可能刚刚移除。",
+            SystemRadioSetStatus.NotConfirmed =>
+                $"{name} 切换请求已发送，但硬件状态没有确认改变。"
+                + "请检查飞行模式、驱动或硬件开关。",
+            _ =>
+                $"无法切换 {name}。"
+                + "可使用“快捷设置”重试。"
+        };
     }
 
     private void
@@ -3587,6 +3828,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _brightnessControl.CompleteAsync(),
                 _applicationAudioControl
                     .CompleteAsync(),
+                _radioOperations.CompleteAsync(),
                 _autoStartup.CompleteAsync(),
                 _taskCapture.CompleteAsync(),
                 _taskSearch.CompleteAsync(),
@@ -3678,5 +3920,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             bool BrightnessWritePending,
             IReadOnlyList<
                 ApplicationAudioSessionSnapshot>
-                ApplicationAudioSessions);
+                ApplicationAudioSessions,
+            IReadOnlyList<SystemRadioSnapshot>
+                RadioSnapshots);
 }

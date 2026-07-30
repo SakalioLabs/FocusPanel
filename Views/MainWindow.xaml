@@ -447,6 +447,27 @@
                                             Content="快捷设置"
                                             Command="{Binding OpenQuickSettingsCommand}"/>
                                 </Grid>
+                                <UniformGrid Columns="2"
+                                             Margin="0,0,0,4">
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="{Binding WiFiRadioActionText}"
+                                            Command="{Binding ToggleWiFiRadioCommand}"
+                                            IsEnabled="{Binding CanToggleWiFiRadio}"
+                                            AutomationProperties.Name="{Binding WiFiRadioActionText}"
+                                            ToolTip="直接切换 Wi‑Fi Radio；不可用时使用上方快捷设置"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="{Binding BluetoothRadioActionText}"
+                                            Command="{Binding ToggleBluetoothRadioCommand}"
+                                            IsEnabled="{Binding CanToggleBluetoothRadio}"
+                                            AutomationProperties.Name="{Binding BluetoothRadioActionText}"
+                                            ToolTip="直接切换蓝牙 Radio；不可用时使用上方快捷设置"/>
+                                </UniformGrid>
+                                <TextBlock Margin="4,0,0,12"
+                                           Text="{Binding RadioStatusText}"
+                                           Style="{StaticResource FocusCaptionText}"
+                                           TextWrapping="Wrap"/>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>

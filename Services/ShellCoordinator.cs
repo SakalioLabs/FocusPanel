@@ -15,6 +15,7 @@ public sealed class ShellCoordinator : IDisposable
             new DisplayBrightnessService();
         ApplicationAudio =
             new ApplicationAudioSessionService();
+        Radios = new SystemRadioService();
         Updates = new VelopackUpdateService();
         JumpLists =
             new AppJumpListService();
@@ -32,6 +33,7 @@ public sealed class ShellCoordinator : IDisposable
     {
         get;
     }
+    public ISystemRadioService Radios { get; }
     public IAppUpdateService Updates { get; }
     internal IAppJumpListService
         JumpLists
@@ -56,6 +58,7 @@ public sealed class ShellCoordinator : IDisposable
         SystemStatus.Dispose();
         Brightness.Dispose();
         ApplicationAudio.Dispose();
+        Radios.Dispose();
         Updates.Dispose();
         JumpLists.Dispose();
         await AppFiles

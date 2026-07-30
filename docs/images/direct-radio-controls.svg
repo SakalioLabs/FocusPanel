@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1724"/>
+      <stop offset="1" stop-color="#21364a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#53c8ff"/>
+      <stop offset="1" stop-color="#8e82ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#02070d" flood-opacity=".44"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="620" rx="32" fill="url(#bg)"/>
+  <circle cx="1098" cy="40" r="210" fill="#53c8ff" opacity=".08"/>
+  <circle cx="72" cy="610" r="220" fill="#8e82ff" opacity=".07"/>
+  <text x="58" y="70" fill="#f4f8fc" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="28" font-weight="650">Wi‑Fi 与蓝牙，状态中心原地切换</text>
+  <text x="58" y="105" fill="#9cb2c6" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">读取真实 Radio → 用户主动授权 → 串行切换 → 重读最终状态 → 明确成功或降级</text>
+
+  <g transform="translate(58 140)" filter="url(#shadow)">
+    <rect width="650" height="414" rx="24" fill="#182a3b" stroke="#446179"/>
+    <text x="28" y="42" fill="#eef5fb" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">状态中心 · 连接</text>
+    <text x="622" y="42" text-anchor="end" fill="#91a9bd" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">家庭网络 · 已连接</text>
+
+    <g transform="translate(28 76)" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+      <rect width="286" height="94" rx="16" fill="#24465b" stroke="#62c9f7"/>
+      <g transform="translate(24 24)" fill="none" stroke="#73d5ff" stroke-width="4" stroke-linecap="round">
+        <path d="M0 10c12-11 28-11 40 0M7 19c8-7 18-7 26 0M15 28c3-3 7-3 10 0"/>
+        <circle cx="20" cy="36" r="2.5" fill="#73d5ff" stroke="none"/>
+      </g>
+      <text x="84" y="39" fill="#f3f8fc" font-size="17" font-weight="600">Wi‑Fi 已开启</text>
+      <text x="84" y="66" fill="#9fb6c8" font-size="13">点击关闭</text>
+      <circle cx="255" cy="47" r="8" fill="#50d89a"/>
+
+      <g transform="translate(308 0)">
+        <rect width="286" height="94" rx="16" fill="#202f40" stroke="#49657b"/>
+        <g transform="translate(26 22)" fill="none" stroke="#9eb4c7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 0v46l17-14-30-24 30 24-30 24 30-24z"/>
+        </g>
+        <text x="84" y="39" fill="#f3f8fc" font-size="17" font-weight="600">蓝牙已关闭</text>
+        <text x="84" y="66" fill="#9fb6c8" font-size="13">点击开启</text>
+        <circle cx="255" cy="47" r="8" fill="#6f8294"/>
+      </g>
+
+      <rect y="122" width="594" height="74" rx="14" fill="#1f3749"/>
+      <text x="22" y="153" fill="#dcecf7" font-size="14" font-weight="600">只在第一次主动切换时请求 Windows 权限</text>
+      <text x="22" y="178" fill="#94adbf" font-size="13">读取状态无需授权；授权结果在本次 Panel 会话复用</text>
+
+      <rect y="218" width="594" height="106" rx="14" fill="#192d3d" stroke="#3e5a70"/>
+      <text x="22" y="250" fill="#70d0ff" font-size="14" font-weight="600">最终状态确认</text>
+      <path d="M22 270h442" stroke="#3f5e74" stroke-width="5" stroke-linecap="round"/>
+      <path d="M22 270h330" stroke="url(#accent)" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="352" cy="270" r="10" fill="#e8f8ff" stroke="#62c9f7" stroke-width="3"/>
+      <text x="22" y="302" fill="#94adbf" font-size="13">“请求已允许” ≠ “硬件已切换”；重读 On / Off 后才更新按钮</text>
+    </g>
+  </g>
+
+  <g transform="translate(754 140)">
+    <rect width="388" height="414" rx="24" fill="#172839" stroke="#446179"/>
+    <text x="28" y="44" fill="#eef5fb" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">比原任务栏少一层</text>
+    <g font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+      <rect x="28" y="76" width="332" height="70" rx="16" fill="#223b50"/>
+      <text x="50" y="105" fill="#70d0ff" font-size="15" font-weight="600">01　打开状态中心</text>
+      <text x="50" y="128" fill="#a8bbcb" font-size="13">网络状态与开关在同一处</text>
+      <path d="M194 146v26" stroke="#59768e" stroke-width="3"/>
+      <rect x="28" y="172" width="332" height="70" rx="16" fill="#223b50"/>
+      <text x="50" y="201" fill="#70d0ff" font-size="15" font-weight="600">02　直接开启或关闭</text>
+      <text x="50" y="224" fill="#a8bbcb" font-size="13">无需再展开 Windows 快捷设置</text>
+      <path d="M194 242v26" stroke="#59768e" stroke-width="3"/>
+      <rect x="28" y="268" width="332" height="70" rx="16" fill="#223b50"/>
+      <text x="50" y="297" fill="#70d0ff" font-size="15" font-weight="600">03　看到真实结果</text>
+      <text x="50" y="320" fill="#a8bbcb" font-size="13">拒绝、硬件禁用与策略均可解释</text>
+      <rect x="28" y="360" width="332" height="34" rx="11" fill="#1f493f" stroke="#42b88a"/>
+      <text x="194" y="382" text-anchor="middle" fill="#9ce6c9" font-size="13">公开 Windows Radio API · 无私有注入</text>
+    </g>
+  </g>
+</svg>
