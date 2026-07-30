@@ -1198,6 +1198,13 @@ public partial class MainWindow :
                 Command = _viewModel.ActivateWindowCommand,
                 CommandParameter = window
             });
+            windowMenu.Items.Add(
+                new Separator());
+            AddWindowStateMenuItems(
+                windowMenu,
+                window);
+            windowMenu.Items.Add(
+                new Separator());
             windowMenu.Items.Add(new MenuItem
             {
                 Header = "关闭窗口",
@@ -1220,6 +1227,57 @@ public partial class MainWindow :
 
         FocusMenuTheme.Apply(menu);
         button.ContextMenu = menu;
+    }
+
+    private void AddWindowStateMenuItems(
+        MenuItem windowMenu,
+        WindowReference window)
+    {
+        foreach (WindowStateAction action
+                 in WindowStateActionPolicy
+                     .GetActions(
+                         window.State))
+        {
+            MenuItem item =
+                action switch
+                {
+                    WindowStateAction.Restore =>
+                        new MenuItem
+                        {
+                            Header = "还原窗口",
+                            Command =
+                                _viewModel
+                                    .RestoreWindowCommand,
+                            CommandParameter =
+                                window
+                        },
+                    WindowStateAction.Minimize =>
+                        new MenuItem
+                        {
+                            Header = "最小化窗口",
+                            Command =
+                                _viewModel
+                                    .MinimizeWindowCommand,
+                            CommandParameter =
+                                window
+                        },
+                    WindowStateAction.Maximize =>
+                        new MenuItem
+                        {
+                            Header = "最大化窗口",
+                            Command =
+                                _viewModel
+                                    .MaximizeWindowCommand,
+                            CommandParameter =
+                                window
+                        },
+                    _ => throw new
+                        ArgumentOutOfRangeException(
+                            nameof(action))
+                };
+            windowMenu.Items.Add(
+                item);
+        }
     }
 
     private bool TryAddJumpListSection(
@@ -1935,8 +1993,28 @@ public partial class MainWindow :
         string title = GetWindowTitle(
             window,
             fallback);
-        return window.IsActive
-            ? $"当前窗口，{title}"
+        string state =
+            window.State switch
+            {
+                TrackedWindowState.Minimized =>
+                    "已最小化",
+                TrackedWindowState.Maximized =>
+                    "已最大化",
+                _ => string.Empty
+            };
+        string prefix =
+            window.IsActive
+                ? "当前窗口"
+                : string.Empty;
+        if (state.Length > 0)
+        {
+            prefix =
+                prefix.Length > 0
+                    ? prefix + "，" + state
+                    : state;
+        }
+        return prefix.Length > 0
+            ? prefix + "，" + title
             : title;
     }
 

@@ -8,6 +8,7 @@ internal interface IWindowCommandBoundary
     bool IsWindow(IntPtr handle);
     IntPtr GetForegroundWindow();
     bool IsIconic(IntPtr handle);
+    bool IsZoomed(IntPtr handle);
     void ShowWindow(IntPtr handle, int command);
     bool SetForegroundWindow(IntPtr handle);
     bool PostClose(IntPtr handle);
@@ -16,6 +17,7 @@ internal interface IWindowCommandBoundary
 internal sealed class WindowCommandExecutor
 {
     internal const int MinimizeCommand = 6;
+    internal const int MaximizeCommand = 3;
     internal const int RestoreCommand = 9;
 
     private readonly IWindowCommandBoundary _native;
@@ -64,6 +66,40 @@ internal sealed class WindowCommandExecutor
     internal bool Close(IntPtr handle) =>
         IsUsable(handle)
         && _native.PostClose(handle);
+
+    internal bool Minimize(IntPtr handle)
+    {
+        if (!IsUsable(handle))
+            return false;
+
+        _native.ShowWindow(
+            handle,
+            MinimizeCommand);
+        return _native.IsIconic(handle);
+    }
+
+    internal bool Maximize(IntPtr handle)
+    {
+        if (!IsUsable(handle))
+            return false;
+
+        _native.ShowWindow(
+            handle,
+            MaximizeCommand);
+        return _native.IsZoomed(handle);
+    }
+
+    internal bool Restore(IntPtr handle)
+    {
+        if (!IsUsable(handle))
+            return false;
+
+        _native.ShowWindow(
+            handle,
+            RestoreCommand);
+        return !_native.IsIconic(handle)
+            && !_native.IsZoomed(handle);
+    }
 
     private bool IsUsable(IntPtr handle) =>
         handle != IntPtr.Zero

@@ -109,6 +109,33 @@ public sealed class WindowTracker : IWindowTracker
     public bool Activate(IntPtr handle) =>
         _commands.Activate(handle);
 
+    public bool Minimize(IntPtr handle)
+    {
+        bool succeeded =
+            _commands.Minimize(handle);
+        if (succeeded)
+            RequestSnapshotRefresh();
+        return succeeded;
+    }
+
+    public bool Maximize(IntPtr handle)
+    {
+        bool succeeded =
+            _commands.Maximize(handle);
+        if (succeeded)
+            RequestSnapshotRefresh();
+        return succeeded;
+    }
+
+    public bool Restore(IntPtr handle)
+    {
+        bool succeeded =
+            _commands.Restore(handle);
+        if (succeeded)
+            RequestSnapshotRefresh();
+        return succeeded;
+    }
+
     public bool Close(IntPtr handle) =>
         _commands.Close(handle);
 
@@ -274,7 +301,8 @@ public sealed class WindowTracker : IWindowTracker
                             new WindowReference(
                                 item.Handle,
                                 item.Title,
-                                item.IsActive))
+                                item.IsActive,
+                                item.State))
                         .ToList(),
                     IsActive = group.Any(item => item.IsActive)
                 };
@@ -349,6 +377,14 @@ public sealed class WindowTracker : IWindowTracker
                 ?? executablePath,
             identity.Key,
             identity.ApplicationUserModelId,
+            NativeMethods.IsIconic(hwnd)
+                ? TrackedWindowState
+                    .Minimized
+                : NativeMethods.IsZoomed(hwnd)
+                    ? TrackedWindowState
+                        .Maximized
+                    : TrackedWindowState
+                        .Normal,
             hwnd == foreground));
     }
 
@@ -492,6 +528,7 @@ public sealed class WindowTracker : IWindowTracker
         string? ExecutablePath,
         string IdentityKey,
         string? ApplicationUserModelId,
+        TrackedWindowState State,
         bool IsActive);
 
     private sealed record PendingWindowSnapshot(
@@ -526,6 +563,10 @@ public sealed class WindowTracker : IWindowTracker
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindowVisible(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool IsIconic(IntPtr hwnd);
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetWindow(IntPtr hwnd, uint command);

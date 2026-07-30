@@ -17,6 +17,9 @@ internal sealed class WindowsWindowCommandBoundary :
     public bool IsIconic(IntPtr handle) =>
         NativeMethods.IsIconic(handle);
 
+    public bool IsZoomed(IntPtr handle) =>
+        NativeMethods.IsZoomed(handle);
+
     public void ShowWindow(
         IntPtr handle,
         int command) =>
@@ -44,6 +47,10 @@ internal sealed class WindowsWindowCommandBoundary :
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsIconic(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool IsZoomed(IntPtr hwnd);
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]

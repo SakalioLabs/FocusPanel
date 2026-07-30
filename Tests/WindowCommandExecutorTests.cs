@@ -22,12 +22,84 @@ public sealed class WindowCommandExecutorTests
 
         Assert.False(executor.Activate(IntPtr.Zero));
         Assert.False(executor.Close(Handle));
+        Assert.False(executor.Minimize(Handle));
+        Assert.False(executor.Maximize(Handle));
+        Assert.False(executor.Restore(Handle));
         Assert.False(
             executor.ActivateOrMinimize(
                 Task(Handle)));
         Assert.Empty(native.ShowCommands);
         Assert.Equal(0, native.ForegroundCalls);
         Assert.Equal(0, native.CloseCalls);
+    }
+
+    [Fact]
+    public void ExplicitMinimize_IsConfirmed()
+    {
+        var native = new FakeBoundary
+        {
+            BecomeIconicWhenMinimized = true
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.True(executor.Minimize(Handle));
+        Assert.Equal(
+            WindowCommandExecutor.MinimizeCommand,
+            Assert.Single(
+                native.ShowCommands));
+    }
+
+    [Fact]
+    public void ExplicitMaximize_IsConfirmed()
+    {
+        var native = new FakeBoundary
+        {
+            BecomeZoomedWhenMaximized = true
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.True(executor.Maximize(Handle));
+        Assert.Equal(
+            WindowCommandExecutor.MaximizeCommand,
+            Assert.Single(
+                native.ShowCommands));
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void Restore_ClearsMinimizedOrMaximizedState(
+        bool iconic,
+        bool zoomed)
+    {
+        var native = new FakeBoundary
+        {
+            Iconic = iconic,
+            Zoomed = zoomed
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.True(executor.Restore(Handle));
+        Assert.Equal(
+            WindowCommandExecutor.RestoreCommand,
+            Assert.Single(
+                native.ShowCommands));
+        Assert.False(native.Iconic);
+        Assert.False(native.Zoomed);
+    }
+
+    [Fact]
+    public void IgnoredStateChange_IsReportedAsFailure()
+    {
+        var native = new FakeBoundary();
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.False(executor.Minimize(Handle));
+        Assert.False(executor.Maximize(Handle));
     }
 
     [Fact]
@@ -152,7 +224,9 @@ public sealed class WindowCommandExecutorTests
         internal bool WindowExists { get; set; } = true;
         internal IntPtr Foreground { get; set; }
         internal bool Iconic { get; set; }
+        internal bool Zoomed { get; set; }
         internal bool BecomeIconicWhenMinimized { get; set; }
+        internal bool BecomeZoomedWhenMaximized { get; set; }
         internal bool ForegroundResult { get; set; }
         internal bool BecomeForegroundWhenRequested { get; set; }
         internal bool CloseResult { get; set; } = true;
@@ -170,6 +244,9 @@ public sealed class WindowCommandExecutorTests
         public bool IsIconic(IntPtr handle) =>
             Iconic;
 
+        public bool IsZoomed(IntPtr handle) =>
+            Zoomed;
+
         public void ShowWindow(
             IntPtr handle,
             int command)
@@ -180,11 +257,20 @@ public sealed class WindowCommandExecutorTests
                 && BecomeIconicWhenMinimized)
             {
                 Iconic = true;
+                Zoomed = false;
+            }
+            else if (command
+                     == WindowCommandExecutor.MaximizeCommand
+                     && BecomeZoomedWhenMaximized)
+            {
+                Iconic = false;
+                Zoomed = true;
             }
             else if (command
                      == WindowCommandExecutor.RestoreCommand)
             {
                 Iconic = false;
+                Zoomed = false;
             }
         }
 

@@ -1910,6 +1910,51 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void MinimizeWindow(
+        WindowReference? window)
+    {
+        if (window != null)
+        {
+            CompleteTaskbarWindowAction(
+                SystemActionExecution.Try(
+                    () => _windowTracker.Minimize(
+                        window.Handle)),
+                $"无法最小化“{window.Title}”。窗口可能已经关闭，"
+                + "或当前应用拒绝了状态更改。");
+        }
+    }
+
+    [RelayCommand]
+    private void MaximizeWindow(
+        WindowReference? window)
+    {
+        if (window != null)
+        {
+            CompleteTaskbarWindowAction(
+                SystemActionExecution.Try(
+                    () => _windowTracker.Maximize(
+                        window.Handle)),
+                $"无法最大化“{window.Title}”。窗口可能已经关闭，"
+                + "或当前应用拒绝了状态更改。");
+        }
+    }
+
+    [RelayCommand]
+    private void RestoreWindow(
+        WindowReference? window)
+    {
+        if (window != null)
+        {
+            CompleteTaskbarWindowAction(
+                SystemActionExecution.Try(
+                    () => _windowTracker.Restore(
+                        window.Handle)),
+                $"无法还原“{window.Title}”。窗口可能已经关闭，"
+                + "或当前应用拒绝了状态更改。");
+        }
+    }
+
+    [RelayCommand]
     private void CloseTask(TaskbarAppItem? task)
     {
         if (task == null)

@@ -102,6 +102,7 @@ internal static class TaskbarAppCollectionSynchronizer
             && current.Zip(candidate, (left, right) =>
                     left.Handle == right.Handle
                     && left.IsActive == right.IsActive
+                    && left.State == right.State
                     && string.Equals(left.Title, right.Title, StringComparison.Ordinal))
                 .All(equal => equal);
 }

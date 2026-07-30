@@ -5,6 +5,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace FocusPanel.Models;
 
+public enum TrackedWindowState
+{
+    Normal,
+    Minimized,
+    Maximized
+}
+
 public partial class WindowTaskItem : ObservableObject
 {
     public string AppKey { get; init; } = string.Empty;
@@ -24,4 +31,6 @@ public partial class WindowTaskItem : ObservableObject
 public sealed record WindowReference(
     IntPtr Handle,
     string Title,
-    bool IsActive = false);
+    bool IsActive = false,
+    TrackedWindowState State =
+        TrackedWindowState.Normal);

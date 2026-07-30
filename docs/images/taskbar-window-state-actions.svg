@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0a1221"/>
+      <stop offset="1" stop-color="#202a43"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffffff" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#8ebeff" stop-opacity=".07"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".36"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="520" rx="34" fill="url(#bg)"/>
+  <circle cx="85" cy="62" r="155" fill="#3478f6" opacity=".13"/>
+  <circle cx="1030" cy="470" r="220" fill="#70dfc2" opacity=".07"/>
+  <text x="62" y="68" fill="#f6f8ff" font-family="Segoe UI,Microsoft YaHei" font-size="28" font-weight="700">窗口状态管理，直接留在应用栏</text>
+  <text x="62" y="104" fill="#aab8d1" font-family="Segoe UI,Microsoft YaHei" font-size="16">无需先切换窗口 · 执行后验证真实状态</text>
+
+  <g filter="url(#shadow)">
+    <rect x="62" y="142" width="380" height="320" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <rect x="84" y="167" width="58" height="270" rx="23" fill="#10192a" stroke="#fff" stroke-opacity=".12"/>
+    <circle cx="113" cy="205" r="20" fill="#2f3b53"/>
+    <rect x="104" y="196" width="18" height="18" rx="4" fill="#78b5ff"/>
+    <circle cx="113" cy="258" r="20" fill="#2f3b53"/>
+    <path d="M103 260l7 7 14-18" fill="none" stroke="#80dfc2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="113" cy="311" r="20" fill="#6754d8"/>
+    <path d="M104 302h18v18h-18z" fill="#fff" opacity=".9"/>
+    <circle cx="113" cy="364" r="20" fill="#2f3b53"/>
+    <path d="M104 355h18v18h-18z" fill="#ffc36e"/>
+
+    <rect x="159" y="175" width="250" height="76" rx="18" fill="#0e1829" stroke="#67a9ff" stroke-opacity=".55"/>
+    <rect x="176" y="191" width="44" height="44" rx="13" fill="#6754d8"/>
+    <path d="M187 202h22v22h-22z" fill="#fff" opacity=".9"/>
+    <text x="235" y="207" fill="#f7f9ff" font-family="Segoe UI,Microsoft YaHei" font-size="17" font-weight="600">代码编辑器</text>
+    <text x="235" y="232" fill="#8fa1be" font-family="Segoe UI,Microsoft YaHei" font-size="13">2 个窗口 · 右键管理</text>
+
+    <rect x="159" y="270" width="250" height="148" rx="18" fill="#101a2c" stroke="#fff" stroke-opacity=".12"/>
+    <text x="181" y="302" fill="#f2f6ff" font-family="Segoe UI,Microsoft YaHei" font-size="15" font-weight="600">● 当前窗口 · 编辑器</text>
+    <text x="181" y="334" fill="#a9b7ce" font-family="Segoe UI,Microsoft YaHei" font-size="14">文档窗口 · 已最大化</text>
+    <text x="181" y="373" fill="#dbe5f5" font-family="Segoe UI,Microsoft YaHei" font-size="14">终端窗口 · 普通</text>
+  </g>
+
+  <path d="M468 302h72" stroke="#79b8ff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M530 292l12 10-12 10" fill="none" stroke="#79b8ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="568" y="142" width="490" height="320" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <rect x="592" y="166" width="442" height="272" rx="20" fill="#101a2c" stroke="#fff" stroke-opacity=".12"/>
+    <text x="618" y="198" fill="#8fa1be" font-family="Segoe UI,Microsoft YaHei" font-size="14" font-weight="600">文档窗口 · 已最大化</text>
+    <g font-family="Segoe UI,Microsoft YaHei" font-size="15">
+      <rect x="610" y="214" width="406" height="44" rx="11" fill="#3478f6" opacity=".18"/>
+      <text x="636" y="242" fill="#f4f7ff">切换到此窗口</text>
+      <line x1="610" y1="274" x2="1016" y2="274" stroke="#fff" stroke-opacity=".11"/>
+      <path d="M630 302h16v12h-16z" fill="none" stroke="#7fb8ff" stroke-width="2"/>
+      <text x="663" y="314" fill="#dce5f5">还原窗口</text>
+      <path d="M630 345h16" stroke="#7fdcbe" stroke-width="3" stroke-linecap="round"/>
+      <text x="663" y="351" fill="#dce5f5">最小化窗口</text>
+      <line x1="610" y1="374" x2="1016" y2="374" stroke="#fff" stroke-opacity=".11"/>
+      <text x="636" y="406" fill="#ff9f9f">关闭窗口</text>
+    </g>
+  </g>
+
+  <g transform="translate(690 476)">
+    <circle cx="0" cy="0" r="5" fill="#78dabd"/>
+    <text x="14" y="5" fill="#9fb0ca" font-family="Segoe UI,Microsoft YaHei" font-size="13">ShowWindow 设置 · IsIconic / IsZoomed 确认 · 快照原位更新</text>
+  </g>
+</svg>

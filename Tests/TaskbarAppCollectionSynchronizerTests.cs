@@ -178,6 +178,43 @@ public sealed class TaskbarAppCollectionSynchronizerTests
     }
 
     [Fact]
+    public void WindowStateChange_UpdatesExistingApplicationInPlace()
+    {
+        TaskbarAppItem current =
+            RunningApp(
+                "exe:c:\\one.exe",
+                "一",
+                1,
+                false,
+                TrackedWindowState.Normal);
+        var items =
+            new ObservableCollection<
+                TaskbarAppItem>
+            {
+                current
+            };
+
+        TaskbarAppCollectionSynchronizer
+            .Synchronize(
+                items,
+                new[]
+                {
+                    RunningApp(
+                        "exe:c:\\one.exe",
+                        "一",
+                        1,
+                        false,
+                        TrackedWindowState
+                            .Maximized)
+                });
+
+        Assert.Same(current, items[0]);
+        Assert.Equal(
+            TrackedWindowState.Maximized,
+            items[0].Windows[0].State);
+    }
+
+    [Fact]
     public void DifferentIdentity_IsStillInsertedInsteadOfMerged()
     {
         TaskbarAppItem current =
@@ -211,7 +248,9 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         string identity,
         string name,
         int handle,
-        bool active) => new()
+        bool active,
+        TrackedWindowState state =
+            TrackedWindowState.Normal) => new()
     {
         IdentityKey = identity,
         DisplayName = name,
@@ -221,7 +260,14 @@ public sealed class TaskbarAppCollectionSynchronizerTests
             IdentityKey = identity,
             DisplayName = name,
             IsActive = active,
-            Windows = new[] { new WindowReference(new IntPtr(handle), name) }
+            Windows = new[]
+            {
+                new WindowReference(
+                    new IntPtr(handle),
+                    name,
+                    false,
+                    state)
+            }
         }
     };
 

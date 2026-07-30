@@ -2271,7 +2271,13 @@ public sealed class XamlResourceContractTests
             "TextTrimming.CharacterEllipsis",
             codeBehind);
         Assert.Contains(
-            "当前窗口，",
+            "\"当前窗口\"",
+            codeBehind);
+        Assert.Contains(
+            "\"已最小化\"",
+            codeBehind);
+        Assert.Contains(
+            "\"已最大化\"",
             codeBehind);
         Assert.Contains(
             "PreviewMouseWheel=\"TaskbarApp_PreviewMouseWheel\"",
@@ -2292,7 +2298,16 @@ public sealed class XamlResourceContractTests
             "TaskbarWindowItem_PreviewKeyDown",
             codeBehind);
         Assert.Contains(
-            "item.IsActive))",
+            "item.IsActive,\n"
+            + "                                item.State))",
+            tracker.Replace(
+                "\r\n",
+                "\n"));
+        Assert.Contains(
+            "left.State == right.State",
+            synchronizer);
+        Assert.Contains(
+            "NativeMethods.IsIconic(hwnd)",
             tracker);
         Assert.Contains(
             "left.IsActive == right.IsActive",
@@ -4671,8 +4686,41 @@ public sealed class XamlResourceContractTests
             "bool Activate(IntPtr handle)",
             windowContract);
         Assert.Contains(
+            "bool Minimize(IntPtr handle)",
+            windowContract);
+        Assert.Contains(
+            "bool Maximize(IntPtr handle)",
+            windowContract);
+        Assert.Contains(
+            "bool Restore(IntPtr handle)",
+            windowContract);
+        Assert.Contains(
             "bool Close(IntPtr handle)",
             windowContract);
+        Assert.Contains(
+            "MinimizeWindowCommand",
+            codeBehind);
+        Assert.Contains(
+            "MaximizeWindowCommand",
+            codeBehind);
+        Assert.Contains(
+            "RestoreWindowCommand",
+            codeBehind);
+        Assert.Contains(
+            "AddWindowStateMenuItems(",
+            codeBehind);
+        Assert.Contains(
+            "Header = \"还原窗口\"",
+            codeBehind);
+        Assert.Contains(
+            "Header = \"最小化窗口\"",
+            codeBehind);
+        Assert.Contains(
+            "Header = \"最大化窗口\"",
+            codeBehind);
+        Assert.Contains(
+            "WindowStateActionPolicy",
+            codeBehind);
         Assert.Contains(
             "Task<bool> SetPinnedAsync(",
             appContract);
