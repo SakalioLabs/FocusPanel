@@ -96,6 +96,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 固定、取消固定和拖动排序会确认 SQLite 提交结果；数据库短暂锁定或写入失败不会冲击 UI 线程，也不会把未保存的顺序伪装成成功。
 - 运行项可通过右键固定；拖动未固定运行项会自动创建固定项并保存排序，取消固定后只要窗口仍在就继续显示。
 - 紧凑栏从上到下固定为开始、搜索、统一固定/运行应用列表、任务视图、Focus 中心、状态中心和时间；六个系统入口顺序稳定，中部只承担可滚动应用区。
+- 任务视图入口不再只是 Win+Tab 转发：滚轮向上/下可直接切换上一个/下一个虚拟桌面，右键菜单可切换、新建或关闭当前桌面，菜单同步显示 `Win+Ctrl+←/→/D/F4`。滚轮使用 160ms 防抖，不会因高分辨率触控板一次动作跨过多个桌面；实现只复用微软公布的[多桌面快捷键](https://support.microsoft.com/en-us/windows/keyboard-shortcuts-in-windows-dcc61a57-8ff0-cffe-9796-cb9706c75eec)，不调用未公开 Virtual Desktop COM 接口。
 - 多屏定位以 Windows 主屏的物理边界和主屏 DPI 为唯一基准；紧凑栏、展开动画、12px 热区和 3px 指示条不会混用窗口当前屏的 WPF DIP。主屏存在负坐标、位于副屏右侧或采用不同缩放时，Panel 仍完整向主屏内部展开。
 - 中部应用列表超出可视高度时显示轻量悬浮上下导航；到达顶部或底部后相应箭头自动消失，点击按一个应用图标步长移动，鼠标滚轮仍可直接滚动。
 - Focus 中心统一承载桌面收纳、任务、番茄钟、OKR、AI、最近使用模块和设置更新；状态中心集中音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
@@ -115,6 +116,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
 
 ![六入口紧凑任务栏](docs/images/six-entry-taskbar.svg)
+
+![任务视图与虚拟桌面快捷控制](docs/images/virtual-desktop-task-view.svg)
 
 ![右缘热区后台采样与低频 UI 提交](docs/images/edge-hot-zone-background-sampling.svg)
 
@@ -467,7 +470,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.52 `
+  -Version 0.10.53 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -478,7 +481,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.52-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.53-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

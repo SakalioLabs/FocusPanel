@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -311,6 +312,26 @@ public sealed class SystemStatusService : ISystemStatusService
 
     public bool OpenTaskView() => TrySendWindowsShortcut(WindowsShellAction.TaskView);
 
+    public bool SwitchVirtualDesktop(
+        VirtualDesktopDirection direction) =>
+        TrySendWindowsShortcut(
+            direction
+            == VirtualDesktopDirection.Previous
+                ? WindowsShellAction
+                    .VirtualDesktopPrevious
+                : WindowsShellAction
+                    .VirtualDesktopNext);
+
+    public bool CreateVirtualDesktop() =>
+        TrySendWindowsShortcut(
+            WindowsShellAction
+                .VirtualDesktopCreate);
+
+    public bool CloseCurrentVirtualDesktop() =>
+        TrySendWindowsShortcut(
+            WindowsShellAction
+                .VirtualDesktopClose);
+
     public bool OpenWindowsSearch() => TrySendWindowsShortcut(WindowsShellAction.Search);
 
     public bool OpenWidgets() => TrySendWindowsShortcut(WindowsShellAction.Widgets);
@@ -474,30 +495,23 @@ public sealed class SystemStatusService : ISystemStatusService
 
     private static bool TrySendWindowsShortcut(WindowsShellAction action)
     {
-        WindowsShellShortcut shortcut = WindowsShellShortcutMap.Get(action);
-        if (!shortcut.UsesWindowsKey)
-            return TrySendKey(shortcut.Key);
-
-        var inputs = new[]
-        {
-            KeyboardInput.KeyDown(0x5B),
-            KeyboardInput.KeyDown(shortcut.Key),
-            KeyboardInput.KeyUp(shortcut.Key),
-            KeyboardInput.KeyUp(0x5B)
-        };
-        return NativeMethods.SendInput(
-            (uint)inputs.Length,
-            inputs,
-            Marshal.SizeOf<Input>()) == (uint)inputs.Length;
-    }
-
-    private static bool TrySendKey(ushort key)
-    {
-        var inputs = new[]
-        {
-            KeyboardInput.KeyDown(key),
-            KeyboardInput.KeyUp(key)
-        };
+        IReadOnlyList<
+            WindowsShortcutKeyTransition>
+            sequence =
+                WindowsShortcutSequence.Build(
+                    WindowsShellShortcutMap.Get(
+                        action));
+        Input[] inputs =
+            sequence.Select(
+                    transition =>
+                        transition.IsDown
+                            ? KeyboardInput
+                                .KeyDown(
+                                    transition.Key)
+                            : KeyboardInput
+                                .KeyUp(
+                                    transition.Key))
+                .ToArray();
         return NativeMethods.SendInput(
             (uint)inputs.Length,
             inputs,

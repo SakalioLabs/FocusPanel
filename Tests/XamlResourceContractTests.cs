@@ -1229,6 +1229,18 @@ public sealed class XamlResourceContractTests
             && statusCenter < time);
         Assert.Contains("Click=\"FocusCenterButton_Click\"", compactDock);
         Assert.Contains("Click=\"StatusCenterButton_Click\"", compactDock);
+        Assert.Contains(
+            "x:Name=\"TaskViewButton\"",
+            compactDock);
+        Assert.Contains(
+            "x:Name=\"StartButton\"",
+            compactDock);
+        Assert.Contains(
+            "x:Name=\"FocusCenterButton\"",
+            compactDock);
+        Assert.Contains(
+            "x:Name=\"StatusCenterButton\"",
+            compactDock);
         Assert.DoesNotContain("OpenNotificationOverflow", compactDock);
         Assert.DoesNotContain("OpenInputSwitcherCommand", compactDock);
         Assert.DoesNotContain("OpenNotificationsCommand", compactDock);
@@ -1246,6 +1258,121 @@ public sealed class XamlResourceContractTests
         string onboarding = mainWindow[onboardingStart..];
         Assert.Contains("<Border Grid.Column=\"0\"", onboarding);
         Assert.DoesNotContain("Grid.ColumnSpan=\"2\"", onboarding);
+    }
+
+    [Fact]
+    public void TaskView_ProvidesVirtualDesktopWheelMenuAndCorrectFocusReturn()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        string contract = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ISystemStatusService.cs"));
+        string service = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "SystemStatusService.cs"));
+        string theme = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Themes",
+                "FocusTheme.xaml"));
+        XDocument document =
+            XDocument.Parse(mainWindow);
+        XNamespace xaml =
+            "http://schemas.microsoft.com/winfx/2006/xaml";
+        XElement NamedButton(
+            string name) =>
+            document.Descendants()
+                .Single(
+                    element =>
+                        element.Name.LocalName
+                            == "Button"
+                        && (string?)element
+                            .Attribute(
+                                xaml + "Name")
+                            == name);
+
+        Assert.Contains(
+            "PreviewMouseWheel=\"TaskViewButton_PreviewMouseWheel\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"上一个虚拟桌面\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"下一个虚拟桌面\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"新建虚拟桌面\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"关闭当前虚拟桌面\"",
+            mainWindow);
+        Assert.Contains(
+            "VirtualDesktopWheelPolicy",
+            codeBehind);
+        Assert.Contains(
+            ".GetAction(",
+            codeBehind);
+        Assert.Contains(
+            "SwitchVirtualDesktopCommand",
+            codeBehind);
+        Assert.Matches(
+            @"QueueOverlayFocus\(\s*StatusCenterButton,\s*StatusCenterQuickSettingsButton",
+            codeBehind);
+        Assert.Equal(
+            "{Binding OpenStartMenuCommand}",
+            (string?)NamedButton(
+                    "StartButton")
+                .Attribute("Command"));
+        Assert.Equal(
+            "FocusCenterButton_Click",
+            (string?)NamedButton(
+                    "FocusCenterButton")
+                .Attribute("Click"));
+        Assert.Equal(
+            "StatusCenterButton_Click",
+            (string?)NamedButton(
+                    "StatusCenterButton")
+                .Attribute("Click"));
+        Assert.Contains(
+            "SwitchVirtualDesktop(",
+            viewModel);
+        Assert.Contains(
+            "CreateVirtualDesktop()",
+            viewModel);
+        Assert.Contains(
+            "CloseCurrentVirtualDesktop()",
+            viewModel);
+        Assert.Contains(
+            "SwitchVirtualDesktop(",
+            contract);
+        Assert.Contains(
+            "VirtualDesktopCreate",
+            service);
+        Assert.Contains(
+            "VirtualDesktopClose",
+            service);
+        Assert.Contains(
+            "Text=\"{TemplateBinding InputGestureText}\"",
+            theme);
     }
 
     [Fact]
@@ -1907,10 +2034,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -2450,7 +2577,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);

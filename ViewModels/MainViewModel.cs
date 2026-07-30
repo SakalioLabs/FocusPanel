@@ -1432,6 +1432,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
             "无法唤起任务视图，请使用 Win+Tab。");
 
     [RelayCommand]
+    private async Task SwitchVirtualDesktop(
+        VirtualDesktopDirection direction)
+        => await RunSystemActionAsync(
+            () => _systemStatus
+                .SwitchVirtualDesktop(
+                    direction),
+            direction
+            == VirtualDesktopDirection.Previous
+                ? "无法切换到上一个虚拟桌面，请使用 Win+Ctrl+←。"
+                : "无法切换到下一个虚拟桌面，请使用 Win+Ctrl+→。");
+
+    [RelayCommand]
+    private async Task CreateVirtualDesktop()
+        => await RunSystemActionAsync(
+            _systemStatus
+                .CreateVirtualDesktop,
+            "无法新建虚拟桌面，请使用 Win+Ctrl+D。");
+
+    [RelayCommand]
+    private async Task CloseCurrentVirtualDesktop()
+        => await RunSystemActionAsync(
+            _systemStatus
+                .CloseCurrentVirtualDesktop,
+            "无法关闭当前虚拟桌面，请使用 Win+Ctrl+F4。");
+
+    [RelayCommand]
     private async Task OpenWindowsSearch()
         => await RunSystemActionAsync(
             _systemStatus.OpenWindowsSearch,

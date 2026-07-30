@@ -86,6 +86,7 @@ public partial class MainWindow :
     private string? _lastTaskbarWindowCycleIdentity;
     private IntPtr _lastTaskbarWindowCycleHandle;
     private long _lastTaskbarWindowCycleTick = -1;
+    private long _lastVirtualDesktopWheelTick = -1;
 
     public MainWindow()
         : this(null)
@@ -1864,6 +1865,47 @@ public partial class MainWindow :
     {
         float step = e.Delta > 0 ? 0.05f : -0.05f;
         _viewModel.AdjustMasterVolume(step);
+        e.Handled = true;
+    }
+
+    private void TaskViewButton_PreviewMouseWheel(
+        object sender,
+        MouseWheelEventArgs e)
+    {
+        long now =
+            Environment.TickCount64;
+        VirtualDesktopWheelAction action =
+            VirtualDesktopWheelPolicy
+                .GetAction(
+                    e.Delta,
+                    _lastVirtualDesktopWheelTick,
+                    now);
+        if (action
+            == VirtualDesktopWheelAction
+                .Ignore)
+        {
+            return;
+        }
+        if (action
+            == VirtualDesktopWheelAction
+                .Throttled)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        _lastVirtualDesktopWheelTick =
+            now;
+        _viewModel
+            .SwitchVirtualDesktopCommand
+            .Execute(
+                action
+                == VirtualDesktopWheelAction
+                    .Previous
+                    ? VirtualDesktopDirection
+                        .Previous
+                    : VirtualDesktopDirection
+                        .Next);
         e.Handled = true;
     }
 

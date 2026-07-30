@@ -1347,6 +1347,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="18"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock x:Name="CheckIndicator"
@@ -1364,8 +1365,13 @@
                                                   RecognizesAccessKey="True"
                                                   VerticalAlignment="Center"
                                                   SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                <TextBlock Grid.Column="2"
+                                           Margin="12,0,4,0"
+                                           Text="{TemplateBinding InputGestureText}"
+                                           Foreground="{DynamicResource FocusMutedTextBrush}"
+                                           VerticalAlignment="Center"/>
                                 <TextBlock x:Name="SubmenuArrow"
-                                           Grid.Column="2"
+                                           Grid.Column="3"
                                            Text="&#xE76C;"
                                            FontFamily="Segoe Fluent Icons"
                                            FontSize="11"

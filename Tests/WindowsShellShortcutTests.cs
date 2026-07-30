@@ -1,4 +1,5 @@
 using FocusPanel.Services;
+using System.Linq;
 using Xunit;
 
 namespace FocusPanel.Tests;
@@ -36,5 +37,89 @@ public sealed class WindowsShellShortcutTests
 
         Assert.False(shortcut.UsesWindowsKey);
         Assert.Equal(0x5B, shortcut.Key);
+    }
+
+    [Fact]
+    public void VirtualDesktopChords_UseWindowsControlAndExpectedKey()
+    {
+        var expected =
+            new[]
+            {
+                (
+                    WindowsShellAction
+                        .VirtualDesktopPrevious,
+                    Key: (ushort)0x25),
+                (
+                    WindowsShellAction
+                        .VirtualDesktopNext,
+                    Key: (ushort)0x27),
+                (
+                    WindowsShellAction
+                        .VirtualDesktopCreate,
+                    Key: (ushort)0x44),
+                (
+                    WindowsShellAction
+                        .VirtualDesktopClose,
+                    Key: (ushort)0x73)
+            };
+
+        foreach (var item in expected)
+        {
+            WindowsShellShortcut shortcut =
+                WindowsShellShortcutMap.Get(
+                    item.Item1);
+
+            Assert.True(
+                shortcut.UsesWindowsKey);
+            Assert.True(
+                shortcut.UsesControl);
+            Assert.False(shortcut.UsesAlt);
+            Assert.False(shortcut.UsesShift);
+            Assert.Equal(
+                item.Key,
+                shortcut.Key);
+        }
+    }
+
+    [Fact]
+    public void KeySequence_PressesModifiersThenReleasesInReverse()
+    {
+        WindowsShellShortcut shortcut =
+            WindowsShellShortcutMap.Get(
+                WindowsShellAction
+                    .VirtualDesktopNext);
+
+        WindowsShortcutKeyTransition[]
+            transitions =
+                WindowsShortcutSequence
+                    .Build(shortcut)
+                    .ToArray();
+
+        Assert.Equal(
+            new ushort[]
+            {
+                0x5B,
+                0x11,
+                0x27,
+                0x27,
+                0x11,
+                0x5B
+            },
+            transitions.Select(
+                transition =>
+                    transition.Key));
+        Assert.Equal(
+            new[]
+            {
+                true,
+                true,
+                true,
+                false,
+                false,
+                false
+            },
+            transitions.Select(
+                transition =>
+                    transition.IsDown));
     }
 }

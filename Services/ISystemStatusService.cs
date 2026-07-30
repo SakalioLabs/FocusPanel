@@ -16,6 +16,10 @@ public interface ISystemStatusService : IDisposable
     bool OpenInputSwitcher();
     bool OpenStartMenu();
     bool OpenTaskView();
+    bool SwitchVirtualDesktop(
+        VirtualDesktopDirection direction);
+    bool CreateVirtualDesktop();
+    bool CloseCurrentVirtualDesktop();
     bool OpenWindowsSearch();
     bool OpenWidgets();
     bool OpenRunDialog();
@@ -26,4 +30,10 @@ public interface ISystemStatusService : IDisposable
     bool Sleep();
     bool Restart();
     bool Shutdown();
+}
+
+public enum VirtualDesktopDirection
+{
+    Previous,
+    Next
 }
