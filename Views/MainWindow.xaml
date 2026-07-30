@@ -181,17 +181,17 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Text="应用、窗口与系统命令"
+                            <TextBlock Text="应用、窗口、命令与计算"
                                        Style="{StaticResource FocusSectionTitleText}"/>
                             <Grid Grid.Row="1" Margin="0,14,0,12">
                                 <TextBox x:Name="SearchBox"
                                          Style="{StaticResource FocusSearchBox}"
                                          Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                          PreviewKeyDown="SearchBox_PreviewKeyDown"
-                                         AutomationProperties.Name="搜索应用、窗口与系统命令"
-                                         AutomationProperties.HelpText="输入应用名、窗口标题或系统工具，使用上下方向键选择，按回车执行"
-                                         ToolTip="搜索应用、已打开窗口与系统命令"/>
-                                <TextBlock Text="输入应用、窗口或系统工具"
+                                         AutomationProperties.Name="搜索应用、窗口、系统命令与计算"
+                                         AutomationProperties.HelpText="输入应用名、窗口标题、系统工具或算式，使用上下方向键选择，按回车执行"
+                                         ToolTip="搜索应用、窗口、系统命令或直接计算"/>
+                                <TextBlock Text="输入应用、窗口、系统工具或算式"
                                            Margin="16,0"
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False">
@@ -214,7 +214,7 @@
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"
                                          Style="{StaticResource FocusListBox}"
                                          Foreground="{DynamicResource FocusTextBrush}"
-                                         AutomationProperties.Name="应用、窗口与系统命令搜索结果"
+                                         AutomationProperties.Name="应用、窗口、系统命令与计算结果"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem"
@@ -254,7 +254,7 @@
                                                                     <Style TargetType="controls:AppIconPresenter">
                                                                         <Setter Property="Visibility" Value="Visible"/>
                                                                         <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding IsSystemCommand}" Value="True">
+                                                                            <DataTrigger Binding="{Binding UsesGlyph}" Value="True">
                                                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                                             </DataTrigger>
                                                                         </Style.Triggers>
@@ -267,7 +267,7 @@
                                                                     <Style TargetType="Border">
                                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                                         <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding IsSystemCommand}" Value="True">
+                                                                            <DataTrigger Binding="{Binding UsesGlyph}" Value="True">
                                                                                 <Setter Property="Visibility" Value="Visible"/>
                                                                             </DataTrigger>
                                                                         </Style.Triggers>

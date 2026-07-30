@@ -8,7 +8,8 @@ public enum ShellSearchResultKind
 {
     Application,
     Window,
-    SystemCommand
+    SystemCommand,
+    Calculation
 }
 
 public sealed record ShellSearchResult
@@ -73,6 +74,12 @@ public sealed record ShellSearchResult
         init;
     }
 
+    public string CalculationResult
+    {
+        get;
+        init;
+    } = string.Empty;
+
     public string Glyph
     {
         get;
@@ -86,6 +93,14 @@ public sealed record ShellSearchResult
     public bool IsSystemCommand =>
         Kind
         == ShellSearchResultKind.SystemCommand;
+
+    public bool IsCalculation =>
+        Kind
+        == ShellSearchResultKind.Calculation;
+
+    public bool UsesGlyph =>
+        IsSystemCommand
+        || IsCalculation;
 
     public bool CanTogglePin =>
         Application != null;
@@ -198,5 +213,30 @@ public sealed record ShellSearchResult
                 entry.Glyph,
             ShellAction =
                 entry.Action
+        };
+
+    internal static ShellSearchResult
+        FromCalculation(
+            string expression,
+            string result) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .Calculation,
+            StableKey =
+                "calculation:"
+                + expression.Trim(),
+            DisplayName =
+                result,
+            SecondaryText =
+                "计算结果 · 点击或按 Enter 复制",
+            AccessibleName =
+                $"计算结果 {result}，"
+                + "点击或按回车复制",
+            Glyph =
+                "\uE1D0",
+            CalculationResult =
+                result
         };
 }

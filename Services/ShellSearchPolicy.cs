@@ -46,6 +46,23 @@ internal static class ShellSearchPolicy
         var ranked =
             new List<RankedResult>();
         int originalIndex = 0;
+        if (SafeExpressionEvaluator
+            .TryEvaluate(
+                query,
+                out string calculation))
+        {
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult
+                        .FromCalculation(
+                            query,
+                            calculation),
+                    Rank: -1,
+                    Category: -1,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         foreach (AppLaunchItem app
                  in apps)
         {

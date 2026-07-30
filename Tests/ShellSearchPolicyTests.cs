@@ -259,6 +259,63 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Fact]
+    public void Compose_CalculationIsFirstAndCanBeCopied()
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "计算器",
+                        "exe:c:\\calc.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                "2 + 3 * 4");
+
+        ShellSearchResult result =
+            results[0];
+        Assert.Equal(
+            ShellSearchResultKind.Calculation,
+            result.Kind);
+        Assert.Equal(
+            "14",
+            result.DisplayName);
+        Assert.Equal(
+            "14",
+            result.CalculationResult);
+        Assert.Equal(
+            "计算结果 · 点击或按 Enter 复制",
+            result.SecondaryText);
+        Assert.True(
+            result.IsCalculation);
+        Assert.True(
+            result.UsesGlyph);
+        Assert.False(
+            result.CanTogglePin);
+        Assert.StartsWith(
+            "calculation:",
+            result.StableKey);
+    }
+
+    [Theory]
+    [InlineData("42")]
+    [InlineData("calc")]
+    [InlineData("1/0")]
+    public void Compose_DoesNotInventCalculationForInvalidInput(
+        string query)
+    {
+        Assert.DoesNotContain(
+            ShellSearchPolicy.Compose(
+                Array.Empty<AppLaunchItem>(),
+                Array.Empty<WindowTaskItem>(),
+                query),
+            result =>
+                result.Kind
+                == ShellSearchResultKind
+                    .Calculation);
+    }
+
+    [Fact]
     public void Compose_NonPositiveLimitReturnsEmpty()
     {
         Assert.Empty(

@@ -34,6 +34,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _appLaunch;
     private readonly SystemActionCoordinator
         _systemActions;
+    private readonly ClipboardTextService
+        _clipboard;
     private readonly AutoStartupCoordinator
         _autoStartup;
     private readonly TaskbarAppComposer _taskbarComposer = new();
@@ -329,7 +331,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SystemActionCoordinator? systemActions = null,
         AutoStartupCoordinator? autoStartup = null,
         IFileOrganizerViewModelFactory?
-            fileOrganizerFactory = null)
+            fileOrganizerFactory = null,
+        ClipboardTextService?
+            clipboard = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -341,6 +345,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _systemActions =
             systemActions
             ?? new SystemActionCoordinator();
+        _clipboard =
+            clipboard
+            ?? new ClipboardTextService();
         _autoStartup =
             autoStartup
             ?? new AutoStartupCoordinator();
@@ -454,7 +461,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string AppSearchStatusText =>
         IsAppCatalogLoading
             ? "正在载入应用目录…"
-            : "没有找到匹配的应用、窗口或系统命令";
+            : "没有找到匹配的应用、窗口、系统命令或计算结果";
     public bool IsAppSearchStatusVisible =>
         SearchResults.Count == 0;
     public string AudioGlyph =>
@@ -934,6 +941,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ExecuteSearchResult(
         ShellSearchResult? result)
     {
+        if (!string.IsNullOrWhiteSpace(
+                result?.CalculationResult))
+        {
+            bool copied =
+                await _clipboard
+                    .TrySetTextAsync(
+                        result
+                            .CalculationResult);
+            if (_isDisposed)
+                return;
+            if (copied)
+            {
+                IsSearchOpen = false;
+                return;
+            }
+
+            SystemActionMessage =
+                "计算结果无法写入剪贴板。"
+                + "剪贴板可能正被其他程序占用，请稍后重试。";
+            CloseTransientPanels();
+            IsStatusCenterOpen = true;
+            return;
+        }
+
         if (result?.ShellAction
             is WindowsShellAction shellAction)
         {

@@ -2381,6 +2381,16 @@ public sealed class XamlResourceContractTests
                 root,
                 "Models",
                 "ShellSearchResult.cs"));
+        string expressionEvaluator = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "SafeExpressionEvaluator.cs"));
+        string clipboardService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "ClipboardTextService.cs"));
         Assert.Contains(
             "x:Name=\"SearchResultsList\"",
             mainWindow);
@@ -2394,7 +2404,7 @@ public sealed class XamlResourceContractTests
             "正在载入应用目录…",
             viewModel);
         Assert.Contains(
-            "没有找到匹配的应用、窗口或系统命令",
+            "没有找到匹配的应用、窗口、系统命令或计算结果",
             viewModel);
         Assert.Contains(
             "Name = \"FocusPanel.AppCatalog\"",
@@ -2471,6 +2481,27 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             ".OpenManagementTool(",
             viewModel);
+        Assert.Contains(
+            "SafeExpressionEvaluator",
+            shellSearchPolicy);
+        Assert.Contains(
+            "ShellSearchResultKind.Calculation",
+            searchResult);
+        Assert.Contains(
+            "MaximumExpressionLength",
+            expressionEvaluator);
+        Assert.DoesNotContain(
+            "DataTable",
+            expressionEvaluator);
+        Assert.DoesNotContain(
+            "Process.Start",
+            expressionEvaluator);
+        Assert.Contains(
+            "Clipboard.SetDataObject(",
+            clipboardService);
+        Assert.Contains(
+            "TrySetTextAsync(",
+            viewModel);
     }
 
     [Fact]
@@ -2528,10 +2559,10 @@ public sealed class XamlResourceContractTests
             "SelectedSearchResult?.StableKey",
             viewModel);
         Assert.Contains(
-            "AutomationProperties.Name=\"应用、窗口与系统命令搜索结果\"",
+            "AutomationProperties.Name=\"应用、窗口、系统命令与计算结果\"",
             mainWindow);
         Assert.Contains(
-            "Binding=\"{Binding IsSystemCommand}\"",
+            "Binding=\"{Binding UsesGlyph}\"",
             mainWindow);
         Assert.Contains(
             "Style=\"{StaticResource FocusIconText}\"",
