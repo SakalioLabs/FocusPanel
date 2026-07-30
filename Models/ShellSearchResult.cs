@@ -67,6 +67,12 @@ public sealed record ShellSearchResult
         init;
     }
 
+    internal WindowsShellAction? ShellAction
+    {
+        get;
+        init;
+    }
+
     public string Glyph
     {
         get;
@@ -169,5 +175,28 @@ public sealed record ShellSearchResult
                 entry.Glyph,
             ManagementTool =
                 entry.Tool
+        };
+
+    internal static ShellSearchResult
+        FromShellCommand(
+            WindowsShellSearchEntry entry) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .SystemCommand,
+            StableKey =
+                "shell:"
+                + entry.Action,
+            DisplayName =
+                entry.DisplayName,
+            SecondaryText =
+                "Windows 快捷命令",
+            AccessibleName =
+                $"执行快捷命令 {entry.DisplayName}",
+            Glyph =
+                entry.Glyph,
+            ShellAction =
+                entry.Action
         };
 }

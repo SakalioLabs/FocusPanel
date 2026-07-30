@@ -2371,6 +2371,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "SystemManagementSearchCatalog.cs"));
+        string shellSearchCatalog = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowsShellSearchCatalog.cs"));
         string searchResult = File.ReadAllText(
             Path.Combine(
                 root,
@@ -2434,7 +2439,31 @@ public sealed class XamlResourceContractTests
             "ShellSearchResultKind.SystemCommand",
             searchResult);
         Assert.Contains(
+            "WindowsShellSearchCatalog",
+            shellSearchPolicy);
+        Assert.Contains(
+            "WindowsShellAction.RunDialog",
+            shellSearchCatalog);
+        Assert.Contains(
+            "WindowsShellAction.ShowDesktop",
+            shellSearchCatalog);
+        Assert.DoesNotContain(
+            "VirtualDesktopClose",
+            shellSearchCatalog);
+        Assert.Contains(
             "result?.ManagementTool",
+            viewModel);
+        Assert.Contains(
+            "result?.ShellAction",
+            viewModel);
+        Assert.Contains(
+            "ExecuteShellSearchActionAsync(",
+            viewModel);
+        Assert.Contains(
+            "_systemStatus.OpenRunDialog",
+            viewModel);
+        Assert.Contains(
+            "_systemStatus.ShowDesktop",
             viewModel);
         Assert.Contains(
             "_systemStatus",

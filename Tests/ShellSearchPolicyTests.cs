@@ -217,6 +217,47 @@ public sealed class ShellSearchPolicyTests
                 == SystemManagementTool.Settings);
     }
 
+    [Theory]
+    [InlineData("运行", "RunDialog")]
+    [InlineData("win a", "QuickSettings")]
+    [InlineData("消息", "Notifications")]
+    [InlineData("键盘", "InputSwitcher")]
+    [InlineData("win tab", "TaskView")]
+    [InlineData("天气", "Widgets")]
+    [InlineData("查看桌面", "ShowDesktop")]
+    public void Compose_FindsSafeShellActionByNameOrAlias(
+        string query,
+        string expectedAction)
+    {
+        ShellSearchResult result =
+            ShellSearchPolicy.Compose(
+                    Array.Empty<AppLaunchItem>(),
+                    Array.Empty<WindowTaskItem>(),
+                    query)
+                .First(
+                    item =>
+                        item.ShellAction
+                        .HasValue);
+
+        Assert.Equal(
+            ShellSearchResultKind.SystemCommand,
+            result.Kind);
+        Assert.Equal(
+            expectedAction,
+            result.ShellAction
+                ?.ToString());
+        Assert.StartsWith(
+            "shell:",
+            result.StableKey);
+        Assert.Equal(
+            "Windows 快捷命令",
+            result.SecondaryText);
+        Assert.Null(
+            result.ManagementTool);
+        Assert.False(
+            result.CanTogglePin);
+    }
+
     [Fact]
     public void Compose_NonPositiveLimitReturnsEmpty()
     {

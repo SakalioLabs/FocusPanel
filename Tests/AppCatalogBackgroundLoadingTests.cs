@@ -108,6 +108,12 @@ public sealed class AppCatalogBackgroundLoadingTests
                 ref notifications);
         Assert.True(
             source.Entered.Wait(TimeSpan.FromSeconds(3)));
+        // The initial pinned-cache notification is allowed to complete before
+        // the source blocks. This assertion is specifically about callbacks
+        // queued after disposal, so start its observation window here.
+        Interlocked.Exchange(
+            ref notifications,
+            0);
 
         service.Dispose();
         source.Release.Set();

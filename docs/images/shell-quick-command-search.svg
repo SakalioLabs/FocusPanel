@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#09131f"/>
+      <stop offset="1" stop-color="#1b2943"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#55c6ff"/>
+      <stop offset="1" stop-color="#8c7dff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="15" stdDeviation="20" flood-color="#000" flood-opacity=".32"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="620" rx="30" fill="url(#bg)"/>
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <text x="56" y="66" fill="#f4f8ff" font-size="28" font-weight="600">Shell 快捷动作：搜索即执行，不再寻找任务栏入口</text>
+    <text x="56" y="103" fill="#9eb1ca" font-size="17">七个安全动作复用 Windows 公布快捷键，高影响操作继续保留确认边界</text>
+
+    <g filter="url(#shadow)">
+      <rect x="56" y="136" width="522" height="424" rx="26" fill="#1e2d45" stroke="#415a79"/>
+      <text x="84" y="178" fill="#dce9f8" font-size="18" font-weight="600">应用、窗口与系统命令</text>
+      <rect x="84" y="196" width="466" height="58" rx="15" fill="#101b2d" stroke="#62b9fa" stroke-width="2"/>
+      <text x="106" y="232" fill="#f5f9ff" font-size="18">win a</text>
+
+      <rect x="84" y="272" width="466" height="78" rx="16" fill="#294766" stroke="#69bcfa"/>
+      <rect x="101" y="289" width="44" height="44" rx="12" fill="url(#accent)"/>
+      <path d="M113 304h20M113 311h13M113 318h16" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      <text x="162" y="308" fill="#fff" font-size="18" font-weight="600">快捷设置</text>
+      <text x="162" y="334" fill="#bad0e7" font-size="14">Windows 快捷命令 · Win+A</text>
+      <text x="520" y="320" text-anchor="end" fill="#91d1ff" font-size="23">↵</text>
+
+      <g fill="#17253a">
+        <rect x="84" y="362" width="466" height="58" rx="15"/>
+        <rect x="84" y="430" width="466" height="58" rx="15"/>
+      </g>
+      <circle cx="123" cy="391" r="17" fill="#263b58"/>
+      <path d="M116 391h14M123 384v14" stroke="#8fc9ff" stroke-width="2.2" stroke-linecap="round"/>
+      <text x="156" y="388" fill="#e9f1fb" font-size="16">运行</text>
+      <text x="156" y="408" fill="#879eb8" font-size="13">Win+R</text>
+      <circle cx="123" cy="459" r="17" fill="#263b58"/>
+      <path d="M115 454h16v11h-16z" fill="none" stroke="#a49aff" stroke-width="2"/>
+      <text x="156" y="456" fill="#e9f1fb" font-size="16">任务视图</text>
+      <text x="156" y="476" fill="#879eb8" font-size="13">Win+Tab</text>
+
+      <rect x="84" y="505" width="466" height="30" rx="15" fill="#223752"/>
+      <text x="317" y="526" text-anchor="middle" fill="#9fd5ff" font-size="13">空查询不混入命令 · 精确结果保持首位</text>
+    </g>
+
+    <g transform="translate(626 138)">
+      <rect width="438" height="422" rx="26" fill="#17243a" stroke="#405775"/>
+      <text x="28" y="45" fill="#f1f6fd" font-size="20" font-weight="600">七个可搜索快捷动作</text>
+
+      <g font-size="15">
+        <g transform="translate(28 74)">
+          <rect width="182" height="54" rx="15" fill="#223853"/>
+          <circle cx="28" cy="27" r="15" fill="#315477"/>
+          <text x="28" y="33" text-anchor="middle" fill="#8ed0ff">R</text>
+          <text x="54" y="24" fill="#edf4fc">运行</text>
+          <text x="54" y="43" fill="#839bb7" font-size="12">Win+R</text>
+        </g>
+        <g transform="translate(228 74)">
+          <rect width="182" height="54" rx="15" fill="#223853"/>
+          <circle cx="28" cy="27" r="15" fill="#315477"/>
+          <text x="28" y="33" text-anchor="middle" fill="#8ed0ff">A</text>
+          <text x="54" y="24" fill="#edf4fc">快捷设置</text>
+          <text x="54" y="43" fill="#839bb7" font-size="12">Win+A</text>
+        </g>
+        <g transform="translate(28 142)">
+          <rect width="182" height="54" rx="15" fill="#223853"/>
+          <circle cx="28" cy="27" r="15" fill="#3e426f"/>
+          <text x="28" y="33" text-anchor="middle" fill="#b0a6ff">N</text>
+          <text x="54" y="24" fill="#edf4fc">通知中心</text>
+          <text x="54" y="43" fill="#839bb7" font-size="12">Win+N</text>
+        </g>
+        <g transform="translate(228 142)">
+          <rect width="182" height="54" rx="15" fill="#223853"/>
+          <circle cx="28" cy="27" r="15" fill="#3e426f"/>
+          <text x="28" y="33" text-anchor="middle" fill="#b0a6ff">空</text>
+          <text x="54" y="24" fill="#edf4fc">切换输入法</text>
+          <text x="54" y="43" fill="#839bb7" font-size="12">Win+Space</text>
+        </g>
+        <g transform="translate(28 210)">
+          <rect width="182" height="54" rx="15" fill="#223853"/>
+          <circle cx="28" cy="27" r="15" fill="#315477"/>
+          <text x="28" y="33" text-anchor="middle" fill="#8ed0ff">Tab</text>
+          <text x="54" y="24" fill="#edf4fc">任务视图</text>
+          <text x="54" y="43" fill="#839bb7" font-size="12">Win+Tab</text>
+        </g>
+        <g transform="translate(228 210)">
+          <rect width="182" height="54" rx="15" fill="#223853"/>
+          <circle cx="28" cy="27" r="15" fill="#3e426f"/>
+          <text x="28" y="33" text-anchor="middle" fill="#b0a6ff">W</text>
+          <text x="54" y="24" fill="#edf4fc">小组件</text>
+          <text x="54" y="43" fill="#839bb7" font-size="12">Win+W</text>
+        </g>
+        <g transform="translate(28 278)">
+          <rect width="382" height="54" rx="15" fill="#223853"/>
+          <circle cx="28" cy="27" r="15" fill="url(#accent)"/>
+          <text x="28" y="33" text-anchor="middle" fill="#fff">D</text>
+          <text x="54" y="24" fill="#edf4fc">显示桌面</text>
+          <text x="54" y="43" fill="#839bb7" font-size="12">Win+D · 不依赖原任务栏按钮</text>
+        </g>
+      </g>
+
+      <rect x="28" y="358" width="382" height="40" rx="14" fill="#3a3046"/>
+      <text x="219" y="383" text-anchor="middle" fill="#e1c8e8" font-size="13">锁定 / 电源 / 关闭桌面：不加入无确认搜索</text>
+    </g>
+  </g>
+</svg>

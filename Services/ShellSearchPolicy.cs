@@ -122,6 +122,31 @@ internal static class ShellSearchPolicy
                     originalIndex++));
         }
 
+        foreach (WindowsShellSearchEntry
+                 command
+                 in WindowsShellSearchCatalog
+                     .All)
+        {
+            int? rank =
+                AppSearchPolicy
+                    .GetTextRank(
+                        command.DisplayName,
+                        command.Aliases,
+                        query);
+            if (!rank.HasValue)
+                continue;
+
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult
+                        .FromShellCommand(
+                            command),
+                    rank.Value,
+                    Category: 2,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         return ranked
             .OrderBy(
                 item =>

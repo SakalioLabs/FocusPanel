@@ -934,6 +934,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ExecuteSearchResult(
         ShellSearchResult? result)
     {
+        if (result?.ShellAction
+            is WindowsShellAction shellAction)
+        {
+            await ExecuteShellSearchActionAsync(
+                shellAction,
+                result.DisplayName);
+            return;
+        }
+
         if (result?.ManagementTool
             is SystemManagementTool tool)
         {
@@ -965,6 +974,41 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         if (await TryLaunchAppAsync(app))
             IsSearchOpen = false;
+    }
+
+    private async Task
+        ExecuteShellSearchActionAsync(
+            WindowsShellAction action,
+            string displayName)
+    {
+        Func<bool> operation =
+            action switch
+            {
+                WindowsShellAction.RunDialog =>
+                    _systemStatus.OpenRunDialog,
+                WindowsShellAction.QuickSettings =>
+                    _systemStatus.OpenQuickSettings,
+                WindowsShellAction.Notifications =>
+                    _systemStatus.OpenNotifications,
+                WindowsShellAction.InputSwitcher =>
+                    _systemStatus.OpenInputSwitcher,
+                WindowsShellAction.TaskView =>
+                    _systemStatus.OpenTaskView,
+                WindowsShellAction.Widgets =>
+                    _systemStatus.OpenWidgets,
+                WindowsShellAction.ShowDesktop =>
+                    _systemStatus.ShowDesktop,
+                _ =>
+                    throw new ArgumentOutOfRangeException(
+                        nameof(action),
+                        action,
+                        null)
+            };
+
+        await RunSystemActionAsync(
+            operation,
+            $"无法执行“{displayName}”。"
+            + "Windows Shell 可能暂时不可用。");
     }
 
     [RelayCommand]
