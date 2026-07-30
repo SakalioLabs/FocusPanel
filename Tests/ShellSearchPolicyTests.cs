@@ -350,6 +350,45 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
+    [InlineData("专注 25", 25)]
+    [InlineData("focus 45 min", 45)]
+    [InlineData("开始番茄钟60分钟", 60)]
+    public void Compose_FocusCommandIsFirstAndExecutable(
+        string query,
+        int minutes)
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "专注工具",
+                        "exe:c:\\focus.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                query);
+
+        ShellSearchResult result =
+            results[0];
+        Assert.Equal(
+            ShellSearchResultKind.FocusCommand,
+            result.Kind);
+        Assert.Equal(
+            minutes,
+            result.FocusCommand
+                ?.DurationMinutes);
+        Assert.True(result.IsFocusCommand);
+        Assert.True(result.UsesGlyph);
+        Assert.False(result.CanTogglePin);
+        Assert.StartsWith(
+            "focus:start:",
+            result.StableKey);
+        Assert.Contains(
+            "开始",
+            result.SecondaryText);
+    }
+
+    [Theory]
     [InlineData("42")]
     [InlineData("calc")]
     [InlineData("1/0")]

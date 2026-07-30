@@ -2488,10 +2488,16 @@ public sealed class XamlResourceContractTests
             "AudioSearchCommandParser",
             shellSearchPolicy);
         Assert.Contains(
+            "PomodoroSearchCommandParser",
+            shellSearchPolicy);
+        Assert.Contains(
             "ShellSearchResultKind.Calculation",
             searchResult);
         Assert.Contains(
             "ShellSearchResultKind.AudioCommand",
+            searchResult);
+        Assert.Contains(
+            "ShellSearchResultKind.FocusCommand",
             searchResult);
         Assert.Contains(
             "MaximumExpressionLength",
@@ -2520,6 +2526,19 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "当前音量尚未读取完成",
             viewModel);
+        Assert.Contains(
+            "ExecuteFocusSearchCommand(",
+            viewModel);
+        Assert.Contains(
+            "TryStartQuickSession(",
+            viewModel);
+        Assert.Contains(
+            "ShowActivated=\"False\"",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "PomodoroFloatingWindow.xaml")));
     }
 
     [Fact]
@@ -2577,7 +2596,7 @@ public sealed class XamlResourceContractTests
             "SelectedSearchResult?.StableKey",
             viewModel);
         Assert.Contains(
-            "AutomationProperties.Name=\"应用、窗口、系统命令、音量与计算结果\"",
+            "AutomationProperties.Name=\"应用、窗口、系统命令、专注与计算结果\"",
             mainWindow);
         Assert.Contains(
             "Binding=\"{Binding UsesGlyph}\"",

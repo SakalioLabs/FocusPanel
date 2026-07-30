@@ -5,6 +5,25 @@ using FocusPanel.Views;
 
 namespace FocusPanel.Services
 {
+    internal interface IPomodoroOverlayHost
+    {
+        void Open(PomodoroViewModel viewModel);
+        void Close();
+    }
+
+    internal sealed class PomodoroOverlayHost
+        : IPomodoroOverlayHost
+    {
+        public void Open(
+            PomodoroViewModel viewModel) =>
+            PomodoroWindowManager
+                .OpenWindows(viewModel);
+
+        public void Close() =>
+            PomodoroWindowManager
+                .CloseWindows();
+    }
+
     public static class PomodoroWindowManager
     {
         private static PomodoroFloatingWindow? _floatingWindow;

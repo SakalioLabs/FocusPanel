@@ -46,6 +46,23 @@ internal static class ShellSearchPolicy
         var ranked =
             new List<RankedResult>();
         int originalIndex = 0;
+        if (PomodoroSearchCommandParser
+            .TryParse(
+                query,
+                out PomodoroSearchCommand
+                    focusCommand))
+        {
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult
+                        .FromFocusCommand(
+                            focusCommand),
+                    Rank: -3,
+                    Category: -1,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         if (AudioSearchCommandParser
             .TryParse(
                 query,

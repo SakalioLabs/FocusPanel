@@ -26,6 +26,8 @@ public partial class PomodoroViewModel
     private readonly Dispatcher _uiDispatcher;
     private readonly IPomodoroSessionRepository
         _sessionRepository;
+    private readonly IPomodoroOverlayHost
+        _overlayHost;
     private readonly CoalescingBackgroundRefresh<
         PendingPomodoroStats> _statsRefresh;
     private readonly CoalescingAsyncSaveQueue<
@@ -70,7 +72,9 @@ public partial class PomodoroViewModel
     internal PomodoroViewModel(
         IPomodoroSessionRepository
             sessionRepository,
-        Dispatcher dispatcher)
+        Dispatcher dispatcher,
+        IPomodoroOverlayHost?
+            overlayHost = null)
     {
         _sessionRepository = sessionRepository
             ?? throw new ArgumentNullException(
@@ -78,6 +82,9 @@ public partial class PomodoroViewModel
         _uiDispatcher = dispatcher
             ?? throw new ArgumentNullException(
                 nameof(dispatcher));
+        _overlayHost =
+            overlayHost
+            ?? new PomodoroOverlayHost();
         _countdown =
             new PomodoroCountdown(
                 TimeSpan.FromMinutes(
@@ -115,6 +122,46 @@ public partial class PomodoroViewModel
         !IsRunning
         && (!_countdown.HasElapsed
             || _countdown.IsCompleted);
+
+    internal PomodoroQuickStartResult
+        TryStartQuickSession(
+            int durationMinutes)
+    {
+        if (_disposed)
+        {
+            return PomodoroQuickStartResult
+                .Unavailable;
+        }
+
+        if (durationMinutes
+            is < 1 or > 180)
+        {
+            return PomodoroQuickStartResult
+                .InvalidDuration;
+        }
+
+        if (IsRunning)
+        {
+            return PomodoroQuickStartResult
+                .AlreadyRunning;
+        }
+
+        if (_sessionStartedAt.HasValue
+            || !CanChangeDuration)
+        {
+            return PomodoroQuickStartResult
+                .SessionInProgress;
+        }
+
+        SetDuration(
+            durationMinutes.ToString(
+                System.Globalization
+                    .CultureInfo
+                    .InvariantCulture));
+        Start();
+        return PomodoroQuickStartResult
+            .Started;
+    }
 
     private PendingPomodoroStats CaptureStats()
     {
@@ -380,10 +427,10 @@ public partial class PomodoroViewModel
     }
 
     private void OpenOverlayWindows()
-        => PomodoroWindowManager.OpenWindows(this);
+        => _overlayHost.Open(this);
 
-    private static void CloseOverlayWindows()
-        => PomodoroWindowManager.CloseWindows();
+    private void CloseOverlayWindows()
+        => _overlayHost.Close();
 
     internal Task DisposeAsync()
     {
@@ -417,4 +464,13 @@ public partial class PomodoroViewModel
     private sealed record PendingPomodoroSave(
         CompletedPomodoroSession Session,
         long Revision);
+}
+
+internal enum PomodoroQuickStartResult
+{
+    Started,
+    AlreadyRunning,
+    SessionInProgress,
+    InvalidDuration,
+    Unavailable
 }

@@ -854,15 +854,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 CurrentSectionTitle = "任务";
                 break;
             case "Pomodoro":
-                if (_pomodoroViewModel == null)
-                {
-                    _pomodoroViewModel =
-                        new PomodoroViewModel();
-                    _pomodoroViewModel.SessionCompleted +=
-                        PomodoroViewModel_SessionCompleted;
-                    _pomodoroViewModel.SessionPersisted +=
-                        PomodoroViewModel_SessionPersisted;
-                }
+                _pomodoroViewModel =
+                    GetOrCreatePomodoroViewModel();
                 CurrentViewModel = _pomodoroViewModel;
                 CurrentSectionTitle = "番茄钟";
                 break;
@@ -941,6 +934,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ExecuteSearchResult(
         ShellSearchResult? result)
     {
+        if (result?.FocusCommand
+            is PomodoroSearchCommand focusCommand)
+        {
+            ExecuteFocusSearchCommand(
+                focusCommand);
+            return;
+        }
+
         if (result?.AudioCommand
             is AudioSearchCommand audioCommand)
         {
@@ -1013,6 +1014,51 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         if (await TryLaunchAppAsync(app))
             IsSearchOpen = false;
+    }
+
+    private PomodoroViewModel
+        GetOrCreatePomodoroViewModel()
+    {
+        if (_pomodoroViewModel != null)
+            return _pomodoroViewModel;
+
+        _pomodoroViewModel =
+            new PomodoroViewModel();
+        _pomodoroViewModel.SessionCompleted +=
+            PomodoroViewModel_SessionCompleted;
+        _pomodoroViewModel.SessionPersisted +=
+            PomodoroViewModel_SessionPersisted;
+        return _pomodoroViewModel;
+    }
+
+    private void ExecuteFocusSearchCommand(
+        PomodoroSearchCommand command)
+    {
+        PomodoroViewModel viewModel =
+            GetOrCreatePomodoroViewModel();
+        PomodoroQuickStartResult result =
+            viewModel.TryStartQuickSession(
+                command.DurationMinutes);
+        switch (result)
+        {
+            case PomodoroQuickStartResult.Started:
+                SystemActionMessage =
+                    string.Empty;
+                IsSearchOpen = false;
+                break;
+            case PomodoroQuickStartResult
+                .AlreadyRunning:
+            case PomodoroQuickStartResult
+                .SessionInProgress:
+                Navigate("Pomodoro");
+                break;
+            default:
+                SystemActionMessage =
+                    "无法开始专注计时，请打开番茄钟工作区后重试。";
+                CloseTransientPanels();
+                IsStatusCenterOpen = true;
+                break;
+        }
     }
 
     private void ExecuteAudioSearchCommand(

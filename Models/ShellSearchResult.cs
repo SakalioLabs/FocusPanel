@@ -10,7 +10,8 @@ public enum ShellSearchResultKind
     Window,
     SystemCommand,
     Calculation,
-    AudioCommand
+    AudioCommand,
+    FocusCommand
 }
 
 public sealed record ShellSearchResult
@@ -87,6 +88,12 @@ public sealed record ShellSearchResult
         init;
     }
 
+    internal PomodoroSearchCommand? FocusCommand
+    {
+        get;
+        init;
+    }
+
     public string Glyph
     {
         get;
@@ -109,10 +116,15 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.AudioCommand;
 
+    public bool IsFocusCommand =>
+        Kind
+        == ShellSearchResultKind.FocusCommand;
+
     public bool UsesGlyph =>
         IsSystemCommand
         || IsCalculation
-        || IsAudioCommand;
+        || IsAudioCommand
+        || IsFocusCommand;
 
     public bool CanTogglePin =>
         Application != null;
@@ -271,6 +283,28 @@ public sealed record ShellSearchResult
             Glyph =
                 command.Glyph,
             AudioCommand =
+                command
+        };
+
+    internal static ShellSearchResult
+        FromFocusCommand(
+            PomodoroSearchCommand command) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .FocusCommand,
+            StableKey =
+                command.StableKey,
+            DisplayName =
+                command.DisplayName,
+            SecondaryText =
+                "专注快捷命令 · 点击或按 Enter 开始",
+            AccessibleName =
+                $"执行专注快捷命令 {command.DisplayName}",
+            Glyph =
+                "\uE823",
+            FocusCommand =
                 command
         };
 }
