@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1b29"/>
+      <stop offset="1" stop-color="#19334a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#55caff"/>
+      <stop offset="1" stop-color="#8b82ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="15" stdDeviation="19" flood-color="#02070d" flood-opacity=".44"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="620" rx="30" fill="url(#bg)"/>
+  <circle cx="1120" cy="60" r="190" fill="#56c9ff" opacity=".07"/>
+  <circle cx="72" cy="584" r="210" fill="#8b82ff" opacity=".07"/>
+  <text x="56" y="68" fill="#f5f9fd" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="28" font-weight="650">媒体控制不必再绕回原生任务栏</text>
+  <text x="56" y="102" fill="#94acc1" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">状态中心连续控制 · 紧凑栏中键一击播放/暂停 · 统一搜索直接执行</text>
+
+  <g transform="translate(56 140)" filter="url(#shadow)" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+    <rect width="670" height="408" rx="24" fill="#172b3d" stroke="#41627c"/>
+    <text x="28" y="42" fill="#eef5fb" font-size="18" font-weight="600">状态中心</text>
+    <text x="28" y="70" fill="#8ea8bd" font-size="12">音量、网络、电池与媒体集中在同一个可操作表面</text>
+
+    <rect x="28" y="92" width="614" height="72" rx="16" fill="#102230" stroke="#345269"/>
+    <circle cx="62" cy="128" r="20" fill="#244761"/>
+    <path d="M51 124h8l10-8v24l-10-8h-8z" fill="#76d2ff"/>
+    <path d="M74 120c5 5 5 11 0 16" fill="none" stroke="#76d2ff" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="100" y="124" width="444" height="8" rx="4" fill="#28455a"/>
+    <rect x="100" y="124" width="286" height="8" rx="4" fill="url(#accent)"/>
+    <text x="566" y="134" fill="#dceaf4" font-size="14">64%</text>
+
+    <text x="32" y="197" fill="#9ab2c6" font-size="13">媒体控制</text>
+    <g transform="translate(28 212)">
+      <rect width="190" height="62" rx="15" fill="#142a3b" stroke="#3b5a72"/>
+      <path d="M58 21v20M90 21L66 31l24 10z" fill="#77d1ff" stroke="#77d1ff" stroke-width="2" stroke-linejoin="round"/>
+      <text x="112" y="37" fill="#e8f2f8" font-size="14">上一首</text>
+    </g>
+    <g transform="translate(238 212)">
+      <rect width="194" height="62" rx="15" fill="#28516c" stroke="#70d0ff"/>
+      <path d="M38 20l22 11-22 11z" fill="#8cdcff"/>
+      <path d="M68 20h5v22h-5M78 20h5v22h-5" fill="#9b90ff"/>
+      <text x="135" y="37" fill="#f4f9fd" font-size="14" text-anchor="middle">播放 / 暂停</text>
+    </g>
+    <g transform="translate(452 212)">
+      <rect width="190" height="62" rx="15" fill="#142a3b" stroke="#3b5a72"/>
+      <path d="M98 21v20M66 21l24 10-24 10z" fill="#77d1ff" stroke="#77d1ff" stroke-width="2" stroke-linejoin="round"/>
+      <text x="126" y="37" fill="#e8f2f8" font-size="14">下一首</text>
+    </g>
+
+    <rect x="28" y="298" width="614" height="82" rx="16" fill="#102230" stroke="#345269"/>
+    <rect x="48" y="315" width="48" height="48" rx="14" fill="url(#accent)"/>
+    <path d="M60 329h8l9-7v26l-9-7h-8z" fill="#081520"/>
+    <text x="116" y="329" fill="#e9f2f8" font-size="15" font-weight="600">紧凑栏状态按钮</text>
+    <text x="116" y="352" fill="#92acbf" font-size="12">滚轮调音量 · 右键静音 · 中键播放/暂停</text>
+  </g>
+
+  <g transform="translate(760 140)" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+    <rect width="384" height="408" rx="24" fill="#122536" stroke="#36556e"/>
+    <text x="26" y="42" fill="#eff6fb" font-size="18" font-weight="600">统一搜索也能直接执行</text>
+    <rect x="26" y="66" width="332" height="54" rx="14" fill="#0d1d2a" stroke="#58caff" stroke-width="2"/>
+    <path d="M48 82a8 8 0 1 0 0 16a8 8 0 0 0 0-16m6 14l7 7" fill="none" stroke="#7bd5ff" stroke-width="2.2" stroke-linecap="round"/>
+    <text x="76" y="100" fill="#f7fbfe" font-size="18">下一首</text>
+
+    <rect x="26" y="138" width="332" height="70" rx="15" fill="#244861" stroke="#68cfff"/>
+    <rect x="42" y="151" width="44" height="44" rx="12" fill="#315d78"/>
+    <path d="M68 162l14 11-14 11zM58 162h5v22h-5" fill="#80d7ff"/>
+    <text x="102" y="169" fill="#f2f8fc" font-size="15" font-weight="600">下一首</text>
+    <text x="102" y="190" fill="#a9c3d6" font-size="12">Windows 快捷命令 · Enter 执行</text>
+
+    <text x="26" y="246" fill="#9ab2c5" font-size="13">公开且可测试的键序列</text>
+    <g transform="translate(26 264)">
+      <rect width="96" height="54" rx="13" fill="#172d3e" stroke="#38576e"/>
+      <text x="48" y="23" fill="#7ed5ff" font-size="12" text-anchor="middle">PREV</text>
+      <text x="48" y="42" fill="#dceaf4" font-size="13" text-anchor="middle">0xB1</text>
+      <rect x="112" width="104" height="54" rx="13" fill="#244b65" stroke="#62c8f6"/>
+      <text x="164" y="23" fill="#9c92ff" font-size="12" text-anchor="middle">PLAY</text>
+      <text x="164" y="42" fill="#eef6fb" font-size="13" text-anchor="middle">0xB3</text>
+      <rect x="232" width="100" height="54" rx="13" fill="#172d3e" stroke="#38576e"/>
+      <text x="282" y="23" fill="#7ed5ff" font-size="12" text-anchor="middle">NEXT</text>
+      <text x="282" y="42" fill="#dceaf4" font-size="13" text-anchor="middle">0xB0</text>
+    </g>
+
+    <text x="26" y="348" fill="#dceaf3" font-size="13">按下 + 释放一次批量 SendInput</text>
+    <text x="26" y="372" fill="#819caf" font-size="12">失败进入状态中心；不读取播放器私有数据</text>
+  </g>
+</svg>

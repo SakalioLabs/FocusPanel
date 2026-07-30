@@ -189,9 +189,9 @@
                                          Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                          PreviewKeyDown="SearchBox_PreviewKeyDown"
                                          AutomationProperties.Name="搜索应用、窗口、待办、系统命令与计算"
-                                         AutomationProperties.HelpText="输入应用名、窗口标题、已有待办、系统工具、音量、专注或任务命令、算式，使用上下方向键选择，按回车执行"
-                                         ToolTip="搜索应用、窗口和已有待办，直接完成待办、收集任务、调音量、开始专注或计算"/>
-                                <TextBlock Text="输入应用、窗口、已有待办、系统工具或快捷命令"
+                                         AutomationProperties.HelpText="输入应用名、窗口标题、已有待办、系统工具、音量、媒体、专注或任务命令、算式，使用上下方向键选择，按回车执行"
+                                         ToolTip="搜索应用、窗口和已有待办，直接控制媒体、完成待办、收集任务、调音量、开始专注或计算"/>
+                                <TextBlock Text="输入应用、窗口、待办、音量、媒体或系统命令"
                                            Margin="16,0"
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False">
@@ -472,6 +472,30 @@
                                                Foreground="{DynamicResource FocusMutedTextBrush}"
                                                TextWrapping="Wrap"/>
                                 </Grid>
+                                <TextBlock Text="媒体控制"
+                                           Margin="4,2,0,7"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                                <UniformGrid Columns="3"
+                                             Margin="0,0,0,12">
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="上一首"
+                                            Command="{Binding SendMediaCommandCommand}"
+                                            CommandParameter="{x:Static services:MediaTransportAction.PreviousTrack}"
+                                            AutomationProperties.Name="播放上一首"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="播放 / 暂停"
+                                            Command="{Binding SendMediaCommandCommand}"
+                                            CommandParameter="{x:Static services:MediaTransportAction.PlayPause}"
+                                            AutomationProperties.Name="播放或暂停媒体"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="下一首"
+                                            Command="{Binding SendMediaCommandCommand}"
+                                            CommandParameter="{x:Static services:MediaTransportAction.NextTrack}"
+                                            AutomationProperties.Name="播放下一首"/>
+                                </UniformGrid>
                                 <Grid Visibility="{Binding HasBattery, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Style="{StaticResource FocusIconText}"
@@ -1067,10 +1091,18 @@
                                     Tag="CompactFixedEntry"
                                     Click="StatusCenterButton_Click"
                                     PreviewMouseWheel="VolumeButton_PreviewMouseWheel"
+                                    PreviewMouseDown="StatusCenterButton_PreviewMouseDown"
                                     MouseRightButtonUp="VolumeButton_MouseRightButtonUp"
                                     AutomationProperties.Name="{Binding StatusCenterAutomationName}"
-                                    AutomationProperties.HelpText="鼠标滚轮调节音量，右键静音"
-                                    ToolTip="{Binding StatusCenterSummary}">
+                                    AutomationProperties.HelpText="鼠标滚轮调节音量，右键静音，中键播放或暂停媒体">
+                                <Button.ToolTip>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding StatusCenterSummary}"/>
+                                        <TextBlock Margin="0,4,0,0"
+                                                   Text="滚轮调音量 · 右键静音 · 中键播放/暂停"
+                                                   Style="{StaticResource FocusCaptionText}"/>
+                                    </StackPanel>
+                                </Button.ToolTip>
                                 <TextBlock>
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">

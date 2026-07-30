@@ -1911,6 +1911,31 @@ public partial class MainWindow :
         e.Handled = true;
     }
 
+    private void StatusCenterButton_PreviewMouseDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton
+            != MouseButton.Middle)
+        {
+            return;
+        }
+
+        if (_viewModel
+            .SendMediaCommandCommand
+            .CanExecute(
+                MediaTransportAction
+                    .PlayPause))
+        {
+            _viewModel
+                .SendMediaCommandCommand
+                .Execute(
+                    MediaTransportAction
+                        .PlayPause);
+        }
+        e.Handled = true;
+    }
+
     private void TaskViewButton_PreviewMouseWheel(
         object sender,
         MouseWheelEventArgs e)

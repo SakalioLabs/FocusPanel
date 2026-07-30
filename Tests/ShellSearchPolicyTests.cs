@@ -225,6 +225,9 @@ public sealed class ShellSearchPolicyTests
     [InlineData("win tab", "TaskView")]
     [InlineData("天气", "Widgets")]
     [InlineData("查看桌面", "ShowDesktop")]
+    [InlineData("上一曲", "MediaPreviousTrack")]
+    [InlineData("播放暂停", "MediaPlayPause")]
+    [InlineData("next track", "MediaNextTrack")]
     public void Compose_FindsSafeShellActionByNameOrAlias(
         string query,
         string expectedAction)

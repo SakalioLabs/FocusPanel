@@ -8,7 +8,7 @@ namespace FocusPanel.Tests;
 public sealed class WindowsShellSearchCatalogTests
 {
     [Fact]
-    public void Catalog_ContainsOnlySevenNonDestructiveShortcutActions()
+    public void Catalog_ContainsOnlyTenNonDestructiveShortcutActions()
     {
         WindowsShellAction[] expected =
         {
@@ -18,7 +18,10 @@ public sealed class WindowsShellSearchCatalogTests
             WindowsShellAction.InputSwitcher,
             WindowsShellAction.TaskView,
             WindowsShellAction.Widgets,
-            WindowsShellAction.ShowDesktop
+            WindowsShellAction.ShowDesktop,
+            WindowsShellAction.MediaPreviousTrack,
+            WindowsShellAction.MediaPlayPause,
+            WindowsShellAction.MediaNextTrack
         };
 
         Assert.Equal(

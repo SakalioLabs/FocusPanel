@@ -699,6 +699,11 @@ public sealed class XamlResourceContractTests
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
+        string mainWindowCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
 
         Assert.Contains("OpenQuickSettingsCommand", mainWindow);
         Assert.Contains("OpenNotificationsCommand", mainWindow);
@@ -718,7 +723,33 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AutomationProperties.Name=\"{Binding StatusCenterAutomationName}\"",
             mainWindow);
-        Assert.Contains("ToolTip=\"{Binding StatusCenterSummary}\"", mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding StatusCenterSummary}\"",
+            mainWindow);
+        Assert.Contains(
+            "Command=\"{Binding SendMediaCommandCommand}\"",
+            mainWindow);
+        Assert.Contains(
+            "MediaTransportAction.PreviousTrack",
+            mainWindow);
+        Assert.Contains(
+            "MediaTransportAction.PlayPause",
+            mainWindow);
+        Assert.Contains(
+            "MediaTransportAction.NextTrack",
+            mainWindow);
+        Assert.Contains(
+            "PreviewMouseDown=\"StatusCenterButton_PreviewMouseDown\"",
+            mainWindow);
+        Assert.Contains(
+            "e.ChangedButton",
+            mainWindowCode);
+        Assert.Contains(
+            "MediaTransportAction",
+            mainWindowCode);
+        Assert.Contains(
+            ".SendMediaCommandCommand",
+            mainWindowCode);
         Assert.Contains("Text=\"{Binding BatteryGlyph}\"", mainWindow);
         Assert.Contains("Text=\"{Binding BatteryValueText}\"", mainWindow);
         Assert.Contains(
@@ -760,6 +791,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains("bool TrySetMasterVolume(float value)", statusContract);
         Assert.Contains("bool TrySetMuted(bool value)", statusContract);
         Assert.Contains(
+            "bool SendMediaCommand(",
+            statusContract);
+        Assert.Contains(
             "BatteryStatusSnapshot GetBatteryStatus()",
             statusContract);
         Assert.Contains(
@@ -776,6 +810,12 @@ public sealed class XamlResourceContractTests
             systemStatus);
         Assert.Contains(
             "TryCreateDeviceEnumerator()",
+            systemStatus);
+        Assert.Contains(
+            "_shortcutSender(",
+            systemStatus);
+        Assert.Contains(
+            "MediaTransportShortcutMap.Get(",
             systemStatus);
         Assert.DoesNotContain(
             "_deviceEnumerator",
@@ -812,6 +852,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains("CompleteSystemAction(", viewModel);
         Assert.Contains("IsStatusCenterOpen = true", viewModel);
         Assert.Contains("AdjustMasterVolume(float step)", viewModel);
+        Assert.Contains(
+            "RunInlineStatusActionAsync(",
+            viewModel);
+        Assert.Contains(
+            ".SendMediaCommand(",
+            viewModel);
         Assert.Contains(
             "AudioControlCoordinator",
             viewModel);

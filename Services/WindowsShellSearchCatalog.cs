@@ -48,6 +48,24 @@ internal static class WindowsShellSearchCatalog
                 WindowsShellAction.ShowDesktop,
                 "显示桌面",
                 "\uE18A",
-                "最小化窗口 查看桌面 show desktop Win D")
+                "最小化窗口 查看桌面 show desktop Win D"),
+            new WindowsShellSearchEntry(
+                WindowsShellAction
+                    .MediaPreviousTrack,
+                "上一首",
+                "\uE892",
+                "上一曲 前一首 previous track prev track media previous"),
+            new WindowsShellSearchEntry(
+                WindowsShellAction
+                    .MediaPlayPause,
+                "播放 / 暂停",
+                "\uE768",
+                "播放 暂停 音乐 play pause media play media pause"),
+            new WindowsShellSearchEntry(
+                WindowsShellAction
+                    .MediaNextTrack,
+                "下一首",
+                "\uE893",
+                "下一曲 后一首 next track media next")
         };
 }

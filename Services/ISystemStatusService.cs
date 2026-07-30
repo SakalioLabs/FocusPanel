@@ -8,6 +8,8 @@ public interface ISystemStatusService : IDisposable
     AudioStatusSnapshot GetAudioStatus();
     bool TrySetMasterVolume(float value);
     bool TrySetMuted(bool value);
+    bool SendMediaCommand(
+        MediaTransportAction action);
     NetworkStatusSnapshot GetNetworkStatus();
     InputMethodStatusSnapshot GetInputMethodStatus();
     BatteryStatusSnapshot GetBatteryStatus();
@@ -36,4 +38,11 @@ public enum VirtualDesktopDirection
 {
     Previous,
     Next
+}
+
+public enum MediaTransportAction
+{
+    PreviousTrack,
+    PlayPause,
+    NextTrack
 }

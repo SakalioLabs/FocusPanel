@@ -1311,6 +1311,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     _systemStatus.OpenWidgets,
                 WindowsShellAction.ShowDesktop =>
                     _systemStatus.ShowDesktop,
+                WindowsShellAction
+                    .MediaPreviousTrack =>
+                    () => _systemStatus
+                        .SendMediaCommand(
+                            MediaTransportAction
+                                .PreviousTrack),
+                WindowsShellAction
+                    .MediaPlayPause =>
+                    () => _systemStatus
+                        .SendMediaCommand(
+                            MediaTransportAction
+                                .PlayPause),
+                WindowsShellAction
+                    .MediaNextTrack =>
+                    () => _systemStatus
+                        .SendMediaCommand(
+                            MediaTransportAction
+                                .NextTrack),
                 _ =>
                     throw new ArgumentOutOfRangeException(
                         nameof(action),
@@ -1768,6 +1786,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             IsMuted = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task SendMediaCommand(
+        MediaTransportAction action)
+    {
+        string actionName =
+            action switch
+            {
+                MediaTransportAction
+                    .PreviousTrack =>
+                    "上一首",
+                MediaTransportAction
+                    .PlayPause =>
+                    "播放 / 暂停",
+                MediaTransportAction
+                    .NextTrack =>
+                    "下一首",
+                _ =>
+                    "媒体控制"
+            };
+        await RunInlineStatusActionAsync(
+            () => _systemStatus
+                .SendMediaCommand(action),
+            $"无法发送“{actionName}”媒体键。"
+            + "当前系统会话可能不允许模拟输入。");
     }
 
     [RelayCommand]
@@ -2778,6 +2822,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CompleteSystemAction(
             completion.Succeeded,
             error);
+    }
+
+    private async Task RunInlineStatusActionAsync(
+        Func<bool> action,
+        string error)
+    {
+        SystemActionCompletion completion =
+            await _systemActions.ExecuteAsync(
+                action);
+        if (_isDisposed
+            || !_systemActions.IsCurrent(
+                completion.Revision))
+        {
+            return;
+        }
+
+        SystemActionMessage =
+            completion.Succeeded
+                ? string.Empty
+                : error;
+        if (!completion.Succeeded)
+        {
+            CloseTransientPanels();
+            IsStatusCenterOpen = true;
+        }
     }
 
     private async Task<bool> TryLaunchAppAsync(

@@ -17,7 +17,10 @@ internal enum WindowsShellAction
     Search,
     Widgets,
     RunDialog,
-    ShowDesktop
+    ShowDesktop,
+    MediaPreviousTrack,
+    MediaPlayPause,
+    MediaNextTrack
 }
 
 internal readonly record struct WindowsShellShortcut(
@@ -104,6 +107,39 @@ internal static class WindowsShellShortcutMap
         WindowsShellAction.Widgets => new(0x57, true),
         WindowsShellAction.RunDialog => new(0x52, true),
         WindowsShellAction.ShowDesktop => new(0x44, true),
+        WindowsShellAction.MediaPreviousTrack =>
+            new(0xB1, false),
+        WindowsShellAction.MediaPlayPause =>
+            new(0xB3, false),
+        WindowsShellAction.MediaNextTrack =>
+            new(0xB0, false),
         _ => throw new System.ArgumentOutOfRangeException(nameof(action), action, null)
     };
+}
+
+internal static class MediaTransportShortcutMap
+{
+    internal static WindowsShellAction Get(
+        MediaTransportAction action) =>
+        action switch
+        {
+            MediaTransportAction
+                .PreviousTrack =>
+                WindowsShellAction
+                    .MediaPreviousTrack,
+            MediaTransportAction
+                .PlayPause =>
+                WindowsShellAction
+                    .MediaPlayPause,
+            MediaTransportAction
+                .NextTrack =>
+                WindowsShellAction
+                    .MediaNextTrack,
+            _ =>
+                throw new System
+                    .ArgumentOutOfRangeException(
+                        nameof(action),
+                        action,
+                        null)
+        };
 }

@@ -122,4 +122,82 @@ public sealed class WindowsShellShortcutTests
                 transition =>
                     transition.IsDown));
     }
+
+    [Theory]
+    [InlineData(
+        MediaTransportAction.PreviousTrack,
+        0xB1)]
+    [InlineData(
+        MediaTransportAction.PlayPause,
+        0xB3)]
+    [InlineData(
+        MediaTransportAction.NextTrack,
+        0xB0)]
+    public void MediaKeys_UseSdkVirtualKeysWithoutModifiers(
+        MediaTransportAction mediaAction,
+        int expectedKey)
+    {
+        WindowsShellAction shellAction =
+            mediaAction switch
+            {
+                MediaTransportAction
+                    .PreviousTrack =>
+                    WindowsShellAction
+                        .MediaPreviousTrack,
+                MediaTransportAction
+                    .PlayPause =>
+                    WindowsShellAction
+                        .MediaPlayPause,
+                _ =>
+                    WindowsShellAction
+                        .MediaNextTrack
+            };
+        Assert.Equal(
+            shellAction,
+            MediaTransportShortcutMap.Get(
+                mediaAction));
+        WindowsShellShortcut shortcut =
+            WindowsShellShortcutMap.Get(
+                shellAction);
+
+        Assert.False(shortcut.UsesWindowsKey);
+        Assert.False(shortcut.UsesControl);
+        Assert.False(shortcut.UsesAlt);
+        Assert.False(shortcut.UsesShift);
+        Assert.Equal(
+            (ushort)expectedKey,
+            shortcut.Key);
+
+        WindowsShortcutKeyTransition[]
+            transitions =
+                WindowsShortcutSequence
+                    .Build(shortcut)
+                    .ToArray();
+        Assert.Equal(
+            new[]
+            {
+                (ushort)expectedKey,
+                (ushort)expectedKey
+            },
+            transitions.Select(item =>
+                item.Key));
+        Assert.Equal(
+            new[]
+            {
+                true,
+                false
+            },
+            transitions.Select(item =>
+                item.IsDown));
+    }
+
+    [Fact]
+    public void InvalidMediaActionDoesNotInventAKey()
+    {
+        Assert.Throws<
+            System.ArgumentOutOfRangeException>(
+            () =>
+                MediaTransportShortcutMap.Get(
+                    (MediaTransportAction)99));
+    }
 }

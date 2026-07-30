@@ -14,6 +14,26 @@ namespace FocusPanel.Services;
 
 public sealed class SystemStatusService : ISystemStatusService
 {
+    private readonly Func<
+        WindowsShellShortcut,
+        bool> _shortcutSender;
+
+    public SystemStatusService()
+        : this(SendWindowsShortcut)
+    {
+    }
+
+    internal SystemStatusService(
+        Func<
+            WindowsShellShortcut,
+            bool> shortcutSender)
+    {
+        _shortcutSender =
+            shortcutSender
+            ?? throw new ArgumentNullException(
+                nameof(shortcutSender));
+    }
+
     public SystemStatusSnapshot GetStatusSnapshot()
     {
         int comInitializationResult =
@@ -175,6 +195,21 @@ public sealed class SystemStatusService : ISystemStatusService
             {
                 NativeMethods.CoUninitialize();
             }
+        }
+    }
+
+    public bool SendMediaCommand(
+        MediaTransportAction action)
+    {
+        try
+        {
+            return TrySendWindowsShortcut(
+                MediaTransportShortcutMap.Get(
+                    action));
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
         }
     }
 
@@ -493,14 +528,20 @@ public sealed class SystemStatusService : ISystemStatusService
         });
     }
 
-    private static bool TrySendWindowsShortcut(WindowsShellAction action)
+    private bool TrySendWindowsShortcut(
+        WindowsShellAction action) =>
+        _shortcutSender(
+            WindowsShellShortcutMap.Get(
+                action));
+
+    private static bool SendWindowsShortcut(
+        WindowsShellShortcut shortcut)
     {
         IReadOnlyList<
             WindowsShortcutKeyTransition>
             sequence =
                 WindowsShortcutSequence.Build(
-                    WindowsShellShortcutMap.Get(
-                        action));
+                    shortcut);
         Input[] inputs =
             sequence.Select(
                     transition =>
