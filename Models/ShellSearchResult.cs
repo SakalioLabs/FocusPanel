@@ -9,7 +9,8 @@ public enum ShellSearchResultKind
     Application,
     Window,
     SystemCommand,
-    Calculation
+    Calculation,
+    AudioCommand
 }
 
 public sealed record ShellSearchResult
@@ -80,6 +81,12 @@ public sealed record ShellSearchResult
         init;
     } = string.Empty;
 
+    internal AudioSearchCommand? AudioCommand
+    {
+        get;
+        init;
+    }
+
     public string Glyph
     {
         get;
@@ -98,9 +105,14 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.Calculation;
 
+    public bool IsAudioCommand =>
+        Kind
+        == ShellSearchResultKind.AudioCommand;
+
     public bool UsesGlyph =>
         IsSystemCommand
-        || IsCalculation;
+        || IsCalculation
+        || IsAudioCommand;
 
     public bool CanTogglePin =>
         Application != null;
@@ -238,5 +250,27 @@ public sealed record ShellSearchResult
                 "\uE1D0",
             CalculationResult =
                 result
+        };
+
+    internal static ShellSearchResult
+        FromAudioCommand(
+            AudioSearchCommand command) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .AudioCommand,
+            StableKey =
+                command.StableKey,
+            DisplayName =
+                command.DisplayName,
+            SecondaryText =
+                "音频快捷命令 · 点击或按 Enter 执行",
+            AccessibleName =
+                $"执行音频快捷命令 {command.DisplayName}",
+            Glyph =
+                command.Glyph,
+            AudioCommand =
+                command
         };
 }

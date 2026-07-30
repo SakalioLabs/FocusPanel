@@ -2485,7 +2485,13 @@ public sealed class XamlResourceContractTests
             "SafeExpressionEvaluator",
             shellSearchPolicy);
         Assert.Contains(
+            "AudioSearchCommandParser",
+            shellSearchPolicy);
+        Assert.Contains(
             "ShellSearchResultKind.Calculation",
+            searchResult);
+        Assert.Contains(
+            "ShellSearchResultKind.AudioCommand",
             searchResult);
         Assert.Contains(
             "MaximumExpressionLength",
@@ -2501,6 +2507,18 @@ public sealed class XamlResourceContractTests
             clipboardService);
         Assert.Contains(
             "TrySetTextAsync(",
+            viewModel);
+        Assert.Contains(
+            "ExecuteAudioSearchCommand(",
+            viewModel);
+        Assert.Contains(
+            "command.Resolve(",
+            viewModel);
+        Assert.Contains(
+            "command.RequiresCurrentVolume",
+            viewModel);
+        Assert.Contains(
+            "当前音量尚未读取完成",
             viewModel);
     }
 
@@ -2559,7 +2577,7 @@ public sealed class XamlResourceContractTests
             "SelectedSearchResult?.StableKey",
             viewModel);
         Assert.Contains(
-            "AutomationProperties.Name=\"应用、窗口、系统命令与计算结果\"",
+            "AutomationProperties.Name=\"应用、窗口、系统命令、音量与计算结果\"",
             mainWindow);
         Assert.Contains(
             "Binding=\"{Binding UsesGlyph}\"",

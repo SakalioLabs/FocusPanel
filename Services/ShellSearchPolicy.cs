@@ -46,6 +46,23 @@ internal static class ShellSearchPolicy
         var ranked =
             new List<RankedResult>();
         int originalIndex = 0;
+        if (AudioSearchCommandParser
+            .TryParse(
+                query,
+                out AudioSearchCommand
+                    audioCommand))
+        {
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult
+                        .FromAudioCommand(
+                            audioCommand),
+                    Rank: -2,
+                    Category: -1,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         if (SafeExpressionEvaluator
             .TryEvaluate(
                 query,

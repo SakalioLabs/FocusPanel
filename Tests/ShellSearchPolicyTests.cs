@@ -298,6 +298,58 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
+    [InlineData(
+        "音量 35",
+        "SetVolume",
+        35)]
+    [InlineData(
+        "volume +10",
+        "AdjustVolume",
+        10)]
+    [InlineData(
+        "静音",
+        "SetMuted",
+        0)]
+    public void Compose_AudioCommandIsFirstAndExecutable(
+        string query,
+        string kind,
+        int percent)
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "音量助手",
+                        "exe:c:\\volume.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                query);
+
+        ShellSearchResult result =
+            results[0];
+        Assert.Equal(
+            ShellSearchResultKind.AudioCommand,
+            result.Kind);
+        Assert.Equal(
+            kind,
+            result.AudioCommand?.Kind
+                .ToString());
+        Assert.Equal(
+            percent,
+            result.AudioCommand?.Percent);
+        Assert.True(result.IsAudioCommand);
+        Assert.True(result.UsesGlyph);
+        Assert.False(result.CanTogglePin);
+        Assert.StartsWith(
+            "audio:",
+            result.StableKey);
+        Assert.Contains(
+            "Enter",
+            result.SecondaryText);
+    }
+
+    [Theory]
     [InlineData("42")]
     [InlineData("calc")]
     [InlineData("1/0")]

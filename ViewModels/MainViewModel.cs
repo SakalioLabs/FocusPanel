@@ -941,6 +941,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ExecuteSearchResult(
         ShellSearchResult? result)
     {
+        if (result?.AudioCommand
+            is AudioSearchCommand audioCommand)
+        {
+            ExecuteAudioSearchCommand(
+                audioCommand);
+            return;
+        }
+
         if (!string.IsNullOrWhiteSpace(
                 result?.CalculationResult))
         {
@@ -1005,6 +1013,40 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         if (await TryLaunchAppAsync(app))
             IsSearchOpen = false;
+    }
+
+    private void ExecuteAudioSearchCommand(
+        AudioSearchCommand command)
+    {
+        if (command.RequiresCurrentVolume
+            && !IsAudioAvailable)
+        {
+            ReportAudioFailure(
+                "当前音量尚未读取完成，无法安全执行相对调整。"
+                + "请在状态中心确认默认音频设备后重试。");
+            return;
+        }
+
+        AudioSearchMutation mutation =
+            command.Resolve(
+                MasterVolume);
+        SystemActionMessage =
+            string.Empty;
+        if (mutation.Volume
+            is float volume)
+        {
+            MasterVolume =
+                volume;
+        }
+
+        if (mutation.Muted
+            is bool muted)
+        {
+            IsMuted =
+                muted;
+        }
+
+        IsSearchOpen = false;
     }
 
     private async Task
