@@ -419,6 +419,11 @@ public sealed class SystemStatusService : ISystemStatusService
         SystemActionExecution.TryStart(
             () => OpenSystemUri("ms-settings:powersleep"));
 
+    public bool OpenLocationPrivacySettings() =>
+        SystemActionExecution.TryStart(
+            () => OpenSystemUri(
+                "ms-settings:privacy-location"));
+
     public bool ShowDesktop() =>
         SystemActionExecution.TryWithFallback(
             () => TrySendWindowsShortcut(WindowsShellAction.ShowDesktop),

@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1724"/>
+      <stop offset="1" stop-color="#21364a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#53c8ff"/>
+      <stop offset="1" stop-color="#8e82ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#02070d" flood-opacity=".44"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="620" rx="32" fill="url(#bg)"/>
+  <circle cx="1100" cy="40" r="210" fill="#53c8ff" opacity=".08"/>
+  <circle cx="80" cy="610" r="220" fill="#8e82ff" opacity=".07"/>
+  <text x="58" y="70" fill="#f4f8fc" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="28" font-weight="650">附近 Wi‑Fi，不必再展开原任务栏</text>
+  <text x="58" y="105" fill="#9cb2c6" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">主动扫描 → 稳定排序 → 已保存网络直连 → 重读 Connected → 未保存网络安全降级</text>
+
+  <g transform="translate(58 140)" filter="url(#shadow)">
+    <rect width="650" height="414" rx="24" fill="#182a3b" stroke="#446179"/>
+    <text x="28" y="42" fill="#eef5fb" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">状态中心 · 附近 Wi‑Fi</text>
+    <rect x="510" y="14" width="112" height="42" rx="12" fill="#24465b" stroke="#62c9f7"/>
+    <text x="566" y="41" text-anchor="middle" fill="#dff6ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">刷新网络</text>
+
+    <g transform="translate(28 76)" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+      <g>
+        <text x="8" y="27" fill="#f3f8fc" font-size="17" font-weight="600">Home 5G</text>
+        <text x="8" y="51" fill="#59d89b" font-size="13">已连接</text>
+        <text x="450" y="36" text-anchor="end" fill="#a9bdcc" font-size="14">92%</text>
+        <rect x="474" y="5" width="120" height="48" rx="12" fill="#1f493f" stroke="#42b88a"/>
+        <text x="534" y="35" text-anchor="middle" fill="#9ce6c9" font-size="14">当前</text>
+        <path d="M0 68h594" stroke="#3b5569"/>
+      </g>
+      <g transform="translate(0 80)">
+        <text x="8" y="27" fill="#f3f8fc" font-size="17" font-weight="600">Studio</text>
+        <text x="8" y="51" fill="#9fb6c8" font-size="13">已保存 · 安全网络</text>
+        <text x="450" y="36" text-anchor="end" fill="#a9bdcc" font-size="14">78%</text>
+        <rect x="474" y="5" width="120" height="48" rx="12" fill="#24465b" stroke="#62c9f7"/>
+        <text x="534" y="35" text-anchor="middle" fill="#dff6ff" font-size="14">连接</text>
+        <path d="M0 68h594" stroke="#3b5569"/>
+      </g>
+      <g transform="translate(0 160)">
+        <text x="8" y="27" fill="#f3f8fc" font-size="17" font-weight="600">Coffee Guest</text>
+        <text x="8" y="51" fill="#e1bd78" font-size="13">需要密码</text>
+        <text x="450" y="36" text-anchor="end" fill="#a9bdcc" font-size="14">63%</text>
+        <rect x="474" y="5" width="120" height="48" rx="12" fill="#202f40" stroke="#49657b"/>
+        <text x="534" y="35" text-anchor="middle" fill="#bdcad5" font-size="13">系统面板</text>
+        <path d="M0 68h594" stroke="#3b5569"/>
+      </g>
+      <rect y="250" width="594" height="70" rx="14" fill="#1f3749"/>
+      <text x="22" y="279" fill="#70d0ff" font-size="14" font-weight="600">真实结果确认</text>
+      <text x="22" y="303" fill="#9fb6c8" font-size="13">WlanConnect 已提交 ≠ 已连接；重读 Connected 后才更新</text>
+    </g>
+  </g>
+
+  <g transform="translate(754 140)">
+    <rect width="388" height="414" rx="24" fill="#172839" stroke="#446179"/>
+    <text x="28" y="44" fill="#eef5fb" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">权限与安全边界</text>
+    <g font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+      <rect x="28" y="76" width="332" height="76" rx="16" fill="#223b50"/>
+      <text x="50" y="105" fill="#70d0ff" font-size="15" font-weight="600">01　用户主动查找</text>
+      <text x="50" y="130" fill="#a8bbcb" font-size="13">不在后台常驻扫描附近网络</text>
+      <path d="M194 152v22" stroke="#59768e" stroke-width="3"/>
+      <rect x="28" y="174" width="332" height="76" rx="16" fill="#223b50"/>
+      <text x="50" y="203" fill="#70d0ff" font-size="15" font-weight="600">02　Windows 管理位置授权</text>
+      <text x="50" y="228" fill="#a8bbcb" font-size="13">拒绝时直达位置权限设置</text>
+      <path d="M194 250v22" stroke="#59768e" stroke-width="3"/>
+      <rect x="28" y="272" width="332" height="76" rx="16" fill="#223b50"/>
+      <text x="50" y="301" fill="#70d0ff" font-size="15" font-weight="600">03　密码仍归 Windows</text>
+      <text x="50" y="326" fill="#a8bbcb" font-size="13">不导出配置，不读取明文密钥</text>
+      <rect x="28" y="368" width="332" height="34" rx="11" fill="#1f493f" stroke="#42b88a"/>
+      <text x="194" y="390" text-anchor="middle" fill="#9ce6c9" font-size="13">公开 Native Wi‑Fi API · 无 Explorer 注入</text>
+    </g>
+  </g>
+</svg>

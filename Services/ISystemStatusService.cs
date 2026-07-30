@@ -27,6 +27,7 @@ public interface ISystemStatusService : IDisposable
     bool OpenRunDialog();
     bool OpenManagementTool(SystemManagementTool tool);
     bool OpenPowerSettings();
+    bool OpenLocationPrivacySettings();
     bool ShowDesktop();
     bool Lock();
     bool Sleep();

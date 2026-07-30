@@ -30,6 +30,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IApplicationAudioSessionService
         _applicationAudio;
     private readonly ISystemRadioService _radios;
+    private readonly IWifiNetworkService
+        _wifiNetworks;
     private readonly IAppUpdateService _updateService;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly IShellPreferenceRepository
@@ -43,6 +45,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _applicationAudioControl;
     private readonly InFlightTaskTracker
         _radioOperations = new();
+    private readonly InFlightTaskTracker
+        _wifiNetworkOperations = new();
     private readonly AppLaunchCoordinator
         _appLaunch;
     private readonly SystemActionCoordinator
@@ -93,6 +97,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private volatile bool _brightnessWritePending;
     private int _confirmedBrightnessPercent;
     private long _applicationAudioRevision;
+    private long _wifiNetworkRevision;
     private readonly ConcurrentDictionary<
         string,
         long> _applicationAudioRevisions =
@@ -342,6 +347,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "正在读取 Wi‑Fi 与蓝牙状态…";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(WifiNetworkToggleText))]
+    private bool isWifiNetworkListVisible;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(WifiNetworkToggleText))]
+    private bool isWifiNetworkBusy;
+
+    [ObservableProperty]
+    private string wifiNetworkStatusText =
+        "按“查找网络”后由 Windows 请求位置权限并显示附近 Wi‑Fi";
+
+    [ObservableProperty]
+    private bool hasWifiLocationAccessWarning;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NetworkGlyph))]
     private NetworkConnectionKind networkConnectionKind;
 
@@ -412,7 +434,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IDisplayBrightnessService brightness,
         IApplicationAudioSessionService
             applicationAudio,
-        ISystemRadioService radios)
+        ISystemRadioService radios,
+        IWifiNetworkService wifiNetworks)
         : this(
             appCatalog,
             windowTracker,
@@ -422,7 +445,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             brightness: brightness,
             applicationAudio:
                 applicationAudio,
-            radios: radios)
+            radios: radios,
+            wifiNetworks: wifiNetworks)
     {
     }
 
@@ -445,7 +469,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             brightness = null,
         IApplicationAudioSessionService?
             applicationAudio = null,
-        ISystemRadioService? radios = null)
+        ISystemRadioService? radios = null,
+        IWifiNetworkService?
+            wifiNetworks = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -459,6 +485,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _radios =
             radios
             ?? new SystemRadioService();
+        _wifiNetworks =
+            wifiNetworks
+            ?? new WifiNetworkService();
         _updateService = updateService;
         _appLaunch =
             new AppLaunchCoordinator(
@@ -602,6 +631,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     } = new();
     public bool HasApplicationAudioSessions =>
         ApplicationAudioSessions.Count > 0;
+    public ObservableCollection<
+        WifiNetworkSnapshot> WifiNetworks
+    {
+        get;
+    } = new();
+    public bool HasWifiNetworks =>
+        WifiNetworks.Count > 0;
+    public string WifiNetworkToggleText =>
+        IsWifiNetworkBusy
+            ? "正在查找 Wi‑Fi…"
+            : IsWifiNetworkListVisible
+                ? "刷新网络"
+                : "查找网络";
     public ObservableCollection<
         ShellDisplayTargetOption> DisplayTargetOptions
     {
@@ -873,7 +915,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnIsStatusCenterOpenChanged(bool value)
     {
         if (value && _isShellVisible)
+        {
             RequestSystemStatusRefresh();
+            if (IsWifiNetworkListVisible
+                && !IsWifiNetworkBusy)
+                _ = RefreshWifiNetworksCoreAsync(false);
+        }
         UpdateRefreshActivity();
     }
 
@@ -2050,6 +2097,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             "无法唤起 Windows 快捷设置，请使用 Win+A。");
 
     [RelayCommand]
+    private async Task OpenWifiLocationSettings()
+        => await RunSystemActionAsync(
+            _systemStatus
+                .OpenLocationPrivacySettings,
+            "无法打开 Windows 位置权限设置。"
+            + "请进入“设置 > 隐私和安全性 > 位置”。");
+
+    [RelayCommand]
     private async Task OpenNotifications()
         => await RunSystemActionAsync(
             _systemStatus.OpenNotifications,
@@ -3092,6 +3147,181 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ToggleSystemRadioAsync(
             SystemRadioKind.Bluetooth);
 
+    [RelayCommand]
+    private Task RefreshWifiNetworks()
+    {
+        IsWifiNetworkListVisible = true;
+        return RefreshWifiNetworksCoreAsync(true);
+    }
+
+    [RelayCommand]
+    private async Task ConnectWifiNetwork(
+        WifiNetworkSnapshot? network)
+    {
+        if (network == null
+            || IsWifiNetworkBusy)
+        {
+            return;
+        }
+
+        if (!network.HasProfile)
+        {
+            SystemActionMessage =
+                $"“{network.DisplayName}”尚未保存密码，"
+                + "请在 Windows 快捷设置中首次连接。";
+            await OpenQuickSettings();
+            return;
+        }
+
+        long revision =
+            Interlocked.Increment(
+                ref _wifiNetworkRevision);
+        IsWifiNetworkBusy = true;
+        WifiNetworkStatusText =
+            $"正在连接 {network.DisplayName}…";
+        Task<WifiNetworkConnectResult>?
+            operation =
+                _wifiNetworkOperations.TryStart(
+                    () =>
+                        _wifiNetworks.ConnectAsync(
+                            network,
+                            CancellationToken.None));
+        if (operation == null)
+        {
+            IsWifiNetworkBusy = false;
+            return;
+        }
+
+        WifiNetworkConnectResult result =
+            await operation;
+        if (_isDisposed
+            || revision
+                != Volatile.Read(
+                    ref _wifiNetworkRevision))
+        {
+            return;
+        }
+
+        IsWifiNetworkBusy = false;
+        if (result.Succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            WifiNetworkStatusText =
+                $"已连接 {result.DisplayName}";
+            await RefreshWifiNetworksCoreAsync(false);
+            return;
+        }
+
+        SystemActionMessage =
+            ComposeWifiConnectFailure(result);
+        WifiNetworkStatusText =
+            "连接没有完成，可使用快捷设置继续处理";
+        IsStatusCenterOpen = true;
+    }
+
+    private async Task
+        RefreshWifiNetworksCoreAsync(
+            bool requestScan)
+    {
+        if (_isDisposed
+            || IsWifiNetworkBusy)
+            return;
+
+        long revision =
+            Interlocked.Increment(
+                ref _wifiNetworkRevision);
+        IsWifiNetworkBusy = true;
+        WifiNetworkStatusText = requestScan
+            ? "Windows 正在扫描附近 Wi‑Fi…"
+            : "正在更新 Wi‑Fi 状态…";
+        Task<WifiNetworkListResult>? operation =
+            _wifiNetworkOperations.TryStart(
+                () =>
+                    _wifiNetworks.GetNetworksAsync(
+                        requestScan,
+                        CancellationToken.None));
+        if (operation == null)
+        {
+            IsWifiNetworkBusy = false;
+            return;
+        }
+
+        WifiNetworkListResult result =
+            await operation;
+        if (_isDisposed
+            || revision
+                != Volatile.Read(
+                    ref _wifiNetworkRevision))
+        {
+            return;
+        }
+
+        IsWifiNetworkBusy = false;
+        ReplaceCollection(
+            WifiNetworks,
+            result.Networks);
+        OnPropertyChanged(
+            nameof(HasWifiNetworks));
+        HasWifiLocationAccessWarning =
+            result.Status
+            == WifiNetworkListStatus.AccessDenied;
+        WifiNetworkStatusText =
+            ComposeWifiListStatus(result);
+    }
+
+    private static string ComposeWifiListStatus(
+        WifiNetworkListResult result) =>
+        result.Status switch
+        {
+            WifiNetworkListStatus.Succeeded
+                when result.Networks.Count > 0 =>
+                $"找到 {result.Networks.Count} 个网络；"
+                + "已保存网络可直接连接",
+            WifiNetworkListStatus.Succeeded =>
+                "附近暂时没有可显示的 Wi‑Fi",
+            WifiNetworkListStatus.AccessDenied =>
+                "Windows 未授予精确位置权限，"
+                + "无法列出附近 Wi‑Fi",
+            WifiNetworkListStatus.RadioOff =>
+                "Wi‑Fi Radio 已关闭，请先开启",
+            WifiNetworkListStatus.NoAdapter =>
+                "没有检测到 Windows WLAN 适配器",
+            WifiNetworkListStatus
+                .ServiceUnavailable =>
+                "Windows WLAN AutoConfig 服务不可用",
+            _ =>
+                "无法读取附近 Wi‑Fi，"
+                + "可使用快捷设置重试"
+        };
+
+    private static string
+        ComposeWifiConnectFailure(
+            WifiNetworkConnectResult result) =>
+        result.Status switch
+        {
+            WifiNetworkConnectStatus
+                .NeedsCredentials =>
+                $"“{result.DisplayName}”需要首次输入密码，"
+                + "请使用 Windows 快捷设置。",
+            WifiNetworkConnectStatus.AccessDenied =>
+                "Windows 拒绝读取 Wi‑Fi 连接状态。"
+                + "请检查精确位置权限。",
+            WifiNetworkConnectStatus.RadioOff =>
+                "Wi‑Fi Radio 已关闭，无法连接。",
+            WifiNetworkConnectStatus
+                .ServiceUnavailable =>
+                "Windows WLAN AutoConfig 服务不可用。",
+            WifiNetworkConnectStatus.NotFound =>
+                $"“{result.DisplayName}”已离开范围"
+                + "或保存的配置已删除。",
+            WifiNetworkConnectStatus.NotConfirmed =>
+                $"已请求连接“{result.DisplayName}”，"
+                + "但 Windows 未确认连接成功。",
+            _ =>
+                $"无法连接“{result.DisplayName}”。"
+                + "可使用快捷设置重试。"
+        };
+
     private async Task ToggleSystemRadioAsync(
         SystemRadioKind kind)
     {
@@ -3829,6 +4059,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _applicationAudioControl
                     .CompleteAsync(),
                 _radioOperations.CompleteAsync(),
+                _wifiNetworkOperations
+                    .CompleteAsync(),
                 _autoStartup.CompleteAsync(),
                 _taskCapture.CompleteAsync(),
                 _taskSearch.CompleteAsync(),

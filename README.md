@@ -49,6 +49,12 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 状态中心新增 Wi‑Fi 与蓝牙直接开关：打开状态中心即可按当前真实 Radio 状态开启或关闭，不再先展开 Win+A。第一次主动切换时才请求 Windows 无线控制权限，并在本次会话复用结果；系统仅接受请求还不算成功，Panel 会重新读取最终硬件状态后再更新按钮。飞行模式、硬件开关、驱动或组织策略禁用、权限拒绝和设备移除都会显示具体原因，同时保留“快捷设置”作为公开系统入口。实现使用 Windows 公开 [`Radio.GetRadiosAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.getradiosasync)、[`Radio.RequestAccessAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.requestaccessasync) 与 [`Radio.SetStateAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.setstateasync)，不读取 Explorer 托盘私有数据。
 
 ![状态中心直接切换 Wi-Fi 与蓝牙](docs/images/direct-radio-controls.svg)
+
+- 状态中心可直接查找附近 Wi‑Fi 并连接 Windows 已保存的网络：用户点击“查找网络”后才调用公开 Native Wi‑Fi API，等待扫描完成通知并按“当前连接优先、信号强度、名称”稳定排列，最多显示 10 项，避免网络较多时淹没其他状态控制。点击已保存网络后调用 `WlanConnect`，但只有重新读取到真实 Connected 标记才显示成功；网络离开范围、配置删除、Radio 关闭、WLAN AutoConfig 停止或连接超时都会保留 Panel 并说明原因。未保存网络不会读取或保存密码，而是明确转入 Windows 快捷设置完成首次连接。
+- Windows 11 24H2 会把附近 Wi‑Fi 列表作为精确位置能力管理；首次扫描可能出现一次系统授权，拒绝时 Panel 显示“打开位置权限”，直达“设置 > 隐私和安全性 > 位置”。依据见微软的 [Wi‑Fi 访问和位置行为变更](https://learn.microsoft.com/en-us/windows/win32/nativewifi/wi-fi-access-location-changes)、[`WlanScan`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlanscan)、[`WlanGetAvailableNetworkList`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlangetavailablenetworklist) 与 [`WlanConnect`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlanconnect)。FocusPanel 不导出 Wi‑Fi 配置、不读取明文密钥，也不注入 Explorer 网络面板。
+
+![状态中心附近 Wi-Fi 与已保存网络直连](docs/images/wifi-network-chooser.svg)
+
 - 媒体播放也不再依赖原生快捷设置：状态中心提供上一首、播放/暂停、下一首三个 44px 直接按钮，成功后保持状态中心打开，便于连续切歌；紧凑栏状态按钮中键可从任意应用一击播放或暂停，滚轮调音量和右键静音语义保持不变。统一搜索同步支持“上一曲”“播放暂停”“下一首”及英文 `previous track / play pause / next track`。执行使用 Windows SDK 公开的 `VK_MEDIA_*` 虚拟键和现有批量 `SendInput` 按下/释放链，不枚举、注入或读取播放器私有数据；系统阻止模拟输入时进入状态中心明确提示。
 
 ![状态中心、紧凑栏与统一搜索的媒体控制](docs/images/media-transport-controls.svg)
@@ -504,7 +510,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.65 `
+  -Version 0.10.66 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -515,7 +521,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.65-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.66-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

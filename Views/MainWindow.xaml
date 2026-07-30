@@ -6,6 +6,7 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:FocusPanel.Views"
         xmlns:controls="clr-namespace:FocusPanel.Controls"
+        xmlns:converters="clr-namespace:FocusPanel.Converters"
         xmlns:vm="clr-namespace:FocusPanel.ViewModels"
         xmlns:services="clr-namespace:FocusPanel.Services"
         mc:Ignorable="d"
@@ -26,6 +27,7 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
 
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
             <local:DashboardView/>
@@ -468,6 +470,84 @@
                                            Text="{Binding RadioStatusText}"
                                            Style="{StaticResource FocusCaptionText}"
                                            TextWrapping="Wrap"/>
+                                <Grid Margin="4,0,4,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="附近 Wi‑Fi"
+                                                   Style="{StaticResource FocusCardTitleText}"/>
+                                        <TextBlock Text="{Binding WifiNetworkStatusText}"
+                                                   Style="{StaticResource FocusCaptionText}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="{Binding WifiNetworkToggleText}"
+                                            Command="{Binding RefreshWifiNetworksCommand}"
+                                            IsEnabled="{Binding IsWifiNetworkBusy, Converter={StaticResource InverseBoolConverter}}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding WifiNetworks}"
+                                              Margin="0,0,0,12"
+                                              Visibility="{Binding IsWifiNetworkListVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                              AutomationProperties.Name="附近 Wi-Fi 网络">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="4,7"
+                                                    BorderBrush="{DynamicResource FocusStrokeBrush}"
+                                                    BorderThickness="0,0,0,1">
+                                                <Grid MinHeight="44">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="48"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding DisplayName}"
+                                                                   Style="{StaticResource FocusCardTitleText}"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding SecurityText}"
+                                                                   Style="{StaticResource FocusCaptionText}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding SignalText}"
+                                                               Style="{StaticResource FocusMetaText}"/>
+                                                    <Button Grid.Column="2"
+                                                            MinWidth="72"
+                                                            MinHeight="44"
+                                                            Content="{Binding ActionText}"
+                                                            Command="{Binding DataContext.ConnectWifiNetworkCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            AutomationProperties.Name="{Binding DisplayName, StringFormat=Wi-Fi {0}}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button"
+                                                                   BasedOn="{StaticResource FocusSecondaryButton}">
+                                                                <Setter Property="IsEnabled"
+                                                                        Value="{Binding CanInvokeAction}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.IsWifiNetworkBusy, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                                 Value="True">
+                                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Style="{StaticResource FocusSecondaryButton}"
+                                        Margin="0,0,0,12"
+                                        MinHeight="44"
+                                        Content="打开位置权限"
+                                        Command="{Binding OpenWifiLocationSettingsCommand}"
+                                        Visibility="{Binding HasWifiLocationAccessWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>

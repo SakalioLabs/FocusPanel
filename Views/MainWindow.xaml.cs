@@ -106,7 +106,8 @@ public partial class MainWindow :
             _coordinator.Updates,
             _coordinator.Brightness,
             _coordinator.ApplicationAudio,
-            _coordinator.Radios);
+            _coordinator.Radios,
+            _coordinator.WifiNetworks);
 
         InitializeComponent();
         DataContext = _viewModel;
