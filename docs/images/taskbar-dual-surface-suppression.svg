@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1724"/>
+      <stop offset="1" stop-color="#17344a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#55caff"/>
+      <stop offset="1" stop-color="#8c84ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#02070d" flood-opacity=".42"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#6fcfff"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="640" rx="30" fill="url(#bg)"/>
+  <circle cx="1125" cy="70" r="210" fill="#58ccff" opacity=".07"/>
+  <circle cx="74" cy="608" r="220" fill="#8d83ff" opacity=".07"/>
+  <g font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+    <text x="56" y="68" fill="#f5f9fd" font-size="28" font-weight="650">触底不再唤回原生任务栏</text>
+    <text x="56" y="102" fill="#96aec1" font-size="15">关闭 Explorer 边缘呼出 · 空区域切断命中 · DWM cloak 切断最终呈现</text>
+
+    <g transform="translate(56 142)" filter="url(#shadow)">
+      <rect width="1088" height="390" rx="26" fill="#13293a" stroke="#3a5c74"/>
+
+      <g transform="translate(28 30)">
+        <rect width="286" height="278" rx="21" fill="#102332" stroke="#395870"/>
+        <circle cx="42" cy="42" r="18" fill="#24475f"/>
+        <text x="42" y="49" text-anchor="middle" fill="#7ed8ff" font-size="18" font-weight="700">1</text>
+        <text x="72" y="48" fill="#eef6fb" font-size="18" font-weight="600">关闭边缘呼出</text>
+        <rect x="24" y="82" width="238" height="108" rx="15" fill="#0b1a26" stroke="#2d4a60"/>
+        <rect x="42" y="101" width="202" height="62" rx="10" fill="#203e53"/>
+        <rect x="42" y="154" width="202" height="9" rx="4.5" fill="#7c90a1"/>
+        <path d="M54 174H232" stroke="#ff9b77" stroke-width="3" stroke-linecap="round"/>
+        <path d="M136 168l9 9 9-9" fill="none" stroke="#ff9b77" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="143" y="220" text-anchor="middle" fill="#dce9f2" font-size="14">清除 ABS_AUTOHIDE</text>
+        <text x="143" y="245" text-anchor="middle" fill="#8faabd" font-size="12">Explorer 不再拥有底边唤出策略</text>
+      </g>
+
+      <path d="M330 169H373" stroke="#6fcfff" stroke-width="3" marker-end="url(#arrow)"/>
+
+      <g transform="translate(386 30)">
+        <rect width="286" height="278" rx="21" fill="#102b3d" stroke="#4b8aac"/>
+        <circle cx="42" cy="42" r="18" fill="#285873"/>
+        <text x="42" y="49" text-anchor="middle" fill="#8fe0ff" font-size="18" font-weight="700">2</text>
+        <text x="72" y="48" fill="#eef8fc" font-size="18" font-weight="600">空窗口区域</text>
+        <rect x="24" y="82" width="238" height="108" rx="15" fill="#0b1a26" stroke="#2f5268"/>
+        <rect x="42" y="101" width="202" height="62" rx="10" fill="#23465d"/>
+        <rect x="42" y="154" width="202" height="9" rx="4.5" fill="none" stroke="#68d2ff" stroke-width="2" stroke-dasharray="6 5"/>
+        <path d="M130 151l26 15M156 151l-26 15" stroke="#ff91a7" stroke-width="3" stroke-linecap="round"/>
+        <text x="143" y="220" text-anchor="middle" fill="#dceaf3" font-size="14">SetWindowRgn：NULLREGION</text>
+        <text x="143" y="245" text-anchor="middle" fill="#93afc1" font-size="12">没有绘制区域，也没有鼠标命中区域</text>
+      </g>
+
+      <path d="M688 169H731" stroke="#6fcfff" stroke-width="3" marker-end="url(#arrow)"/>
+
+      <g transform="translate(744 30)">
+        <rect width="316" height="278" rx="21" fill="#173249" stroke="#70cfff" stroke-width="2"/>
+        <circle cx="42" cy="42" r="18" fill="url(#accent)"/>
+        <text x="42" y="49" text-anchor="middle" fill="#07151f" font-size="18" font-weight="700">3</text>
+        <text x="72" y="48" fill="#f4f9fc" font-size="18" font-weight="600">DWM 合成隐藏</text>
+        <rect x="24" y="82" width="268" height="108" rx="15" fill="#0b1a26" stroke="#38637c"/>
+        <rect x="44" y="103" width="228" height="58" rx="12" fill="#294f68" opacity=".35"/>
+        <path d="M97 126h122" stroke="#7dd8ff" stroke-width="4" stroke-linecap="round"/>
+        <path d="M126 108l64 36M190 108l-64 36" stroke="#a08fff" stroke-width="5" stroke-linecap="round"/>
+        <text x="158" y="220" text-anchor="middle" fill="#e5f2f8" font-size="14">DWMWA_CLOAK：不向用户呈现</text>
+        <text x="158" y="245" text-anchor="middle" fill="#9ab5c8" font-size="12">逻辑可见位变化也不会重新露出表面</text>
+      </g>
+
+      <rect x="28" y="328" width="1032" height="38" rx="12" fill="#0d202e" stroke="#31526a"/>
+      <circle cx="50" cy="347" r="7" fill="#63d29a"/>
+      <text x="68" y="352" fill="#dceaf3" font-size="13">守护只读两层状态，不反复隐藏</text>
+      <circle cx="363" cy="347" r="7" fill="#ffb16f"/>
+      <text x="381" y="352" fill="#dceaf3" font-size="13">任一层失效：只恢复一次并说明原因</text>
+      <circle cx="752" cy="347" r="7" fill="#8f8aff"/>
+      <text x="770" y="352" fill="#dceaf3" font-size="13">退出 / 更新 / 异常 / watchdog 精确还原原状态</text>
+    </g>
+
+    <rect x="56" y="558" width="1088" height="48" rx="16" fill="#102536" stroke="#34566f"/>
+    <path d="M79 582l10 10 20-23" fill="none" stroke="#6fd4a0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="126" y="589" fill="#e7f2f8" font-size="14">不结束 Explorer · 不遮挡底边输入 · 不修改副屏任务栏 · 不进入隐藏/显示闪烁循环</text>
+  </g>
+</svg>

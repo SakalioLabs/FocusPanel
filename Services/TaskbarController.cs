@@ -22,6 +22,9 @@ public sealed class TaskbarController : ITaskbarController
     private const uint AbmGetState = 0x00000004;
     private const uint AbmSetState = 0x0000000A;
     private const uint AbsAutoHide = 0x00000001;
+    private const uint DwmCloakedApp = 0x00000001;
+    private const int DwmwaCloak = 13;
+    private const int DwmwaCloaked = 14;
     private const string MutationMutexName = @"Local\FocusPanel.TaskbarMutation";
     private static readonly JsonSerializerOptions SessionJsonOptions = new()
     {
@@ -94,14 +97,26 @@ public sealed class TaskbarController : ITaskbarController
         }
 
         uint appBarState = _native.GetAppBarState(taskbar);
+        if (!_native.TryGetTaskbarAppCloaked(
+                taskbar,
+                out bool taskbarWasAppCloaked))
+        {
+            error =
+                "无法读取 Windows 任务栏的 DWM 合成状态，已取消任务栏接管。";
+            return false;
+        }
+
         _state = new TaskbarSessionState
         {
             TaskbarWasVisible = _native.IsWindowVisible(taskbar),
+            TaskbarWasAppCloaked =
+                taskbarWasAppCloaked,
             OriginalWorkArea = originalWorkArea,
             OriginalAppBarState = appBarState,
             PrimaryBounds = primaryBounds,
             UsesNativeAutoHide = false,
             UsesEmptyWindowRegion = true,
+            UsesDwmCloak = true,
             CreatedAt = DateTimeOffset.Now
         };
 
@@ -213,9 +228,11 @@ public sealed class TaskbarController : ITaskbarController
     private static void RestoreSessionFileCore(string sessionFile, ITaskbarNativeApi native)
     {
         TaskbarSessionState? state = null;
+        bool sessionExists =
+            File.Exists(sessionFile);
         try
         {
-            if (File.Exists(sessionFile))
+            if (sessionExists)
                 state = JsonSerializer.Deserialize<TaskbarSessionState>(
                     File.ReadAllText(sessionFile),
                     SessionJsonOptions);
@@ -225,6 +242,8 @@ public sealed class TaskbarController : ITaskbarController
             // A missing or damaged state file must not prevent the fail-safe from showing the taskbar.
         }
 
+        bool damagedSessionRecovery =
+            sessionExists && state == null;
         bool workAreaRestored = true;
         IntPtr taskbar = native.FindPrimaryTaskbar();
         if (state != null && !state.UsesNativeAutoHide)
@@ -232,9 +251,11 @@ public sealed class TaskbarController : ITaskbarController
 
         bool visibilityRestored = taskbar != IntPtr.Zero;
         bool surfaceRestored = taskbar != IntPtr.Zero;
+        bool cloakRestored = taskbar != IntPtr.Zero;
         if (taskbar != IntPtr.Zero)
         {
-            if (state?.UsesEmptyWindowRegion == true)
+            if (state?.UsesEmptyWindowRegion == true
+                || damagedSessionRecovery)
             {
                 surfaceRestored =
                     native.SetTaskbarSurfaceSuppressed(
@@ -242,6 +263,23 @@ public sealed class TaskbarController : ITaskbarController
                         false)
                     && !native.IsTaskbarSurfaceSuppressed(
                         taskbar);
+            }
+
+            if (state?.UsesDwmCloak == true
+                || damagedSessionRecovery)
+            {
+                bool desiredAppCloak =
+                    state?.TaskbarWasAppCloaked
+                    ?? false;
+                cloakRestored =
+                    native.SetTaskbarAppCloaked(
+                        taskbar,
+                        desiredAppCloak)
+                    && native.TryGetTaskbarAppCloaked(
+                        taskbar,
+                        out bool restoredCloak)
+                    && restoredCloak
+                        == desiredAppCloak;
             }
 
             if (state != null)
@@ -262,6 +300,7 @@ public sealed class TaskbarController : ITaskbarController
 
         if (!workAreaRestored
             || !surfaceRestored
+            || !cloakRestored
             || !visibilityRestored)
             return;
 
@@ -336,6 +375,24 @@ public sealed class TaskbarController : ITaskbarController
         {
             _lastApplyError =
                 "Windows 拒绝停用原生任务栏的显示与命中区域";
+            return false;
+        }
+
+        // DWM cloaking is a second, independent presentation boundary. It
+        // keeps the Explorer host invisible even if a Shell edge gesture
+        // makes the underlying HWND visible or replaces its GDI region.
+        // The original app-cloak bit is recorded before any mutation and is
+        // restored by both the main process and the watchdog.
+        if (!_native.SetTaskbarAppCloaked(
+                taskbar,
+                true)
+            || !_native.TryGetTaskbarAppCloaked(
+                taskbar,
+                out bool appCloaked)
+            || !appCloaked)
+        {
+            _lastApplyError =
+                "Windows 拒绝停用原生任务栏的 DWM 合成表面";
             return false;
         }
 
@@ -503,6 +560,19 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
+        if (!_native.TryGetTaskbarAppCloaked(
+                taskbar,
+                out bool appCloaked)
+            || !appCloaked)
+        {
+            _lastApplyError =
+                "Windows 已恢复原生任务栏的 DWM 合成表面";
+            _lastStopReason =
+                TaskbarReplacementStopReason
+                    .WindowsTaskbarReappeared;
+            return false;
+        }
+
         if ((_native.GetAppBarState(taskbar) & AbsAutoHide) != 0)
         {
             _lastApplyError = "Windows 已重新启用原生任务栏的边缘呼出";
@@ -591,11 +661,21 @@ public sealed class TaskbarController : ITaskbarController
     private sealed class TaskbarSessionState
     {
         public bool TaskbarWasVisible { get; set; }
+        public bool TaskbarWasAppCloaked
+        {
+            get;
+            set;
+        }
         public NativeRect OriginalWorkArea { get; set; }
         public uint OriginalAppBarState { get; set; }
         public NativeRect PrimaryBounds { get; set; }
         public bool UsesNativeAutoHide { get; set; }
         public bool UsesEmptyWindowRegion
+        {
+            get;
+            set;
+        }
+        public bool UsesDwmCloak
         {
             get;
             set;
@@ -689,6 +769,40 @@ public sealed class TaskbarController : ITaskbarController
             NativeMethods.DeleteObject(
                 region);
             return false;
+        }
+
+        public bool TryGetTaskbarAppCloaked(
+            IntPtr taskbar,
+            out bool cloaked)
+        {
+            cloaked = false;
+            int cloakFlags = 0;
+            int result =
+                NativeMethods.DwmGetWindowAttribute(
+                    taskbar,
+                    DwmwaCloaked,
+                    out cloakFlags,
+                    Marshal.SizeOf<int>());
+            if (result < 0)
+                return false;
+
+            cloaked =
+                ((uint)cloakFlags
+                    & DwmCloakedApp) != 0;
+            return true;
+        }
+
+        public bool SetTaskbarAppCloaked(
+            IntPtr taskbar,
+            bool cloaked)
+        {
+            int value = cloaked ? 1 : 0;
+            return NativeMethods.DwmSetWindowAttribute(
+                    taskbar,
+                    DwmwaCloak,
+                    ref value,
+                    Marshal.SizeOf<int>())
+                >= 0;
         }
 
         public bool SetTaskbarVisible(IntPtr taskbar, bool visible)
@@ -792,6 +906,20 @@ public sealed class TaskbarController : ITaskbarController
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool DeleteObject(
             IntPtr handle);
+
+        [DllImport("dwmapi.dll")]
+        internal static extern int DwmGetWindowAttribute(
+            IntPtr hwnd,
+            int attribute,
+            out int value,
+            int valueSize);
+
+        [DllImport("dwmapi.dll")]
+        internal static extern int DwmSetWindowAttribute(
+            IntPtr hwnd,
+            int attribute,
+            ref int value,
+            int valueSize);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

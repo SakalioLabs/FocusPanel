@@ -4279,6 +4279,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "UsesEmptyWindowRegion = true",
             controller);
+        Assert.Contains(
+            "UsesDwmCloak = true",
+            controller);
         Assert.Contains("SetTaskbarVisible(taskbar, false)", controller);
         Assert.Contains(
             "SetTaskbarSurfaceSuppressed(",
@@ -4288,6 +4291,9 @@ public sealed class XamlResourceContractTests
             controller);
         Assert.Contains(
             "SetWindowRgn(",
+            controller);
+        Assert.Contains(
+            "DwmSetWindowAttribute(",
             controller);
         Assert.Contains("ValidateReplacement()", controller);
         Assert.Contains(
@@ -4302,6 +4308,9 @@ public sealed class XamlResourceContractTests
             guard);
         Assert.DoesNotContain(
             "_native.SetTaskbarSurfaceSuppressed(",
+            guard);
+        Assert.DoesNotContain(
+            "_native.SetTaskbarAppCloaked(",
             guard);
         Assert.DoesNotContain(
             "ApplyReplacement();",

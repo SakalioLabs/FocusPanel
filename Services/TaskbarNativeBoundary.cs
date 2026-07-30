@@ -13,6 +13,12 @@ internal interface ITaskbarNativeApi
     bool SetTaskbarSurfaceSuppressed(
         IntPtr taskbar,
         bool suppressed);
+    bool TryGetTaskbarAppCloaked(
+        IntPtr taskbar,
+        out bool cloaked);
+    bool SetTaskbarAppCloaked(
+        IntPtr taskbar,
+        bool cloaked);
     bool SetTaskbarVisible(IntPtr taskbar, bool visible);
     bool TryGetPrimaryMonitorInfo(
         IntPtr taskbar,
