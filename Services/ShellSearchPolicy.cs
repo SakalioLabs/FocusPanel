@@ -99,6 +99,23 @@ internal static class ShellSearchPolicy
                     originalIndex++));
         }
 
+        if (BrightnessSearchCommandParser
+            .TryParse(
+                query,
+                out BrightnessSearchCommand
+                    brightnessCommand))
+        {
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult
+                        .FromBrightnessCommand(
+                            brightnessCommand),
+                    Rank: -2,
+                    Category: -1,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         if (SafeExpressionEvaluator
             .TryEvaluate(
                 query,

@@ -11,6 +11,7 @@ public enum ShellSearchResultKind
     SystemCommand,
     Calculation,
     AudioCommand,
+    BrightnessCommand,
     FocusCommand,
     TaskCapture,
     Task
@@ -90,6 +91,13 @@ public sealed record ShellSearchResult
         init;
     }
 
+    internal BrightnessSearchCommand?
+        BrightnessCommand
+    {
+        get;
+        init;
+    }
+
     internal PomodoroSearchCommand? FocusCommand
     {
         get;
@@ -130,6 +138,10 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.AudioCommand;
 
+    public bool IsBrightnessCommand =>
+        Kind
+        == ShellSearchResultKind.BrightnessCommand;
+
     public bool IsFocusCommand =>
         Kind
         == ShellSearchResultKind.FocusCommand;
@@ -146,6 +158,7 @@ public sealed record ShellSearchResult
         IsSystemCommand
         || IsCalculation
         || IsAudioCommand
+        || IsBrightnessCommand
         || IsFocusCommand
         || IsTaskCapture
         || IsTask;
@@ -311,6 +324,24 @@ public sealed record ShellSearchResult
                 command.Glyph,
             AudioCommand =
                 command
+        };
+
+    internal static ShellSearchResult
+        FromBrightnessCommand(
+            BrightnessSearchCommand command) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .BrightnessCommand,
+            StableKey = command.StableKey,
+            DisplayName = command.DisplayName,
+            SecondaryText =
+                "显示快捷命令 · 点击或按 Enter 执行",
+            AccessibleName =
+                $"执行显示快捷命令 {command.DisplayName}",
+            Glyph = "\uE706",
+            BrightnessCommand = command
         };
 
     internal static ShellSearchResult

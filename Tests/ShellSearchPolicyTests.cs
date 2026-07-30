@@ -353,6 +353,53 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
+    [InlineData(
+        "亮度 35",
+        "Set",
+        35)]
+    [InlineData(
+        "brightness +10",
+        "Adjust",
+        10)]
+    public void Compose_BrightnessCommandIsFirstAndExecutable(
+        string query,
+        string kind,
+        int percent)
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "亮度工具",
+                        "exe:c:\\brightness.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                query);
+
+        ShellSearchResult result = results[0];
+        Assert.Equal(
+            ShellSearchResultKind.BrightnessCommand,
+            result.Kind);
+        Assert.Equal(
+            kind,
+            result.BrightnessCommand?.Kind
+                .ToString());
+        Assert.Equal(
+            percent,
+            result.BrightnessCommand?.Percent);
+        Assert.True(result.IsBrightnessCommand);
+        Assert.True(result.UsesGlyph);
+        Assert.False(result.CanTogglePin);
+        Assert.StartsWith(
+            "brightness:",
+            result.StableKey);
+        Assert.Contains(
+            "Enter",
+            result.SecondaryText);
+    }
+
+    [Theory]
     [InlineData("专注 25", 25)]
     [InlineData("focus 45 min", 45)]
     [InlineData("开始番茄钟60分钟", 60)]

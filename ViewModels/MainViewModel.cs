@@ -24,12 +24,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IAppCatalogService _appCatalog;
     private readonly IWindowTracker _windowTracker;
     private readonly ISystemStatusService _systemStatus;
+    private readonly IDisplayBrightnessService
+        _brightness;
     private readonly IAppUpdateService _updateService;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly IShellPreferenceRepository
         _shellPreferences;
     private readonly AudioControlCoordinator
         _audioControl;
+    private readonly BrightnessControlCoordinator
+        _brightnessControl;
     private readonly AppLaunchCoordinator
         _appLaunch;
     private readonly SystemActionCoordinator
@@ -75,6 +79,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private long _audioMuteRevision;
     private volatile bool _volumeWritePending;
     private volatile bool _muteWritePending;
+    private bool _updatingBrightnessState;
+    private long _brightnessRevision;
+    private volatile bool _brightnessWritePending;
+    private int _confirmedBrightnessPercent;
     private long _taskSummaryMonthTicks;
     private float _confirmedMasterVolume;
     private bool _confirmedMuted;
@@ -247,6 +255,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "正在读取音频设备…";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(BrightnessSummary))]
+    private int brightnessPercent;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(BrightnessSummary))]
+    private bool isBrightnessAvailable;
+
+    [ObservableProperty]
+    private string brightnessStatusText =
+        "正在读取内置显示器…";
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NetworkGlyph))]
     [NotifyPropertyChangedFor(nameof(NetworkSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
@@ -330,13 +352,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IAppCatalogService appCatalog,
         IWindowTracker windowTracker,
         ISystemStatusService systemStatus,
-        IAppUpdateService updateService)
+        IAppUpdateService updateService,
+        IDisplayBrightnessService brightness)
         : this(
             appCatalog,
             windowTracker,
             systemStatus,
             updateService,
-            new ShellPreferenceRepository())
+            new ShellPreferenceRepository(),
+            brightness: brightness)
     {
     }
 
@@ -354,11 +378,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ClipboardTextService?
             clipboard = null,
         TaskService?
-            taskService = null)
+            taskService = null,
+        IDisplayBrightnessService?
+            brightness = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
         _systemStatus = systemStatus;
+        _brightness =
+            brightness
+            ?? new DisplayBrightnessService();
         _updateService = updateService;
         _appLaunch =
             new AppLaunchCoordinator(
@@ -387,6 +416,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _systemStatus.TrySetMuted);
         _audioControl.Completed +=
             OnAudioControlCompleted;
+        _brightnessControl =
+            new BrightnessControlCoordinator(
+                _brightness.TrySetBrightness);
+        _brightnessControl.Completed +=
+            OnBrightnessControlCompleted;
         _shellPreferences =
             shellPreferences
             ?? throw new ArgumentNullException(
@@ -514,6 +548,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GetAudioPresentation().Summary;
     public string AudioToggleLabel =>
         GetAudioPresentation().ToggleLabel;
+    public string BrightnessSummary =>
+        IsBrightnessAvailable
+            ? $"亮度 {BrightnessPercent}%"
+            : "亮度控制不可用";
     public string NetworkGlyph =>
         GetNetworkPresentation().Glyph;
     public string NetworkSummary =>
@@ -733,6 +771,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         QueueMuted(value);
     }
 
+    partial void OnBrightnessPercentChanged(
+        int value)
+    {
+        if (_updatingBrightnessState)
+            return;
+
+        QueueBrightness(value);
+    }
+
     private void QueueMasterVolume(float value)
     {
         float normalized =
@@ -778,6 +825,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _muteWritePending = false;
         SetDisplayedMuted(
             _confirmedMuted);
+    }
+
+    private void QueueBrightness(int value)
+    {
+        int normalized =
+            Math.Clamp(value, 0, 100);
+        long revision =
+            Interlocked.Increment(
+                ref _brightnessRevision);
+        _brightnessWritePending = true;
+        if (_brightnessControl.Queue(
+                revision,
+                normalized))
+        {
+            return;
+        }
+
+        _brightnessWritePending = false;
+        SetDisplayedBrightness(
+            _confirmedBrightnessPercent);
     }
 
     partial void OnThemeModeChanged(string value)
@@ -1016,6 +1083,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             ExecuteAudioSearchCommand(
                 audioCommand);
+            return;
+        }
+
+        if (result?.BrightnessCommand
+            is BrightnessSearchCommand
+                brightnessCommand)
+        {
+            ExecuteBrightnessSearchCommand(
+                brightnessCommand);
             return;
         }
 
@@ -1286,6 +1362,33 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 muted;
         }
 
+        IsSearchOpen = false;
+    }
+
+    private void ExecuteBrightnessSearchCommand(
+        BrightnessSearchCommand command)
+    {
+        if (!IsBrightnessAvailable)
+        {
+            ReportBrightnessFailure(
+                "此设备没有向 Windows 公开内置显示器亮度控制。"
+                + "外接显示器请使用显示器按键，或尝试 Win+A。");
+            return;
+        }
+
+        if (command.RequiresCurrentBrightness
+            && _brightnessWritePending)
+        {
+            ReportBrightnessFailure(
+                "上一项亮度调整仍在执行，"
+                + "请稍后再使用相对亮度命令。");
+            return;
+        }
+
+        SystemActionMessage = string.Empty;
+        BrightnessPercent =
+            command.Resolve(
+                BrightnessPercent);
         IsSearchOpen = false;
     }
 
@@ -2373,11 +2476,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool audioWritePendingAfterCapture =
             _volumeWritePending
             || _muteWritePending;
+        long brightnessRevision =
+            Volatile.Read(
+                ref _brightnessRevision);
+        bool brightnessWritePendingBeforeCapture =
+            _brightnessWritePending;
+        BrightnessStatusSnapshot brightness =
+            _brightness.GetStatus();
+        bool brightnessWritePendingAfterCapture =
+            _brightnessWritePending;
         return new PendingSystemStatusSnapshot(
             snapshot,
             audioRevision,
             audioWritePendingBeforeCapture
-            || audioWritePendingAfterCapture);
+                || audioWritePendingAfterCapture,
+            brightness,
+            brightnessRevision,
+            brightnessWritePendingBeforeCapture
+                || brightnessWritePendingAfterCapture);
     }
 
     private async Task ApplySystemStatusAsync(
@@ -2422,6 +2538,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 RestoreConfirmedAudioState(
                     audio.MasterVolume,
                     audio.IsMuted);
+            }
+        }
+
+        if (!pending.BrightnessWritePending
+            && pending.BrightnessRevision
+                == Volatile.Read(
+                    ref _brightnessRevision))
+        {
+            BrightnessStatusSnapshot brightness =
+                pending.Brightness;
+            IsBrightnessAvailable =
+                brightness.IsAvailable;
+            BrightnessStatusText =
+                brightness.Detail;
+            if (brightness.IsAvailable)
+            {
+                RestoreConfirmedBrightness(
+                    brightness.Percent);
             }
         }
 
@@ -2512,6 +2646,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private void RestoreConfirmedBrightness(
+        int percent)
+    {
+        _confirmedBrightnessPercent =
+            Math.Clamp(percent, 0, 100);
+        SetDisplayedBrightness(
+            _confirmedBrightnessPercent);
+    }
+
+    private void SetDisplayedBrightness(
+        int percent)
+    {
+        _updatingBrightnessState = true;
+        try
+        {
+            BrightnessPercent =
+                Math.Clamp(percent, 0, 100);
+        }
+        finally
+        {
+            _updatingBrightnessState = false;
+        }
+    }
+
     private void OnAudioControlCompleted(
         AudioControlOutcome outcome)
     {
@@ -2581,6 +2739,63 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsAudioAvailable = false;
         AudioStatusText =
             "默认音频输出设备暂时不可用";
+        SystemActionMessage = message;
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
+    }
+
+    private void OnBrightnessControlCompleted(
+        BrightnessControlOutcome outcome)
+    {
+        _uiDispatcher.BeginInvoke(
+            () =>
+                ApplyBrightnessControlOutcome(
+                    outcome),
+            DispatcherPriority.Background);
+    }
+
+    private void ApplyBrightnessControlOutcome(
+        BrightnessControlOutcome outcome)
+    {
+        if (_isDisposed)
+            return;
+
+        bool isCurrent =
+            outcome.Revision
+            == Volatile.Read(
+                ref _brightnessRevision);
+        if (outcome.Succeeded)
+        {
+            _confirmedBrightnessPercent =
+                outcome.Percent;
+        }
+
+        if (!isCurrent)
+            return;
+
+        _brightnessWritePending = false;
+        if (outcome.Succeeded)
+        {
+            IsBrightnessAvailable = true;
+            BrightnessStatusText =
+                "内置显示器";
+            SystemActionMessage = string.Empty;
+            return;
+        }
+
+        SetDisplayedBrightness(
+            _confirmedBrightnessPercent);
+        ReportBrightnessFailure(
+            "无法调整显示亮度。显示驱动可能正在切换，"
+            + "或此显示器不支持 Windows 亮度接口。");
+    }
+
+    private void ReportBrightnessFailure(
+        string message)
+    {
+        IsBrightnessAvailable = false;
+        BrightnessStatusText =
+            "内置显示器亮度控制暂时不可用";
         SystemActionMessage = message;
         CloseTransientPanels();
         IsStatusCenterOpen = true;
@@ -3052,6 +3267,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _isDisposed = true;
         _audioControl.Completed -=
             OnAudioControlCompleted;
+        _brightnessControl.Completed -=
+            OnBrightnessControlCompleted;
         _shellPreferences.SaveFailed -=
             OnShellPreferenceSaveFailed;
         _clockTimer.Stop();
@@ -3067,6 +3284,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             new List<Task>
             {
                 _audioControl.CompleteAsync(),
+                _brightnessControl.CompleteAsync(),
                 _autoStartup.CompleteAsync(),
                 _taskCapture.CompleteAsync(),
                 _taskSearch.CompleteAsync(),
@@ -3119,6 +3337,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         finally
         {
             _audioControl.Dispose();
+            _brightnessControl.Dispose();
             _shellPreferences.Dispose();
         }
     }
@@ -3150,5 +3369,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         PendingSystemStatusSnapshot(
             SystemStatusSnapshot Snapshot,
             long AudioRevision,
-            bool AudioWritePending);
+            bool AudioWritePending,
+            BrightnessStatusSnapshot Brightness,
+            long BrightnessRevision,
+            bool BrightnessWritePending);
 }

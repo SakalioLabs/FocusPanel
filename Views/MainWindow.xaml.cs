@@ -103,7 +103,8 @@ public partial class MainWindow :
             _coordinator.Apps,
             _coordinator.Windows,
             _coordinator.SystemStatus,
-            _coordinator.Updates);
+            _coordinator.Updates,
+            _coordinator.Brightness);
 
         InitializeComponent();
         DataContext = _viewModel;

@@ -11,6 +11,8 @@ public sealed class ShellCoordinator : IDisposable
         Apps = new AppCatalogService();
         Windows = new WindowTracker();
         SystemStatus = new SystemStatusService();
+        Brightness =
+            new DisplayBrightnessService();
         Updates = new VelopackUpdateService();
         JumpLists =
             new AppJumpListService();
@@ -22,6 +24,7 @@ public sealed class ShellCoordinator : IDisposable
     public IAppCatalogService Apps { get; }
     public IWindowTracker Windows { get; }
     public ISystemStatusService SystemStatus { get; }
+    public IDisplayBrightnessService Brightness { get; }
     public IAppUpdateService Updates { get; }
     internal IAppJumpListService
         JumpLists
@@ -44,6 +47,7 @@ public sealed class ShellCoordinator : IDisposable
         Taskbar.Dispose();
         Windows.Dispose();
         SystemStatus.Dispose();
+        Brightness.Dispose();
         Updates.Dispose();
         JumpLists.Dispose();
         await AppFiles

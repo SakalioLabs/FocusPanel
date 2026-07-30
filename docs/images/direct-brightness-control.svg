@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1b29"/>
+      <stop offset="1" stop-color="#223449"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd45a"/>
+      <stop offset="1" stop-color="#ff9e57"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#02070d" flood-opacity=".44"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="620" rx="32" fill="url(#bg)"/>
+  <circle cx="1080" cy="92" r="180" fill="#65c7ff" opacity=".08"/>
+  <circle cx="100" cy="590" r="210" fill="#ffbd59" opacity=".07"/>
+  <text x="58" y="70" fill="#f5f8fc" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="28" font-weight="650">亮度直接控制：少开一个 Windows 面板</text>
+  <text x="58" y="105" fill="#9bb0c5" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">状态中心连续调节 · 统一搜索一步设定 · 公开 WMI 边界 · 不支持时明确降级</text>
+
+  <g transform="translate(58 142)" filter="url(#shadow)">
+    <rect width="500" height="408" rx="24" fill="#1a2b3c" stroke="#446079"/>
+    <text x="28" y="42" fill="#edf5fb" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">状态中心</text>
+    <rect x="26" y="70" width="448" height="116" rx="18" fill="#223b50"/>
+    <g transform="translate(58 110)">
+      <circle cx="18" cy="18" r="12" fill="url(#sun)"/>
+      <g stroke="#ffc45b" stroke-width="3" stroke-linecap="round">
+        <path d="M18 0v-8M18 36v8M0 18h-8M36 18h8M5 5l-6-6M31 31l6 6M31 5l6-6M5 31l-6 6"/>
+      </g>
+    </g>
+    <rect x="112" y="122" width="260" height="7" rx="4" fill="#40586b"/>
+    <rect x="112" y="122" width="176" height="7" rx="4" fill="#65c7ff"/>
+    <circle cx="288" cy="125.5" r="11" fill="#dff5ff" stroke="#65c7ff" stroke-width="3"/>
+    <text x="398" y="133" fill="#f4f8fb" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="18">68%</text>
+    <text x="32" y="170" fill="#9eb3c6" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">内置显示器 · 拖动只提交最后目标值</text>
+
+    <rect x="26" y="208" width="448" height="166" rx="18" fill="#142635" stroke="#38546a"/>
+    <text x="48" y="244" fill="#a9bdce" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="14">统一搜索</text>
+    <rect x="46" y="260" width="408" height="48" rx="13" fill="#0c1a26" stroke="#65c7ff" stroke-width="2"/>
+    <text x="66" y="291" fill="#f7fbff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="18">亮度 35</text>
+    <rect x="46" y="322" width="408" height="38" rx="11" fill="#26465d"/>
+    <text x="66" y="347" fill="#dff5ff" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">☀  将亮度设为 35%　　Enter</text>
+  </g>
+
+  <g transform="translate(606 142)">
+    <rect width="536" height="408" rx="24" fill="#172839" stroke="#446079"/>
+    <text x="30" y="44" fill="#edf5fb" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="19" font-weight="600">安全执行链</text>
+    <g font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+      <rect x="32" y="74" width="472" height="64" rx="16" fill="#223b50"/>
+      <text x="56" y="102" fill="#7fd4ff" font-size="15" font-weight="600">01　界面立即响应</text>
+      <text x="56" y="124" fill="#a7bacb" font-size="13">滑块与搜索只提交 0–100 的明确目标</text>
+      <path d="M268 138v25" stroke="#5b7890" stroke-width="3"/>
+      <rect x="32" y="163" width="472" height="64" rx="16" fill="#223b50"/>
+      <text x="56" y="191" fill="#7fd4ff" font-size="15" font-weight="600">02　合并并串行写入</text>
+      <text x="56" y="213" fill="#a7bacb" font-size="13">连续输入只保留最新值，不阻塞 WPF Dispatcher</text>
+      <path d="M268 227v25" stroke="#5b7890" stroke-width="3"/>
+      <rect x="32" y="252" width="472" height="64" rx="16" fill="#223b50"/>
+      <text x="56" y="280" fill="#7fd4ff" font-size="15" font-weight="600">03　Windows 公开 WMI</text>
+      <text x="56" y="302" fill="#a7bacb" font-size="13">只操作 Active 的内置显示设备</text>
+      <path d="M268 316v22" stroke="#5b7890" stroke-width="3"/>
+      <rect x="32" y="338" width="226" height="45" rx="13" fill="#1f493f" stroke="#42b88a"/>
+      <text x="56" y="366" fill="#9ce6c9" font-size="14">成功 · 保持中心打开</text>
+      <rect x="278" y="338" width="226" height="45" rx="13" fill="#4a3533" stroke="#d88978"/>
+      <text x="302" y="366" fill="#ffc2b5" font-size="14">失败 · 回滚并说明</text>
+    </g>
+  </g>
+</svg>
