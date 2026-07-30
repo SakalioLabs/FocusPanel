@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using FocusPanel.Services;
 using Xunit;
 
@@ -6,6 +7,39 @@ namespace FocusPanel.Tests;
 
 public sealed class SystemManagementToolCatalogTests
 {
+    [Fact]
+    public void SearchCatalog_CoversEveryManagementToolExactlyOnce()
+    {
+        Assert.Equal(
+            System.Enum.GetValues<
+                SystemManagementTool>().Length,
+            SystemManagementSearchCatalog
+                .All.Count);
+        Assert.Equal(
+            SystemManagementSearchCatalog
+                .All.Count,
+            SystemManagementSearchCatalog
+                .All
+                .Select(item => item.Tool)
+                .Distinct()
+                .Count());
+        Assert.All(
+            SystemManagementSearchCatalog
+                .All,
+            entry =>
+            {
+                Assert.False(
+                    string.IsNullOrWhiteSpace(
+                        entry.DisplayName));
+                Assert.False(
+                    string.IsNullOrWhiteSpace(
+                        entry.Glyph));
+                Assert.False(
+                    string.IsNullOrWhiteSpace(
+                        entry.Aliases));
+            });
+    }
+
     public static IEnumerable<object[]> ToolRequests()
     {
         yield return Case(SystemManagementTool.InstalledApps, "ms-settings:appsfeatures");

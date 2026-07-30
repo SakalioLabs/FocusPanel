@@ -97,6 +97,31 @@ internal static class ShellSearchPolicy
             }
         }
 
+        foreach (SystemManagementSearchEntry
+                 command
+                 in SystemManagementSearchCatalog
+                     .All)
+        {
+            int? rank =
+                AppSearchPolicy
+                    .GetTextRank(
+                        command.DisplayName,
+                        command.Aliases,
+                        query);
+            if (!rank.HasValue)
+                continue;
+
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult
+                        .FromSystemCommand(
+                            command),
+                    rank.Value,
+                    Category: 2,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         return ranked
             .OrderBy(
                 item =>

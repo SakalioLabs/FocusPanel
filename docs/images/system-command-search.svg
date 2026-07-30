@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#091321"/>
+      <stop offset="1" stop-color="#1d2942"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#61b9ff"/>
+      <stop offset="1" stop-color="#8b7dff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000" flood-opacity=".32"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="620" rx="30" fill="url(#bg)"/>
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <text x="56" y="66" fill="#f4f8ff" font-size="28" font-weight="600">统一搜索：系统管理工具不再藏在多层菜单里</text>
+    <text x="56" y="103" fill="#9eb1ca" font-size="17">输入中文、英文、同义词或原生命令名，回车直接执行</text>
+
+    <g filter="url(#shadow)">
+      <rect x="56" y="136" width="632" height="422" rx="26" fill="#1e2c43" stroke="#405575"/>
+      <text x="86" y="179" fill="#dce9fa" font-size="18" font-weight="600">应用、窗口与系统命令</text>
+      <rect x="84" y="198" width="576" height="58" rx="15" fill="#101b2d" stroke="#5daff5" stroke-width="2"/>
+      <text x="108" y="234" fill="#f4f8ff" font-size="18">设备</text>
+      <text x="625" y="234" text-anchor="end" fill="#7890ad" font-size="15">↑ ↓ 选择 · Enter 执行</text>
+
+      <rect x="84" y="273" width="576" height="76" rx="16" fill="#294666" stroke="#69b7f5"/>
+      <rect x="101" y="289" width="44" height="44" rx="12" fill="url(#accent)"/>
+      <path d="M112 303h22v16h-22zM117 324h12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+      <text x="163" y="307" fill="#fff" font-size="18" font-weight="600">设备管理器</text>
+      <text x="163" y="333" fill="#b9cee5" font-size="14">Windows 系统命令 · devmgmt</text>
+      <text x="625" y="320" text-anchor="end" fill="#8dccff" font-size="24">↵</text>
+
+      <rect x="84" y="360" width="576" height="76" rx="16" fill="#17253a"/>
+      <rect x="101" y="376" width="44" height="44" rx="12" fill="#263b58"/>
+      <circle cx="123" cy="398" r="11" fill="none" stroke="#8fc8ff" stroke-width="2.5"/>
+      <path d="M123 392v7l5 4" fill="none" stroke="#8fc8ff" stroke-width="2.5" stroke-linecap="round"/>
+      <text x="163" y="394" fill="#eaf2fc" font-size="18" font-weight="600">设备规格 - 设置</text>
+      <text x="163" y="420" fill="#92a8c1" font-size="14">已打开窗口 · 设置</text>
+
+      <rect x="84" y="447" width="576" height="76" rx="16" fill="#17253a"/>
+      <rect x="101" y="463" width="44" height="44" rx="12" fill="#263b58"/>
+      <text x="123" y="492" text-anchor="middle" fill="#8fc8ff" font-size="18" font-weight="600">设</text>
+      <text x="163" y="481" fill="#eaf2fc" font-size="18" font-weight="600">设备助手</text>
+      <text x="163" y="507" fill="#92a8c1" font-size="14">应用</text>
+    </g>
+
+    <g transform="translate(736 150)">
+      <rect width="328" height="390" rx="24" fill="#17243a" stroke="#405575"/>
+      <text x="28" y="48" fill="#f2f7ff" font-size="20" font-weight="600">一条输入路径</text>
+
+      <circle cx="48" cy="96" r="20" fill="#274968"/>
+      <text x="48" y="103" text-anchor="middle" fill="#8dccff" font-size="20">1</text>
+      <text x="82" y="93" fill="#e7f0fb" font-size="16">输入“任务”“硬盘分区”</text>
+      <text x="82" y="116" fill="#8fa6bf" font-size="13">也支持 taskmgr / diskmgmt</text>
+
+      <path d="M48 126v34" stroke="#456483" stroke-width="2"/>
+      <circle cx="48" cy="182" r="20" fill="#33456e"/>
+      <text x="48" y="189" text-anchor="middle" fill="#a99dff" font-size="20">2</text>
+      <text x="82" y="179" fill="#e7f0fb" font-size="16">应用、窗口、命令一起排序</text>
+      <text x="82" y="202" fill="#8fa6bf" font-size="13">精确应用仍优先，不打乱空列表</text>
+
+      <path d="M48 212v34" stroke="#456483" stroke-width="2"/>
+      <circle cx="48" cy="268" r="20" fill="url(#accent)"/>
+      <text x="48" y="275" text-anchor="middle" fill="#fff" font-size="20">3</text>
+      <text x="82" y="265" fill="#e7f0fb" font-size="16">回车直接打开系统工具</text>
+      <text x="82" y="288" fill="#8fa6bf" font-size="13">后台执行，失败回到状态中心</text>
+
+      <rect x="28" y="320" width="272" height="46" rx="14" fill="#223853"/>
+      <text x="164" y="349" text-anchor="middle" fill="#9ed2ff" font-size="15">15 个 Windows 管理入口 · 0 个新按钮</text>
+    </g>
+  </g>
+</svg>

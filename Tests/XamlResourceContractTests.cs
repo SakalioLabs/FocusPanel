@@ -2322,7 +2322,7 @@ public sealed class XamlResourceContractTests
             2,
             Regex.Matches(
                 mainWindow,
-                "<controls:AppIconPresenter").Count);
+                @"<controls:AppIconPresenter(?:\s|>)").Count);
         Assert.DoesNotContain(
             "<Image Source=\"{Binding Icon}\"",
             mainWindow);
@@ -2366,6 +2366,16 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "ShellSearchPolicy.cs"));
+        string systemSearchCatalog = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "SystemManagementSearchCatalog.cs"));
+        string searchResult = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Models",
+                "ShellSearchResult.cs"));
         Assert.Contains(
             "x:Name=\"SearchResultsList\"",
             mainWindow);
@@ -2379,7 +2389,7 @@ public sealed class XamlResourceContractTests
             "正在载入应用目录…",
             viewModel);
         Assert.Contains(
-            "没有找到匹配的应用或窗口",
+            "没有找到匹配的应用、窗口或系统命令",
             viewModel);
         Assert.Contains(
             "Name = \"FocusPanel.AppCatalog\"",
@@ -2408,6 +2418,30 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "window.IsActive",
             shellSearchPolicy);
+        Assert.Contains(
+            "SystemManagementSearchCatalog",
+            shellSearchPolicy);
+        Assert.Contains(
+            "任务管理器",
+            systemSearchCatalog);
+        Assert.Contains(
+            "设备管理器",
+            systemSearchCatalog);
+        Assert.Contains(
+            "TerminalAdministrator",
+            systemSearchCatalog);
+        Assert.Contains(
+            "ShellSearchResultKind.SystemCommand",
+            searchResult);
+        Assert.Contains(
+            "result?.ManagementTool",
+            viewModel);
+        Assert.Contains(
+            "_systemStatus",
+            viewModel);
+        Assert.Contains(
+            ".OpenManagementTool(",
+            viewModel);
     }
 
     [Fact]
@@ -2444,7 +2478,7 @@ public sealed class XamlResourceContractTests
             "SelectedItem=\"{Binding SelectedSearchResult, Mode=TwoWay}\"",
             mainWindow);
         Assert.Contains(
-            "使用上下方向键选择，按回车启动或切换",
+            "使用上下方向键选择，按回车执行",
             mainWindow);
         Assert.Contains(
             "AppSearchSelectionPolicy.Move(",
@@ -2465,7 +2499,13 @@ public sealed class XamlResourceContractTests
             "SelectedSearchResult?.StableKey",
             viewModel);
         Assert.Contains(
-            "AutomationProperties.Name=\"应用与窗口搜索结果\"",
+            "AutomationProperties.Name=\"应用、窗口与系统命令搜索结果\"",
+            mainWindow);
+        Assert.Contains(
+            "Binding=\"{Binding IsSystemCommand}\"",
+            mainWindow);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusIconText}\"",
             mainWindow);
         Assert.Contains(
             "Command=\"{Binding DataContext.ExecuteSearchResultCommand",

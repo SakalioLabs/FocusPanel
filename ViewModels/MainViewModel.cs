@@ -454,7 +454,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string AppSearchStatusText =>
         IsAppCatalogLoading
             ? "正在载入应用目录…"
-            : "没有找到匹配的应用或窗口";
+            : "没有找到匹配的应用、窗口或系统命令";
     public bool IsAppSearchStatusVisible =>
         SearchResults.Count == 0;
     public string AudioGlyph =>
@@ -934,6 +934,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ExecuteSearchResult(
         ShellSearchResult? result)
     {
+        if (result?.ManagementTool
+            is SystemManagementTool tool)
+        {
+            await RunSystemActionAsync(
+                () => _systemStatus
+                    .OpenManagementTool(
+                        tool),
+                $"无法打开“{result.DisplayName}”。"
+                + "当前账户权限或系统版本可能不支持该入口。");
+            return;
+        }
+
         if (result?.Window is WindowReference window)
         {
             bool succeeded =

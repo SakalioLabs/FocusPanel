@@ -36,7 +36,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 多窗口应用无需打开列表即可在图标上滚轮切换：向下进入下一个窗口，向上返回上一个窗口，首尾自动环绕。连续滚动会记住刚刚选中的窗口，不等待 WinEvent 快照回写，也用 90ms 节流抑制高分辨率触控板抖动；单窗口应用不会吞掉应用栏滚动。悬停窗口列表中可用中键或 `Delete` 直接关闭目标窗口，仍只发送正常 `WM_CLOSE`。
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
 - 应用搜索按“完整名称 → 可执行文件名 → 名称前缀 → 缩写 → 多词前缀 → 包含”分级匹配；`vsc` 可命中 Visual Studio Code，`studio co` 可按词查找，标点、大小写和重音符号会被统一规范化。固定状态只在同一匹配等级内作为次级排序，不会再把固定但弱相关的结果压到精确结果前面；不做易误启动的无限模糊纠错。
-- 搜索现在把应用与已打开窗口放在同一条结果列表中：输入文档、网页或会话的窗口标题即可直接切换，精确窗口标题会排在仅包含关键词的应用之前；精确应用名仍优先启动应用。空查询保持原有固定应用顺序，不混入运行窗口；窗口快照更新时按句柄保留键盘选中项。该入口只搜索应用与当前顶层窗口，不扩展为网页或磁盘全文搜索。
+- 搜索现在把应用、已打开窗口和 Windows 系统命令放在同一条结果列表中：输入文档、网页或会话的窗口标题即可直接切换；输入“任务管理器”“设备管理器”“硬盘分区”“admin terminal”或 `taskmgr`、`devmgmt` 等命令名即可直接执行对应管理入口。精确应用名仍优先启动应用，空查询保持原有固定应用顺序，不混入窗口或系统命令；窗口快照更新时按稳定键保留键盘选中项。该入口不扩展为网页或磁盘全文搜索。
 - 搜索结果和任务列表统一继承全局 Fluent `ListBox/ListBoxItem`：启动按钮与标题显式使用动态 `FocusTextBrush`，选中项使用 `FocusAccentSoftBrush`、强调描边和主题文字，不再落回 WPF 的系统浅蓝选择背景，因此深色、浅色及系统强调色变化下都保持可读。
 - 任务标题、完成状态和自定义字段采用 180ms 合并保存；根任务、子任务、增删改和全局字段通过同一个后台数据库闸门严格串行，每次操作创建并释放自己的短生命周期 `AppDbContext`，读取使用无跟踪快照。页面切换会先排空旧范围修改，退出会等待已入队保存完成，避免快速输入触发 EF 并发异常、跨操作跟踪污染或丢失最后一次修改。
 - 任务 Markdown 图片选择完成后，目标目录创建、唯一文件名生成和文件复制全部在工作线程执行；网络盘、云盘占位图片和大文件不会冻结任务详情。任务在复制期间被关闭或切换时，迟到结果不会写入新任务；点击 Markdown 图片也复用后台 Shell 打开边界，失效关联不会造成 Panel 闪退。
@@ -208,6 +208,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![应用搜索分级匹配与稳定排序](docs/images/app-search-ranked-matching.svg)
 
 ![应用与窗口统一搜索切换](docs/images/unified-app-window-search.svg)
+
+![统一搜索直达 Windows 系统命令](docs/images/system-command-search.svg)
 
 ![统一 Fluent 任务栏菜单](docs/images/fluent-context-menu-system.svg)
 
@@ -470,7 +472,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.53 `
+  -Version 0.10.54 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -481,7 +483,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.53-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.54-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

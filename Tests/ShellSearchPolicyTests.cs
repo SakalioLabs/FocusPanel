@@ -103,11 +103,23 @@ public sealed class ShellSearchPolicyTests
     [Fact]
     public void Compose_BlankWindowTitleUsesApplicationFallback()
     {
-        ShellSearchResult result = Assert.Single(
-            ShellSearchPolicy.Compose(
-                Array.Empty<AppLaunchItem>(),
-                new[] { Running("终端", " ", 41) },
-                "终端"));
+        ShellSearchResult result =
+            Assert.Single(
+                ShellSearchPolicy.Compose(
+                        Array.Empty<AppLaunchItem>(),
+                        new[]
+                        {
+                            Running(
+                                "终端",
+                                " ",
+                                41)
+                        },
+                        "终端")
+                    .Where(
+                        item =>
+                            item.Kind
+                            == ShellSearchResultKind
+                                .Window));
 
         Assert.Equal("终端 窗口", result.DisplayName);
         Assert.Equal(ShellSearchResultKind.Window, result.Kind);
@@ -122,6 +134,87 @@ public sealed class ShellSearchPolicyTests
             "cafe editor");
 
         Assert.Equal("CaféEditor", Assert.Single(results).DisplayName);
+    }
+
+    [Theory]
+    [InlineData("任务管理器", SystemManagementTool.TaskManager)]
+    [InlineData("taskmgr", SystemManagementTool.TaskManager)]
+    [InlineData("硬盘分区", SystemManagementTool.DiskManagement)]
+    [InlineData("devmgmt", SystemManagementTool.DeviceManager)]
+    [InlineData("admin terminal", SystemManagementTool.TerminalAdministrator)]
+    public void Compose_FindsSystemCommandByNameOrAlias(
+        string query,
+        SystemManagementTool expectedTool)
+    {
+        ShellSearchResult result =
+            Assert.Single(
+                ShellSearchPolicy.Compose(
+                    Array.Empty<AppLaunchItem>(),
+                    Array.Empty<WindowTaskItem>(),
+                    query));
+
+        Assert.Equal(
+            ShellSearchResultKind.SystemCommand,
+            result.Kind);
+        Assert.Equal(
+            expectedTool,
+            result.ManagementTool);
+        Assert.True(
+            result.IsSystemCommand);
+        Assert.False(
+            result.CanTogglePin);
+        Assert.StartsWith(
+            "system:",
+            result.StableKey);
+        Assert.False(
+            string.IsNullOrWhiteSpace(
+                result.Glyph));
+    }
+
+    [Fact]
+    public void Compose_EmptyQueryDoesNotMixSystemCommandsIntoPinnedApps()
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "设置",
+                        "exe:c:\\settings.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                string.Empty);
+
+        ShellSearchResult result =
+            Assert.Single(results);
+        Assert.Equal(
+            ShellSearchResultKind.Application,
+            result.Kind);
+        Assert.Null(result.ManagementTool);
+    }
+
+    [Fact]
+    public void Compose_ExactApplicationStaysAheadOfEqualSystemCommand()
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "设置",
+                        "exe:c:\\settings.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                "设置");
+
+        Assert.Equal(
+            ShellSearchResultKind.Application,
+            results[0].Kind);
+        Assert.Contains(
+            results,
+            item =>
+                item.ManagementTool
+                == SystemManagementTool.Settings);
     }
 
     [Fact]

@@ -1,12 +1,14 @@
 using System;
 using System.Windows.Media;
+using FocusPanel.Services;
 
 namespace FocusPanel.Models;
 
 public enum ShellSearchResultKind
 {
     Application,
-    Window
+    Window,
+    SystemCommand
 }
 
 public sealed record ShellSearchResult
@@ -59,9 +61,25 @@ public sealed record ShellSearchResult
         init;
     }
 
+    public SystemManagementTool? ManagementTool
+    {
+        get;
+        init;
+    }
+
+    public string Glyph
+    {
+        get;
+        init;
+    } = string.Empty;
+
     public bool IsWindow =>
         Kind
         == ShellSearchResultKind.Window;
+
+    public bool IsSystemCommand =>
+        Kind
+        == ShellSearchResultKind.SystemCommand;
 
     public bool CanTogglePin =>
         Application != null;
@@ -129,4 +147,27 @@ public sealed record ShellSearchResult
                 window
         };
     }
+
+    internal static ShellSearchResult
+        FromSystemCommand(
+            SystemManagementSearchEntry entry) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .SystemCommand,
+            StableKey =
+                "system:"
+                + entry.Tool,
+            DisplayName =
+                entry.DisplayName,
+            SecondaryText =
+                "Windows 系统命令",
+            AccessibleName =
+                $"打开系统命令 {entry.DisplayName}",
+            Glyph =
+                entry.Glyph,
+            ManagementTool =
+                entry.Tool
+        };
 }
