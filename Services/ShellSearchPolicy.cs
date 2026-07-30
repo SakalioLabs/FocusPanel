@@ -16,7 +16,9 @@ internal static class ShellSearchPolicy
             IEnumerable<WindowTaskItem>?
                 runningApplications,
             string? query,
-            int limit = DefaultLimit)
+            int limit = DefaultLimit,
+            IEnumerable<TaskSearchItem>?
+                taskItems = null)
     {
         if (limit <= 0)
         {
@@ -135,6 +137,30 @@ internal static class ShellSearchPolicy
             }
         }
 
+        foreach (TaskSearchItem task
+                 in TaskSearchPolicy.Search(
+                     taskItems,
+                     query))
+        {
+            int? rank =
+                AppSearchPolicy
+                    .GetTextRank(
+                        task.Title,
+                        task.ParentTitle,
+                        query);
+            if (!rank.HasValue)
+                continue;
+
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult
+                        .FromTask(task),
+                    rank.Value,
+                    Category: 1,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         foreach (WindowTaskItem running
                  in runningApplications
                      ?? Array.Empty<
@@ -159,7 +185,7 @@ internal static class ShellSearchPolicy
                                 running,
                                 window),
                         rank.Value,
-                        Category: 1,
+                        Category: 2,
                         window.IsActive,
                         originalIndex++));
             }
@@ -185,7 +211,7 @@ internal static class ShellSearchPolicy
                         .FromSystemCommand(
                             command),
                     rank.Value,
-                    Category: 2,
+                    Category: 3,
                     IsActive: false,
                     originalIndex++));
         }
@@ -210,7 +236,7 @@ internal static class ShellSearchPolicy
                         .FromShellCommand(
                             command),
                     rank.Value,
-                    Category: 2,
+                    Category: 3,
                     IsActive: false,
                     originalIndex++));
         }

@@ -41,6 +41,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly TaskService _taskService;
     private readonly TaskQuickCaptureCoordinator
         _taskCapture;
+    private readonly TaskSearchCoordinator
+        _taskSearch;
     private readonly TaskbarAppComposer _taskbarComposer = new();
     private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
@@ -88,6 +90,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private IReadOnlyDictionary<DateTime, CalendarFocusSummary>
         _calendarFocusByDate =
             new Dictionary<DateTime, CalendarFocusSummary>();
+    private IReadOnlyList<TaskSearchItem>
+        _taskSearchItems =
+            Array.Empty<TaskSearchItem>();
 
     [ObservableProperty]
     private string title = "FocusPanel";
@@ -127,6 +132,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool isSearchOpen;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(AppSearchStatusText))]
+    private bool isTaskSearchLoading;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(AppSearchStatusText))]
+    private string taskSearchError =
+        string.Empty;
 
     [ObservableProperty]
     private ShellSearchResult? selectedSearchResult;
@@ -362,6 +378,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _taskCapture =
             new TaskQuickCaptureCoordinator(
                 _taskService);
+        _taskSearch =
+            new TaskSearchCoordinator(
+                _taskService);
         _audioControl =
             new AudioControlCoordinator(
                 _systemStatus.TrySetMasterVolume,
@@ -469,10 +488,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         get;
     } = new();
-    public string AppSearchStatusText =>
-        IsAppCatalogLoading
-            ? "正在载入应用目录…"
-            : "没有找到匹配的应用、窗口、命令或快捷结果";
+    public string AppSearchStatusText
+    {
+        get
+        {
+            if (IsAppCatalogLoading)
+                return "正在载入应用目录…";
+            if (IsTaskSearchLoading)
+                return "正在载入待办任务…";
+            if (!string.IsNullOrWhiteSpace(
+                    TaskSearchError))
+            {
+                return "待办任务暂时无法载入；"
+                       + "应用、窗口与命令搜索仍可使用";
+            }
+
+            return "没有找到匹配的应用、窗口、待办、命令或快捷结果";
+        }
+    }
     public bool IsAppSearchStatusVisible =>
         SearchResults.Count == 0;
     public string AudioGlyph =>
@@ -548,6 +581,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<string>? WorkspaceRequested;
     public event Action<int>? PomodoroCompleted;
     public event Action<int, string>? TaskCaptured;
+    public event Action<int, string>? TaskCompleted;
     public event Action? DisplayTargetChanged;
     public event Action<bool>? WorkspacePinChanged;
 
@@ -657,6 +691,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsSearchOpen = true;
         RefreshSearchResults();
+    }
+
+    partial void OnIsSearchOpenChanged(bool value)
+    {
+        if (value)
+            _ = RefreshTaskSearchIndexAsync();
     }
 
     partial void OnIsCalendarOpenChanged(bool value)
@@ -955,6 +995,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        if (result?.TaskItem
+            is TaskSearchItem taskItem)
+        {
+            await OpenSearchTaskAsync(
+                taskItem);
+            return;
+        }
+
         if (result?.FocusCommand
             is PomodoroSearchCommand focusCommand)
         {
@@ -1064,6 +1112,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _tasksViewModel
                 ?.ApplyQuickCapturedInboxItem(
                     result.Item);
+            PrependTaskSearchItem(
+                new TaskSearchItem(
+                    result.Item.Id,
+                    result.Item.Title,
+                    TaskQuickCaptureCoordinator
+                        .InboxId,
+                    "Inbox",
+                    result.Item.Status,
+                    result.Item.CreatedAt));
             SystemActionMessage =
                 string.Empty;
             TaskCaptured?.Invoke(
@@ -1079,6 +1136,76 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     result.Error)
                 ? "请打开任务工作区后重试。"
                 : $" {result.Error}");
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
+    }
+
+    private async Task OpenSearchTaskAsync(
+        TaskSearchItem task)
+    {
+        IsSearchOpen = false;
+        Navigate("Tasks");
+        bool opened =
+            await GetOrCreateTasksViewModel()
+                .NavigateToSearchTaskAsync(
+                    task.Id);
+        if (_isDisposed
+            || opened)
+        {
+            return;
+        }
+
+        SystemActionMessage =
+            $"无法打开“{task.Title}”。"
+            + "任务可能已被删除或移动，请重新搜索。";
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
+    }
+
+    [RelayCommand]
+    private async Task CompleteSearchTask(
+        ShellSearchResult? result)
+    {
+        if (result?.TaskItem
+            is not TaskSearchItem task)
+        {
+            return;
+        }
+
+        TaskSearchCompletionResult completion =
+            await _taskSearch
+                .CompleteTaskAsync(
+                    task.Id);
+        if (_isDisposed)
+            return;
+
+        if (completion.Succeeded)
+        {
+            _taskSearchItems =
+                _taskSearchItems
+                    .Where(item =>
+                        item.Id
+                        != completion.TaskId)
+                    .ToArray();
+            _tasksViewModel
+                ?.ApplyExternallyCompletedTask(
+                    completion.TaskId);
+            RefreshSearchResults();
+            RequestTaskSummaryRefresh();
+            SystemActionMessage =
+                string.Empty;
+            TaskCompleted?.Invoke(
+                completion.TaskId,
+                completion.Title);
+            return;
+        }
+
+        SystemActionMessage =
+            $"无法完成“{task.Title}”。"
+            + (string.IsNullOrWhiteSpace(
+                    completion.Error)
+                ? "请打开任务工作区后重试。"
+                : $" {completion.Error}");
         CloseTransientPanels();
         IsStatusCenterOpen = true;
     }
@@ -2090,7 +2217,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ShellSearchPolicy.Compose(
                 applications,
                 _windowTracker.GetSnapshot(),
-                SearchQuery);
+                SearchQuery,
+                taskItems:
+                    _taskSearchItems);
         ReplaceCollection(
             SearchResults,
             results);
@@ -2105,6 +2234,51 @@ public partial class MainViewModel : ObservableObject, IDisposable
             nameof(IsAppSearchStatusVisible));
         OnPropertyChanged(
             nameof(AppSearchStatusText));
+    }
+
+    private async Task
+        RefreshTaskSearchIndexAsync()
+    {
+        IsTaskSearchLoading = true;
+        TaskSearchIndexResult result =
+            await _taskSearch
+                .RefreshAsync();
+        if (_isDisposed
+            || !_taskSearch.IsCurrent(
+                result.Revision))
+        {
+            return;
+        }
+
+        IsTaskSearchLoading = false;
+        if (result.Succeeded)
+        {
+            TaskSearchError =
+                string.Empty;
+            _taskSearchItems =
+                result.Items;
+            RefreshSearchResults();
+            return;
+        }
+
+        TaskSearchError =
+            result.Error;
+    }
+
+    private void PrependTaskSearchItem(
+        TaskSearchItem item)
+    {
+        _taskSearchItems =
+            new[]
+            {
+                item
+            }
+            .Concat(
+                _taskSearchItems.Where(
+                    existing =>
+                        existing.Id
+                        != item.Id))
+            .ToArray();
     }
 
     private void OnWindowSnapshotChanged(
@@ -2826,6 +3000,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _audioControl.CompleteAsync(),
                 _autoStartup.CompleteAsync(),
                 _taskCapture.CompleteAsync(),
+                _taskSearch.CompleteAsync(),
                 _shellPreferences.CompleteAsync()
             };
         if (_tasksViewModel != null)

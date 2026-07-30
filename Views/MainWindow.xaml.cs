@@ -122,6 +122,8 @@ public partial class MainWindow :
             ViewModel_PomodoroCompleted;
         _viewModel.TaskCaptured +=
             ViewModel_TaskCaptured;
+        _viewModel.TaskCompleted +=
+            ViewModel_TaskCompleted;
         _viewModel.DisplayTargetChanged +=
             ViewModel_DisplayTargetChanged;
         _viewModel.WorkspacePinChanged +=
@@ -256,6 +258,21 @@ public partial class MainWindow :
             new FocusToastNotification(
                 $"task-captured:{taskId}",
                 "已收集到 Inbox",
+                title,
+                "\uE73E",
+                FocusToastKind.Success,
+                "查看任务",
+                OpenTasksWorkspace));
+    }
+
+    private void ViewModel_TaskCompleted(
+        int taskId,
+        string title)
+    {
+        _toastManager.Enqueue(
+            new FocusToastNotification(
+                $"task-completed:{taskId}",
+                "任务已完成",
                 title,
                 "\uE73E",
                 FocusToastKind.Success,
@@ -2192,6 +2209,8 @@ public partial class MainWindow :
             ViewModel_PomodoroCompleted;
         _viewModel.TaskCaptured -=
             ViewModel_TaskCaptured;
+        _viewModel.TaskCompleted -=
+            ViewModel_TaskCompleted;
         _viewModel.DisplayTargetChanged -=
             ViewModel_DisplayTargetChanged;
         _viewModel.WorkspacePinChanged -=

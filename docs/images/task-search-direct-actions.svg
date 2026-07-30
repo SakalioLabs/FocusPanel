@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1b29"/>
+      <stop offset="1" stop-color="#19344a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#55c8ff"/>
+      <stop offset="1" stop-color="#8c82ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#02070d" flood-opacity=".45"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="620" rx="30" fill="url(#bg)"/>
+  <circle cx="1100" cy="86" r="190" fill="#53c5ff" opacity=".07"/>
+  <circle cx="76" cy="580" r="210" fill="#8c82ff" opacity=".07"/>
+  <text x="56" y="68" fill="#f6f9fc" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="28" font-weight="650">已有待办不再藏在工作区里</text>
+  <text x="56" y="102" fill="#95adc2" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-size="15">一次唤出 → 搜索任务标题或项目 → Enter 直达详情 / 右侧勾选立即完成</text>
+
+  <g transform="translate(56 138)" filter="url(#shadow)" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+    <rect width="724" height="418" rx="24" fill="#172b3d" stroke="#43647e"/>
+    <text x="28" y="42" fill="#edf5fb" font-size="18" font-weight="600">应用、窗口、待办、命令与计算</text>
+    <rect x="28" y="66" width="668" height="58" rx="14" fill="#0d1b28" stroke="#5cc9ff" stroke-width="2"/>
+    <path d="M50 87a10 10 0 1 0 0 20a10 10 0 0 0 0-20m8 18l8 8" fill="none" stroke="#88d8ff" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="82" y="102" fill="#f8fbfe" font-size="20">发布说明</text>
+
+    <g transform="translate(28 142)">
+      <rect width="668" height="84" rx="16" fill="#254b65" stroke="#70d1ff"/>
+      <rect x="18" y="18" width="48" height="48" rx="13" fill="#315d78"/>
+      <path d="M31 31h22M31 41h16M31 51h19" stroke="#82d8ff" stroke-width="3" stroke-linecap="round"/>
+      <text x="84" y="35" fill="#f4f9fd" font-size="17" font-weight="600">整理 0.10.60 发布说明</text>
+      <text x="84" y="59" fill="#bed4e5" font-size="13">Inbox · In Progress</text>
+      <rect x="606" y="18" width="48" height="48" rx="14" fill="url(#accent)"/>
+      <path d="M619 42l8 8 15-18" fill="none" stroke="#081521" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <g transform="translate(28 240)">
+      <rect width="668" height="72" rx="16" fill="#142737" stroke="#354f65"/>
+      <rect x="18" y="12" width="48" height="48" rx="13" fill="#203e53"/>
+      <path d="M31 25h22M31 35h16M31 45h19" stroke="#6db9df" stroke-width="3" stroke-linecap="round"/>
+      <text x="84" y="31" fill="#e8f1f8" font-size="16">校对 GitHub Release 资产</text>
+      <text x="84" y="53" fill="#8fa9bd" font-size="12">FocusPanel · To Do</text>
+      <rect x="612" y="16" width="40" height="40" rx="12" fill="#203b50" stroke="#426781"/>
+      <path d="M623 36l6 6 12-14" fill="none" stroke="#7bcfff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <g transform="translate(28 326)">
+      <rect width="320" height="62" rx="15" fill="#102130" stroke="#324c61"/>
+      <text x="20" y="27" fill="#dceaf5" font-size="14">Enter / 点击结果</text>
+      <text x="20" y="47" fill="#809ab0" font-size="12">进入真实父项目并打开详情</text>
+      <rect x="362" width="306" height="62" rx="15" fill="#102130" stroke="#324c61"/>
+      <text x="382" y="27" fill="#dceaf5" font-size="14">点击右侧勾选</text>
+      <text x="382" y="47" fill="#809ab0" font-size="12">当前界面内完成并立即移除</text>
+    </g>
+  </g>
+
+  <g transform="translate(814 140)" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+    <rect width="330" height="414" rx="24" fill="#122536" stroke="#36566f"/>
+    <text x="26" y="42" fill="#f0f6fb" font-size="18" font-weight="600">快，但不牺牲数据安全</text>
+
+    <g transform="translate(26 72)">
+      <circle cx="20" cy="20" r="20" fill="#224862"/>
+      <text x="20" y="27" fill="#72ceff" font-size="18" text-anchor="middle">1</text>
+      <text x="54" y="17" fill="#e5eff7" font-size="14">打开搜索时后台取快照</text>
+      <text x="54" y="38" fill="#8da8bd" font-size="12">输入时不重复访问 SQLite</text>
+      <path d="M20 44v26" stroke="#3a5c73" stroke-width="2"/>
+    </g>
+    <g transform="translate(26 154)">
+      <circle cx="20" cy="20" r="20" fill="#224862"/>
+      <text x="20" y="27" fill="#72ceff" font-size="18" text-anchor="middle">2</text>
+      <text x="54" y="17" fill="#e5eff7" font-size="14">执行前重读当前任务</text>
+      <text x="54" y="38" fill="#8da8bd" font-size="12">删除或移动不会误写</text>
+      <path d="M20 44v26" stroke="#3a5c73" stroke-width="2"/>
+    </g>
+    <g transform="translate(26 236)">
+      <circle cx="20" cy="20" r="20" fill="#224862"/>
+      <text x="20" y="27" fill="#72ceff" font-size="18" text-anchor="middle">3</text>
+      <text x="54" y="17" fill="#e5eff7" font-size="14">共享 TaskService 串行闸门</text>
+      <text x="54" y="38" fill="#8da8bd" font-size="12">不与任务页并发写数据库</text>
+      <path d="M20 44v26" stroke="#3a5c73" stroke-width="2"/>
+    </g>
+    <g transform="translate(26 318)">
+      <circle cx="20" cy="20" r="20" fill="url(#accent)"/>
+      <path d="M10 20l7 7 14-16" fill="none" stroke="#07131d" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="54" y="17" fill="#e5eff7" font-size="14">结果移除 + Toast 反馈</text>
+      <text x="54" y="38" fill="#8da8bd" font-size="12">退出前排空已接收操作</text>
+    </g>
+  </g>
+</svg>

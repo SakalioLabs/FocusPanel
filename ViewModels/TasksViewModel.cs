@@ -144,6 +144,9 @@ public partial class TasksViewModel
     private TodoItem? _lastSaveFailureItem;
     private bool _isDisposed;
     private int _loadGeneration;
+    private int? _pendingSearchTaskId;
+    private Task _currentParentLoadTask =
+        Task.CompletedTask;
     private string _globalCustomFieldsJson =
         string.Empty;
 
@@ -237,7 +240,8 @@ public partial class TasksViewModel
         IFilePickerService filePickerService,
         TaskImageImportCoordinator? imageImporter = null,
         ShellPathOpenCoordinator? shellOpen = null,
-        TaskService? taskService = null)
+        TaskService? taskService = null,
+        SettingsService? settingsService = null)
     {
         _folderPickerService =
             folderPickerService;
@@ -260,7 +264,9 @@ public partial class TasksViewModel
             OnQueuedItemSaved;
         _taskSaveQueue.ItemSaveFailed +=
             OnQueuedItemSaveFailed;
-        _settingsService = new SettingsService();
+        _settingsService =
+            settingsService
+            ?? new SettingsService();
         ImageSavePath = _settingsService.CurrentSettings.ImageSavePath;
         _globalCustomFieldsJson =
             _settingsService.CurrentSettings
@@ -379,9 +385,20 @@ public partial class TasksViewModel
                 }));
     }
 
-    async partial void OnCurrentParentItemChanged(
+    partial void OnCurrentParentItemChanged(
         TodoItem? oldValue,
         TodoItem? newValue)
+    {
+        _currentParentLoadTask =
+            ApplyCurrentParentChangeAsync(
+                oldValue,
+                newValue);
+    }
+
+    private async Task
+        ApplyCurrentParentChangeAsync(
+            TodoItem? oldValue,
+            TodoItem? newValue)
     {
         if (oldValue != null) oldValue.PropertyChanged -= OnTodoItemPropertyChanged;
         if (newValue != null) newValue.PropertyChanged += OnTodoItemPropertyChanged;
@@ -389,17 +406,38 @@ public partial class TasksViewModel
         OnPropertyChanged(nameof(CanGoBack));
         OnPropertyChanged(nameof(IsProjectSelected));
         UpdateViewMode();
+        CloseTaskDetail();
         try
         {
             await LoadCurrentViewItems();
+            if (_isDisposed
+                || !ReferenceEquals(
+                    CurrentParentItem,
+                    newValue))
+            {
+                return;
+            }
+
             LoadCustomFieldDefinitions();
+            int? pendingTaskId =
+                _pendingSearchTaskId;
+            if (pendingTaskId.HasValue)
+            {
+                _pendingSearchTaskId =
+                    null;
+                SelectedTask =
+                    CurrentViewItems
+                        .FirstOrDefault(
+                            item =>
+                                item.Id
+                                == pendingTaskId.Value);
+            }
         }
         catch (Exception ex)
         {
             TaskStatusMessage =
                 $"无法切换任务范围：{ex.Message}";
         }
-        CloseTaskDetail(); 
     }
     
     partial void OnSelectedTaskChanged(
@@ -901,6 +939,95 @@ public partial class TasksViewModel
             OnTodoItemPropertyChanged;
         CurrentViewItems.Insert(0, item);
         RefreshBoardColumns();
+    }
+
+    internal async Task<bool>
+        NavigateToSearchTaskAsync(
+            int taskId)
+    {
+        if (_isDisposed
+            || taskId <= 0)
+        {
+            return false;
+        }
+
+        TodoItem? task;
+        try
+        {
+            task =
+                await _taskService
+                    .GetItemByIdAsync(
+                        taskId);
+        }
+        catch
+        {
+            return false;
+        }
+
+        if (_isDisposed
+            || task == null
+            || !task.ParentId.HasValue)
+        {
+            return false;
+        }
+
+        TodoItem? parent;
+        try
+        {
+            parent =
+                await _taskService
+                    .GetItemByIdAsync(
+                        task.ParentId.Value);
+        }
+        catch
+        {
+            return false;
+        }
+
+        if (_isDisposed
+            || parent == null)
+        {
+            return false;
+        }
+
+        _pendingSearchTaskId =
+            task.Id;
+        CurrentParentItem =
+            parent;
+        Task load =
+            _currentParentLoadTask;
+        await load;
+        return !_isDisposed
+            && SelectedTask?.Id
+            == task.Id;
+    }
+
+    internal void ApplyExternallyCompletedTask(
+        int taskId)
+    {
+        if (_isDisposed)
+            return;
+
+        TodoItem? task =
+            CurrentViewItems
+                .FirstOrDefault(
+                    item =>
+                        item.Id
+                        == taskId);
+        if (task == null)
+            return;
+
+        task.PropertyChanged -=
+            OnTodoItemPropertyChanged;
+        try
+        {
+            task.IsCompleted = true;
+        }
+        finally
+        {
+            task.PropertyChanged +=
+                OnTodoItemPropertyChanged;
+        }
     }
 
     [RelayCommand]

@@ -181,17 +181,17 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Text="应用、窗口、命令、任务与计算"
+                            <TextBlock Text="应用、窗口、待办、命令与计算"
                                        Style="{StaticResource FocusSectionTitleText}"/>
                             <Grid Grid.Row="1" Margin="0,14,0,12">
                                 <TextBox x:Name="SearchBox"
                                          Style="{StaticResource FocusSearchBox}"
                                          Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                          PreviewKeyDown="SearchBox_PreviewKeyDown"
-                                         AutomationProperties.Name="搜索应用、窗口、系统命令、任务与计算"
-                                         AutomationProperties.HelpText="输入应用名、窗口标题、系统工具、音量、专注或任务命令、算式，使用上下方向键选择，按回车执行"
-                                         ToolTip="搜索应用、窗口、系统命令，直接收集任务、调音量、开始专注或计算"/>
-                                <TextBlock Text="输入应用、窗口、系统工具、音量、专注或任务命令"
+                                         AutomationProperties.Name="搜索应用、窗口、待办、系统命令与计算"
+                                         AutomationProperties.HelpText="输入应用名、窗口标题、已有待办、系统工具、音量、专注或任务命令、算式，使用上下方向键选择，按回车执行"
+                                         ToolTip="搜索应用、窗口和已有待办，直接完成待办、收集任务、调音量、开始专注或计算"/>
+                                <TextBlock Text="输入应用、窗口、已有待办、系统工具或快捷命令"
                                            Margin="16,0"
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False">
@@ -214,7 +214,7 @@
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"
                                          Style="{StaticResource FocusListBox}"
                                          Foreground="{DynamicResource FocusTextBrush}"
-                                         AutomationProperties.Name="应用、窗口、系统命令、任务与计算结果"
+                                         AutomationProperties.Name="应用、窗口、待办、系统命令与计算结果"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem"
@@ -310,6 +310,19 @@
                                                         CommandParameter="{Binding}"
                                                         Visibility="{Binding CanTogglePin, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <TextBlock Style="{StaticResource FocusIconText}" FontSize="16" Text="&#xE840;"/>
+                                                </Button>
+                                                <Button Grid.Column="2"
+                                                        Style="{StaticResource FocusIconButton}"
+                                                        Width="40"
+                                                        Height="40"
+                                                        ToolTip="直接完成任务"
+                                                        AutomationProperties.Name="完成这条待办任务"
+                                                        Command="{Binding DataContext.CompleteSearchTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding CanCompleteTask, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                                               FontSize="16"
+                                                               Text="&#xE73E;"/>
                                                 </Button>
                                             </Grid>
                                         </DataTemplate>

@@ -12,7 +12,8 @@ public enum ShellSearchResultKind
     Calculation,
     AudioCommand,
     FocusCommand,
-    TaskCapture
+    TaskCapture,
+    Task
 }
 
 public sealed record ShellSearchResult
@@ -101,6 +102,12 @@ public sealed record ShellSearchResult
         init;
     }
 
+    internal TaskSearchItem? TaskItem
+    {
+        get;
+        init;
+    }
+
     public string Glyph
     {
         get;
@@ -131,12 +138,20 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.TaskCapture;
 
+    public bool IsTask =>
+        Kind
+        == ShellSearchResultKind.Task;
+
     public bool UsesGlyph =>
         IsSystemCommand
         || IsCalculation
         || IsAudioCommand
         || IsFocusCommand
-        || IsTaskCapture;
+        || IsTaskCapture
+        || IsTask;
+
+    public bool CanCompleteTask =>
+        TaskItem != null;
 
     public bool CanTogglePin =>
         Application != null;
@@ -340,5 +355,34 @@ public sealed record ShellSearchResult
                 "\uE73E",
             TaskCaptureCommand =
                 command
+        };
+
+    internal static ShellSearchResult
+        FromTask(
+            TaskSearchItem item) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .Task,
+            StableKey =
+                item.StableKey,
+            DisplayName =
+                item.Title,
+            SecondaryText =
+                string.IsNullOrWhiteSpace(
+                    item.ParentTitle)
+                    ? "待办任务"
+                    : $"{item.ParentTitle} · "
+                      + (string.IsNullOrWhiteSpace(
+                              item.Status)
+                          ? "待办任务"
+                          : item.Status),
+            AccessibleName =
+                $"打开待办任务 {item.Title}",
+            Glyph =
+                "\uE8FD",
+            TaskItem =
+                item
         };
 }

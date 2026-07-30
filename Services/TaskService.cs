@@ -17,7 +17,9 @@ internal sealed record TaskPersistenceHandlers(
     Action<TodoItem> UpdateItem,
     Action<TodoItem> DeleteItem,
     Func<string, string> LoadGlobalCustomFields,
-    Action<string> SaveGlobalCustomFields);
+    Action<string> SaveGlobalCustomFields,
+    Func<List<TaskSearchItem>>?
+        LoadOpenTaskSearchItems = null);
 
 public sealed class TaskService
 {
@@ -37,7 +39,8 @@ public sealed class TaskService
                 UpdateItemCore,
                 DeleteItemCore,
                 LoadGlobalCustomFieldsCore,
-                SaveGlobalCustomFieldsCore))
+                SaveGlobalCustomFieldsCore,
+                LoadOpenTaskSearchItemsCore))
     {
     }
 
@@ -63,6 +66,12 @@ public sealed class TaskService
         int id) =>
         ExecuteAsync(
             () => _handlers.LoadItemById(id));
+
+    internal Task<List<TaskSearchItem>>
+        GetOpenTaskSearchItemsAsync() =>
+        ExecuteAsync(
+            _handlers.LoadOpenTaskSearchItems
+            ?? LoadOpenTaskSearchItemsCore);
 
     public Task AddItemAsync(
         TodoItem item) =>
@@ -176,6 +185,32 @@ public sealed class TaskService
                 item.Children)
             .FirstOrDefault(item =>
                 item.Id == id);
+    }
+
+    private static List<TaskSearchItem>
+        LoadOpenTaskSearchItemsCore()
+    {
+        using var context = new AppDbContext();
+        return context.Todos
+            .AsNoTracking()
+            .Where(item =>
+                item.ParentId != null
+                && !item.IsCompleted)
+            .OrderByDescending(item =>
+                item.CreatedAt)
+            .ThenBy(item =>
+                item.Id)
+            .Select(item =>
+                new TaskSearchItem(
+                    item.Id,
+                    item.Title,
+                    item.ParentId!.Value,
+                    item.Parent == null
+                        ? string.Empty
+                        : item.Parent.Title,
+                    item.Status,
+                    item.CreatedAt))
+            .ToList();
     }
 
     private static void AddItemCore(

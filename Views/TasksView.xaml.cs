@@ -64,6 +64,22 @@ public partial class TasksView : UserControl
             _subscribedViewModel
                 .CloseTaskDetailRequested +=
                 OnCloseTaskDetailRequested;
+            if (_subscribedViewModel.SelectedTask
+                is TodoItem selectedTask)
+            {
+                _ = Dispatcher.BeginInvoke(
+                    () =>
+                    {
+                        if (ReferenceEquals(
+                                _subscribedViewModel,
+                                viewModel)
+                            && IsLoaded)
+                        {
+                            OnOpenTaskDetailRequested(
+                                selectedTask);
+                        }
+                    });
+            }
         }
     }
 

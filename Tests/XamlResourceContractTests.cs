@@ -2396,6 +2396,26 @@ public sealed class XamlResourceContractTests
                 root,
                 "Services",
                 "ClipboardTextService.cs"));
+        string taskSearchCoordinator = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "TaskSearchCoordinator.cs"));
+        string taskService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "TaskService.cs"));
+        string tasksViewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "TasksViewModel.cs"));
+        string tasksViewCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "TasksView.xaml.cs"));
         Assert.Contains(
             "x:Name=\"SearchResultsList\"",
             mainWindow);
@@ -2409,7 +2429,7 @@ public sealed class XamlResourceContractTests
             "正在载入应用目录…",
             viewModel);
         Assert.Contains(
-            "没有找到匹配的应用、窗口、命令或快捷结果",
+            "没有找到匹配的应用、窗口、待办、命令或快捷结果",
             viewModel);
         Assert.Contains(
             "Name = \"FocusPanel.AppCatalog\"",
@@ -2511,6 +2531,45 @@ public sealed class XamlResourceContractTests
             "ShellSearchResultKind.TaskCapture",
             searchResult);
         Assert.Contains(
+            "ShellSearchResultKind.Task",
+            searchResult);
+        Assert.Contains(
+            "TaskSearchPolicy.Search(",
+            shellSearchPolicy);
+        Assert.Contains(
+            "taskItems:",
+            viewModel);
+        Assert.Contains(
+            "GetOpenTaskSearchItemsAsync()",
+            taskService);
+        Assert.Contains(
+            "new TaskSearchCoordinator(",
+            viewModel);
+        Assert.Contains(
+            "_taskSearch.CompleteAsync()",
+            viewModel);
+        Assert.Contains(
+            "NavigateToSearchTaskAsync(",
+            tasksViewModel);
+        Assert.Contains(
+            "ApplyExternallyCompletedTask(",
+            tasksViewModel);
+        Assert.Contains(
+            "_subscribedViewModel.SelectedTask",
+            tasksViewCode);
+        Assert.Contains(
+            "OnOpenTaskDetailRequested(",
+            tasksViewCode);
+        Assert.Contains(
+            "CompleteTaskAsync(",
+            taskSearchCoordinator);
+        Assert.Contains(
+            "CompleteSearchTaskCommand",
+            mainWindow);
+        Assert.Contains(
+            "CanCompleteTask",
+            mainWindow);
+        Assert.Contains(
             "MaximumExpressionLength",
             expressionEvaluator);
         Assert.DoesNotContain(
@@ -2570,6 +2629,12 @@ public sealed class XamlResourceContractTests
             "_viewModel.TaskCaptured -=",
             mainWindowCode);
         Assert.Contains(
+            "_viewModel.TaskCompleted +=",
+            mainWindowCode);
+        Assert.Contains(
+            "_viewModel.TaskCompleted -=",
+            mainWindowCode);
+        Assert.Contains(
             "ViewModel_TaskCaptured(",
             mainWindowCode);
         Assert.Contains(
@@ -2577,6 +2642,9 @@ public sealed class XamlResourceContractTests
             mainWindowCode);
         Assert.Contains(
             "$\"task-captured:{taskId}\"",
+            mainWindowCode);
+        Assert.Contains(
+            "$\"task-completed:{taskId}\"",
             mainWindowCode);
         Assert.Contains(
             "ShowActivated=\"False\"",
@@ -2642,7 +2710,7 @@ public sealed class XamlResourceContractTests
             "SelectedSearchResult?.StableKey",
             viewModel);
         Assert.Contains(
-            "AutomationProperties.Name=\"应用、窗口、系统命令、任务与计算结果\"",
+            "AutomationProperties.Name=\"应用、窗口、待办、系统命令与计算结果\"",
             mainWindow);
         Assert.Contains(
             "Binding=\"{Binding UsesGlyph}\"",

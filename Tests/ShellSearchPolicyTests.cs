@@ -442,6 +442,118 @@ public sealed class ShellSearchPolicyTests
             result.ManagementTool);
     }
 
+    [Fact]
+    public void Compose_FindsExistingTaskAndExposesDirectCompletion()
+    {
+        var task =
+            new TaskSearchItem(
+                27,
+                "整理 0.10.60 发布说明",
+                1,
+                "Inbox",
+                "In Progress",
+                DateTime.Now);
+
+        ShellSearchResult result =
+            Assert.Single(
+                ShellSearchPolicy.Compose(
+                        Array.Empty<AppLaunchItem>(),
+                        Array.Empty<WindowTaskItem>(),
+                        "发布说明",
+                        taskItems:
+                            new[]
+                            {
+                                task
+                            })
+                    .Where(item =>
+                        item.IsTask));
+
+        Assert.Equal(
+            ShellSearchResultKind.Task,
+            result.Kind);
+        Assert.Same(
+            task,
+            result.TaskItem);
+        Assert.Equal(
+            "task:item:27",
+            result.StableKey);
+        Assert.Equal(
+            "Inbox · In Progress",
+            result.SecondaryText);
+        Assert.True(result.UsesGlyph);
+        Assert.True(
+            result.CanCompleteTask);
+        Assert.False(
+            result.CanTogglePin);
+    }
+
+    [Fact]
+    public void Compose_EmptyQueryDoesNotExposeTaskSnapshot()
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "固定应用",
+                        "exe:c:\\app.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                string.Empty,
+                taskItems:
+                    new[]
+                    {
+                        new TaskSearchItem(
+                            3,
+                            "不应泄露的待办",
+                            1,
+                            "Inbox",
+                            "To Do",
+                            DateTime.Now)
+                    });
+
+        Assert.Single(results);
+        Assert.DoesNotContain(
+            results,
+            item =>
+                item.IsTask);
+    }
+
+    [Fact]
+    public void Compose_ExactApplicationStaysAheadOfEqualTaskTitle()
+    {
+        var results =
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "发布工具",
+                        "exe:c:\\release.exe")
+                },
+                Array.Empty<WindowTaskItem>(),
+                "发布工具",
+                taskItems:
+                    new[]
+                    {
+                        new TaskSearchItem(
+                            5,
+                            "发布工具",
+                            1,
+                            "Inbox",
+                            "To Do",
+                            DateTime.Now)
+                    });
+
+        Assert.Equal(
+            ShellSearchResultKind.Application,
+            results[0].Kind);
+        Assert.Contains(
+            results,
+            item =>
+                item.Kind
+                == ShellSearchResultKind.Task);
+    }
+
     [Theory]
     [InlineData("42")]
     [InlineData("calc")]
