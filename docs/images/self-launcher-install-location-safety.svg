@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#08111f"/>
+      <stop offset="1" stop-color="#15243c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".055"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity=".32"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <circle cx="1100" cy="90" r="240" fill="#368cff" opacity=".12"/>
+  <circle cx="180" cy="660" r="260" fill="#36d7b7" opacity=".09"/>
+  <text x="72" y="82" fill="#f4f8ff" font-family="Microsoft YaHei UI, sans-serif" font-size="35" font-weight="700">入口不自锁 · 安装不回退 C 盘</text>
+  <text x="72" y="120" fill="#a9bad2" font-family="Microsoft YaHei UI, sans-serif" font-size="17">FocusPanel 0.10.71 安全闭环</text>
+
+  <g filter="url(#shadow)">
+    <rect x="72" y="158" width="550" height="474" rx="28" fill="url(#glass)" stroke="#79e4cd" stroke-opacity=".32"/>
+    <rect x="658" y="158" width="550" height="474" rx="28" fill="url(#glass)" stroke="#7bb6ff" stroke-opacity=".34"/>
+  </g>
+
+  <text x="112" y="215" fill="#8cf0d9" font-family="Microsoft YaHei UI, sans-serif" font-size="23" font-weight="700">桌面收纳保护</text>
+  <text x="698" y="215" fill="#9bc7ff" font-family="Microsoft YaHei UI, sans-serif" font-size="23" font-weight="700">安装目录故障关闭</text>
+
+  <g font-family="Microsoft YaHei UI, sans-serif">
+    <rect x="112" y="254" width="470" height="82" rx="18" fill="#071825" fill-opacity=".72"/>
+    <circle cx="149" cy="295" r="17" fill="#2ed5ad"/>
+    <path d="M141 295l6 6 12-14" fill="none" stroke="#062019" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="181" y="287" fill="#f5fbff" font-size="18" font-weight="600">永久排除 FocusPanel.lnk</text>
+    <text x="181" y="313" fill="#a9bad2" font-size="15">同时保护当前运行的程序文件</text>
+
+    <rect x="112" y="356" width="470" height="104" rx="18" fill="#071825" fill-opacity=".72"/>
+    <text x="140" y="392" fill="#f5fbff" font-size="18" font-weight="600">发现旧版误收纳自身入口</text>
+    <text x="140" y="421" fill="#a9bad2" font-size="15">恢复同批项目的原始属性与收纳标记</text>
+    <text x="140" y="446" fill="#ffce78" font-size="14">失败项保留“需要恢复”，不继续隐藏</text>
+
+    <rect x="112" y="480" width="470" height="104" rx="18" fill="#071825" fill-opacity=".72"/>
+    <text x="140" y="516" fill="#f5fbff" font-size="18" font-weight="600">混合桌面整理：授权前零写入</text>
+    <text x="140" y="545" fill="#a9bad2" font-size="15">一次 UAC 后再提交整批文件属性</text>
+    <text x="140" y="570" fill="#8cf0d9" font-size="14">取消授权 = 所有图标保持原状</text>
+
+    <rect x="698" y="254" width="470" height="82" rx="18" fill="#08172a" fill-opacity=".75"/>
+    <text x="726" y="286" fill="#f5fbff" font-size="18" font-weight="600">残留 C 盘记录 ≠ 有效安装</text>
+    <text x="726" y="313" fill="#a9bad2" font-size="15">只有真实程序文件才能决定旧目录</text>
+
+    <rect x="698" y="356" width="470" height="104" rx="18" fill="#08172a" fill-opacity=".75"/>
+    <text x="726" y="392" fill="#f5fbff" font-size="18" font-weight="600">旧版在系统盘，优先预选 D / E 盘</text>
+    <text x="726" y="421" fill="#a9bad2" font-size="15">使用正式卸载器或 MSI 注销残留</text>
+    <text x="726" y="446" fill="#9bc7ff" font-size="14">清理失败立即中止，不静默回退</text>
+
+    <rect x="698" y="480" width="470" height="104" rx="18" fill="#08172a" fill-opacity=".75"/>
+    <text x="726" y="516" fill="#f5fbff" font-size="18" font-weight="600">安装完成后核验真实落盘目录</text>
+    <text x="726" y="545" fill="#a9bad2" font-size="15">与所选目录不一致时自动尝试撤销</text>
+    <text x="726" y="570" fill="#ffce78" font-size="14">设置页更新原地升级；迁盘需运行 Setup 一次</text>
+  </g>
+  <text x="640" y="681" text-anchor="middle" fill="#8295ae" font-family="Microsoft YaHei UI, sans-serif" font-size="14">不删除业务数据库 · 不移动桌面文件 · 不修改真实任务栏测试环境</text>
+</svg>

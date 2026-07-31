@@ -926,6 +926,70 @@ public class FileOrganizerService : IDisposable
         context.EnsureSchema();
         var collected = context.DesktopFilePreferences.Where(p => p.IsHiddenFromDesktop).ToList();
 
+        if (collected.Any(pref =>
+                DesktopAutoOrganizePolicy
+                    .IsProtectedPanelLauncher(
+                        pref.FilePath,
+                        pref.ManagedPath,
+                        Environment.ProcessPath)))
+        {
+            // A managed FocusPanel launcher can only come from an old
+            // automatic-organize bug. Treat the whole attribute batch as
+            // poisoned and restore it before normal reconciliation, so a
+            // crash cannot leave the user without a way back into Panel.
+            foreach (DesktopFilePreference pref
+                     in collected.Where(pref =>
+                         pref.CollectionMode
+                         == DesktopCollectionMode.Attribute))
+            {
+                try
+                {
+                    string path = pref.ManagedPath
+                        ?? Path.Combine(
+                            _desktopPath,
+                            pref.FilePath);
+                    if (!_visibility.Exists(path))
+                    {
+                        pref.OperationState =
+                            DesktopVisibilityOperation
+                                .RecoveryRequired;
+                        continue;
+                    }
+
+                    long original = pref.OriginalAttributes
+                        ?? (long)(_visibility.GetAttributes(path)
+                            & ~FileAttributes.Hidden
+                            & ~FileAttributes.System);
+                    _visibility.SetAttributes(
+                        path,
+                        DesktopItemAttributePolicy
+                            .Restore(original));
+                    _visibility.NotifyAttributesChanged(path);
+                    pref.IsHiddenFromDesktop = false;
+                    pref.PartitionName = string.Empty;
+                    pref.CollectionMode =
+                        DesktopCollectionMode.None;
+                    pref.OperationState =
+                        DesktopVisibilityOperation.Stable;
+                    pref.OriginalAttributes = null;
+                }
+                catch (Exception ex)
+                {
+                    pref.OperationState =
+                        DesktopVisibilityOperation
+                            .RecoveryRequired;
+                    System.Diagnostics.Debug.WriteLine(
+                        "Restore poisoned desktop batch error: "
+                        + ex.Message);
+                }
+            }
+
+            context.SaveChanges();
+            collected = context.DesktopFilePreferences
+                .Where(pref => pref.IsHiddenFromDesktop)
+                .ToList();
+        }
+
         foreach (var pref in collected)
         {
             try
@@ -1581,6 +1645,21 @@ public class FileOrganizerService : IDisposable
             allowCommonDesktopElevation,
             progress);
 
+    public int CountCommonDesktopCandidates() =>
+        Files.Count(file =>
+            !file.IsHidden
+            && !file.NeedsRecovery
+            && !DesktopAutoOrganizePolicy
+                .IsProtectedPanelLauncher(
+                    file.Name,
+                    file.FullPath,
+                    Environment.ProcessPath)
+            && DesktopDropPolicy.Classify(
+                file.FullPath,
+                _desktopPath,
+                _commonDesktopPath)
+            == DesktopDropLocation.CommonDesktop);
+
     public async Task<DesktopOrganizeResult> OrganizeFiles(
         IReadOnlyList<string> paths,
         bool allowCommonDesktopElevation = false,
@@ -1605,7 +1684,12 @@ public class FileOrganizerService : IDisposable
                     file.FullPath,
                     file.FileType,
                     file.IsHidden,
-                    file.NeedsRecovery))
+                    file.NeedsRecovery,
+                    DesktopAutoOrganizePolicy
+                        .IsProtectedPanelLauncher(
+                            file.Name,
+                            file.FullPath,
+                            Environment.ProcessPath)))
                 .ToArray();
             IReadOnlyList<DesktopAutoOrganizeItem> items =
                 DesktopAutoOrganizePolicy
@@ -1616,14 +1700,14 @@ public class FileOrganizerService : IDisposable
             IDisposable? elevatedBatch = null;
             bool elevationReady =
                 allowCommonDesktopElevation;
+            int commonDesktopCount = items.Count(item =>
+                DesktopDropPolicy.Classify(
+                    item.FullPath,
+                    _desktopPath,
+                    _commonDesktopPath)
+                == DesktopDropLocation.CommonDesktop);
             if (allowCommonDesktopElevation
-                && items.Any(item =>
-                    DesktopDropPolicy.Classify(
-                        item.FullPath,
-                        _desktopPath,
-                        _commonDesktopPath)
-                    == DesktopDropLocation
-                        .CommonDesktop))
+                && commonDesktopCount > 0)
             {
                 try
                 {
@@ -1638,14 +1722,33 @@ public class FileOrganizerService : IDisposable
                 }
                 catch (OperationCanceledException)
                 {
-                    elevationReady = false;
+                    return new DesktopOrganizeResult(
+                        items.Count,
+                        0,
+                        commonDesktopCount,
+                        0,
+                        Array.Empty<string>());
                 }
                 catch (Exception ex)
                 {
-                    elevationReady = false;
                     System.Diagnostics.Debug.WriteLine(
                         "Start desktop elevation batch failed: "
                         + ex.Message);
+                    return new DesktopOrganizeResult(
+                        items.Count,
+                        0,
+                        commonDesktopCount,
+                        items.Count
+                            - commonDesktopCount,
+                        items.Where(item =>
+                                DesktopDropPolicy.Classify(
+                                    item.FullPath,
+                                    _desktopPath,
+                                    _commonDesktopPath)
+                                != DesktopDropLocation
+                                    .CommonDesktop)
+                            .Select(item => item.Name)
+                            .ToArray());
                 }
             }
 

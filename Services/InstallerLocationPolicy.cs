@@ -137,5 +137,40 @@ namespace FocusPanel.Services
                 return false;
             }
         }
+
+        internal static string SelectInitialDirectory(
+            string existingDirectory,
+            string recommendedDirectory,
+            string systemRoot)
+        {
+            if (string.IsNullOrWhiteSpace(
+                    existingDirectory))
+            {
+                return recommendedDirectory;
+            }
+
+            string existingRoot = NormalizeRoot(
+                existingDirectory);
+            string recommendedRoot = NormalizeRoot(
+                recommendedDirectory);
+            string normalizedSystemRoot = NormalizeRoot(
+                systemRoot);
+            bool existingUsesSystemDrive =
+                existingRoot.Length > 0
+                && string.Equals(
+                    existingRoot,
+                    normalizedSystemRoot,
+                    StringComparison.OrdinalIgnoreCase);
+            bool recommendationLeavesSystemDrive =
+                recommendedRoot.Length > 0
+                && !string.Equals(
+                    recommendedRoot,
+                    normalizedSystemRoot,
+                    StringComparison.OrdinalIgnoreCase);
+            return existingUsesSystemDrive
+                && recommendationLeavesSystemDrive
+                    ? recommendedDirectory
+                    : existingDirectory;
+        }
     }
 }

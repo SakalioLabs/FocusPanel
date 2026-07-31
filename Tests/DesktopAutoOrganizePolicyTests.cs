@@ -213,6 +213,63 @@ public sealed class DesktopAutoOrganizePolicyTests
         Assert.Equal("one.txt", selected[0].Name);
     }
 
+    [Fact]
+    public void SelectCreatedItems_NeverCollectsProtectedPanelLauncher()
+    {
+        var items = new[]
+        {
+            new DesktopAutoOrganizeItem(
+                "FocusPanel.lnk",
+                @"C:\Desktop\FocusPanel.lnk",
+                "Application",
+                IsProtectedPanelLauncher: true),
+            new DesktopAutoOrganizeItem(
+                "notes.txt",
+                @"C:\Desktop\notes.txt",
+                "Document")
+        };
+
+        IReadOnlyList<DesktopAutoOrganizeItem> selected =
+            DesktopAutoOrganizePolicy
+                .SelectCreatedItems(
+                    items,
+                    items.Select(item => item.FullPath));
+
+        Assert.Single(selected);
+        Assert.Equal("notes.txt", selected[0].Name);
+    }
+
+    [Theory]
+    [InlineData(
+        "FocusPanel.lnk",
+        @"C:\Desktop\FocusPanel.lnk",
+        @"D:\Apps\FocusPanel\FocusPanel.exe",
+        true)]
+    [InlineData(
+        "FocusPanel.exe",
+        @"D:\Apps\FocusPanel\FocusPanel.exe",
+        @"d:\apps\focuspanel\FocusPanel.exe",
+        true)]
+    [InlineData(
+        "another.lnk",
+        @"C:\Desktop\another.lnk",
+        @"D:\Apps\FocusPanel\FocusPanel.exe",
+        false)]
+    public void ProtectedLauncher_UsesOfficialNameOrExactExecutablePath(
+        string name,
+        string fullPath,
+        string processPath,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            DesktopAutoOrganizePolicy
+                .IsProtectedPanelLauncher(
+                    name,
+                    fullPath,
+                    processPath));
+    }
+
     [Theory]
     [InlineData(1, 1, 0, 0, "已自动收纳 1 个新增项目")]
     [InlineData(

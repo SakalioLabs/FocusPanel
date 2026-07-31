@@ -50,6 +50,7 @@ public static class DesktopAutoOrganizePolicy
             .Where(item =>
                 !item.IsCollected
                 && !item.NeedsRecovery
+                && !item.IsProtectedPanelLauncher
                 && IsSelectedPath(
                     item.FullPath,
                     normalizedPaths))
@@ -58,6 +59,31 @@ public static class DesktopAutoOrganizePolicy
                 StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .ToArray();
+    }
+
+    public static bool IsProtectedPanelLauncher(
+        string? name,
+        string? fullPath,
+        string? processPath)
+    {
+        if (string.Equals(
+                name,
+                "FocusPanel.lnk",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        string itemPath = NormalizePath(
+            fullPath ?? string.Empty);
+        string executablePath = NormalizePath(
+            processPath ?? string.Empty);
+        return itemPath.Length > 0
+            && executablePath.Length > 0
+            && string.Equals(
+                itemPath,
+                executablePath,
+                StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsSelectedPath(
@@ -184,7 +210,8 @@ public sealed record DesktopAutoOrganizeItem(
     string FullPath,
     string FileType,
     bool IsCollected = false,
-    bool NeedsRecovery = false);
+    bool NeedsRecovery = false,
+    bool IsProtectedPanelLauncher = false);
 
 public sealed record DesktopOrganizeResult(
     int Attempted,

@@ -1028,6 +1028,41 @@ public sealed class XamlResourceContractTests
                     root,
                     "packaging",
                     "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "SelectInitialDirectory(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "CleanupStaleRegistrations()",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "UnregisterStaleMsi(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "已自动撤销错误位置的安装",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
+        Assert.Contains(
+            "LauncherVersion = \"0.10.71\"",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "packaging",
+                    "CustomInstallerLauncher.cs")));
         Assert.DoesNotContain(
             "--installto",
             File.ReadAllText(
@@ -3815,6 +3850,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "await _fileService.OrganizeFiles(",
             viewModel);
+        Assert.Contains(
+            "CountCommonDesktopCandidates()",
+            viewModel);
+        Assert.Contains(
+            "授权完成前不会隐藏任何图标",
+            viewModel);
+        Assert.Contains(
+            "IsProtectedPanelLauncher",
+            service);
+        Assert.Contains(
+            "Restore poisoned desktop batch error",
+            service);
         Assert.Contains(
             "AutoOrganizeStatus",
             viewModel);

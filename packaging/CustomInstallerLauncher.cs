@@ -15,6 +15,7 @@ internal static class CustomInstallerLauncher
     private const string ProbeArgument =
         "--verify-install-location-picker";
     private const int ProbeExitCode = 42;
+    private const string LauncherVersion = "0.10.71";
 
     [STAThread]
     private static int Main(string[] args)
@@ -36,10 +37,17 @@ internal static class CustomInstallerLauncher
 
         string existingDirectory =
             FindExistingInstallDirectory();
+        string recommendedDirectory =
+            GetDefaultInstallDirectory();
+        string initialDirectory =
+            InstallerLocationPolicy
+                .SelectInitialDirectory(
+                    existingDirectory,
+                    recommendedDirectory,
+                    Path.GetPathRoot(
+                        Environment.SystemDirectory));
         using (var dialog = new InstallLocationDialog(
-            string.IsNullOrWhiteSpace(existingDirectory)
-                ? GetDefaultInstallDirectory()
-                : existingDirectory,
+            initialDirectory,
             existingDirectory))
         {
             if (dialog.ShowDialog() != DialogResult.OK)
@@ -85,6 +93,9 @@ internal static class CustomInstallerLauncher
                     return 1;
                 }
             }
+
+            if (!CleanupStaleRegistrations())
+                return 1;
 
             return RunInstaller(
                 dialog.InstallDirectory);
@@ -149,6 +160,18 @@ internal static class CustomInstallerLauncher
                             actualDirectory,
                             installDirectory))
                     {
+                        bool rolledBack = false;
+                        if (!string.IsNullOrWhiteSpace(
+                                actualDirectory))
+                        {
+                            rolledBack =
+                                UninstallExisting(
+                                    actualDirectory) == 0
+                                && WaitForUninstallCompletion(
+                                    actualDirectory,
+                                    TimeSpan.FromSeconds(90));
+                        }
+
                         throw new InvalidOperationException(
                             "Windows Installer 没有使用所选目录。"
                             + "\r\n所选目录："
@@ -158,6 +181,10 @@ internal static class CustomInstallerLauncher
                                     actualDirectory)
                                 ? "未检测到安装记录"
                                 : actualDirectory)
+                            + "\r\n处理结果："
+                            + (rolledBack
+                                ? "已自动撤销错误位置的安装"
+                                : "未能自动撤销；请根据下方日志检查 Windows Installer 状态")
                             + "\r\n\r\n安装日志："
                             + logPath);
                     }
@@ -295,8 +322,9 @@ internal static class CustomInstallerLauncher
                                 string location =
                                     ResolveRegisteredDirectory(
                                         key);
-                                if (!string.IsNullOrWhiteSpace(
-                                        location))
+                                if (InstallerLocationPolicy
+                                        .HasInstalledExecutable(
+                                            location))
                                 {
                                     return location;
                                 }
@@ -312,6 +340,169 @@ internal static class CustomInstallerLauncher
         }
 
         return string.Empty;
+    }
+
+    private static bool CleanupStaleRegistrations()
+    {
+        string uninstallRoot =
+            @"Software\Microsoft\Windows\CurrentVersion\Uninstall";
+        try
+        {
+            using (RegistryKey parent =
+                   Registry.CurrentUser.OpenSubKey(
+                       uninstallRoot,
+                       true))
+            {
+                if (parent == null)
+                    return true;
+
+                foreach (string subKeyName
+                         in parent.GetSubKeyNames())
+                {
+                    string location = string.Empty;
+                    using (RegistryKey key =
+                           parent.OpenSubKey(
+                               subKeyName))
+                    {
+                        string displayName =
+                            ReadRegistryString(
+                                key,
+                                "DisplayName");
+                        if (!string.Equals(
+                                displayName,
+                                "FocusPanel",
+                                StringComparison.OrdinalIgnoreCase)
+                            && !string.Equals(
+                                subKeyName,
+                                "FocusPanel",
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        location = ResolveRegisteredDirectory(
+                            key);
+                        if (InstallerLocationPolicy
+                                .HasInstalledExecutable(
+                                    location))
+                        {
+                            continue;
+                        }
+                    }
+
+                    Guid productCode;
+                    if (Guid.TryParse(
+                            subKeyName,
+                            out productCode))
+                    {
+                        if (!UnregisterStaleMsi(
+                                productCode))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (!TryUninstallStaleVelopack(
+                                location))
+                        {
+                            return false;
+                        }
+
+                        // Velopack's exact current-user application key
+                        // is not a Windows Installer product. If it no
+                        // longer points to an executable or updater, only
+                        // the stale uninstall registration is removed;
+                        // files and user data are never deleted here.
+                        parent.DeleteSubKeyTree(
+                            subKeyName,
+                            false);
+                    }
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                "检测到损坏的旧版安装记录，但无法安全清理。"
+                + "\r\n\r\n新版本尚未安装，也不会回退到 C 盘。"
+                + "\r\n" + ex.Message,
+                "安装记录需要修复",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return false;
+        }
+    }
+
+    private static bool UnregisterStaleMsi(
+        Guid productCode)
+    {
+        try
+        {
+            using (Process process = Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = "msiexec.exe",
+                    Arguments =
+                        "/x "
+                        + productCode.ToString("B")
+                        + " /qn /norestart",
+                    UseShellExecute = true
+                }))
+            {
+                if (process == null)
+                    return false;
+                process.WaitForExit();
+                return process.ExitCode == 0
+                    || process.ExitCode == 1605
+                    || process.ExitCode == 3010;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryUninstallStaleVelopack(
+        string installDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(
+                installDirectory))
+        {
+            return true;
+        }
+
+        string updater = Path.Combine(
+            installDirectory,
+            "Update.exe");
+        if (!File.Exists(updater))
+            return true;
+
+        try
+        {
+            using (Process process = Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = updater,
+                    Arguments = "--uninstall --silent",
+                    UseShellExecute = true,
+                    WorkingDirectory =
+                        installDirectory
+                }))
+            {
+                if (process == null)
+                    return false;
+                process.WaitForExit();
+                return process.ExitCode == 0;
+            }
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static string ReadRegistryString(
@@ -536,7 +727,8 @@ internal static class CustomInstallerLauncher
             string defaultDirectory,
             string existingDirectory)
         {
-            Text = "安装 FocusPanel";
+            Text = "安装 FocusPanel "
+                + LauncherVersion;
             Font = new Font("Microsoft YaHei UI", 9F);
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -556,7 +748,11 @@ internal static class CustomInstallerLauncher
                 Text = string.IsNullOrWhiteSpace(
                         existingDirectory)
                     ? "可直接输入或浏览到 D/E 盘；安装结束后会校验真实落盘目录。"
-                    : "当前版本可迁移到新目录；业务数据和设置不会被删除。",
+                    : SamePath(
+                        defaultDirectory,
+                        existingDirectory)
+                        ? "当前安装目录已预填；可改到其他磁盘。业务数据和设置不会被删除。"
+                        : "检测到当前版本位于系统盘，已优先推荐其他磁盘；安装前会先安全卸载旧程序。",
                 AutoSize = true,
                 ForeColor = SystemColors.GrayText,
                 Location = new Point(26, 58)

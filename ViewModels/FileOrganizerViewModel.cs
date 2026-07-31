@@ -671,6 +671,29 @@ public partial class FileOrganizerViewModel :
             if (result != System.Windows.MessageBoxResult.Yes)
                 return;
 
+            int commonDesktopCount =
+                _fileService
+                    .CountCommonDesktopCandidates();
+            bool allowCommonDesktopElevation = false;
+            if (commonDesktopCount > 0)
+            {
+                var authorize = FocusDialogService.Show(
+                    $"其中 {commonDesktopCount} 个项目位于公共桌面，需要一次管理员授权。"
+                    + "\n\n授权完成前不会隐藏任何图标；如果取消，本批保持原状。是否继续？",
+                    "公共桌面授权",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Warning);
+                if (authorize
+                    != System.Windows.MessageBoxResult.Yes)
+                {
+                    AutoOrganizeStatus =
+                        "已取消整理；桌面图标保持原状";
+                    return;
+                }
+
+                allowCommonDesktopElevation = true;
+            }
+
             await _organizePresentationGate
                 .WaitAsync();
             try
@@ -683,39 +706,12 @@ public partial class FileOrganizerViewModel :
                     $"正在整理 0/{initialTotal}");
                 DesktopOrganizeResult organizeResult =
                     await _fileService.OrganizeAllFiles(
-                        false,
+                        allowCommonDesktopElevation,
                         CreateOrganizeProgress(
                             "正在整理",
                             progressRevision));
                 int collected =
                     organizeResult.Collected;
-
-                if (organizeResult.AuthorizationRequired > 0)
-                {
-                    var authorize = FocusDialogService.Show(
-                        $"另有 {organizeResult.AuthorizationRequired} 个公共桌面项目需要管理员授权。"
-                        + "\n\n是否继续收纳这些项目？",
-                        "公共桌面授权",
-                        System.Windows.MessageBoxButton.YesNo,
-                        System.Windows.MessageBoxImage.Warning);
-                    if (authorize == System.Windows.MessageBoxResult.Yes)
-                    {
-                        int elevatedTotal =
-                            _fileService.Files.Count;
-                        progressRevision =
-                            BeginOrganizePresentation(
-                            elevatedTotal,
-                            $"正在处理授权项目 0/{elevatedTotal}");
-                        DesktopOrganizeResult elevatedResult =
-                            await _fileService.OrganizeAllFiles(
-                                true,
-                                CreateOrganizeProgress(
-                                    "正在处理授权项目",
-                                    progressRevision));
-                        collected +=
-                            elevatedResult.Collected;
-                    }
-                }
 
                 RequestLayoutRefresh();
                 int remaining =

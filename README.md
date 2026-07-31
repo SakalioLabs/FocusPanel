@@ -381,6 +381,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 - 桌面根目录监视器会把 500ms 内重复的创建、写入、删除和重命名通知按路径合并，只读取真正变化的项目；旧仓库变化或监视器缓冲区异常时才安全回退全量扫描。
 - “新增桌面项目自动按类型收纳”只处理开关开启后由监视器确认的新路径；普通内容变化、属性刷新、既有项目改名、启动扫描和错误恢复不会把原有桌面项目批量抓走。复制临时文件改名到最终名称时保留新增身份，取消收纳与救援工具创建的项目则明确跳过，避免恢复后立即被重新收纳。
 - 自动收纳不会在后台弹出管理员授权窗口；公共桌面项目保持可见并显示“需手动授权”，成功、部分失败和设置保存异常也会在选项下方给出非打断式状态。
+- 自动收纳永久排除官方 `FocusPanel.lnk` 和当前运行的 `FocusPanel.exe`，不会把唯一启动入口藏进面板。若启动时发现旧版本曾误收纳自身入口，会按收纳记录保存的原始属性恢复当前属性模式收纳集中的桌面图标；无法恢复的项目保留“需要恢复”状态，不继续强制隐藏。
+- 手动一键整理若包含公共桌面项目，会在任何文件属性写入前一次性说明并请求管理员授权；取消 UAC 或授权助手启动失败时整批零写入，普通桌面图标也保持原状。
 - 自动收纳和手动一键整理都会登记为可等待操作；应用退出时先停止接收新批次并等待已开始的文件属性事务收尾，再释放监视器。进度渲染和文件列表订阅者各自捕获异常，单个卡片、迟到 Dispatcher 消息或观察者失败不会再触发整个 Panel 的全局闪退。
 - 外部重命名、文件大小和类型变化继续复用原卡片并更新派生文本；已收纳文件外部丢失时保留“需要恢复”入口。退出应用会释放全部桌面监视器和计时器，不留下重复刷新源。
 - 网格和列表模式使用与外层统一滚动条协作的视口虚拟化面板，只创建当前可见行和前后缓冲行的文件卡片；完整集合、滚动范围、双列收纳盒和业务排序不变。
@@ -520,7 +522,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.70 `
+  -Version 0.10.71 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -530,8 +532,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 安装包输出到 `artifacts/release/packages/`，其中包括：
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
+- 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.70-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.71-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -547,6 +550,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 ![公共桌面批量收纳单次授权](docs/images/desktop-batch-elevation-session.svg)
 
+![自身入口保护与安装目录故障关闭](docs/images/self-launcher-install-location-safety.svg)
+
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
 正式发布流程会把当前版本显式设为 GitHub Latest，并回读验证 `releases.win.json`、`RELEASES`、完整更新包、带路径向导的 Setup 和 MSI。Setup 在打包时以特殊探针参数无安装执行，必须返回目录向导专用标识；上传后还会将 GitHub 公开资产的 SHA-256 与本地文件比较，不能再由同名默认安装器悄悄顶替。中文发布说明使用带签名的 Unicode 中间文件，并在打包后与更新清单逐字核对；任何代码页转换或内容损坏都会直接中止发布。验证通过后，另一台设备只要安装过一次，以后即可在设置页直接完成检查、下载、安装和重启。个人设备使用 `Setup.exe` 选择目录，企业部署使用 MSI。设置页同时保留“打开官方下载页”按钮；网络策略、代理或临时服务异常时可以直接下载安装器覆盖升级，业务数据库和 `%APPDATA%` 设置不会被安装包删除。
@@ -554,6 +559,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ![GitHub 静态清单一键更新与手动兜底](docs/images/github-static-update-flow.svg)
 
 用户点击“一键检查并安装更新”后，FocusPanel 会显示更新说明、下载完整包或差分包、备份数据库、恢复原任务栏设置，然后重启安装。其他设备首次运行 `Setup.exe` 时即可选择目录；后续版本均沿用同一条更新链，不会因自定义目录而回到默认位置。
+
+设置页的一键更新是原地升级，不会主动搬迁已经安装在 C 盘的程序。需要释放 C 盘时，请先运行一次 0.10.71 或更高版本的 `FocusPanel-win-Setup.exe`，在路径窗口确认 D/E 盘；迁移完成后，后续一键更新会继续沿用该目录。
 
 ![一键更新流程](docs/images/one-click-update.svg)
 

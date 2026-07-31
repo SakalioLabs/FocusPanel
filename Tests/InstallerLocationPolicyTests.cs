@@ -112,4 +112,40 @@ public sealed class InstallerLocationPolicyTests
                 Directory.Delete(root, true);
         }
     }
+
+    [Fact]
+    public void InitialLocation_MigratesExistingSystemDriveInstallToRecommendation()
+    {
+        Assert.Equal(
+            @"D:\Applications\FocusPanel",
+            InstallerLocationPolicy
+                .SelectInitialDirectory(
+                    @"C:\Users\Test\AppData\Local\FocusPanel",
+                    @"D:\Applications\FocusPanel",
+                    @"C:\"));
+    }
+
+    [Fact]
+    public void InitialLocation_PreservesExistingNonSystemDriveInstall()
+    {
+        Assert.Equal(
+            @"D:\Applications\FocusPanel",
+            InstallerLocationPolicy
+                .SelectInitialDirectory(
+                    @"D:\Applications\FocusPanel",
+                    @"E:\Applications\FocusPanel",
+                    @"C:\"));
+    }
+
+    [Fact]
+    public void InitialLocation_UsesRecommendationWithoutLiveInstall()
+    {
+        Assert.Equal(
+            @"E:\Applications\FocusPanel",
+            InstallerLocationPolicy
+                .SelectInitialDirectory(
+                    string.Empty,
+                    @"E:\Applications\FocusPanel",
+                    @"C:\"));
+    }
 }
