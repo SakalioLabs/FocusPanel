@@ -176,6 +176,67 @@ public sealed class DesktopItemVisibilityTests
     }
 
     [Fact]
+    public async Task VisibilityIo_ElevatedBatchReusesOneSessionForEveryWrite()
+    {
+        int legacyCalls = 0;
+        int batchStarts = 0;
+        var batch = new RecordingElevatedBatch();
+        var io = new DesktopVisibilityIo(
+            new RecordingVisibilityService(),
+            (_, _) => legacyCalls++,
+            () =>
+            {
+                batchStarts++;
+                return batch;
+            });
+
+        using (await io.BeginElevatedBatchAsync())
+        {
+            await io.ApplyAttributesAsync(
+                @"C:\Users\Public\Desktop\one.lnk",
+                FileAttributes.Hidden
+                | FileAttributes.System,
+                true);
+            await io.ApplyAttributesAsync(
+                @"C:\Users\Public\Desktop\two.lnk",
+                FileAttributes.Hidden
+                | FileAttributes.System,
+                true);
+        }
+
+        Assert.Equal(1, batchStarts);
+        Assert.Equal(2, batch.SetCalls);
+        Assert.Equal(1, batch.DisposeCalls);
+        Assert.Equal(0, legacyCalls);
+    }
+
+    [Fact]
+    public async Task VisibilityIo_AfterBatchUsesSingleItemFallbackAgain()
+    {
+        int legacyCalls = 0;
+        var batch = new RecordingElevatedBatch();
+        var io = new DesktopVisibilityIo(
+            new RecordingVisibilityService(),
+            (_, _) => legacyCalls++,
+            () => batch);
+
+        using (await io.BeginElevatedBatchAsync())
+        {
+            await io.ApplyAttributesAsync(
+                @"C:\Users\Public\Desktop\during.lnk",
+                FileAttributes.Hidden,
+                true);
+        }
+        await io.ApplyAttributesAsync(
+            @"C:\Users\Public\Desktop\after.lnk",
+            FileAttributes.Normal,
+            true);
+
+        Assert.Equal(1, batch.SetCalls);
+        Assert.Equal(1, legacyCalls);
+    }
+
+    [Fact]
     public async Task VisibilityIo_MissingItemFailsWithoutAttributeRead()
     {
         var visibility =
@@ -322,5 +383,28 @@ public sealed class DesktopItemVisibilityTests
         private void RecordThread() =>
             LastThreadId =
                 Environment.CurrentManagedThreadId;
+    }
+
+    private sealed class RecordingElevatedBatch
+        : IDesktopVisibilityElevatedBatch
+    {
+        internal int SetCalls { get; private set; }
+
+        internal int DisposeCalls
+        {
+            get;
+            private set;
+        }
+
+        public void SetAttributes(
+            string path,
+            FileAttributes attributes)
+        {
+            _ = path;
+            _ = attributes;
+            SetCalls++;
+        }
+
+        public void Dispose() => DisposeCalls++;
     }
 }

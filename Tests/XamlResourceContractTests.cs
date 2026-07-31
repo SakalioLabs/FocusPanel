@@ -3859,6 +3859,54 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void DesktopOrganizer_UsesOneElevatedSessionPerBatchWithoutElevatingShell()
+    {
+        string root = FindRepositoryRoot();
+        string service = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FileOrganizerService.cs"));
+        string visibilityIo = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "DesktopVisibilityIo.cs"));
+        string helper = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "DesktopVisibilityElevatedHelper.cs"));
+        string manifest = File.ReadAllText(
+            Path.Combine(root, "app.manifest"));
+
+        Assert.Contains(
+            "BeginElevatedBatchAsync()",
+            service);
+        Assert.Contains(
+            "catch (OperationCanceledException)",
+            service);
+        Assert.Contains(
+            "IDesktopVisibilityElevatedBatch",
+            visibilityIo);
+        Assert.Contains(
+            "SessionCommand",
+            helper);
+        Assert.Contains(
+            "NamedPipeServerStream",
+            helper);
+        Assert.Contains(
+            "PipeOptions.CurrentUserOnly",
+            helper);
+        Assert.Contains(
+            "level=\"asInvoker\"",
+            manifest);
+        Assert.DoesNotContain(
+            "level=\"requireAdministrator\"",
+            manifest);
+    }
+
+    [Fact]
     public void DesktopOrganizer_UsesViewportVirtualizationForBothModes()
     {
         string root = FindRepositoryRoot();

@@ -13,6 +13,16 @@ internal interface IDesktopVisibilityIo
         string path,
         FileAttributes attributes,
         bool requiresElevation);
+
+    Task<IDisposable> BeginElevatedBatchAsync();
+}
+
+internal interface IDesktopVisibilityElevatedBatch
+    : IDisposable
+{
+    void SetAttributes(
+        string path,
+        FileAttributes attributes);
 }
 
 internal sealed class DesktopVisibilityIo
@@ -23,13 +33,21 @@ internal sealed class DesktopVisibilityIo
     private readonly Action<
         string,
         FileAttributes> _setElevatedAttributes;
+    private readonly Func<
+        IDesktopVisibilityElevatedBatch>
+        _startElevatedBatch;
+    private readonly object _elevatedBatchGate = new();
+    private IDesktopVisibilityElevatedBatch?
+        _elevatedBatch;
 
     internal DesktopVisibilityIo(
         IDesktopItemVisibilityService visibility)
         : this(
             visibility,
             DesktopVisibilityElevatedHelper
-                .SetAttributes)
+                .SetAttributes,
+            DesktopVisibilityElevatedHelper
+                .StartBatch)
     {
     }
 
@@ -37,7 +55,9 @@ internal sealed class DesktopVisibilityIo
         IDesktopItemVisibilityService visibility,
         Action<
             string,
-            FileAttributes> setElevatedAttributes)
+            FileAttributes> setElevatedAttributes,
+        Func<IDesktopVisibilityElevatedBatch>?
+            startElevatedBatch = null)
     {
         _visibility =
             visibility
@@ -47,6 +67,10 @@ internal sealed class DesktopVisibilityIo
             setElevatedAttributes
             ?? throw new ArgumentNullException(
                 nameof(setElevatedAttributes));
+        _startElevatedBatch =
+            startElevatedBatch
+            ?? DesktopVisibilityElevatedHelper
+                .StartBatch;
     }
 
     public Task<FileAttributes>
@@ -83,9 +107,22 @@ internal sealed class DesktopVisibilityIo
             {
                 if (requiresElevation)
                 {
-                    _setElevatedAttributes(
-                        requiredPath,
-                        attributes);
+                    IDesktopVisibilityElevatedBatch?
+                        batch;
+                    lock (_elevatedBatchGate)
+                        batch = _elevatedBatch;
+                    if (batch != null)
+                    {
+                        batch.SetAttributes(
+                            requiredPath,
+                            attributes);
+                    }
+                    else
+                    {
+                        _setElevatedAttributes(
+                            requiredPath,
+                            attributes);
+                    }
                     return;
                 }
 
@@ -95,6 +132,74 @@ internal sealed class DesktopVisibilityIo
                 _visibility.NotifyAttributesChanged(
                     requiredPath);
             });
+    }
+
+    public Task<IDisposable>
+        BeginElevatedBatchAsync() =>
+        Task.Run<IDisposable>(
+            () =>
+            {
+                IDesktopVisibilityElevatedBatch batch =
+                    _startElevatedBatch();
+                lock (_elevatedBatchGate)
+                {
+                    if (_elevatedBatch != null)
+                    {
+                        batch.Dispose();
+                        throw new InvalidOperationException(
+                            "管理员收纳会话已在运行。");
+                    }
+
+                    _elevatedBatch = batch;
+                }
+
+                return new ElevatedBatchLease(
+                    this,
+                    batch);
+            });
+
+    private void EndElevatedBatch(
+        IDesktopVisibilityElevatedBatch batch)
+    {
+        lock (_elevatedBatchGate)
+        {
+            if (ReferenceEquals(
+                    _elevatedBatch,
+                    batch))
+            {
+                _elevatedBatch = null;
+            }
+        }
+
+        batch.Dispose();
+    }
+
+    private sealed class ElevatedBatchLease
+        : IDisposable
+    {
+        private DesktopVisibilityIo? _owner;
+        private IDesktopVisibilityElevatedBatch?
+            _batch;
+
+        internal ElevatedBatchLease(
+            DesktopVisibilityIo owner,
+            IDesktopVisibilityElevatedBatch batch)
+        {
+            _owner = owner;
+            _batch = batch;
+        }
+
+        public void Dispose()
+        {
+            DesktopVisibilityIo? owner =
+                System.Threading.Interlocked
+                    .Exchange(ref _owner, null);
+            IDesktopVisibilityElevatedBatch? batch =
+                System.Threading.Interlocked
+                    .Exchange(ref _batch, null);
+            if (owner != null && batch != null)
+                owner.EndElevatedBatch(batch);
+        }
     }
 
     private static string RequirePath(

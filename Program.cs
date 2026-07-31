@@ -35,6 +35,19 @@ public static class Program
             return;
         }
 
+        if (args.Length > 0
+            && string.Equals(
+                args[0],
+                DesktopVisibilityElevatedHelper
+                    .SessionCommand,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            Environment.ExitCode =
+                DesktopVisibilityElevatedHelper
+                    .RunSession(args);
+            return;
+        }
+
         bool isUiSmokeTest = args.Length > 0
             && string.Equals(
                 args[0],

@@ -1613,7 +1613,44 @@ public class FileOrganizerService : IDisposable
                         candidates,
                         paths);
 
-            await _refreshGate.WaitAsync();
+            IDisposable? elevatedBatch = null;
+            bool elevationReady =
+                allowCommonDesktopElevation;
+            if (allowCommonDesktopElevation
+                && items.Any(item =>
+                    DesktopDropPolicy.Classify(
+                        item.FullPath,
+                        _desktopPath,
+                        _commonDesktopPath)
+                    == DesktopDropLocation
+                        .CommonDesktop))
+            {
+                try
+                {
+                    // Start one short-lived elevated helper for the
+                    // complete batch. Attribute writes and rollbacks
+                    // reuse this session, so a desktop containing many
+                    // public shortcuts produces only one UAC prompt.
+                    elevatedBatch =
+                        await _visibilityIo
+                            .BeginElevatedBatchAsync()
+                            .ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    elevationReady = false;
+                }
+                catch (Exception ex)
+                {
+                    elevationReady = false;
+                    System.Diagnostics.Debug.WriteLine(
+                        "Start desktop elevation batch failed: "
+                        + ex.Message);
+                }
+            }
+
+            await _refreshGate.WaitAsync()
+                .ConfigureAwait(false);
             try
             {
                 DesktopOrganizeResult? result = null;
@@ -1624,7 +1661,7 @@ public class FileOrganizerService : IDisposable
                             await DesktopAutoOrganizePolicy
                                 .ExecuteAsync(
                                     items,
-                                    allowCommonDesktopElevation,
+                                    elevationReady,
                                     async (
                                         item,
                                         partition,
@@ -1672,6 +1709,7 @@ public class FileOrganizerService : IDisposable
             finally
             {
                 _refreshGate.Release();
+                elevatedBatch?.Dispose();
             }
         }
         finally

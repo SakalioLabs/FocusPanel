@@ -366,6 +366,8 @@ Focus 中心顶部提供“今日概览”：以只读方式汇总未完成任�
 - 不再注入或持续修改 Explorer 的桌面列表；Explorer 刷新、重启和系统重启后按文件属性保持状态。
 - 属性改变后会通知 Shell 更新项目并重新枚举桌面目录，避免图标只变成半透明却仍停留在桌面。
 - 收纳时的文件存在检查、完整原属性读取、`Hidden + System` 写入及 Explorer 属性通知统一经过后台 I/O 边界，不再在 WPF 调用上下文同步访问文件系统；公共桌面的应用与失败回滚使用同一提权路径，避免属性已经改变但普通权限无法恢复。数据库仍先记录“收纳中”，成功后标记稳定，失败时恢复原属性或保留“需要恢复”记录。
+- 用户桌面与公共桌面项目混合整理时，先以普通权限完成用户项目；用户确认公共桌面授权后只弹出一次 UAC，并为本批创建短生命周期属性会话。全部公共快捷方式、文件夹和失败回滚复用该会话，单项失败只进入最终统计，不会退出主程序。批次结束、主程序断开或助手异常时会话立即释放。
+- 主壳刻意保持 `asInvoker`，不会在开机时整体请求管理员权限：这样普通权限 Explorer 仍可把桌面项目拖进 Panel，同时避免每次登录弹 UAC，以及把任务栏接管、更新、热区和业务数据库扩大到高权限进程。管理员助手只接受公共桌面根目录下的属性写入并逐项重新校验路径。
 - 旧版 `.FocusPanel` 仓库继续兼容，升级时不自动移动旧文件。
 - 不创建全屏桌面覆盖窗口；Windows 原生桌面保持可点击，文件收纳操作集中在侧边栏工作区完成。
 - 桌面收纳工具栏、收纳盒、视图选项、新建、修复和重命名已全部使用共享 Fluent 控件；页面不再保留 Material 兼容控件或矩形/圆角双重外框。
@@ -518,7 +520,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.69 `
+  -Version 0.10.70 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -529,7 +531,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.69-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.70-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
@@ -542,6 +544,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 ![目录安装器与自动收纳发布验收](docs/images/setup-organizer-release-verification.svg)
 
 ![跨盘落盘与自动整理单次提交](docs/images/install-organizer-single-commit.svg)
+
+![公共桌面批量收纳单次授权](docs/images/desktop-batch-elevation-session.svg)
 
 安装版和 Velopack 便携版统一使用项目的公开 [GitHub Releases](https://github.com/SakalioLabs/FocusPanel/releases)，无需在每台设备配置更新地址或访问令牌。客户端直接读取 GitHub Latest Release 的静态 `releases.win.json` 和包资产，不调用匿名 Releases API，因此不会因共享 IP 的 API 次数耗尽而收到 403。程序启动后会自动检查一次，之后每 6 小时最多检查一次；发现新版本时更新设置和托盘都会提示，但不会强制重启。
 
