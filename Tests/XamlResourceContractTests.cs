@@ -1057,7 +1057,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.71\"",
+            "LauncherVersion = \"0.10.72\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1416,7 +1416,7 @@ public sealed class XamlResourceContractTests
             "SwitchVirtualDesktopCommand",
             codeBehind);
         Assert.Matches(
-            @"QueueOverlayFocus\(\s*StatusCenterButton,\s*StatusCenterQuickSettingsButton",
+            @"ToggleCompactOverlay\([\s\S]*?StatusCenterButton,[\s\S]*?StatusCenterQuickSettingsButton",
             codeBehind);
         Assert.Equal(
             "{Binding OpenStartMenuCommand}",
@@ -2818,10 +2818,16 @@ public sealed class XamlResourceContractTests
             "_viewModel.ExecuteSearchResultCommand.Execute(result);",
             codeBehind);
         Assert.Contains(
-            "SearchBox.SelectAll();",
+            "textBox.SelectAll();",
             codeBehind);
-        Assert.Matches(
-            @"_overlayReturnFocusTarget\s*=\s*SearchButton;",
+        Assert.Contains(
+            "selectAllText: true",
+            codeBehind);
+        Assert.DoesNotContain(
+            "Command=\"{Binding ToggleSearchCommand}\"",
+            mainWindow);
+        Assert.Contains(
+            "ToggleCompactOverlay(",
             codeBehind);
         Assert.Contains(
             "returnTarget.Focus();",
@@ -3854,6 +3860,9 @@ public sealed class XamlResourceContractTests
             "CountCommonDesktopCandidates()",
             viewModel);
         Assert.Contains(
+            "GetCommonDesktopCandidatePaths()",
+            service);
+        Assert.Contains(
             "授权完成前不会隐藏任何图标",
             viewModel);
         Assert.Contains(
@@ -3865,6 +3874,23 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AutoOrganizeStatus",
             viewModel);
+        Assert.Contains(
+            "CollectPendingCommonDesktopCommand",
+            viewModel);
+        Assert.Contains(
+            "AuthorizationRequiredPaths",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Services",
+                    "DesktopAutoOrganizePolicy.cs")));
+        Assert.Contains(
+            "授权收纳公共桌面项目",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "FileOrganizerView.xaml")));
         Assert.Contains(
             "NotifyCanExecuteChangedFor(",
             viewModel);

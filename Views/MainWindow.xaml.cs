@@ -614,22 +614,13 @@ public partial class MainWindow :
 
     private void SearchButton_Click(object sender, RoutedEventArgs e)
     {
-        ExpandSidebar();
-        _overlayReturnFocusTarget =
-            SearchButton;
-        Dispatcher.BeginInvoke(() =>
-        {
-            if (_viewModel.IsSearchOpen)
-            {
-                SearchBox.Focus();
-                SearchBox.SelectAll();
-            }
-            else
-            {
-                _overlayReturnFocusTarget =
-                    null;
-            }
-        }, DispatcherPriority.Input);
+        ToggleCompactOverlay(
+            () => _viewModel.IsSearchOpen,
+            () => _viewModel.ToggleSearchCommand
+                .Execute(null),
+            SearchButton,
+            SearchBox,
+            selectAllText: true);
     }
 
     private void SearchBox_PreviewKeyDown(
@@ -667,40 +658,88 @@ public partial class MainWindow :
         e.Handled = true;
     }
 
-    private void CalendarButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
     private void FocusCenterButton_Click(object sender, RoutedEventArgs e)
     {
-        ExpandSidebar();
-        _viewModel.ToggleFocusCenterCommand.Execute(null);
-        QueueOverlayFocus(
+        ToggleCompactOverlay(
+            () => _viewModel.IsFocusCenterOpen
+                || _viewModel.IsSettingsOpen,
+            () => _viewModel.ToggleFocusCenterCommand
+                .Execute(null),
             FocusCenterButton,
             FocusCenterLastWorkspaceButton,
-            () => _viewModel.IsFocusCenterOpen);
+            isOpenAfterToggle:
+                () => _viewModel.IsFocusCenterOpen);
     }
 
     private void StatusCenterButton_Click(object sender, RoutedEventArgs e)
     {
-        ExpandSidebar();
-        _viewModel.ToggleStatusCenterCommand.Execute(null);
-        QueueOverlayFocus(
+        ToggleCompactOverlay(
+            () => _viewModel.IsStatusCenterOpen
+                || _viewModel.IsPowerMenuOpen,
+            () => _viewModel.ToggleStatusCenterCommand
+                .Execute(null),
             StatusCenterButton,
             StatusCenterQuickSettingsButton,
-            () => _viewModel.IsStatusCenterOpen);
+            isOpenAfterToggle:
+                () => _viewModel.IsStatusCenterOpen);
     }
 
     private void CalendarPanelButton_Click(object sender, RoutedEventArgs e)
     {
-        ExpandSidebar();
-        _viewModel.ToggleCalendarCommand.Execute(null);
-        if (_viewModel.IsCalendarOpen)
+        ToggleCompactOverlay(
+            () => _viewModel.IsCalendarOpen,
+            () => _viewModel.ToggleCalendarCommand
+                .Execute(null),
+            TimeButton);
+    }
+
+    private void ToggleCompactOverlay(
+        Func<bool> hasOwnedSurfaceOpen,
+        Action openSurface,
+        FrameworkElement returnTarget,
+        FrameworkElement? initialTarget = null,
+        bool selectAllText = false,
+        Func<bool>? isOpenAfterToggle = null)
+    {
+        CompactOverlayToggleAction action =
+            CompactOverlayTogglePolicy.Decide(
+                hasOwnedSurfaceOpen());
+        if (action
+            == CompactOverlayToggleAction.Collapse)
         {
-            _overlayReturnFocusTarget =
-                TimeButton;
+            CollapseSidebar();
+            return;
         }
-        else
+
+        ExpandSidebar();
+        openSurface();
+        Func<bool> isOpen =
+            isOpenAfterToggle
+            ?? hasOwnedSurfaceOpen;
+        if (initialTarget == null)
         {
             _overlayReturnFocusTarget =
-                null;
+                isOpen() ? returnTarget : null;
+            return;
+        }
+
+        QueueOverlayFocus(
+            returnTarget,
+            initialTarget,
+            isOpen);
+        if (selectAllText
+            && initialTarget is TextBox textBox)
+        {
+            Dispatcher.BeginInvoke(
+                new Action(() =>
+                {
+                    if (isOpen()
+                        && textBox.IsKeyboardFocusWithin)
+                    {
+                        textBox.SelectAll();
+                    }
+                }),
+                DispatcherPriority.Input);
         }
     }
 

@@ -93,8 +93,24 @@ public partial class FileOrganizerViewModel :
         "关闭时不会处理新增桌面项目";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(HasPendingCommonDesktopItems))]
+    [NotifyCanExecuteChangedFor(
+        nameof(CollectPendingCommonDesktopCommand))]
+    private int pendingCommonDesktopCount;
+
+    private IReadOnlyList<string>
+        _pendingCommonDesktopPaths =
+            Array.Empty<string>();
+
+    public bool HasPendingCommonDesktopItems =>
+        PendingCommonDesktopCount > 0;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(
         nameof(OrganizeAllCommand))]
+    [NotifyCanExecuteChangedFor(
+        nameof(CollectPendingCommonDesktopCommand))]
     private bool isOrganizing;
 
     [ObservableProperty]
@@ -295,6 +311,10 @@ public partial class FileOrganizerViewModel :
 
     private void FileService_FilesChanged()
     {
+        if (!IsOrganizing)
+        {
+            RefreshPendingCommonDesktopItems();
+        }
         RequestLayoutRefresh();
     }
 
@@ -341,6 +361,7 @@ public partial class FileOrganizerViewModel :
             string status =
                 DesktopAutoOrganizePolicy
                     .DescribeAutomaticResult(result);
+            RefreshPendingCommonDesktopItems();
             if (!_isDisposed
                 && !string.IsNullOrWhiteSpace(status))
                 AutoOrganizeStatus = status;
@@ -355,6 +376,108 @@ public partial class FileOrganizerViewModel :
             System.Diagnostics.Debug.WriteLine(
                 "Auto organize created desktop items failed: "
                 + ex.Message);
+        }
+        finally
+        {
+            EndOrganizePresentation();
+            _organizePresentationGate.Release();
+        }
+    }
+
+    private void UpdatePendingCommonDesktopItems(
+        IReadOnlyList<string>? paths)
+    {
+        _pendingCommonDesktopPaths =
+            paths?
+                .Where(path =>
+                    !string.IsNullOrWhiteSpace(path))
+                .Distinct(
+                    StringComparer.OrdinalIgnoreCase)
+                .ToArray()
+            ?? Array.Empty<string>();
+        PendingCommonDesktopCount =
+            _pendingCommonDesktopPaths.Count;
+    }
+
+    private void RefreshPendingCommonDesktopItems() =>
+        UpdatePendingCommonDesktopItems(
+            _fileService
+                .GetCommonDesktopCandidatePaths());
+
+    private bool CanCollectPendingCommonDesktop() =>
+        !IsOrganizing
+        && PendingCommonDesktopCount > 0;
+
+    [RelayCommand(
+        CanExecute = nameof(
+            CanCollectPendingCommonDesktop))]
+    private async Task CollectPendingCommonDesktop()
+    {
+        string[] paths =
+            _pendingCommonDesktopPaths.ToArray();
+        if (paths.Length == 0)
+            return;
+
+        var confirmation = FocusDialogService.Show(
+            $"这 {paths.Length} 个快捷方式位于公共桌面，"
+            + "需要一次管理员授权才能隐藏。\n\n"
+            + "授权完成前不会修改任何图标。是否继续？",
+            "授权收纳公共桌面项目",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+        if (confirmation
+            != System.Windows.MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        Task<bool>? operation =
+            _organizeOperationTracker.TryStart(
+                async () =>
+                {
+                    await CollectPendingCommonDesktopCore(
+                        paths);
+                    return true;
+                });
+        if (operation != null)
+            await operation;
+    }
+
+    private async Task
+        CollectPendingCommonDesktopCore(
+            IReadOnlyList<string> paths)
+    {
+        await _organizePresentationGate
+            .WaitAsync();
+        try
+        {
+            long revision =
+                BeginOrganizePresentation(
+                    paths.Count,
+                    "正在等待公共桌面授权");
+            DesktopOrganizeResult result =
+                await _fileService.OrganizeFiles(
+                    paths,
+                    true,
+                    CreateOrganizeProgress(
+                        "授权收纳",
+                        revision));
+            RefreshPendingCommonDesktopItems();
+            RequestLayoutRefresh();
+            AutoOrganizeStatus =
+                result.Collected > 0
+                    ? $"已授权收纳 {result.Collected} 个公共桌面项目"
+                    : result.AuthorizationRequired > 0
+                        ? "授权已取消；公共桌面图标保持原状"
+                        : "公共桌面项目暂时无法收纳；图标保持原状";
+        }
+        catch (Exception ex)
+        {
+            AutoOrganizeStatus =
+                "公共桌面授权收纳失败；图标保持原状";
+            System.Diagnostics.Debug.WriteLine(
+                "Collect pending common desktop items failed: "
+                + ex);
         }
         finally
         {
@@ -710,6 +833,7 @@ public partial class FileOrganizerViewModel :
                         CreateOrganizeProgress(
                             "正在整理",
                             progressRevision));
+                RefreshPendingCommonDesktopItems();
                 int collected =
                     organizeResult.Collected;
 

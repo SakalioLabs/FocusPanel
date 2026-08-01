@@ -520,6 +520,13 @@
                                                Style="{StaticResource FocusMetaText}"
                                                TextWrapping="Wrap"
                                                AutomationProperties.LiveSetting="Polite"/>
+                                    <Button Margin="0,8,0,0"
+                                            MinHeight="44"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            Content="{Binding PendingCommonDesktopCount, StringFormat=授权收纳 {0} 个公共桌面项目}"
+                                            Command="{Binding CollectPendingCommonDesktopCommand}"
+                                            Visibility="{Binding HasPendingCommonDesktopItems, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            AutomationProperties.Name="授权收纳公共桌面项目"/>
                                 </StackPanel>
                             </Border>
                         </Popup>

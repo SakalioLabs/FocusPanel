@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#08111f"/><stop offset="1" stop-color="#172b49"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity=".055"/></linearGradient>
+    <filter id="s"><feDropShadow dx="0" dy="18" stdDeviation="22" flood-opacity=".32"/></filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <circle cx="1120" cy="40" r="260" fill="#448cff" opacity=".12"/><circle cx="120" cy="700" r="260" fill="#28d6b1" opacity=".09"/>
+  <text x="72" y="82" fill="#f6f9ff" font-family="Microsoft YaHei UI" font-size="34" font-weight="700">公共桌面可授权 · 紧凑入口可开可关</text>
+  <text x="72" y="120" fill="#a9bad2" font-family="Microsoft YaHei UI" font-size="17">FocusPanel 0.10.72</text>
+  <g filter="url(#s)"><rect x="72" y="158" width="550" height="474" rx="28" fill="url(#glass)" stroke="#68e2c7" stroke-opacity=".34"/><rect x="658" y="158" width="550" height="474" rx="28" fill="url(#glass)" stroke="#7eb7ff" stroke-opacity=".35"/></g>
+  <g font-family="Microsoft YaHei UI">
+    <text x="112" y="215" fill="#86efd7" font-size="23" font-weight="700">Paint.NET 为什么没自动隐藏</text>
+    <rect x="112" y="250" width="470" height="86" rx="18" fill="#071825" fill-opacity=".76"/>
+    <text x="140" y="284" fill="#f6f9ff" font-size="18" font-weight="600">排除规则：仅 FocusPanel.lnk / 当前程序</text><text x="140" y="313" fill="#a9bad2" font-size="15">Paint.NET 不会被名称规则误排除</text>
+    <rect x="112" y="356" width="470" height="104" rx="18" fill="#071825" fill-opacity=".76"/>
+    <text x="140" y="392" fill="#f6f9ff" font-size="18" font-weight="600">公共桌面需要管理员权限</text><text x="140" y="421" fill="#a9bad2" font-size="15">后台不突发 UAC，保留精确待授权路径</text><text x="140" y="446" fill="#ffce78" font-size="14">C:\Users\Public\Desktop\Paint.NET.lnk</text>
+    <rect x="112" y="480" width="470" height="104" rx="18" fill="#071825" fill-opacity=".76"/>
+    <text x="140" y="516" fill="#f6f9ff" font-size="18" font-weight="600">点击“授权收纳 N 个项目”</text><text x="140" y="545" fill="#a9bad2" font-size="15">整批一次 UAC；取消则零写入</text><text x="140" y="570" fill="#86efd7" font-size="14">已有公共快捷方式同样可处理</text>
+    <text x="698" y="215" fill="#9cc9ff" font-size="23" font-weight="700">紧凑栏统一点击状态机</text>
+    <rect x="698" y="250" width="470" height="86" rx="18" fill="#08172a" fill-opacity=".78"/>
+    <text x="726" y="284" fill="#f6f9ff" font-size="18" font-weight="600">第一次点击</text><text x="726" y="313" fill="#a9bad2" font-size="15">76px 紧凑栏 → 展开并打开对应内容</text>
+    <path d="M933 340v28" stroke="#7eb7ff" stroke-width="3"/><path d="M925 360l8 8 8-8" fill="none" stroke="#7eb7ff" stroke-width="3"/>
+    <rect x="698" y="382" width="470" height="86" rx="18" fill="#08172a" fill-opacity=".78"/>
+    <text x="726" y="416" fill="#f6f9ff" font-size="18" font-weight="600">第二次点击同一入口</text><text x="726" y="445" fill="#a9bad2" font-size="15">中心或子表面关闭，整个侧栏收起</text>
+    <rect x="698" y="492" width="470" height="92" rx="18" fill="#08172a" fill-opacity=".78"/>
+    <text x="726" y="527" fill="#f6f9ff" font-size="18" font-weight="600">搜索 · Focus · 状态 · 时间</text><text x="726" y="556" fill="#9cc9ff" font-size="15">单一路径，不再 Command + Click 双执行</text>
+  </g>
+  <text x="640" y="682" text-anchor="middle" fill="#8295ae" font-family="Microsoft YaHei UI" font-size="14">不后台弹 UAC · 不模糊匹配应用名 · 不留下展开空壳</text>
+</svg>

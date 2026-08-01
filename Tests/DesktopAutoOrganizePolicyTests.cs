@@ -50,6 +50,9 @@ public sealed class DesktopAutoOrganizePolicyTests
         Assert.Equal(1, result.AuthorizationRequired);
         Assert.Equal(1, result.Failed);
         Assert.Contains("locked.docx", result.FailedItems);
+        Assert.Contains(
+            @"C:\Public\Desktop\public.lnk",
+            result.AuthorizationRequiredPaths!);
         Assert.Contains("photo.png:图片", collected);
         Assert.Contains("folder:文件夹", collected);
     }
@@ -255,6 +258,11 @@ public sealed class DesktopAutoOrganizePolicyTests
         @"C:\Desktop\another.lnk",
         @"D:\Apps\FocusPanel\FocusPanel.exe",
         false)]
+    [InlineData(
+        "Paint.NET.lnk",
+        @"C:\Users\Public\Desktop\Paint.NET.lnk",
+        @"D:\Apps\FocusPanel\FocusPanel.exe",
+        false)]
     public void ProtectedLauncher_UsesOfficialNameOrExactExecutablePath(
         string name,
         string fullPath,
@@ -277,7 +285,7 @@ public sealed class DesktopAutoOrganizePolicyTests
         1,
         1,
         1,
-        "已收纳 1 个；1 个公共桌面项目需手动授权；1 个暂时失败")]
+        "已收纳 1 个；1 个公共桌面项目待授权收纳；1 个暂时失败")]
     [InlineData(0, 0, 0, 0, "")]
     public void AutomaticResult_ProducesActionableStatus(
         int attempted,

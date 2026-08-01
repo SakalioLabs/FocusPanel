@@ -1064,7 +1064,6 @@
                                     Tag="CompactFixedEntry"
                                     Style="{StaticResource FocusIconButton}"
                                     Click="SearchButton_Click"
-                                    Command="{Binding ToggleSearchCommand}"
                                     AutomationProperties.Name="搜索应用"
                                     ToolTip="启动应用">
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE721;"/>

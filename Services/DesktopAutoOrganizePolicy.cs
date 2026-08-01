@@ -118,6 +118,8 @@ public static class DesktopAutoOrganizePolicy
         int collected = 0;
         int authorizationRequired = 0;
         var failedItems = new List<string>();
+        var authorizationRequiredPaths =
+            new List<string>();
 
         foreach (DesktopAutoOrganizeItem item in items)
         {
@@ -132,10 +134,14 @@ public static class DesktopAutoOrganizePolicy
             catch (CommonDesktopElevationRequiredException)
             {
                 authorizationRequired++;
+                authorizationRequiredPaths.Add(
+                    item.FullPath);
             }
             catch (OperationCanceledException)
             {
                 authorizationRequired++;
+                authorizationRequiredPaths.Add(
+                    item.FullPath);
             }
             catch
             {
@@ -160,7 +166,8 @@ public static class DesktopAutoOrganizePolicy
             collected,
             authorizationRequired,
             failedItems.Count,
-            failedItems);
+            failedItems,
+            authorizationRequiredPaths);
     }
 
     private static void ReportProgress(
@@ -196,7 +203,7 @@ public static class DesktopAutoOrganizePolicy
         if (result.AuthorizationRequired > 0)
         {
             details.Add(
-                $"{result.AuthorizationRequired} 个公共桌面项目需手动授权");
+                $"{result.AuthorizationRequired} 个公共桌面项目待授权收纳");
         }
         if (result.Failed > 0)
             details.Add($"{result.Failed} 个暂时失败");
@@ -218,7 +225,8 @@ public sealed record DesktopOrganizeResult(
     int Collected,
     int AuthorizationRequired,
     int Failed,
-    IReadOnlyList<string> FailedItems);
+    IReadOnlyList<string> FailedItems,
+    IReadOnlyList<string>? AuthorizationRequiredPaths = null);
 
 public sealed record DesktopOrganizeProgress(
     int Processed,

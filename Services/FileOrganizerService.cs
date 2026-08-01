@@ -1645,8 +1645,9 @@ public class FileOrganizerService : IDisposable
             allowCommonDesktopElevation,
             progress);
 
-    public int CountCommonDesktopCandidates() =>
-        Files.Count(file =>
+    public IReadOnlyList<string>
+        GetCommonDesktopCandidatePaths() =>
+        Files.Where(file =>
             !file.IsHidden
             && !file.NeedsRecovery
             && !DesktopAutoOrganizePolicy
@@ -1658,7 +1659,12 @@ public class FileOrganizerService : IDisposable
                 file.FullPath,
                 _desktopPath,
                 _commonDesktopPath)
-            == DesktopDropLocation.CommonDesktop);
+            == DesktopDropLocation.CommonDesktop)
+            .Select(file => file.FullPath)
+            .ToArray();
+
+    public int CountCommonDesktopCandidates() =>
+        GetCommonDesktopCandidatePaths().Count;
 
     public async Task<DesktopOrganizeResult> OrganizeFiles(
         IReadOnlyList<string> paths,
@@ -1675,6 +1681,7 @@ public class FileOrganizerService : IDisposable
                     0,
                     0,
                     0,
+                    Array.Empty<string>(),
                     Array.Empty<string>());
             }
 
@@ -1727,7 +1734,16 @@ public class FileOrganizerService : IDisposable
                         0,
                         commonDesktopCount,
                         0,
-                        Array.Empty<string>());
+                        Array.Empty<string>(),
+                        items.Where(item =>
+                                DesktopDropPolicy.Classify(
+                                    item.FullPath,
+                                    _desktopPath,
+                                    _commonDesktopPath)
+                                == DesktopDropLocation
+                                    .CommonDesktop)
+                            .Select(item => item.FullPath)
+                            .ToArray());
                 }
                 catch (Exception ex)
                 {
@@ -1748,6 +1764,15 @@ public class FileOrganizerService : IDisposable
                                 != DesktopDropLocation
                                     .CommonDesktop)
                             .Select(item => item.Name)
+                            .ToArray(),
+                        items.Where(item =>
+                                DesktopDropPolicy.Classify(
+                                    item.FullPath,
+                                    _desktopPath,
+                                    _commonDesktopPath)
+                                == DesktopDropLocation
+                                    .CommonDesktop)
+                            .Select(item => item.FullPath)
                             .ToArray());
                 }
             }
@@ -1807,6 +1832,7 @@ public class FileOrganizerService : IDisposable
                         0,
                         0,
                         0,
+                        Array.Empty<string>(),
                         Array.Empty<string>());
             }
             finally
