@@ -1103,20 +1103,19 @@ public partial class FileOrganizerViewModel :
             "移动收纳盒");
     }
 
-    [RelayCommand]
-    private async Task AssignToPartition(
-        string partitionName)
+    public async Task AssignFileToPartition(
+        DesktopFile? file,
+        string? partitionName)
     {
-        if (SelectedFile == null) return;
+        if (file == null) return;
 
-        string fileName = SelectedFile.Name;
+        string fileName = file.Name;
         await RunLayoutMutationAsync(
             () =>
                 _layoutRepository
                     .AssignFileToPartition(
                         fileName,
-                        partitionName
-                        ?? string.Empty),
+                        partitionName ?? string.Empty),
             "更新文件分类");
     }
 
@@ -1156,11 +1155,12 @@ public partial class FileOrganizerViewModel :
     }
 
     [RelayCommand]
-    private async Task RestoreFileFromPanel()
+    private async Task RestoreFileFromPanel(
+        DesktopFile? file)
     {
-        if (SelectedFile == null) return;
+        if (file == null) return;
 
-        await RestoreDraggedFileToDesktop(SelectedFile);
+        await RestoreDraggedFileToDesktop(file);
     }
 
     public async Task RestoreDraggedFileToDesktop(DesktopFile file)

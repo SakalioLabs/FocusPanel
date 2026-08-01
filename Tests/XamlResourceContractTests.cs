@@ -1057,7 +1057,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.72\"",
+            "LauncherVersion = \"0.10.73\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -3048,7 +3048,7 @@ public sealed class XamlResourceContractTests
                 organizer,
                 "ContextMenu=\"\\{StaticResource FileContextMenu\\}\"").Count);
         Assert.Contains(
-            "PlacementTarget:",
+            "contextMenu.PlacementTarget is",
             codeBehind);
         Assert.Contains(
             "FrameworkElement",
@@ -3062,6 +3062,24 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "viewModel.SelectFileCommand.Execute(file);",
             codeBehind);
+        Assert.Contains(
+            "PopulatePartitionActions(",
+            codeBehind);
+        Assert.Contains(
+            "PartitionActionTarget(",
+            codeBehind);
+        Assert.Contains(
+            "target.ContextMenu.IsOpen = false;",
+            codeBehind);
+        Assert.DoesNotContain(
+            "ItemsSource=\"{Binding Data.AllPartitions, Source={StaticResource VmProxy}}\"",
+            organizer);
+        Assert.Contains(
+            "Tag=\"MoveToPartitionRoot\"",
+            organizer);
+        Assert.Contains(
+            "Tag=\"CollectToPartitionRoot\"",
+            organizer);
         Assert.Contains(
             "BeginTransientSurface();",
             codeBehind);

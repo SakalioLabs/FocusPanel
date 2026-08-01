@@ -127,25 +127,9 @@
                       Command="{Binding Data.OpenFileCommand, Source={StaticResource VmProxy}}"
                       CommandParameter="{Binding}"/>
             <MenuItem Header="&#x79FB;&#x52A8;&#x5230;"
-                      ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
-                <MenuItem.ItemContainerStyle>
-                    <Style TargetType="MenuItem" BasedOn="{StaticResource FocusMenuItem}">
-                        <Setter Property="Header" Value="{Binding Name}"/>
-                        <Setter Property="Command" Value="{Binding Data.AssignToPartitionCommand, Source={StaticResource VmProxy}}"/>
-                        <Setter Property="CommandParameter" Value="{Binding Name}"/>
-                    </Style>
-                </MenuItem.ItemContainerStyle>
-            </MenuItem>
+                      Tag="MoveToPartitionRoot"/>
             <MenuItem Header="&#x6536;&#x7EB3;&#x5230;&#x9762;&#x677F;"
-                      ItemsSource="{Binding Data.AllPartitions, Source={StaticResource VmProxy}}">
-                <MenuItem.ItemContainerStyle>
-                    <Style TargetType="MenuItem" BasedOn="{StaticResource FocusMenuItem}">
-                        <Setter Property="Header" Value="{Binding Name}"/>
-                        <Setter Property="Command" Value="{Binding Data.HideFileToPanelCommand, Source={StaticResource VmProxy}}"/>
-                        <Setter Property="CommandParameter" Value="{Binding Name}"/>
-                    </Style>
-                </MenuItem.ItemContainerStyle>
-            </MenuItem>
+                      Tag="CollectToPartitionRoot"/>
             <MenuItem Header="&#x6062;&#x590D;&#x5230;&#x684C;&#x9762;"
                       Command="{Binding Data.RestoreFileFromPanelCommand, Source={StaticResource VmProxy}}"
                       CommandParameter="{Binding}"/>

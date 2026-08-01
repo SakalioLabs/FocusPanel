@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -258,22 +259,159 @@ public partial class FileOrganizerView : UserControl
     private void TransientSurface_Opened(object sender, RoutedEventArgs e)
     {
         CloseActiveTransientPopup(false);
-        if (sender is ContextMenu
-            {
-                PlacementTarget:
-                    FrameworkElement
-                    {
-                        DataContext:
-                            DesktopFile file
-                    }
-            }
+        if (sender is ContextMenu contextMenu
+            && contextMenu.PlacementTarget is
+                FrameworkElement
+                {
+                    DataContext: DesktopFile file
+                }
             && DataContext is FileOrganizerViewModel viewModel)
         {
             viewModel.SelectFileCommand.Execute(file);
+            PopulatePartitionActions(
+                contextMenu,
+                file,
+                viewModel);
         }
 
         BeginTransientSurface();
     }
+
+    private static void PopulatePartitionActions(
+        ContextMenu contextMenu,
+        DesktopFile file,
+        FileOrganizerViewModel viewModel)
+    {
+        string[] partitionNames = viewModel.AllPartitions
+            .Select(partition => partition.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        PopulatePartitionAction(
+            contextMenu,
+            "MoveToPartitionRoot",
+            partitionNames,
+            file,
+            viewModel,
+            collect: false);
+        PopulatePartitionAction(
+            contextMenu,
+            "CollectToPartitionRoot",
+            partitionNames,
+            file,
+            viewModel,
+            collect: true);
+    }
+
+    private static void PopulatePartitionAction(
+        ContextMenu contextMenu,
+        string rootTag,
+        IReadOnlyList<string> partitionNames,
+        DesktopFile file,
+        FileOrganizerViewModel viewModel,
+        bool collect)
+    {
+        MenuItem? root = contextMenu.Items
+            .OfType<MenuItem>()
+            .FirstOrDefault(item =>
+                string.Equals(
+                    item.Tag as string,
+                    rootTag,
+                    StringComparison.Ordinal));
+        if (root == null)
+            return;
+
+        root.Items.Clear();
+        foreach (string partitionName in partitionNames)
+        {
+            var action = new MenuItem
+            {
+                Header = partitionName,
+                Tag = new PartitionActionTarget(
+                    contextMenu,
+                    file,
+                    partitionName,
+                    viewModel)
+            };
+            action.Click += collect
+                ? CollectToPartition_Click
+                : MoveToPartition_Click;
+            root.Items.Add(action);
+        }
+        root.IsEnabled = root.Items.Count > 0;
+    }
+
+    private static async void MoveToPartition_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not MenuItem
+            {
+                Tag: PartitionActionTarget target
+            })
+        {
+            return;
+        }
+
+        await ExecutePartitionActionAsync(
+            target,
+            collect: false);
+    }
+
+    private static async void CollectToPartition_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not MenuItem
+            {
+                Tag: PartitionActionTarget target
+            })
+        {
+            return;
+        }
+
+        await ExecutePartitionActionAsync(
+            target,
+            collect: true);
+    }
+
+    private static async Task ExecutePartitionActionAsync(
+        PartitionActionTarget target,
+        bool collect)
+    {
+        try
+        {
+            target.ContextMenu.IsOpen = false;
+            if (collect)
+            {
+                await target.ViewModel.HideDraggedFileToPanel(
+                    target.File,
+                    target.PartitionName);
+            }
+            else
+            {
+                await target.ViewModel.AssignFileToPartition(
+                    target.File,
+                    target.PartitionName);
+            }
+        }
+        catch (Exception ex)
+        {
+            new CrashLogService().TryAppend(ex);
+            FocusDialogService.Show(
+                $"更新收纳区域失败，原有布局已保留：{ex.Message}",
+                "桌面收纳",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private sealed record PartitionActionTarget(
+        ContextMenu ContextMenu,
+        DesktopFile File,
+        string PartitionName,
+        FileOrganizerViewModel ViewModel);
 
     private void TransientSurface_Closed(object sender, RoutedEventArgs e)
         => EndTransientSurface();

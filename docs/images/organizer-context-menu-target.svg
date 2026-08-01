@@ -17,7 +17,7 @@
   </defs>
   <rect width="1120" height="520" rx="28" fill="url(#background)"/>
   <text x="56" y="62" fill="#F5F7FF" font-family="Segoe UI Variable Display, Segoe UI" font-size="28" font-weight="600">桌面右键菜单始终作用于当前文件</text>
-  <text x="56" y="94" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="15">独立实例 + PlacementTarget 动态绑定，避免虚拟化复用后的陈旧选择。</text>
+  <text x="56" y="94" fill="#AEB5C8" font-family="Segoe UI Variable Text, Segoe UI" font-size="15">精确文件目标 + 分区静态快照，避免菜单与虚拟化集合刷新相互冲突。</text>
 
   <g transform="translate(58 138)">
     <rect width="328" height="300" rx="20" fill="url(#card)" stroke="#FFFFFF" stroke-opacity=".14"/>
@@ -62,10 +62,10 @@
     <circle cx="58" cy="58" r="58" fill="#4CA6E8" fill-opacity=".18" stroke="#4CA6E8" stroke-opacity=".72"/>
     <text x="58" y="53" text-anchor="middle" fill="#F5F7FF" font-size="18" font-weight="600">当前目标</text>
     <text x="58" y="78" text-anchor="middle" fill="#4CA6E8" font-size="14">packages</text>
-    <text x="58" y="148" text-anchor="middle" fill="#AEB5C8" font-size="13">同步 SelectedFile</text>
-    <text x="58" y="170" text-anchor="middle" fill="#AEB5C8" font-size="13">再执行原有命令</text>
+    <text x="58" y="148" text-anchor="middle" fill="#AEB5C8" font-size="13">捕获文件 + 分区</text>
+    <text x="58" y="170" text-anchor="middle" fill="#AEB5C8" font-size="13">先关菜单再刷新</text>
     <rect x="-12" y="200" width="140" height="58" rx="14" fill="#FFFFFF" fill-opacity=".07"/>
-    <text x="58" y="224" text-anchor="middle" fill="#F5F7FF" font-size="13">不共享菜单状态</text>
-    <text x="58" y="244" text-anchor="middle" fill="#F5F7FF" font-size="13">不误操作旧文件</text>
+    <text x="58" y="224" text-anchor="middle" fill="#F5F7FF" font-size="13">不枚举实时集合</text>
+    <text x="58" y="244" text-anchor="middle" fill="#F5F7FF" font-size="13">异常保留原布局</text>
   </g>
 </svg>
