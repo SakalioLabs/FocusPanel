@@ -215,10 +215,10 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <CheckBox Content="随问题附带本地任务、OKR 与近 7 天专注摘要"
+                    <CheckBox Content="随问题附带本地任务与近 7 天专注摘要"
                               IsChecked="{Binding IncludeLocalContext}"
                               VerticalAlignment="Center"
-                              ToolTip="仅发送任务标题、状态、OKR 进度与专注统计；不读取文件内容"/>
+                              ToolTip="仅发送任务标题、状态与专注统计；不读取文件内容"/>
                     <StackPanel Grid.Column="1"
                                 Orientation="Horizontal">
                         <Button Style="{StaticResource FocusSecondaryButton}"

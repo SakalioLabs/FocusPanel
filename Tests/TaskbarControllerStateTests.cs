@@ -160,7 +160,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void CloakStateReadFailure_DoesNotMutateTaskbar()
+    public void CloakStateReadFailure_FallsBackToOtherSuppressionBoundaries()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -182,22 +182,18 @@ public sealed class TaskbarControllerStateTests
                     new FakeWatchdogLauncher(),
                     sessionFile);
 
-            Assert.False(
+            Assert.True(
                 controller.TryEnableReplacement(
                     out string? error));
-
-            Assert.Contains("DWM 合成状态", error);
+            Assert.Null(error);
             Assert.Equal(0, native.CloakWriteCount);
-            Assert.Equal(0, native.AppBarStateWriteCount);
-            Assert.Equal(0, native.WorkAreaWriteCount);
-            Assert.Equal(
-                0,
-                native.SurfaceSuppressionWriteCount);
-            Assert.Equal(
-                0,
-                native.TaskbarVisibilityWriteCount);
+            Assert.True(native.TaskbarSurfaceSuppressed);
+            Assert.False(native.Visible);
+            Assert.Contains(
+                "\"UsesDwmCloak\":false",
+                File.ReadAllText(sessionFile));
+            controller.Restore();
             Assert.True(native.Visible);
-            Assert.False(File.Exists(sessionFile));
         }
         finally
         {
@@ -238,7 +234,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void SurfaceSuppressionFailure_RollsBackBeforeReplacementStarts()
+    public void SurfaceSuppressionFailure_FallsBackToDwmAndWindowHiding()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -261,22 +257,23 @@ public sealed class TaskbarControllerStateTests
                     new FakeWatchdogLauncher(),
                     sessionFile);
 
-            Assert.False(
+            Assert.True(
                 controller.TryEnableReplacement(
                     out string? error));
-            Assert.Contains(
-                "显示与命中区域",
-                error);
-            Assert.False(
+            Assert.Null(error);
+            Assert.True(
                 controller.IsReplacementEnabled);
             Assert.False(
                 native.TaskbarSurfaceSuppressed);
-            Assert.True(native.Visible);
+            Assert.True(native.TaskbarAppCloaked);
+            Assert.False(native.Visible);
             Assert.Equal(
-                1040,
+                1080,
                 native.WorkArea.Bottom);
-            Assert.False(
-                File.Exists(sessionFile));
+            Assert.Contains(
+                "\"UsesEmptyWindowRegion\":false",
+                File.ReadAllText(sessionFile));
+            controller.Restore();
         }
         finally
         {
@@ -909,7 +906,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void DwmCloakFailure_RollsBackBeforeReplacementStarts()
+    public void DwmCloakFailure_FallsBackToSurfaceAndWindowHiding()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -931,17 +928,67 @@ public sealed class TaskbarControllerStateTests
                     new FakeWatchdogLauncher(),
                     sessionFile);
 
-            Assert.False(
+            Assert.True(
                 controller.TryEnableReplacement(
                     out string? error));
-            Assert.Contains("DWM 合成表面", error);
-            Assert.False(
+            Assert.Null(error);
+            Assert.True(
                 controller.IsReplacementEnabled);
             Assert.False(native.TaskbarAppCloaked);
-            Assert.False(
+            Assert.True(
                 native.TaskbarSurfaceSuppressed);
+            Assert.False(native.Visible);
+            Assert.Contains(
+                "\"UsesDwmCloak\":false",
+                File.ReadAllText(sessionFile));
+            controller.Restore();
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void BothEnhancementFailures_UseWindowHidingAndDetectReappearance()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi
+        {
+            SurfaceSuppressionWritesSucceed = false,
+            CloakWritesSucceed = false
+        };
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            Assert.False(native.Visible);
+            string session = File.ReadAllText(sessionFile);
+            Assert.Contains(
+                "\"UsesEmptyWindowRegion\":false",
+                session);
+            Assert.Contains(
+                "\"UsesDwmCloak\":false",
+                session);
+
+            native.Visible = true;
+            controller.RunGuardOnceForTests();
+
+            Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
-            Assert.False(File.Exists(sessionFile));
+            Assert.Equal(1040, native.WorkArea.Bottom);
         }
         finally
         {

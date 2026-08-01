@@ -222,7 +222,6 @@ public sealed class ShellSearchPolicyTests
     [InlineData("win a", "QuickSettings")]
     [InlineData("消息", "Notifications")]
     [InlineData("键盘", "InputSwitcher")]
-    [InlineData("win tab", "TaskView")]
     [InlineData("天气", "Widgets")]
     [InlineData("查看桌面", "ShowDesktop")]
     [InlineData("上一曲", "MediaPreviousTrack")]

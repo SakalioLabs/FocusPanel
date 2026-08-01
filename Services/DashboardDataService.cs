@@ -70,30 +70,6 @@ public sealed class DashboardDataService :
                 .Select(item => item.DurationMinutes)
                 .ToArrayAsync(cancellationToken);
 
-        int activeOkrCount = await context.OkrObjectives
-            .AsNoTracking()
-            .CountAsync(
-                item =>
-                    !item.IsDeleted
-                    && item.Progress < 100,
-                cancellationToken);
-
-        DashboardOkrSummary[] objectives =
-            await context.OkrObjectives
-                .AsNoTracking()
-                .Where(
-                    item =>
-                        !item.IsDeleted
-                        && item.Progress < 100)
-                .OrderByDescending(item => item.UpdatedAt)
-                .Take(4)
-                .Select(
-                    item => new DashboardOkrSummary(
-                        item.Id,
-                        item.Name,
-                        item.Progress))
-                .ToArrayAsync(cancellationToken);
-
         int collectedItemCount =
             await context.DesktopFilePreferences
                 .AsNoTracking()
@@ -105,10 +81,8 @@ public sealed class DashboardDataService :
             openTaskCount,
             focusDurations.Length,
             focusDurations.Sum(),
-            activeOkrCount,
             collectedItemCount,
             tasks,
-            objectives,
             DateTime.Now);
     }
 }

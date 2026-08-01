@@ -87,7 +87,6 @@ public partial class MainWindow :
     private string? _lastTaskbarWindowCycleIdentity;
     private IntPtr _lastTaskbarWindowCycleHandle;
     private long _lastTaskbarWindowCycleTick = -1;
-    private long _lastVirtualDesktopWheelTick = -1;
 
     public MainWindow()
         : this(null)
@@ -634,16 +633,6 @@ public partial class MainWindow :
                 .Execute(null));
     }
 
-    private async void TaskViewButton_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        e.Handled = true;
-        await InvokeShellEntryAfterClickAsync(
-            () => _viewModel.OpenTaskViewCommand
-                .Execute(null));
-    }
-
     private async Task InvokeShellEntryAfterClickAsync(
         Action action)
     {
@@ -1081,13 +1070,36 @@ public partial class MainWindow :
         object sender,
         MouseWheelEventArgs e)
     {
+        int windowCount = sender
+                is Button
+                {
+                    DataContext:
+                        TaskbarAppItem item
+                }
+            ? item.WindowCount
+            : 0;
+        TaskbarWheelAction wheelAction =
+            TaskbarWheelPolicy.GetAction(
+                e.Delta,
+                Keyboard.Modifiers.HasFlag(
+                    ModifierKeys.Control),
+                windowCount);
+        if (wheelAction
+            == TaskbarWheelAction.ScrollApps)
+        {
+            ScrollTaskbarApps(e.Delta);
+            e.Handled = true;
+            return;
+        }
+
         if (sender
                 is not Button
                 {
                     DataContext:
                         TaskbarAppItem task
                 }
-            || task.WindowCount < 2)
+            || wheelAction
+                != TaskbarWheelAction.CycleWindows)
         {
             return;
         }
@@ -1132,6 +1144,17 @@ public partial class MainWindow :
         _viewModel.ActivateWindowCommand.Execute(
             target);
         e.Handled = true;
+    }
+
+    private void ScrollTaskbarApps(int delta)
+    {
+        double direction = delta > 0 ? -1 : 1;
+        TaskbarAppsScrollViewer.ScrollToVerticalOffset(
+            Math.Clamp(
+                TaskbarAppsScrollViewer.VerticalOffset
+                    + direction * CompactTaskbarScrollStep,
+                0,
+                TaskbarAppsScrollViewer.ScrollableHeight));
     }
 
     private void TaskbarApp_PreviewKeyDown(
@@ -2151,47 +2174,6 @@ public partial class MainWindow :
                     MediaTransportAction
                         .PlayPause);
         }
-        e.Handled = true;
-    }
-
-    private void TaskViewButton_PreviewMouseWheel(
-        object sender,
-        MouseWheelEventArgs e)
-    {
-        long now =
-            Environment.TickCount64;
-        VirtualDesktopWheelAction action =
-            VirtualDesktopWheelPolicy
-                .GetAction(
-                    e.Delta,
-                    _lastVirtualDesktopWheelTick,
-                    now);
-        if (action
-            == VirtualDesktopWheelAction
-                .Ignore)
-        {
-            return;
-        }
-        if (action
-            == VirtualDesktopWheelAction
-                .Throttled)
-        {
-            e.Handled = true;
-            return;
-        }
-
-        _lastVirtualDesktopWheelTick =
-            now;
-        _viewModel
-            .SwitchVirtualDesktopCommand
-            .Execute(
-                action
-                == VirtualDesktopWheelAction
-                    .Previous
-                    ? VirtualDesktopDirection
-                        .Previous
-                    : VirtualDesktopDirection
-                        .Next);
         e.Handled = true;
     }
 

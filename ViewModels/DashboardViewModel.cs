@@ -41,16 +41,10 @@ public partial class DashboardViewModel :
     private int focusMinutesToday;
 
     [ObservableProperty]
-    private int activeOkrCount;
-
-    [ObservableProperty]
     private int collectedItemCount;
 
     [ObservableProperty]
     private bool hasTasks;
-
-    [ObservableProperty]
-    private bool hasObjectives;
 
     public DashboardViewModel()
         : this(new DashboardDataService())
@@ -66,9 +60,6 @@ public partial class DashboardViewModel :
 
     public ObservableCollection<DashboardTaskSummary>
         PriorityTasks { get; } = new();
-
-    public ObservableCollection<DashboardOkrSummary>
-        ActiveObjectives { get; } = new();
 
     public event Action<string>? NavigationRequested;
 
@@ -120,23 +111,11 @@ public partial class DashboardViewModel :
         FocusSessionCountToday =
             snapshot.FocusSessionCountToday;
         FocusMinutesToday = snapshot.FocusMinutesToday;
-        ActiveOkrCount = snapshot.ActiveOkrCount;
         CollectedItemCount = snapshot.CollectedItemCount;
         ReplaceCollection(
             PriorityTasks,
             snapshot.PriorityTasks);
-        ReplaceCollection(
-            ActiveObjectives,
-            snapshot.ActiveObjectives.Select(
-                item => item with
-                {
-                    Progress = Math.Clamp(
-                        item.Progress,
-                        0,
-                        100)
-                }));
         HasTasks = PriorityTasks.Count > 0;
-        HasObjectives = ActiveObjectives.Count > 0;
         UpdateClockText(snapshot.LoadedAt);
         StatusText =
             $"更新于 {snapshot.LoadedAt:HH:mm} · 数据仅来自本机 FocusPanel";

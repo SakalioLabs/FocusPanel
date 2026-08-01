@@ -18,10 +18,6 @@ internal sealed record AiTaskSummary(
     string Title,
     string Status);
 
-internal sealed record AiOkrSummary(
-    string Name,
-    double Progress);
-
 internal sealed record AiFocusSummary(
     int SessionCount,
     int TotalMinutes);
@@ -30,7 +26,6 @@ internal static class AiContextFormatter
 {
     internal static string Format(
         IEnumerable<AiTaskSummary> tasks,
-        IEnumerable<AiOkrSummary> objectives,
         AiFocusSummary focus)
     {
         var lines = new List<string>
@@ -45,14 +40,6 @@ internal static class AiContextFormatter
             taskItems.Select(
                 item =>
                     $"- {SafeText(item.Title)}｜{SafeText(item.Status)}"));
-
-        AiOkrSummary[] okrItems =
-            objectives.Take(10).ToArray();
-        lines.Add($"进行中的 OKR（{okrItems.Length} 项）：");
-        lines.AddRange(
-            okrItems.Select(
-                item =>
-                    $"- {SafeText(item.Name)}｜{Math.Clamp(item.Progress, 0, 100):0}%"));
 
         lines.Add(
             $"近 7 天专注：{focus.SessionCount} 次，共 {focus.TotalMinutes} 分钟。");
@@ -97,18 +84,6 @@ public sealed class AiLocalContextBuilder :
                         item.Status))
                 .ToArrayAsync(cancellationToken);
 
-        AiOkrSummary[] objectives =
-            await context.OkrObjectives
-                .AsNoTracking()
-                .Where(item => !item.IsDeleted)
-                .OrderByDescending(item => item.UpdatedAt)
-                .Take(10)
-                .Select(
-                    item => new AiOkrSummary(
-                        item.Name,
-                        item.Progress))
-                .ToArrayAsync(cancellationToken);
-
         DateTime since = DateTime.Now.AddDays(-7);
         var focusRows = await context.PomodoroSessions
             .AsNoTracking()
@@ -121,7 +96,6 @@ public sealed class AiLocalContextBuilder :
 
         return AiContextFormatter.Format(
             tasks,
-            objectives,
             new AiFocusSummary(
                 focusRows.Length,
                 focusRows.Sum()));

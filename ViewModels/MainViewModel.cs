@@ -86,7 +86,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
     private FileOrganizerViewModel? _fileOrganizerViewModel;
-    private OkrViewModel? _okrViewModel;
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
     private long _audioStateRevision;
@@ -1125,7 +1124,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 or "Tasks"
                 or "Pomodoro"
                 or "Files"
-                or "OKR"
                 or "AI"))
         {
             return;
@@ -1172,11 +1170,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     _ = LoadFileOrganizerWorkspaceAsync(
                         navigationRevision);
                 }
-                break;
-            case "OKR":
-                _okrViewModel ??= new OkrViewModel();
-                CurrentViewModel = _okrViewModel;
-                CurrentSectionTitle = "OKR";
                 break;
             case "AI":
                 _aiAssistantViewModel ??= new AIAssistantViewModel();
@@ -2405,7 +2398,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task RestoreDatabase()
     {
         var result = FocusDialogService.Show(
-            "确定要从最新备份恢复数据库吗？\n任务、番茄钟、桌面收纳和 OKR 数据都会回到备份时的状态，应用将立即重启。",
+            "确定要从最新备份恢复数据库吗？\n任务、番茄钟、桌面收纳和兼容保留数据都会回到备份时的状态，应用将立即重启。",
             "恢复数据库",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
@@ -4175,7 +4168,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     .DisposeAsync());
         }
 
-        _okrViewModel?.Dispose();
         _aiAssistantViewModel?.Dispose();
         if (_fileOrganizerViewModel != null)
         {

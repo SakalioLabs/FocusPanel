@@ -12,13 +12,12 @@ namespace FocusPanel.Tests;
 public sealed class DashboardViewModelTests
 {
     [Fact]
-    public async Task Refresh_AppliesLocalSnapshotAndCapsProgress()
+    public async Task Refresh_AppliesLocalSnapshot()
     {
         var snapshot = new DashboardSnapshot(
             7,
             2,
             50,
-            3,
             12,
             new[]
             {
@@ -27,13 +26,6 @@ public sealed class DashboardViewModelTests
                     "完成概览",
                     "FocusPanel",
                     "进行中")
-            },
-            new[]
-            {
-                new DashboardOkrSummary(
-                    1,
-                    "稳定发布",
-                    125)
             },
             new DateTime(2026, 7, 28, 15, 20, 0));
         using var viewModel =
@@ -45,13 +37,8 @@ public sealed class DashboardViewModelTests
         Assert.Equal(7, viewModel.OpenTaskCount);
         Assert.Equal(2, viewModel.FocusSessionCountToday);
         Assert.Equal(50, viewModel.FocusMinutesToday);
-        Assert.Equal(3, viewModel.ActiveOkrCount);
         Assert.Equal(12, viewModel.CollectedItemCount);
         Assert.True(viewModel.HasTasks);
-        Assert.True(viewModel.HasObjectives);
-        Assert.Equal(
-            100,
-            viewModel.ActiveObjectives[0].Progress);
         Assert.Contains("更新于 15:20", viewModel.StatusText);
         Assert.Contains("星期二", viewModel.DateText);
     }
@@ -64,9 +51,7 @@ public sealed class DashboardViewModelTests
             0,
             0,
             0,
-            0,
             Array.Empty<DashboardTaskSummary>(),
-            Array.Empty<DashboardOkrSummary>(),
             DateTime.Now);
         using var viewModel =
             new DashboardViewModel(
@@ -75,9 +60,7 @@ public sealed class DashboardViewModelTests
         await viewModel.RefreshCommand.ExecuteAsync(null);
 
         Assert.False(viewModel.HasTasks);
-        Assert.False(viewModel.HasObjectives);
         Assert.Empty(viewModel.PriorityTasks);
-        Assert.Empty(viewModel.ActiveObjectives);
     }
 
     [Fact]
@@ -102,9 +85,7 @@ public sealed class DashboardViewModelTests
             0,
             0,
             0,
-            0,
             Array.Empty<DashboardTaskSummary>(),
-            Array.Empty<DashboardOkrSummary>(),
             DateTime.Now);
 
     private sealed class FakeDashboardDataService :

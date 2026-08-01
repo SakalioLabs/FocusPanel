@@ -41,6 +41,7 @@ public sealed class TaskbarController : ITaskbarController
     private TaskbarSessionState? _state;
     private IntPtr _activeTaskbarHandle;
     private string? _lastApplyError;
+    private bool _canUseDwmCloak;
     private TaskbarReplacementStopReason _lastStopReason = TaskbarReplacementStopReason.Unknown;
     private int _restoring;
     private int _guardRunning;
@@ -97,14 +98,10 @@ public sealed class TaskbarController : ITaskbarController
         }
 
         uint appBarState = _native.GetAppBarState(taskbar);
-        if (!_native.TryGetTaskbarAppCloaked(
+        _canUseDwmCloak =
+            _native.TryGetTaskbarAppCloaked(
                 taskbar,
-                out bool taskbarWasAppCloaked))
-        {
-            error =
-                "无法读取 Windows 任务栏的 DWM 合成状态，已取消任务栏接管。";
-            return false;
-        }
+                out bool taskbarWasAppCloaked);
 
         _state = new TaskbarSessionState
         {
@@ -115,8 +112,8 @@ public sealed class TaskbarController : ITaskbarController
             OriginalAppBarState = appBarState,
             PrimaryBounds = primaryBounds,
             UsesNativeAutoHide = false,
-            UsesEmptyWindowRegion = true,
-            UsesDwmCloak = true,
+            UsesEmptyWindowRegion = false,
+            UsesDwmCloak = false,
             CreatedAt = DateTimeOffset.Now
         };
 
@@ -186,6 +183,7 @@ public sealed class TaskbarController : ITaskbarController
             IsReplacementEnabled = false;
             _state = null;
             _activeTaskbarHandle = IntPtr.Zero;
+            _canUseDwmCloak = false;
             _guardConfirmation.ObserveValid();
         }
         finally
@@ -352,11 +350,9 @@ public sealed class TaskbarController : ITaskbarController
         }
 
         if (!_native.SetWorkArea(_state.PrimaryBounds)
-            || !_native.TryGetPrimaryMonitorInfo(
+            || !WaitForWorkArea(
                 taskbar,
-                out NativeRect appliedWorkArea,
-                out _)
-            || !RectsEqual(appliedWorkArea, _state.PrimaryBounds))
+                _state.PrimaryBounds))
         {
             _lastApplyError = "Windows 拒绝释放原生任务栏占用的主屏工作区";
             return false;
@@ -367,32 +363,48 @@ public sealed class TaskbarController : ITaskbarController
         // region keeps that host non-drawing and non-interactive even if its
         // WS_VISIBLE bit changes. This is applied once and restored from the
         // watchdog session; the guard never rewrites it.
-        if (!_native.SetTaskbarSurfaceSuppressed(
+        _state.UsesEmptyWindowRegion =
+            _native.SetTaskbarSurfaceSuppressed(
                 taskbar,
                 true)
-            || !_native.IsTaskbarSurfaceSuppressed(
-                taskbar))
-        {
-            _lastApplyError =
-                "Windows 拒绝停用原生任务栏的显示与命中区域";
-            return false;
-        }
+            && _native.IsTaskbarSurfaceSuppressed(
+                taskbar);
 
         // DWM cloaking is a second, independent presentation boundary. It
         // keeps the Explorer host invisible even if a Shell edge gesture
         // makes the underlying HWND visible or replaces its GDI region.
         // The original app-cloak bit is recorded before any mutation and is
         // restored by both the main process and the watchdog.
-        if (!_native.SetTaskbarAppCloaked(
+        _state.UsesDwmCloak =
+            _canUseDwmCloak
+            && _native.SetTaskbarAppCloaked(
                 taskbar,
                 true)
-            || !_native.TryGetTaskbarAppCloaked(
+            && _native.TryGetTaskbarAppCloaked(
                 taskbar,
                 out bool appCloaked)
-            || !appCloaked)
+            && appCloaked;
+
+        try
         {
+            File.WriteAllText(
+                _sessionFile,
+                JsonSerializer.Serialize(
+                    _state,
+                    SessionJsonOptions));
+        }
+        catch (Exception ex)
+        {
+            if (_state.UsesDwmCloak)
+                _native.SetTaskbarAppCloaked(
+                    taskbar,
+                    _state.TaskbarWasAppCloaked);
+            if (_state.UsesEmptyWindowRegion)
+                _native.SetTaskbarSurfaceSuppressed(
+                    taskbar,
+                    false);
             _lastApplyError =
-                "Windows 拒绝停用原生任务栏的 DWM 合成表面";
+                $"无法更新任务栏恢复会话：{ex.Message}";
             return false;
         }
 
@@ -407,6 +419,30 @@ public sealed class TaskbarController : ITaskbarController
         _activeTaskbarHandle = taskbar;
         _lastApplyError = null;
         return true;
+    }
+
+    private bool WaitForWorkArea(
+        IntPtr taskbar,
+        NativeRect expected)
+    {
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            if (_native.TryGetPrimaryMonitorInfo(
+                    taskbar,
+                    out NativeRect appliedWorkArea,
+                    out _)
+                && RectsEqual(
+                    appliedWorkArea,
+                    expected))
+            {
+                return true;
+            }
+
+            if (attempt < 2)
+                Thread.Sleep(40);
+        }
+
+        return false;
     }
 
     private static IDisposable AcquireMutationMutex()
@@ -551,7 +587,8 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if (!_native.IsTaskbarSurfaceSuppressed(
+        if (_state?.UsesEmptyWindowRegion == true
+            && !_native.IsTaskbarSurfaceSuppressed(
                 taskbar))
         {
             _lastApplyError =
@@ -560,13 +597,29 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if (!_native.TryGetTaskbarAppCloaked(
-                taskbar,
-                out bool appCloaked)
-            || !appCloaked)
+        if (_state?.UsesDwmCloak == true
+            && (!_native.TryGetTaskbarAppCloaked(
+                    taskbar,
+                    out bool appCloaked)
+                || !appCloaked))
         {
             _lastApplyError =
                 "Windows 已恢复原生任务栏的 DWM 合成表面";
+            _lastStopReason =
+                TaskbarReplacementStopReason
+                    .WindowsTaskbarReappeared;
+            return false;
+        }
+
+        if (_state is
+                {
+                    UsesEmptyWindowRegion: false,
+                    UsesDwmCloak: false
+                }
+            && _native.IsWindowVisible(taskbar))
+        {
+            _lastApplyError =
+                "Windows 已重新显示原生任务栏窗口";
             _lastStopReason =
                 TaskbarReplacementStopReason
                     .WindowsTaskbarReappeared;
@@ -807,19 +860,37 @@ public sealed class TaskbarController : ITaskbarController
 
         public bool SetTaskbarVisible(IntPtr taskbar, bool visible)
         {
-            NativeMethods.ShowWindow(taskbar, visible ? SwShow : SwHide);
-            NativeMethods.SetWindowPos(
-                taskbar,
-                visible ? new IntPtr(-1) : new IntPtr(1),
-                0,
-                0,
-                0,
-                0,
-                SwpNoMove
-                | SwpNoSize
-                | SwpNoActivate
-                | (visible ? SwpShowWindow : SwpHideWindow));
-            return NativeMethods.IsWindowVisible(taskbar) == visible;
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                NativeMethods.ShowWindow(
+                    taskbar,
+                    visible ? SwShow : SwHide);
+                NativeMethods.SetWindowPos(
+                    taskbar,
+                    visible
+                        ? new IntPtr(-1)
+                        : new IntPtr(1),
+                    0,
+                    0,
+                    0,
+                    0,
+                    SwpNoMove
+                    | SwpNoSize
+                    | SwpNoActivate
+                    | (visible
+                        ? SwpShowWindow
+                        : SwpHideWindow));
+                if (NativeMethods.IsWindowVisible(taskbar)
+                    == visible)
+                {
+                    return true;
+                }
+
+                if (attempt < 2)
+                    Thread.Sleep(30);
+            }
+
+            return false;
         }
 
         public bool TryGetPrimaryMonitorInfo(

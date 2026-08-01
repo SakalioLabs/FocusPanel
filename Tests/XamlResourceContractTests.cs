@@ -76,8 +76,7 @@ public sealed class XamlResourceContractTests
             "case \"Dashboard\":",
             mainViewModel);
         Assert.Contains("PriorityTasks", view);
-        Assert.Contains("ActiveObjectives", view);
-        Assert.Contains("FocusLinearProgress", view);
+        Assert.DoesNotContain("OKR", view);
         Assert.Contains("CommandParameter=\"Pomodoro\"", view);
         Assert.Contains("CommandParameter=\"AI\"", view);
         Assert.DoesNotContain(
@@ -1057,7 +1056,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.75\"",
+            "LauncherVersion = \"0.10.76\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1266,7 +1265,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_HasExactlySixFixedEntriesAndOneApplicationList()
+    public void CompactDock_HasExactlyFiveFixedEntriesAndOneScrollableApplicationList()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
@@ -1277,7 +1276,7 @@ public sealed class XamlResourceContractTests
 
         Assert.True(dockStart >= 0 && onboardingStart > dockStart);
         string compactDock = mainWindow[dockStart..onboardingStart];
-        Assert.Equal(6, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
+        Assert.Equal(5, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
         Assert.Equal(1, compactDock.Split("ItemsSource=\"{Binding TaskbarApps}\"").Length - 1);
         int start = compactDock.IndexOf(
             "Click=\"StartButton_Click\"",
@@ -1287,9 +1286,6 @@ public sealed class XamlResourceContractTests
             StringComparison.Ordinal);
         int applications = compactDock.IndexOf(
             "x:Name=\"TaskbarAppsScrollViewer\"",
-            StringComparison.Ordinal);
-        int taskView = compactDock.IndexOf(
-            "Click=\"TaskViewButton_Click\"",
             StringComparison.Ordinal);
         int focusCenter = compactDock.IndexOf(
             "Click=\"FocusCenterButton_Click\"",
@@ -1304,14 +1300,16 @@ public sealed class XamlResourceContractTests
             start >= 0
             && start < search
             && search < applications
-            && applications < taskView
-            && taskView < focusCenter
+            && applications < focusCenter
             && focusCenter < statusCenter
             && statusCenter < time);
         Assert.Contains("Click=\"FocusCenterButton_Click\"", compactDock);
         Assert.Contains("Click=\"StatusCenterButton_Click\"", compactDock);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "x:Name=\"TaskViewButton\"",
+            compactDock);
+        Assert.Contains(
+            "PreviewMouseWheel=\"TaskbarApp_PreviewMouseWheel\"",
             compactDock);
         Assert.Contains(
             "x:Name=\"StartButton\"",
@@ -1342,7 +1340,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void TaskView_ProvidesVirtualDesktopWheelMenuAndCorrectFocusReturn()
+    public void TaskView_IsRemovedFromCompactDockAndSearch()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -1355,111 +1353,15 @@ public sealed class XamlResourceContractTests
                 root,
                 "Views",
                 "MainWindow.xaml.cs"));
-        string viewModel = File.ReadAllText(
-            Path.Combine(
-                root,
-                "ViewModels",
-                "MainViewModel.cs"));
-        string contract = File.ReadAllText(
+        string searchCatalog = File.ReadAllText(
             Path.Combine(
                 root,
                 "Services",
-                "ISystemStatusService.cs"));
-        string service = File.ReadAllText(
-            Path.Combine(
-                root,
-                "Services",
-                "SystemStatusService.cs"));
-        string theme = File.ReadAllText(
-            Path.Combine(
-                root,
-                "Themes",
-                "FocusTheme.xaml"));
-        XDocument document =
-            XDocument.Parse(mainWindow);
-        XNamespace xaml =
-            "http://schemas.microsoft.com/winfx/2006/xaml";
-        XElement NamedButton(
-            string name) =>
-            document.Descendants()
-                .Single(
-                    element =>
-                        element.Name.LocalName
-                            == "Button"
-                        && (string?)element
-                            .Attribute(
-                                xaml + "Name")
-                            == name);
+                "WindowsShellSearchCatalog.cs"));
 
-        Assert.Contains(
-            "PreviewMouseWheel=\"TaskViewButton_PreviewMouseWheel\"",
-            mainWindow);
-        Assert.Contains(
-            "Header=\"上一个虚拟桌面\"",
-            mainWindow);
-        Assert.Contains(
-            "Header=\"下一个虚拟桌面\"",
-            mainWindow);
-        Assert.Contains(
-            "Header=\"新建虚拟桌面\"",
-            mainWindow);
-        Assert.Contains(
-            "Header=\"关闭当前虚拟桌面\"",
-            mainWindow);
-        Assert.Contains(
-            "VirtualDesktopWheelPolicy",
-            codeBehind);
-        Assert.Contains(
-            ".GetAction(",
-            codeBehind);
-        Assert.Contains(
-            "SwitchVirtualDesktopCommand",
-            codeBehind);
-        Assert.Matches(
-            @"ToggleCompactOverlay\([\s\S]*?StatusCenterButton,[\s\S]*?StatusCenterQuickSettingsButton",
-            codeBehind);
-        Assert.Contains(
-            "== CompactOverlayToggleAction.CloseSurface",
-            codeBehind);
-        Assert.Matches(
-            @"CompactOverlayToggleAction\.CloseSurface\)[\s\S]*?CloseOverlayPanels\(\);[\s\S]*?return;",
-            codeBehind);
-        Assert.Equal(
-            "StartButton_Click",
-            (string?)NamedButton(
-                    "StartButton")
-                .Attribute("Click"));
-        Assert.Equal(
-            "FocusCenterButton_Click",
-            (string?)NamedButton(
-                    "FocusCenterButton")
-                .Attribute("Click"));
-        Assert.Equal(
-            "StatusCenterButton_Click",
-            (string?)NamedButton(
-                    "StatusCenterButton")
-                .Attribute("Click"));
-        Assert.Contains(
-            "SwitchVirtualDesktop(",
-            viewModel);
-        Assert.Contains(
-            "CreateVirtualDesktop()",
-            viewModel);
-        Assert.Contains(
-            "CloseCurrentVirtualDesktop()",
-            viewModel);
-        Assert.Contains(
-            "SwitchVirtualDesktop(",
-            contract);
-        Assert.Contains(
-            "VirtualDesktopCreate",
-            service);
-        Assert.Contains(
-            "VirtualDesktopClose",
-            service);
-        Assert.Contains(
-            "Text=\"{TemplateBinding InputGestureText}\"",
-            theme);
+        Assert.DoesNotContain("TaskViewButton", mainWindow);
+        Assert.DoesNotContain("TaskViewButton", codeBehind);
+        Assert.DoesNotContain("WindowsShellAction.TaskView", searchCatalog);
     }
 
     [Fact]
@@ -2136,10 +2038,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            5,
+            4,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            5,
+            4,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -2194,7 +2096,7 @@ public sealed class XamlResourceContractTests
 
         Assert.Contains("Click=\"StartButton_Click\"", mainWindow);
         Assert.Contains("OpenWindowsSearchCommand", mainWindow);
-        Assert.Contains("Click=\"TaskViewButton_Click\"", mainWindow);
+        Assert.DoesNotContain("TaskViewButton", mainWindow);
         Assert.Contains(
             "InvokeShellEntryAfterClickAsync(",
             codeBehind);
@@ -2969,7 +2871,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            5,
+            4,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);
@@ -4416,8 +4318,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "SemaphoreSlim",
             workspaceRepository);
-        Assert.Contains(
-            "_okrViewModel?.Dispose()",
+        Assert.DoesNotContain(
+            "_okrViewModel",
             mainViewModel);
         Assert.Contains(
             "正在从飞书拉取目标",
@@ -4470,10 +4372,10 @@ public sealed class XamlResourceContractTests
         Assert.Contains("AbsAutoHide", controller);
         Assert.Contains("UsesNativeAutoHide = false", controller);
         Assert.Contains(
-            "UsesEmptyWindowRegion = true",
+            "UsesEmptyWindowRegion = false",
             controller);
         Assert.Contains(
-            "UsesDwmCloak = true",
+            "UsesDwmCloak = false",
             controller);
         Assert.Contains("SetTaskbarVisible(taskbar, false)", controller);
         Assert.Contains(

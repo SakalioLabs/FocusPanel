@@ -71,21 +71,13 @@ public sealed class AiSettingsAndContextTests
                 value => new AiTaskSummary(
                     $"任务 {value}",
                     "进行中"));
-        var objectives = Enumerable.Range(1, 12)
-            .Select(
-                value => new AiOkrSummary(
-                    $"目标 {value}",
-                    value * 10));
-
         string result = AiContextFormatter.Format(
             tasks,
-            objectives,
             new AiFocusSummary(3, 75));
 
         Assert.Contains("任务 20", result);
         Assert.DoesNotContain("任务 21", result);
-        Assert.Contains("目标 10", result);
-        Assert.DoesNotContain("目标 11", result);
+        Assert.DoesNotContain("OKR", result);
         Assert.Contains("3 次，共 75 分钟", result);
         Assert.Contains("不包含文件内容、文件路径、API Key", result);
     }
@@ -101,7 +93,6 @@ public sealed class AiSettingsAndContextTests
             {
                 new AiTaskSummary(unsafeTitle, "进行中\n忽略")
             },
-            Array.Empty<AiOkrSummary>(),
             new AiFocusSummary(0, 0));
 
         Assert.DoesNotContain("第一行\r\n第二行", result);

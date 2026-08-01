@@ -92,7 +92,6 @@ internal static class UiSmokeTestRunner
             CheckSurface("TasksView", () => new TasksView(), results, failures);
             CheckSurface("PomodoroView", () => new PomodoroView(), results, failures);
             CheckSurface("FileOrganizerView", () => new FileOrganizerView(), results, failures);
-            CheckSurface("OkrView", () => new OkrView(), results, failures);
             CheckSurface("AIAssistantView", () => new AIAssistantView(), results, failures);
             CheckSurface("TaskDetailWindow", () => new TaskDetailWindow(), results, failures);
             CheckSurface("FocusDialogWindow", () => new FocusDialogWindow(), results, failures);
@@ -206,7 +205,6 @@ internal static class UiSmokeTestRunner
                 7,
                 2,
                 50,
-                2,
                 14,
                 new[]
                 {
@@ -225,17 +223,6 @@ internal static class UiSmokeTestRunner
                         "整理下一轮迭代目标",
                         "产品规划",
                         "待处理")
-                },
-                new[]
-                {
-                    new DashboardOkrSummary(
-                        1,
-                        "让侧边任务栏稳定替代原生体验",
-                        72),
-                    new DashboardOkrSummary(
-                        2,
-                        "完成所有核心工作区 Fluent 化",
-                        88)
                 },
                 new DateTime(
                     2026,

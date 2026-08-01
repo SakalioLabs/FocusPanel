@@ -35,11 +35,6 @@ internal static class WindowsShellSearchCatalog
                 "\uE765",
                 "语言 键盘 输入法 input language keyboard Win Space"),
             new WindowsShellSearchEntry(
-                WindowsShellAction.TaskView,
-                "任务视图",
-                "\uE7C4",
-                "窗口总览 虚拟桌面 task view Win Tab"),
-            new WindowsShellSearchEntry(
                 WindowsShellAction.Widgets,
                 "小组件",
                 "\uECA5",

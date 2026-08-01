@@ -29,7 +29,7 @@
                         Command="{Binding RefreshCommand}"/>
             </Grid>
 
-            <UniformGrid Columns="4"
+            <UniformGrid Columns="3"
                          Margin="0,18,0,0">
                 <Border Style="{StaticResource FocusCard}"
                         Margin="0,0,8,0">
@@ -58,18 +58,6 @@
                         </TextBlock>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource FocusCard}"
-                        Margin="0,0,8,0">
-                    <StackPanel>
-                        <TextBlock Text="进行中 OKR"
-                                   Style="{StaticResource FocusCaptionText}"/>
-                        <TextBlock Text="{Binding ActiveOkrCount}"
-                                   Margin="0,5,0,0"
-                                   Style="{StaticResource FocusMetricText}"/>
-                        <TextBlock Text="个目标"
-                                   Style="{StaticResource FocusCaptionText}"/>
-                    </StackPanel>
-                </Border>
                 <Border Style="{StaticResource FocusCard}">
                     <StackPanel>
                         <TextBlock Text="已收纳"
@@ -84,13 +72,8 @@
             </UniformGrid>
 
             <Grid Margin="0,16,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="2*"/>
-                </Grid.ColumnDefinitions>
-
                 <Border Style="{StaticResource FocusCard}"
-                        Margin="0,0,8,0">
+                        Margin="0">
                     <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -172,81 +155,6 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="1"
-                        Style="{StaticResource FocusCard}"
-                        Margin="8,0,0,0">
-                    <StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="目标进展"
-                                           Style="{StaticResource FocusSectionTitleText}"/>
-                                <TextBlock Text="最近更新的进行中目标"
-                                           Margin="0,3,0,0"
-                                           Style="{StaticResource FocusCaptionText}"/>
-                            </StackPanel>
-                            <Button Grid.Column="1"
-                                    Style="{StaticResource FocusSecondaryButton}"
-                                    MinWidth="66"
-                                    Height="38"
-                                    Content="管理"
-                                    Command="{Binding NavigateCommand}"
-                                    CommandParameter="OKR"/>
-                        </Grid>
-
-                        <ItemsControl Margin="0,12,0,0"
-                                      ItemsSource="{Binding ActiveObjectives}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Margin="0,0,0,12">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Name}"
-                                                       Style="{StaticResource FocusBodyText}"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Grid.Column="1"
-                                                       Margin="10,0,0,0"
-                                                       Text="{Binding Progress, StringFormat={}{0:0}%}"
-                                                       Foreground="{DynamicResource FocusAccentBrightBrush}"/>
-                                        </Grid>
-                                        <ProgressBar Margin="0,6,0,0"
-                                                     Height="6"
-                                                     Minimum="0"
-                                                     Maximum="100"
-                                                     Value="{Binding Progress}"
-                                                     Style="{StaticResource FocusLinearProgress}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <TextBlock Margin="0,18,0,8"
-                                   HorizontalAlignment="Center"
-                                   Text="还没有进行中的 OKR。"
-                                   Foreground="{DynamicResource FocusMutedTextBrush}">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock"
-                                       BasedOn="{StaticResource FocusCaptionText}">
-                                    <Setter Property="Visibility"
-                                            Value="Visible"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding HasObjectives}"
-                                                     Value="True">
-                                            <Setter Property="Visibility"
-                                                    Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
             </Grid>
 
             <Border Style="{StaticResource FocusCard}"

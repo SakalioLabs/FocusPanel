@@ -9,17 +9,10 @@ public sealed record DashboardTaskSummary(
     string ProjectName,
     string Status);
 
-public sealed record DashboardOkrSummary(
-    int Id,
-    string Name,
-    double Progress);
-
 public sealed record DashboardSnapshot(
     int OpenTaskCount,
     int FocusSessionCountToday,
     int FocusMinutesToday,
-    int ActiveOkrCount,
     int CollectedItemCount,
     IReadOnlyList<DashboardTaskSummary> PriorityTasks,
-    IReadOnlyList<DashboardOkrSummary> ActiveObjectives,
     DateTime LoadedAt);

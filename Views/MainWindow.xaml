@@ -41,9 +41,6 @@
         <DataTemplate DataType="{x:Type vm:FileOrganizerViewModel}">
             <local:FileOrganizerView/>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:OkrViewModel}">
-            <local:OkrView/>
-        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AIAssistantViewModel}">
             <local:AIAssistantView/>
         </DataTemplate>
@@ -117,20 +114,24 @@
                       Visibility="Collapsed"
                       Margin="12,12,2,12">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="48"/>
+                        <RowDefinition Height="92"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Margin="10,0,12,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="48"/>
+                            <RowDefinition Height="44"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding CurrentSectionTitle}"
+                                       VerticalAlignment="Center"
                                        Style="{StaticResource FocusSectionTitleText}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <Button Command="{Binding ToggleWorkspacePinCommand}"
                                     AutomationProperties.Name="{Binding WorkspacePinActionText}"
                                     ToolTip="{Binding WorkspacePinActionText}">
@@ -155,7 +156,21 @@
                                     ToolTip="收回工作区">
                                 <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE72B;"/>
                             </Button>
-                        </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                        <UniformGrid Grid.Row="1" Columns="5"
+                                     AutomationProperties.Name="主要功能快捷入口">
+                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
+                                    Content="桌面收纳" Command="{Binding NavigateCommand}" CommandParameter="Files"/>
+                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
+                                    Content="任务" Command="{Binding NavigateCommand}" CommandParameter="Tasks"/>
+                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
+                                    Content="番茄钟" Command="{Binding NavigateCommand}" CommandParameter="Pomodoro"/>
+                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
+                                    Content="AI 助手" Command="{Binding NavigateCommand}" CommandParameter="AI"/>
+                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
+                                    Content="设置" Click="SettingsMenuItem_Click"/>
+                        </UniformGrid>
                     </Grid>
 
                     <Border x:Name="WorkspaceSurface"
@@ -170,7 +185,7 @@
                     <!-- Search overlay -->
                     <Border Grid.RowSpan="2"
                             Panel.ZIndex="10"
-                            Margin="8,56,14,8"
+                            Margin="8,100,14,8"
                             Padding="18"
                             CornerRadius="{StaticResource FocusCardCornerRadius}"
                             Background="{DynamicResource FocusSurfaceStrongBrush}"
@@ -391,7 +406,6 @@
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="桌面收纳" Command="{Binding NavigateCommand}" CommandParameter="Files"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="任务" Command="{Binding NavigateCommand}" CommandParameter="Tasks"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="番茄钟" Command="{Binding NavigateCommand}" CommandParameter="Pomodoro"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="OKR" Command="{Binding NavigateCommand}" CommandParameter="OKR"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="AI 助手" Command="{Binding NavigateCommand}" CommandParameter="AI"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}" Content="设置与更新" Click="SettingsMenuItem_Click"/>
                                 </UniformGrid>
@@ -1251,37 +1265,6 @@
 
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
-                            <Button x:Name="TaskViewButton"
-                                    Style="{StaticResource FocusIconButton}"
-                                    Tag="CompactFixedEntry"
-                                    Click="TaskViewButton_Click"
-                                    PreviewMouseWheel="TaskViewButton_PreviewMouseWheel"
-                                    AutomationProperties.Name="任务视图"
-                                    AutomationProperties.HelpText="按 Enter 打开任务视图；滚轮切换虚拟桌面；右键新建或关闭桌面"
-                                    ToolTip="任务视图&#x0a;滚轮：切换虚拟桌面&#x0a;右键：桌面操作">
-                                <Button.ContextMenu>
-                                    <ContextMenu Style="{StaticResource FocusContextMenu}"
-                                                 Opened="TransientContextMenu_Opened"
-                                                 Closed="TransientContextMenu_Closed">
-                                        <MenuItem Header="上一个虚拟桌面"
-                                                  InputGestureText="Win+Ctrl+←"
-                                                  Command="{Binding PlacementTarget.DataContext.SwitchVirtualDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                  CommandParameter="{x:Static services:VirtualDesktopDirection.Previous}"/>
-                                        <MenuItem Header="下一个虚拟桌面"
-                                                  InputGestureText="Win+Ctrl+→"
-                                                  Command="{Binding PlacementTarget.DataContext.SwitchVirtualDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                  CommandParameter="{x:Static services:VirtualDesktopDirection.Next}"/>
-                                        <Separator/>
-                                        <MenuItem Header="新建虚拟桌面"
-                                                  InputGestureText="Win+Ctrl+D"
-                                                  Command="{Binding PlacementTarget.DataContext.CreateVirtualDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="关闭当前虚拟桌面"
-                                                  InputGestureText="Win+Ctrl+F4"
-                                                  Command="{Binding PlacementTarget.DataContext.CloseCurrentVirtualDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE7C4;"/>
-                            </Button>
                             <Button x:Name="FocusCenterButton"
                                     Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
