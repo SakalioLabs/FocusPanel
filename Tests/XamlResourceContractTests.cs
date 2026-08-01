@@ -1057,7 +1057,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.73\"",
+            "LauncherVersion = \"0.10.74\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1417,6 +1417,12 @@ public sealed class XamlResourceContractTests
             codeBehind);
         Assert.Matches(
             @"ToggleCompactOverlay\([\s\S]*?StatusCenterButton,[\s\S]*?StatusCenterQuickSettingsButton",
+            codeBehind);
+        Assert.Contains(
+            "== CompactOverlayToggleAction.CloseSurface",
+            codeBehind);
+        Assert.Matches(
+            @"CompactOverlayToggleAction\.CloseSurface\)[\s\S]*?CloseOverlayPanels\(\);[\s\S]*?return;",
             codeBehind);
         Assert.Equal(
             "{Binding OpenStartMenuCommand}",

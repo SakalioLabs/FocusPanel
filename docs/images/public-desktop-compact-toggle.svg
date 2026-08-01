@@ -7,7 +7,7 @@
   <rect width="1280" height="720" fill="url(#bg)"/>
   <circle cx="1120" cy="40" r="260" fill="#448cff" opacity=".12"/><circle cx="120" cy="700" r="260" fill="#28d6b1" opacity=".09"/>
   <text x="72" y="82" fill="#f6f9ff" font-family="Microsoft YaHei UI" font-size="34" font-weight="700">公共桌面可授权 · 紧凑入口可开可关</text>
-  <text x="72" y="120" fill="#a9bad2" font-family="Microsoft YaHei UI" font-size="17">FocusPanel 0.10.72</text>
+  <text x="72" y="120" fill="#a9bad2" font-family="Microsoft YaHei UI" font-size="17">FocusPanel 0.10.74</text>
   <g filter="url(#s)"><rect x="72" y="158" width="550" height="474" rx="28" fill="url(#glass)" stroke="#68e2c7" stroke-opacity=".34"/><rect x="658" y="158" width="550" height="474" rx="28" fill="url(#glass)" stroke="#7eb7ff" stroke-opacity=".35"/></g>
   <g font-family="Microsoft YaHei UI">
     <text x="112" y="215" fill="#86efd7" font-size="23" font-weight="700">Paint.NET 为什么没自动隐藏</text>
@@ -22,9 +22,9 @@
     <text x="726" y="284" fill="#f6f9ff" font-size="18" font-weight="600">第一次点击</text><text x="726" y="313" fill="#a9bad2" font-size="15">76px 紧凑栏 → 展开并打开对应内容</text>
     <path d="M933 340v28" stroke="#7eb7ff" stroke-width="3"/><path d="M925 360l8 8 8-8" fill="none" stroke="#7eb7ff" stroke-width="3"/>
     <rect x="698" y="382" width="470" height="86" rx="18" fill="#08172a" fill-opacity=".78"/>
-    <text x="726" y="416" fill="#f6f9ff" font-size="18" font-weight="600">第二次点击同一入口</text><text x="726" y="445" fill="#a9bad2" font-size="15">中心或子表面关闭，整个侧栏收起</text>
+    <text x="726" y="416" fill="#f6f9ff" font-size="18" font-weight="600">第二次点击同一入口</text><text x="726" y="445" fill="#a9bad2" font-size="15">只关闭对应功能区，Panel 保持展开</text>
     <rect x="698" y="492" width="470" height="92" rx="18" fill="#08172a" fill-opacity=".78"/>
     <text x="726" y="527" fill="#f6f9ff" font-size="18" font-weight="600">搜索 · Focus · 状态 · 时间</text><text x="726" y="556" fill="#9cc9ff" font-size="15">单一路径，不再 Command + Click 双执行</text>
   </g>
-  <text x="640" y="682" text-anchor="middle" fill="#8295ae" font-family="Microsoft YaHei UI" font-size="14">不后台弹 UAC · 不模糊匹配应用名 · 不留下展开空壳</text>
+  <text x="640" y="682" text-anchor="middle" fill="#8295ae" font-family="Microsoft YaHei UI" font-size="14">不后台弹 UAC · 不模糊匹配应用名 · 离开后才自动收起</text>
 </svg>

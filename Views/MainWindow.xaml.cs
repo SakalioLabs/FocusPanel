@@ -705,9 +705,10 @@ public partial class MainWindow :
             CompactOverlayTogglePolicy.Decide(
                 hasOwnedSurfaceOpen());
         if (action
-            == CompactOverlayToggleAction.Collapse)
+            == CompactOverlayToggleAction.CloseSurface)
         {
-            CollapseSidebar();
+            CloseOverlayPanels();
+            ScheduleAutoHide(1200);
             return;
         }
 

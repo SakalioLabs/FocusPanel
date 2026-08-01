@@ -14,10 +14,10 @@ public sealed class CompactOverlayTogglePolicyTests
     }
 
     [Fact]
-    public void OpenOwnedSurface_CollapsesOnSecondClick()
+    public void OpenOwnedSurface_ClosesSurfaceOnSecondClick()
     {
         Assert.Equal(
-            CompactOverlayToggleAction.Collapse,
+            CompactOverlayToggleAction.CloseSurface,
             CompactOverlayTogglePolicy.Decide(true));
     }
 }

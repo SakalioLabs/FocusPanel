@@ -3,7 +3,7 @@ namespace FocusPanel.Services;
 internal enum CompactOverlayToggleAction
 {
     ExpandAndOpen,
-    Collapse
+    CloseSurface
 }
 
 internal static class CompactOverlayTogglePolicy
@@ -11,6 +11,6 @@ internal static class CompactOverlayTogglePolicy
     internal static CompactOverlayToggleAction Decide(
         bool hasOwnedSurfaceOpen) =>
         hasOwnedSurfaceOpen
-            ? CompactOverlayToggleAction.Collapse
+            ? CompactOverlayToggleAction.CloseSurface
             : CompactOverlayToggleAction.ExpandAndOpen;
 }
