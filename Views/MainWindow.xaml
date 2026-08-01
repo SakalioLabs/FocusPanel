@@ -989,7 +989,7 @@
                             <Button x:Name="StartButton"
                                     Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
-                                    Command="{Binding OpenStartMenuCommand}"
+                                    Click="StartButton_Click"
                                     AutomationProperties.Name="开始"
                                     AutomationProperties.HelpText="按 Enter 打开开始菜单，按 Shift+F10 打开系统管理菜单"
                                     ToolTip="开始 · 右键打开系统管理菜单">
@@ -1254,7 +1254,7 @@
                             <Button x:Name="TaskViewButton"
                                     Style="{StaticResource FocusIconButton}"
                                     Tag="CompactFixedEntry"
-                                    Command="{Binding OpenTaskViewCommand}"
+                                    Click="TaskViewButton_Click"
                                     PreviewMouseWheel="TaskViewButton_PreviewMouseWheel"
                                     AutomationProperties.Name="任务视图"
                                     AutomationProperties.HelpText="按 Enter 打开任务视图；滚轮切换虚拟桌面；右键新建或关闭桌面"

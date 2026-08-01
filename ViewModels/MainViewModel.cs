@@ -3900,6 +3900,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CompleteSystemAction(
             completion.Succeeded,
             error);
+        if (!completion.Succeeded)
+            WorkspaceRequested?.Invoke("Status");
     }
 
     private async Task RunInlineStatusActionAsync(

@@ -36,6 +36,7 @@ public partial class MainWindow :
     private const int TaskbarHoverCloseDelayMilliseconds = 260;
     private const int TaskbarWindowCycleThrottleMilliseconds = 90;
     private const int TaskbarWindowCycleMemoryMilliseconds = 2000;
+    private const int ShellEntryClickDelayMilliseconds = 80;
     private const int SwShowNoActivate = 4;
     private const int WmHotkey = 0x0312;
     private const int WmDpiChanged = 0x02E0;
@@ -621,6 +622,40 @@ public partial class MainWindow :
             SearchButton,
             SearchBox,
             selectAllText: true);
+    }
+
+    private async void StartButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        e.Handled = true;
+        await InvokeShellEntryAfterClickAsync(
+            () => _viewModel.OpenStartMenuCommand
+                .Execute(null));
+    }
+
+    private async void TaskViewButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        e.Handled = true;
+        await InvokeShellEntryAfterClickAsync(
+            () => _viewModel.OpenTaskViewCommand
+                .Execute(null));
+    }
+
+    private async Task InvokeShellEntryAfterClickAsync(
+        Action action)
+    {
+        await Dispatcher.Yield(
+            DispatcherPriority.ApplicationIdle);
+        await Task.Delay(
+            ShellEntryClickDelayMilliseconds);
+        if (!_isExit
+            && IsVisible)
+        {
+            action();
+        }
     }
 
     private void SearchBox_PreviewKeyDown(

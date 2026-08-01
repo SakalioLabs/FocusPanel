@@ -1057,7 +1057,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.74\"",
+            "LauncherVersion = \"0.10.75\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1280,7 +1280,7 @@ public sealed class XamlResourceContractTests
         Assert.Equal(6, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
         Assert.Equal(1, compactDock.Split("ItemsSource=\"{Binding TaskbarApps}\"").Length - 1);
         int start = compactDock.IndexOf(
-            "Command=\"{Binding OpenStartMenuCommand}\"",
+            "Click=\"StartButton_Click\"",
             StringComparison.Ordinal);
         int search = compactDock.IndexOf(
             "x:Name=\"SearchButton\"",
@@ -1289,7 +1289,7 @@ public sealed class XamlResourceContractTests
             "x:Name=\"TaskbarAppsScrollViewer\"",
             StringComparison.Ordinal);
         int taskView = compactDock.IndexOf(
-            "Command=\"{Binding OpenTaskViewCommand}\"",
+            "Click=\"TaskViewButton_Click\"",
             StringComparison.Ordinal);
         int focusCenter = compactDock.IndexOf(
             "Click=\"FocusCenterButton_Click\"",
@@ -1425,10 +1425,10 @@ public sealed class XamlResourceContractTests
             @"CompactOverlayToggleAction\.CloseSurface\)[\s\S]*?CloseOverlayPanels\(\);[\s\S]*?return;",
             codeBehind);
         Assert.Equal(
-            "{Binding OpenStartMenuCommand}",
+            "StartButton_Click",
             (string?)NamedButton(
                     "StartButton")
-                .Attribute("Command"));
+                .Attribute("Click"));
         Assert.Equal(
             "FocusCenterButton_Click",
             (string?)NamedButton(
@@ -2192,9 +2192,18 @@ public sealed class XamlResourceContractTests
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
 
-        Assert.Contains("OpenStartMenuCommand", mainWindow);
+        Assert.Contains("Click=\"StartButton_Click\"", mainWindow);
         Assert.Contains("OpenWindowsSearchCommand", mainWindow);
-        Assert.Contains("OpenTaskViewCommand", mainWindow);
+        Assert.Contains("Click=\"TaskViewButton_Click\"", mainWindow);
+        Assert.Contains(
+            "InvokeShellEntryAfterClickAsync(",
+            codeBehind);
+        Assert.Contains(
+            "ShellEntryClickDelayMilliseconds",
+            codeBehind);
+        Assert.Contains(
+            "WorkspaceRequested?.Invoke(\"Status\")",
+            viewModel);
         Assert.Contains("OpenWidgetsCommand", mainWindow);
         Assert.Contains("OpenRunDialogCommand", mainWindow);
         Assert.Contains("SystemManagementTool.InstalledApps", mainWindow);
