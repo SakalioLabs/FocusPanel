@@ -53,7 +53,7 @@ public sealed class PartitionSwitchRecoveryContractTests
                     StringSplitOptions.None)
                 .Length - 1);
         Assert.Contains(
-            "if (!_fatalShutdown)",
+            "if (!_fatalShutdown",
             app);
         Assert.Contains(
             "_desktopCrashRecovery.Disarm();",
@@ -147,6 +147,41 @@ public sealed class PartitionSwitchRecoveryContractTests
         Assert.Contains(
             "FocusToastNotification(",
             shell);
+    }
+
+    [Fact]
+    public void WatchdogProcess_DoesNotDiscardFailedDesktopRecoveryMarker()
+    {
+        string root = FindRepositoryRoot();
+        string app = File.ReadAllText(
+            Path.Combine(root, "App.xaml.cs"));
+        string watchdog = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "TaskbarWatchdog.cs"));
+
+        Assert.Contains(
+            "_isWatchdogProcess = true;",
+            app);
+        Assert.Contains(
+            "&& !_isWatchdogProcess",
+            app);
+        Assert.Equal(
+            2,
+            watchdog.Split(
+                    "keepDesktopRecoveryArmed: false",
+                    StringSplitOptions.None)
+                .Length - 1);
+        Assert.Equal(
+            1,
+            watchdog.Split(
+                    "keepDesktopRecoveryArmed: true",
+                    StringSplitOptions.None)
+                .Length - 1);
+        Assert.Contains(
+            "RestoreIfRequested(",
+            watchdog);
     }
 
     private static string FindRepositoryRoot()

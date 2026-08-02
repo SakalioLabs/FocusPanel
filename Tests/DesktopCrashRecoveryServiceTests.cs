@@ -211,6 +211,48 @@ public sealed class DesktopCrashRecoveryServiceTests
         }
     }
 
+    [Fact]
+    public void EmergencyRecovery_KeepsMarkerWhileParentCanContinue()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            string path = Path.Combine(
+                directory,
+                "desktop",
+                "emergency.txt");
+            var store = new FakeStore(
+                new DesktopCrashRecoveryItem(
+                    15,
+                    "emergency.txt",
+                    path,
+                    (long)FileAttributes.Normal));
+            var visibility = new FakeVisibility();
+            visibility.Add(
+                path,
+                FileAttributes.Hidden
+                | FileAttributes.System);
+            var service = CreateService(
+                store,
+                visibility,
+                directory);
+            service.Arm();
+
+            DesktopCrashRecoveryResult result =
+                service.RestoreIfRequested(
+                    force: false,
+                    keepMarker: true);
+
+            Assert.Equal(1, result.Restored);
+            Assert.True(File.Exists(
+                MarkerPath(directory)));
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
     private static DesktopCrashRecoveryService
         CreateService(
             FakeStore store,

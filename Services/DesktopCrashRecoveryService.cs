@@ -100,8 +100,17 @@ internal sealed class DesktopCrashRecoveryService
 
     internal DesktopCrashRecoveryResult
         RestoreIfRequested(bool force) =>
+        RestoreIfRequested(
+            force,
+            keepMarker: false);
+
+    internal DesktopCrashRecoveryResult
+        RestoreIfRequested(
+            bool force,
+            bool keepMarker) =>
         force || File.Exists(_markerPath)
-            ? RestoreCollectedItems()
+            ? RestoreCollectedItems(
+                keepMarker)
             : new DesktopCrashRecoveryResult(
                 false,
                 0,
@@ -134,7 +143,8 @@ internal sealed class DesktopCrashRecoveryService
             }
 
             DesktopCrashRecoveryResult result =
-                RestoreCollectedItemsCore();
+                RestoreCollectedItemsCore(
+                    keepMarker: false);
             if (result.Failed == 0)
             {
                 try
@@ -166,11 +176,22 @@ internal sealed class DesktopCrashRecoveryService
         RestoreCollectedItems()
     {
         lock (_gate)
-            return RestoreCollectedItemsCore();
+            return RestoreCollectedItemsCore(
+                keepMarker: false);
     }
 
     private DesktopCrashRecoveryResult
-        RestoreCollectedItemsCore()
+        RestoreCollectedItems(
+            bool keepMarker)
+    {
+        lock (_gate)
+            return RestoreCollectedItemsCore(
+                keepMarker);
+    }
+
+    private DesktopCrashRecoveryResult
+        RestoreCollectedItemsCore(
+            bool keepMarker)
     {
         int restored = 0;
         int failed = 0;
@@ -232,7 +253,8 @@ internal sealed class DesktopCrashRecoveryService
             }
         }
 
-        if (failed == 0)
+        if (failed == 0
+            && !keepMarker)
             DisarmCore();
         return new DesktopCrashRecoveryResult(
             true,

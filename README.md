@@ -2,7 +2,7 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它提供桌面收纳、任务、番茄钟、AI、应用启动、运行窗口管理、系统状态与日期时间入口。旧版 OKR 表只为升级兼容保留，不再出现在产品界面，也不会被概览或 AI 读取。
 
-> 0.10.78 起，旧版本闪退可能遗留的桌面图标会在升级后首次启动时自动恢复，不要求用户进入修复工具，也不会弹出阻塞启动的对话框。恢复结果通过非阻塞提示告知；分区元数据继续保留，文件不会移动或删除。以后发生未处理异常或强制结束时，应用仍会根据本地恢复标记自动补做恢复。
+> 0.10.79 起，恢复不再依赖下一次启动：主进程被任务管理器强制结束或用户按下 `Ctrl+Alt+Shift+F10` 时，独立 watchdog 会在恢复原任务栏后立即恢复已收纳桌面图标。正常退出会先撤销恢复标记，因此不会打乱正常收纳状态；权限或文件状态导致恢复失败时保留标记，下次启动继续重试。0.10.78 的旧事故首次启动自动恢复仍然保留。
 
 已收纳卡片切换收纳盒只修改 FocusPanel 的分类数据，不再重新写文件属性、刷新 Explorer 或请求管理员权限。“紧急恢复全部图标”仍保留在桌面收纳的修复工具中，但只用于权限异常或损坏记录等极端情况，不属于正常操作流程。
 
@@ -517,7 +517,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.78 `
+  -Version 0.10.79 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -529,7 +529,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.78-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.79-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

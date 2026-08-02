@@ -77,7 +77,9 @@ public static class TaskbarWatchdog
             }
             catch
             {
-                RestoreWithRetry(sessionFile);
+                RestoreSafeState(
+                    sessionFile,
+                    keepDesktopRecoveryArmed: false);
                 return 0;
             }
 
@@ -96,14 +98,18 @@ public static class TaskbarWatchdog
                             // The taskbar restoration below remains the primary safety action.
                         }
 
-                        RestoreWithRetry(sessionFile);
+                        RestoreSafeState(
+                            sessionFile,
+                            keepDesktopRecoveryArmed: true);
                     }
                 }
 
                 Thread.Sleep(100);
             }
 
-            RestoreWithRetry(sessionFile);
+            RestoreSafeState(
+                sessionFile,
+                keepDesktopRecoveryArmed: false);
             return 0;
         }
         finally
@@ -112,6 +118,19 @@ public static class TaskbarWatchdog
             try { File.Delete(sessionFile + ".ready"); } catch { }
         }
     }
+
+    private static void RestoreSafeState(
+        string sessionFile,
+        bool keepDesktopRecoveryArmed) =>
+        WatchdogRecoveryCoordinator.Restore(
+            sessionFile,
+            RestoreWithRetry,
+            () =>
+                new DesktopCrashRecoveryService()
+                    .RestoreIfRequested(
+                        force: false,
+                        keepMarker:
+                            keepDesktopRecoveryArmed));
 
     private static void RestoreWithRetry(string sessionFile)
     {
@@ -148,5 +167,38 @@ public static class TaskbarWatchdog
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool PeekMessage(out NativeMessage lpMsg, IntPtr hWnd, uint min, uint max, uint remove);
+    }
+}
+
+internal static class WatchdogRecoveryCoordinator
+{
+    internal static void Restore(
+        string sessionFile,
+        Action<string> restoreTaskbar,
+        Func<DesktopCrashRecoveryResult>
+            restoreDesktop)
+    {
+        ArgumentNullException.ThrowIfNull(
+            restoreTaskbar);
+        ArgumentNullException.ThrowIfNull(
+            restoreDesktop);
+
+        try
+        {
+            restoreTaskbar(sessionFile);
+        }
+        catch
+        {
+            // Desktop recovery must still run if the taskbar boundary fails.
+        }
+
+        try
+        {
+            _ = restoreDesktop();
+        }
+        catch
+        {
+            // The persistent marker remains available for startup retry.
+        }
     }
 }

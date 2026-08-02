@@ -19,6 +19,7 @@ public partial class App : Application
         _desktopCrashRecovery = new();
     private bool _handlingFatalException;
     private bool _fatalShutdown;
+    private bool _isWatchdogProcess;
 
     public App()
     {
@@ -38,6 +39,7 @@ public partial class App : Application
             && string.Equals(e.Args[0], "--taskbar-watchdog", StringComparison.OrdinalIgnoreCase)
             && int.TryParse(e.Args[1], out int parentProcessId))
         {
+            _isWatchdogProcess = true;
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
             int exitCode = TaskbarWatchdog.Run(parentProcessId, e.Args[2]);
             Shutdown(exitCode);
@@ -119,7 +121,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        if (!_fatalShutdown)
+        if (!_fatalShutdown
+            && !_isWatchdogProcess)
             _desktopCrashRecovery.Disarm();
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
