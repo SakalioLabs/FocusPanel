@@ -277,6 +277,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             .DefaultDwellMilliseconds;
 
     [ObservableProperty]
+    private bool keepCompactDockVisible;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
@@ -945,6 +948,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             HotZoneDwellMilliseconds =
                 preferenceSnapshot
                     .HotZoneDwellMilliseconds;
+            KeepCompactDockVisible =
+                preferenceSnapshot
+                    .KeepCompactDockVisible;
             IsOnboardingVisible =
                 !preferenceSnapshot
                     .FirstRunAccepted
@@ -1199,6 +1205,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ShellPreferenceRepository
                     .HotZoneDwellKey,
                 normalized.ToString());
+        }
+    }
+
+    partial void OnKeepCompactDockVisibleChanged(
+        bool value)
+    {
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .KeepCompactDockVisibleKey,
+                value.ToString());
         }
     }
 

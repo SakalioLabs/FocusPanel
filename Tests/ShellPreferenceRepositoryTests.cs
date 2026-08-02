@@ -29,6 +29,10 @@ public sealed class ShellPreferenceRepositoryTests
             ShellPreferenceSnapshot
                 .Default
                 .HotZoneDwellMilliseconds);
+        Assert.False(
+            ShellPreferenceSnapshot
+                .Default
+                .KeepCompactDockVisible);
     }
 
     [Fact]
@@ -45,7 +49,8 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         "Unsupported",
                         999,
-                        999),
+                        999,
+                        true),
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
@@ -72,6 +77,8 @@ public sealed class ShellPreferenceRepositoryTests
             EdgeHotZoneSensitivityPolicy
                 .DefaultDwellMilliseconds,
             snapshot.HotZoneDwellMilliseconds);
+        Assert.True(
+            snapshot.KeepCompactDockVisible);
     }
 
     [Fact]
@@ -88,7 +95,8 @@ public sealed class ShellPreferenceRepositoryTests
                         false,
                         @"device:  \\.\DISPLAY2  ",
                         800,
-                        180),
+                        180,
+                        true),
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
@@ -103,6 +111,8 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             180,
             snapshot.HotZoneDwellMilliseconds);
+        Assert.True(
+            snapshot.KeepCompactDockVisible);
     }
 
     [Fact]
@@ -135,7 +145,8 @@ public sealed class ShellPreferenceRepositoryTests
                         ShellDisplayTarget
                             .PrimaryValue,
                         1200,
-                        40);
+                        40,
+                        true);
                 },
                 (_, _) => { });
 
@@ -168,6 +179,8 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             40,
             snapshot.HotZoneDwellMilliseconds);
+        Assert.True(
+            snapshot.KeepCompactDockVisible);
     }
 
     [Fact]

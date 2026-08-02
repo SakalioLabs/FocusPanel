@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440">
+  <rect width="1200" height="440" rx="28" fill="#0f172a"/>
+  <text x="60" y="68" fill="#f8fafc" font-size="32" font-family="Segoe UI, Microsoft YaHei" font-weight="700">离开后，不必把整条任务栏藏起来</text>
+  <text x="60" y="104" fill="#94a3b8" font-size="17" font-family="Segoe UI, Microsoft YaHei">“紧凑栏常驻”把展开工作区折回 76px，应用、状态和时间仍保持一眼可见。</text>
+
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <g transform="translate(60 142)">
+      <rect width="460" height="220" rx="24" fill="#172033" stroke="#334155"/>
+      <text x="28" y="40" fill="#cbd5e1" font-size="18" font-weight="600">正在使用工作区</text>
+      <rect x="28" y="62" width="330" height="126" rx="20" fill="#243047"/>
+      <text x="52" y="98" fill="#f8fafc" font-size="20">桌面收纳</text>
+      <text x="52" y="130" fill="#94a3b8" font-size="14">文件、任务或设置保持完整操作空间</text>
+      <rect x="376" y="20" width="62" height="180" rx="22" fill="#312e81"/>
+      <circle cx="407" cy="55" r="10" fill="#93c5fd"/>
+      <circle cx="407" cy="88" r="10" fill="#a5b4fc"/>
+      <circle cx="407" cy="121" r="10" fill="#5eead4"/>
+      <text x="407" y="164" text-anchor="middle" fill="#f8fafc" font-size="13">16:29</text>
+      <text x="28" y="210" fill="#64748b" font-size="13">输入、拖拽、菜单与固定展开继续阻止误收起</text>
+    </g>
+
+    <path d="M545 244 H650" stroke="#60a5fa" stroke-width="4" stroke-linecap="round"/>
+    <path d="M638 232 L652 244 L638 256" fill="none" stroke="#60a5fa" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="598" y="218" text-anchor="middle" fill="#93c5fd" font-size="14">鼠标离开</text>
+
+    <g transform="translate(680 142)">
+      <rect width="460" height="220" rx="24" fill="#172033" stroke="#334155"/>
+      <text x="28" y="40" fill="#cbd5e1" font-size="18" font-weight="600">折回紧凑任务栏</text>
+      <rect x="370" y="20" width="68" height="180" rx="24" fill="#312e81" stroke="#818cf8"/>
+      <circle cx="404" cy="48" r="9" fill="#93c5fd"/>
+      <circle cx="404" cy="76" r="9" fill="#a5b4fc"/>
+      <rect x="392" y="101" width="24" height="6" rx="3" fill="#60a5fa"/>
+      <rect x="392" y="116" width="24" height="6" rx="3" fill="#5eead4"/>
+      <circle cx="404" cy="146" r="9" fill="#fbbf24"/>
+      <text x="404" y="178" text-anchor="middle" fill="#f8fafc" font-size="12">16:29</text>
+      <text x="28" y="88" fill="#f8fafc" font-size="20">常用入口继续可点</text>
+      <text x="28" y="120" fill="#94a3b8" font-size="14">不用再次碰右缘，也不用猜应用是否仍在运行</text>
+      <text x="28" y="155" fill="#5eead4" font-size="14">独占全屏时自动隐藏</text>
+      <text x="28" y="182" fill="#94a3b8" font-size="14">退出全屏后恢复；托盘隐藏与 Esc 仍尊重用户意图</text>
+    </g>
+  </g>
+  <text x="600" y="406" text-anchor="middle" fill="#64748b" font-size="13" font-family="Segoe UI, Microsoft YaHei">设置 → 外观与交互 → 鼠标离开后保留 76px 紧凑栏</text>
+</svg>

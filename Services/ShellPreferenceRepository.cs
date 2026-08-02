@@ -16,7 +16,8 @@ internal sealed record ShellPreferenceSnapshot(
     bool EnableTaskbarSlotHotkeys,
     string DisplayTargetMode,
     int AutoHideDelayMilliseconds,
-    int HotZoneDwellMilliseconds)
+    int HotZoneDwellMilliseconds,
+    bool KeepCompactDockVisible)
 {
     internal static ShellPreferenceSnapshot Default { get; } =
         new(
@@ -30,7 +31,8 @@ internal sealed record ShellPreferenceSnapshot(
             ShellAutoHideDelayPolicy
                 .DefaultMilliseconds,
             EdgeHotZoneSensitivityPolicy
-                .DefaultDwellMilliseconds);
+                .DefaultDwellMilliseconds,
+            false);
 }
 
 internal interface IShellPreferenceRepository
@@ -66,6 +68,8 @@ internal sealed class ShellPreferenceRepository
         "Shell.AutoHideDelayMilliseconds";
     internal const string HotZoneDwellKey =
         "Shell.HotZoneDwellMilliseconds";
+    internal const string KeepCompactDockVisibleKey =
+        "Shell.KeepCompactDockVisible";
 
     private static readonly string[] Keys =
     {
@@ -76,7 +80,8 @@ internal sealed class ShellPreferenceRepository
         TaskbarSlotHotkeysKey,
         DisplayTargetModeKey,
         AutoHideDelayKey,
-        HotZoneDwellKey
+        HotZoneDwellKey,
+        KeepCompactDockVisibleKey
     };
 
     private readonly object _sync = new();
@@ -296,7 +301,11 @@ internal sealed class ShellPreferenceRepository
                         values,
                         HotZoneDwellKey,
                         EdgeHotZoneSensitivityPolicy
-                            .DefaultDwellMilliseconds)));
+                            .DefaultDwellMilliseconds)),
+            ReadBoolean(
+                values,
+                KeepCompactDockVisibleKey,
+                false));
     }
 
     private static void SaveCore(

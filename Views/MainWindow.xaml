@@ -1145,6 +1145,14 @@
                                                TextWrapping="Wrap"
                                                Style="{StaticResource FocusCaptionText}"/>
                                     <CheckBox Margin="0,12,0,0"
+                                              Content="鼠标离开后保留 76px 紧凑栏"
+                                              IsChecked="{Binding KeepCompactDockVisible}"
+                                              AutomationProperties.Name="鼠标离开后保留紧凑任务栏"/>
+                                    <TextBlock Margin="24,5,0,0"
+                                               Text="展开的工作区会自动折回紧凑栏，常用应用与状态入口继续可见；启用下方全屏保护时会自动让路。"
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource FocusCaptionText}"/>
+                                    <CheckBox Margin="0,12,0,0"
                                               Content="全屏应用前台时停用鼠标热区"
                                               IsChecked="{Binding DisableHotZoneInFullscreen}"/>
                                     <CheckBox Margin="0,8,0,0"

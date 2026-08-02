@@ -61,6 +61,7 @@ public partial class MainWindow :
     private bool _shutdownStarted;
     private bool _shutdownCompleted;
     private bool _hiddenToTray;
+    private bool _hiddenForFullscreen;
     private bool _isHotZoneAvailable;
     private bool _shellStartupReady;
     private bool _autoHideIgnoresInputFocus;
@@ -146,16 +147,34 @@ public partial class MainWindow :
                     _transientInteractionDepth > 0,
                     Mouse.Captured != null,
                     HasOpenComboBoxDropDown(this));
-            bool shouldHide = ShellAutoHidePolicy.ShouldHide(
+            ShellAutoHideAction autoHideAction =
+                ShellAutoHidePolicy.Decide(
+                _viewModel.KeepCompactDockVisible,
+                WorkspaceHost.Visibility
+                    == Visibility.Visible,
                 _viewModel.IsWorkspacePinned,
                 _desktopDragSession.IsActive,
                 transientSurfaceActive,
                 IsCursorInsideShell(),
                 IsInputFocusActive(),
                 _autoHideIgnoresInputFocus);
-            if (!shouldHide)
+            if (autoHideAction
+                == ShellAutoHideAction.None)
             {
-                _autoHideTimer.Start();
+                if (!_viewModel
+                        .KeepCompactDockVisible
+                    || WorkspaceHost.Visibility
+                        == Visibility.Visible)
+                {
+                    _autoHideTimer.Start();
+                }
+                return;
+            }
+
+            if (autoHideAction
+                == ShellAutoHideAction.CollapseToCompact)
+            {
+                CollapseSidebar();
                 return;
             }
 
@@ -211,7 +230,15 @@ public partial class MainWindow :
         }
         else
         {
-            HideShell();
+            if (_viewModel
+                    .KeepCompactDockVisible)
+            {
+                OpenCompactDock();
+            }
+            else
+            {
+                HideShell();
+            }
             if (_viewModel.IsReplacementEnabled)
             {
                 _ = Dispatcher.BeginInvoke(
@@ -391,6 +418,32 @@ public partial class MainWindow :
         _hotZoneMonitor.AvailabilityChanged += isAvailable =>
         {
             _isHotZoneAvailable = isAvailable;
+            PersistentCompactDockAvailabilityDecision
+                decision =
+                    ShellAutoHidePolicy
+                        .DecideAvailabilityChange(
+                            isAvailable,
+                            _viewModel
+                                .KeepCompactDockVisible,
+                            _hiddenToTray,
+                            _isExit,
+                            IsVisible,
+                            _hiddenForFullscreen);
+            _hiddenForFullscreen =
+                decision
+                    .IsHiddenForUnavailableEdge;
+            if (decision.Action
+                == PersistentCompactDockAvailabilityAction
+                    .HideForUnavailableEdge)
+            {
+                HideShell();
+            }
+            else if (decision.Action
+                     == PersistentCompactDockAvailabilityAction
+                         .RestoreAfterUnavailableEdge)
+            {
+                OpenCompactDock();
+            }
             UpdateEdgeIndicatorVisibility();
         };
     }
@@ -996,6 +1049,15 @@ public partial class MainWindow :
         if (e.PropertyName
             == nameof(
                 MainViewModel
+                    .KeepCompactDockVisible))
+        {
+            ApplyCompactDockVisibilityPreference();
+            return;
+        }
+
+        if (e.PropertyName
+            == nameof(
+                MainViewModel
                     .EnableTaskbarSlotHotkeys))
         {
             if (_viewModel
@@ -1024,6 +1086,34 @@ public partial class MainWindow :
         _ = Dispatcher.BeginInvoke(
             RevealActiveTaskbarApp,
             DispatcherPriority.Render);
+    }
+
+    private void ApplyCompactDockVisibilityPreference()
+    {
+        if (!_shellStartupReady
+            || _hiddenToTray)
+        {
+            return;
+        }
+
+        if (_viewModel.KeepCompactDockVisible)
+        {
+            if (_isHotZoneAvailable
+                && !IsVisible)
+            {
+                OpenCompactDock();
+            }
+            return;
+        }
+
+        _hiddenForFullscreen = false;
+        if (IsVisible
+            && WorkspaceHost.Visibility
+                != Visibility.Visible
+            && !IsCursorInsideShell())
+        {
+            ScheduleAutoHide();
+        }
     }
 
     private void RevealActiveTaskbarApp()

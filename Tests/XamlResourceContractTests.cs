@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.90\"",
+            "LauncherVersion = \"0.10.91\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -5156,6 +5156,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AutomationProperties.Name=\"右缘悬停呼出灵敏度\"",
             mainXaml);
+        Assert.Contains(
+            "KeepCompactDockVisibleKey",
+            repository);
+        Assert.Contains(
+            "OnKeepCompactDockVisibleChanged(",
+            viewModel);
+        Assert.Contains(
+            "IsChecked=\"{Binding KeepCompactDockVisible}\"",
+            mainXaml);
+        Assert.Contains(
+            "AutomationProperties.Name=\"鼠标离开后保留紧凑任务栏\"",
+            mainXaml);
 
         string mainWindow = File.ReadAllText(
             Path.Combine(
@@ -5191,6 +5203,21 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains(
             ".SetDwellMilliseconds(",
+            mainWindow);
+        Assert.Contains(
+            "ShellAutoHidePolicy.Decide(",
+            mainWindow);
+        Assert.Contains(
+            "ShellAutoHideAction.CollapseToCompact",
+            mainWindow);
+        Assert.Contains(
+            "ApplyCompactDockVisibilityPreference()",
+            mainWindow);
+        Assert.Contains(
+            "DecideAvailabilityChange(",
+            mainWindow);
+        Assert.Contains(
+            "PersistentCompactDockAvailabilityAction",
             mainWindow);
     }
 
