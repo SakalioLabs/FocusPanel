@@ -10,7 +10,7 @@ public sealed class UiSmokeTestProcessTests
     private const int ProcessTimeoutMilliseconds =
         120_000;
 
-    [Fact]
+    [InteractiveWindowsFact]
     public void PackagedUiSurfaces_LoadAndResolveRuntimeResources()
     {
         string executablePath = Path.Combine(AppContext.BaseDirectory, "FocusPanel.exe");
