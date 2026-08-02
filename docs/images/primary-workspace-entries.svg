@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="430" viewBox="0 0 1080 430" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 收纳与任务直达入口</title>
+  <desc id="desc">紧凑任务栏将桌面收纳和任务作为两个明确入口，任务显示未完成数量，其他模块保留在展开后的一级导航。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081220"/>
+      <stop offset="1" stop-color="#172a49"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f8cff"/>
+      <stop offset="1" stop-color="#8664ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="430" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="26" font-weight="700">核心功能不应该藏在“工作”里面</text>
+  <text x="50" y="90" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">收纳与任务直接放到紧凑栏，点击一次就到；低频模块仍保持单层可达</text>
+
+  <g transform="translate(50 122)" filter="url(#shadow)">
+    <rect width="132" height="260" rx="26" fill="#182642" stroke="#385078"/>
+    <text x="66" y="30" text-anchor="middle" fill="#8499bd" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="11">76px 紧凑栏</text>
+    <rect x="28" y="46" width="76" height="76" rx="20" fill="#243653"/>
+    <path d="M48 71h14l5 6h17v24H48z" fill="none" stroke="#8eb4ff" stroke-width="3" stroke-linejoin="round"/>
+    <text x="66" y="113" text-anchor="middle" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" font-weight="650">收纳</text>
+    <rect x="28" y="138" width="76" height="76" rx="20" fill="#243653"/>
+    <rect x="45" y="157" width="32" height="27" rx="4" fill="none" stroke="#b39bff" stroke-width="3"/>
+    <path d="M51 165l4 4 7-8M51 176l4 4 7-8" fill="none" stroke="#b39bff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="96" cy="146" r="13" fill="url(#accent)"/>
+    <text x="96" y="151" text-anchor="middle" fill="#fff" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700">7</text>
+    <text x="66" y="205" text-anchor="middle" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" font-weight="650">任务</text>
+    <rect x="20" y="232" width="92" height="3" rx="2" fill="#4f8cff"/>
+    <text x="66" y="251" text-anchor="middle" fill="#8499bd" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="10">状态一眼可见</text>
+  </g>
+
+  <path d="M212 252h76" stroke="#6f88b2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M276 243l12 9-12 9" fill="none" stroke="#6f88b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(316 122)" filter="url(#shadow)">
+    <rect width="714" height="260" rx="26" fill="#182642" stroke="#385078"/>
+    <text x="28" y="42" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="20" font-weight="650">一次点击展开真实工作区</text>
+    <text x="28" y="70" fill="#8fa4c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">标题下方只有一层导航，不再出现“最近工作区 → 再选模块”的中转菜单</text>
+    <g transform="translate(28 94)" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" font-weight="650">
+      <rect width="100" height="48" rx="14" fill="#243653"/><text x="50" y="30" text-anchor="middle" fill="#dce8fb">概览</text>
+      <rect x="108" width="100" height="48" rx="14" fill="url(#accent)"/><text x="158" y="30" text-anchor="middle" fill="#fff">桌面收纳</text>
+      <rect x="216" width="100" height="48" rx="14" fill="#243653"/><text x="266" y="30" text-anchor="middle" fill="#dce8fb">任务</text>
+      <rect x="324" width="100" height="48" rx="14" fill="#243653"/><text x="374" y="30" text-anchor="middle" fill="#dce8fb">番茄钟</text>
+      <rect x="432" width="100" height="48" rx="14" fill="#243653"/><text x="482" y="30" text-anchor="middle" fill="#dce8fb">AI 助手</text>
+      <rect x="540" width="100" height="48" rx="14" fill="#243653"/><text x="590" y="30" text-anchor="middle" fill="#dce8fb">设置</text>
+    </g>
+    <rect x="28" y="166" width="658" height="66" rx="16" fill="#20324f"/>
+    <text x="50" y="193" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="650">桌面收纳</text>
+    <text x="50" y="216" fill="#90a5c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">文件仍在原桌面路径 · 分区、恢复和拖放能力保持不变</text>
+    <rect x="584" y="180" width="78" height="36" rx="12" fill="#294268"/>
+    <text x="623" y="203" text-anchor="middle" fill="#a9c4f8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">直接操作</text>
+  </g>
+</svg>

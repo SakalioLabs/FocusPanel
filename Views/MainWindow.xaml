@@ -1413,47 +1413,13 @@
 
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
-                            <Button x:Name="WorkspaceButton"
+                            <Button x:Name="OrganizerButton"
                                     Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
-                                    Click="WorkspaceButton_Click"
-                                    AutomationProperties.Name="{Binding CurrentSectionTitle, StringFormat=打开最近工作区：{0}}"
-                                    AutomationProperties.HelpText="按 Enter 直接打开最近工作区，按 Shift+F10 选择今日概览、桌面收纳、任务、番茄钟、AI 助手或设置">
-                                <Button.ToolTip>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding CurrentSectionTitle, StringFormat=打开最近工作区：{0}}"/>
-                                        <TextBlock Margin="0,4,0,0"
-                                                   Text="右键选择其他功能"
-                                                   Style="{StaticResource FocusCaptionText}"/>
-                                    </StackPanel>
-                                </Button.ToolTip>
-                                <Button.ContextMenu>
-                                    <ContextMenu Style="{StaticResource FocusContextMenu}"
-                                                 Opened="TransientContextMenu_Opened"
-                                                 Closed="TransientContextMenu_Closed">
-                                        <MenuItem Header="打开上次使用的工作区"
-                                                  Click="WorkspaceLastMenuItem_Click"/>
-                                        <Separator/>
-                                        <MenuItem Header="今日概览"
-                                                  Tag="Dashboard"
-                                                  Click="WorkspaceShortcutMenuItem_Click"/>
-                                        <MenuItem Header="桌面收纳"
-                                                  Tag="Files"
-                                                  Click="WorkspaceShortcutMenuItem_Click"/>
-                                        <MenuItem Header="任务"
-                                                  Tag="Tasks"
-                                                  Click="WorkspaceShortcutMenuItem_Click"/>
-                                        <MenuItem Header="番茄钟"
-                                                  Tag="Pomodoro"
-                                                  Click="WorkspaceShortcutMenuItem_Click"/>
-                                        <MenuItem Header="AI 助手"
-                                                  Tag="AI"
-                                                  Click="WorkspaceShortcutMenuItem_Click"/>
-                                        <Separator/>
-                                        <MenuItem Header="设置"
-                                                  Click="WorkspaceSettingsMenuItem_Click"/>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
+                                    Click="OrganizerButton_Click"
+                                    AutomationProperties.Name="桌面收纳"
+                                    AutomationProperties.HelpText="按 Enter 直接展开桌面收纳工作区"
+                                    ToolTip="桌面收纳 · 管理已收纳文件与分区">
                                 <Grid Width="48" Height="48">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"
@@ -1462,7 +1428,7 @@
                                         <TextBlock Margin="0,-2,0,0"
                                                    HorizontalAlignment="Center"
                                                    Style="{StaticResource FocusMetaText}"
-                                                   Text="工作"/>
+                                                   Text="收纳"/>
                                     </StackPanel>
                                     <Border Width="3"
                                             Height="22"
@@ -1471,13 +1437,59 @@
                                             CornerRadius="{StaticResource FocusControlCornerRadius}"
                                             Background="{DynamicResource FocusAccentBrightBrush}"
                                             IsHitTestVisible="False"
-                                            Visibility="{Binding IsSettingsOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            Visibility="{Binding IsOrganizerEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                     <Ellipse Width="8"
                                              Height="8"
                                              HorizontalAlignment="Right"
                                              VerticalAlignment="Top"
                                              Fill="{DynamicResource FocusAccentBrightBrush}"
                                              Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                </Grid>
+                            </Button>
+                            <Button x:Name="TasksButton"
+                                    Style="{StaticResource CompactLabeledEntryButton}"
+                                    Tag="CompactFixedEntry"
+                                    Click="TasksButton_Click"
+                                    AutomationProperties.Name="{Binding TasksEntryAutomationName}"
+                                    AutomationProperties.HelpText="按 Enter 直接展开任务工作区"
+                                    ToolTip="{Binding TasksEntryAutomationName}">
+                                <Grid Width="48" Height="48">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource FocusIconText}"
+                                                   HorizontalAlignment="Center"
+                                                   Text="&#xE8A5;"/>
+                                        <TextBlock Margin="0,-2,0,0"
+                                                   HorizontalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Text="任务"/>
+                                    </StackPanel>
+                                    <Border Width="3"
+                                            Height="22"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusAccentBrightBrush}"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding IsTasksEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    <Border MinWidth="16"
+                                            Height="16"
+                                            Padding="2,0"
+                                            Margin="0,-4,-4,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                            BorderBrush="{DynamicResource FocusAccentBrightBrush}"
+                                            BorderThickness="1"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding HasOpenTasks, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="{Binding OpenTaskCountBadgeText}"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
                                 </Grid>
                             </Button>
                             <Button x:Name="StatusCenterButton"

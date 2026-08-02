@@ -227,6 +227,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool hasReplacementWarning;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsOrganizerEntryActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsTasksEntryActive))]
     private string lastWorkspace = "Files";
 
     [ObservableProperty]
@@ -423,6 +427,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string systemActionMessage = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(HasOpenTasks))]
+    [NotifyPropertyChangedFor(
+        nameof(OpenTaskCountBadgeText))]
+    [NotifyPropertyChangedFor(
+        nameof(TasksEntryAutomationName))]
     private int openTaskCount;
 
     [ObservableProperty]
@@ -755,6 +765,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
             BatterySummary);
     public string StatusCenterAutomationName =>
         $"状态中心，{StatusCenterSummary}";
+
+    public bool HasOpenTasks =>
+        GetTaskEntryPresentation().HasBadge;
+    public string OpenTaskCountBadgeText =>
+        GetTaskEntryPresentation().BadgeText;
+    public string TasksEntryAutomationName =>
+        GetTaskEntryPresentation().AutomationName;
+    public bool IsOrganizerEntryActive =>
+        string.Equals(
+            LastWorkspace,
+            "Files",
+            StringComparison.Ordinal);
+    public bool IsTasksEntryActive =>
+        string.Equals(
+            LastWorkspace,
+            "Tasks",
+            StringComparison.Ordinal);
+
+    private CompactTaskEntryPresentation
+        GetTaskEntryPresentation() =>
+        CompactTaskEntryPresentationComposer
+            .Compose(OpenTaskCount);
 
     public string WorkspacePinActionText =>
         IsWorkspacePinned
@@ -3961,8 +3993,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ShellRefreshActivity activity =
             ShellRefreshActivityPolicy.GetActivity(
                 _isShellVisible,
-                IsStatusCenterOpen,
-                IsCalendarOpen);
+                IsStatusCenterOpen);
         SetTimerState(_clockTimer, activity.Clock);
         SetTimerState(_systemStatusTimer, activity.SystemStatus);
         SetTimerState(_taskSummaryTimer, activity.TaskSummary);

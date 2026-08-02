@@ -14,10 +14,9 @@ internal static class ShellRefreshActivityPolicy
 
     internal static ShellRefreshActivity GetActivity(
         bool isShellVisible,
-        bool isStatusCenterOpen,
-        bool isCalendarOpen)
+        bool isStatusCenterOpen)
         => new(
             Clock: isShellVisible,
             SystemStatus: isShellVisible && isStatusCenterOpen,
-            TaskSummary: isShellVisible && isCalendarOpen);
+            TaskSummary: isShellVisible);
 }

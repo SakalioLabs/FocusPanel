@@ -65,7 +65,7 @@ public sealed class XamlResourceContractTests
                 "ViewModels",
                 "MainViewModel.cs"));
 
-        Assert.Contains("今日概览", mainWindow);
+        Assert.Contains("Content=\"概览\"", mainWindow);
         Assert.Contains(
             "CommandParameter=\"Dashboard\"",
             mainWindow);
@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.0\"",
+            "LauncherVersion = \"0.11.1\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1302,7 +1302,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void UpdateAvailability_IsVisibleFromCompactWorkspaceEntry()
+    public void UpdateAvailability_IsVisibleFromCompactOrganizerEntry()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -1314,7 +1314,7 @@ public sealed class XamlResourceContractTests
             "Visibility=\"{Binding IsUpdateAvailable",
             mainWindow);
         Assert.Contains(
-            "x:Name=\"WorkspaceButton\"",
+            "x:Name=\"OrganizerButton\"",
             mainWindow);
         Assert.Contains("ApplyUpdateAvailability(update)", viewModel);
         Assert.Contains("ApplyUpdateAvailability(null)", viewModel);
@@ -1384,7 +1384,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_HasExactlyFiveFixedEntriesAndOneScrollableApplicationList()
+    public void CompactDock_HasSixFixedEntriesAndOneScrollableApplicationList()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
@@ -1395,7 +1395,7 @@ public sealed class XamlResourceContractTests
 
         Assert.True(dockStart >= 0 && onboardingStart > dockStart);
         string compactDock = mainWindow[dockStart..onboardingStart];
-        Assert.Equal(5, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
+        Assert.Equal(6, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
         Assert.Equal(1, compactDock.Split("ItemsSource=\"{Binding TaskbarApps}\"").Length - 1);
         int start = compactDock.IndexOf(
             "Click=\"StartButton_Click\"",
@@ -1406,8 +1406,11 @@ public sealed class XamlResourceContractTests
         int applications = compactDock.IndexOf(
             "x:Name=\"TaskbarAppsScrollViewer\"",
             StringComparison.Ordinal);
-        int focusCenter = compactDock.IndexOf(
-            "Click=\"WorkspaceButton_Click\"",
+        int organizer = compactDock.IndexOf(
+            "Click=\"OrganizerButton_Click\"",
+            StringComparison.Ordinal);
+        int tasks = compactDock.IndexOf(
+            "Click=\"TasksButton_Click\"",
             StringComparison.Ordinal);
         int statusCenter = compactDock.IndexOf(
             "Click=\"StatusCenterButton_Click\"",
@@ -1419,10 +1422,12 @@ public sealed class XamlResourceContractTests
             start >= 0
             && start < search
             && search < applications
-            && applications < focusCenter
-            && focusCenter < statusCenter
+            && applications < organizer
+            && organizer < tasks
+            && tasks < statusCenter
             && statusCenter < time);
-        Assert.Contains("Click=\"WorkspaceButton_Click\"", compactDock);
+        Assert.Contains("Click=\"OrganizerButton_Click\"", compactDock);
+        Assert.Contains("Click=\"TasksButton_Click\"", compactDock);
         Assert.Contains("Click=\"StatusCenterButton_Click\"", compactDock);
         Assert.DoesNotContain(
             "x:Name=\"TaskViewButton\"",
@@ -1434,7 +1439,10 @@ public sealed class XamlResourceContractTests
             "x:Name=\"StartButton\"",
             compactDock);
         Assert.Contains(
-            "x:Name=\"WorkspaceButton\"",
+            "x:Name=\"OrganizerButton\"",
+            compactDock);
+        Assert.Contains(
+            "x:Name=\"TasksButton\"",
             compactDock);
         Assert.Contains(
             "x:Name=\"StatusCenterButton\"",
@@ -1485,13 +1493,14 @@ public sealed class XamlResourceContractTests
         string compactDock =
             mainWindow[dockStart..onboardingStart];
         Assert.Equal(
-            5,
+            6,
             compactDock.Split(
                 "Style=\"{StaticResource CompactLabeledEntryButton}\"",
                 StringSplitOptions.None).Length - 1);
         Assert.Contains("Text=\"开始\"", compactDock);
         Assert.Contains("Text=\"搜索\"", compactDock);
-        Assert.Contains("Text=\"工作\"", compactDock);
+        Assert.Contains("Text=\"收纳\"", compactDock);
+        Assert.Contains("Text=\"任务\"", compactDock);
         Assert.Contains("Text=\"状态\"", compactDock);
         Assert.DoesNotContain(
             "IsStartHubOpen",
@@ -1500,7 +1509,10 @@ public sealed class XamlResourceContractTests
             "Visibility=\"{Binding IsSearchOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
             compactDock);
         Assert.Contains(
-            "Visibility=\"{Binding IsSettingsOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            "Visibility=\"{Binding IsOrganizerEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding IsTasksEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
             compactDock);
         Assert.Contains(
             "Visibility=\"{Binding IsStatusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
@@ -1520,7 +1532,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void WorkspaceEntry_OpensLastWorkspaceAndOffersSingleLayerModuleMenu()
+    public void OrganizerAndTasksEntries_OpenPrimaryWorkspacesDirectly()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -1533,18 +1545,28 @@ public sealed class XamlResourceContractTests
                 root,
                 "Views",
                 "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
 
-        int focusStart = mainWindow.IndexOf(
-            "x:Name=\"WorkspaceButton\"",
+        int organizerStart = mainWindow.IndexOf(
+            "x:Name=\"OrganizerButton\"",
+            StringComparison.Ordinal);
+        int tasksStart = mainWindow.IndexOf(
+            "x:Name=\"TasksButton\"",
+            organizerStart,
             StringComparison.Ordinal);
         int statusStart = mainWindow.IndexOf(
             "x:Name=\"StatusCenterButton\"",
-            focusStart,
+            tasksStart,
             StringComparison.Ordinal);
-        Assert.True(focusStart >= 0);
-        Assert.True(statusStart > focusStart);
-        string focusEntry = mainWindow[
-            focusStart..statusStart];
+        Assert.True(organizerStart >= 0);
+        Assert.True(tasksStart > organizerStart);
+        Assert.True(statusStart > tasksStart);
+        string primaryEntries = mainWindow[
+            organizerStart..statusStart];
 
         Assert.DoesNotContain(
             "<!-- Focus center -->",
@@ -1569,51 +1591,53 @@ public sealed class XamlResourceContractTests
                 mainWindow);
         }
 
+        Assert.Contains("Text=\"收纳\"", primaryEntries);
+        Assert.Contains("Text=\"任务\"", primaryEntries);
         Assert.Contains(
-            "打开最近工作区：{0}",
-            focusEntry);
+            "AutomationProperties.Name=\"桌面收纳\"",
+            primaryEntries);
         Assert.Contains(
-            "AutomationProperties.HelpText=\"按 Enter 直接打开最近工作区",
-            focusEntry);
+            "AutomationProperties.Name=\"{Binding TasksEntryAutomationName}\"",
+            primaryEntries);
         Assert.Contains(
-            "Style=\"{StaticResource FocusContextMenu}\"",
-            focusEntry);
+            "Visibility=\"{Binding HasOpenTasks, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            primaryEntries);
         Assert.Contains(
-            "Opened=\"TransientContextMenu_Opened\"",
-            focusEntry);
-        Assert.Contains(
-            "Closed=\"TransientContextMenu_Closed\"",
-            focusEntry);
-        Assert.Contains(
-            "Header=\"打开上次使用的工作区\"",
-            focusEntry);
-        foreach (string header in new[]
-                 {
-                     "今日概览",
-                     "桌面收纳",
-                     "任务",
-                     "番茄钟",
-                     "AI 助手",
-                     "设置"
-                 })
-        {
-            Assert.Contains(
-                $"Header=\"{header}\"",
-                focusEntry);
-        }
-
+            "Text=\"{Binding OpenTaskCountBadgeText}\"",
+            primaryEntries);
         Assert.DoesNotContain(
-            "FocusEntryPolicy.FromLeftClick(",
-            codeBehind);
+            "Header=\"打开上次使用的工作区\"",
+            primaryEntries);
         Assert.Contains(
-            "=> OpenFocusWorkspace(\n            _viewModel.LastWorkspace)",
+            "OpenFocusWorkspace(\"Files\")",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "OpenFocusWorkspace(\"Tasks\")",
             codeBehind.Replace("\r\n", "\n"));
         Assert.Contains(
             "_viewModel.NavigateCommand.Execute(",
             codeBehind);
-        Assert.Contains(
-            "WorkspaceSettingsMenuItem_Click(",
+        Assert.DoesNotContain(
+            "WorkspaceButton_Click(",
             codeBehind);
+        Assert.DoesNotContain(
+            "WorkspaceShortcutMenuItem_Click(",
+            codeBehind);
+        Assert.Contains(
+            "public bool HasOpenTasks",
+            viewModel);
+        Assert.Contains(
+            "public string OpenTaskCountBadgeText",
+            viewModel);
+        Assert.Contains(
+            "public string TasksEntryAutomationName",
+            viewModel);
+        Assert.Contains(
+            "public bool IsOrganizerEntryActive",
+            viewModel);
+        Assert.Contains(
+            "public bool IsTasksEntryActive",
+            viewModel);
     }
 
     [Fact]
@@ -2037,7 +2061,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
 
         Assert.Contains(
-            "x:Name=\"WorkspaceButton\"",
+            "x:Name=\"OrganizerButton\"",
+            mainWindow);
+        Assert.Contains(
+            "x:Name=\"TasksButton\"",
             mainWindow);
         Assert.Contains(
             "x:Name=\"StatusCenterButton\"",
@@ -2384,10 +2411,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            5,
+            4,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            5,
+            4,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -3306,7 +3333,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            5,
+            4,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);

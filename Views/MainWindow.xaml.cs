@@ -820,28 +820,15 @@ public partial class MainWindow :
         e.Handled = true;
     }
 
-    private void WorkspaceButton_Click(object sender, RoutedEventArgs e)
-        => OpenFocusWorkspace(
-            _viewModel.LastWorkspace);
-
-    private void WorkspaceLastMenuItem_Click(
+    private void OrganizerButton_Click(
         object sender,
         RoutedEventArgs e) =>
-        OpenFocusWorkspace(
-            _viewModel.LastWorkspace);
+        OpenFocusWorkspace("Files");
 
-    private void WorkspaceShortcutMenuItem_Click(
+    private void TasksButton_Click(
         object sender,
-        RoutedEventArgs e)
-    {
-        if (sender is MenuItem
-            {
-                Tag: string destination
-            })
-        {
-            OpenFocusWorkspace(destination);
-        }
-    }
+        RoutedEventArgs e) =>
+        OpenFocusWorkspace("Tasks");
 
     private void OpenFocusWorkspace(
         string destination)
@@ -849,19 +836,6 @@ public partial class MainWindow :
         ExpandSidebar();
         _viewModel.NavigateCommand.Execute(
             destination);
-    }
-
-    private void WorkspaceSettingsMenuItem_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        ExpandSidebar();
-        CloseOverlayPanels();
-        _viewModel.ToggleSettingsCommand.Execute(null);
-        QueueOverlayFocus(
-            WorkspaceButton,
-            SettingsEnableReplacementButton,
-            () => _viewModel.IsSettingsOpen);
     }
 
     private void StatusCenterButton_Click(object sender, RoutedEventArgs e)
@@ -2466,7 +2440,7 @@ public partial class MainWindow :
         ExpandSidebar();
         _viewModel.ToggleSettingsCommand.Execute(null);
         QueueOverlayFocus(
-            WorkspaceButton,
+            OrganizerButton,
             SettingsEnableReplacementButton,
             () => _viewModel.IsSettingsOpen);
     }
