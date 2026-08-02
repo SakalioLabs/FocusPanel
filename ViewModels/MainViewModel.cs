@@ -196,6 +196,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isStatusCenterOpen;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsDashboardWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsFilesWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsTasksWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsPomodoroWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsAiWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsSettingsWorkspaceActive))]
     private bool isSettingsOpen;
 
     [ObservableProperty]
@@ -231,6 +243,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         nameof(IsOrganizerEntryActive))]
     [NotifyPropertyChangedFor(
         nameof(IsTasksEntryActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsDashboardWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsFilesWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsTasksWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsPomodoroWorkspaceActive))]
+    [NotifyPropertyChangedFor(
+        nameof(IsAiWorkspaceActive))]
     private string lastWorkspace = "Files";
 
     [ObservableProperty]
@@ -782,11 +804,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
             LastWorkspace,
             "Tasks",
             StringComparison.Ordinal);
+    public bool IsDashboardWorkspaceActive =>
+        GetWorkspaceNavigationState().Dashboard;
+    public bool IsFilesWorkspaceActive =>
+        GetWorkspaceNavigationState().Files;
+    public bool IsTasksWorkspaceActive =>
+        GetWorkspaceNavigationState().Tasks;
+    public bool IsPomodoroWorkspaceActive =>
+        GetWorkspaceNavigationState().Pomodoro;
+    public bool IsAiWorkspaceActive =>
+        GetWorkspaceNavigationState().Ai;
+    public bool IsSettingsWorkspaceActive =>
+        GetWorkspaceNavigationState().Settings;
 
     private CompactTaskEntryPresentation
         GetTaskEntryPresentation() =>
         CompactTaskEntryPresentationComposer
             .Compose(OpenTaskCount);
+
+    private WorkspaceNavigationState
+        GetWorkspaceNavigationState() =>
+        WorkspaceNavigationStateComposer.Compose(
+            LastWorkspace,
+            IsSettingsOpen);
 
     public string WorkspacePinActionText =>
         IsWorkspacePinned

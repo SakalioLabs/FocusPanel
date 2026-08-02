@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="390" viewBox="0 0 1080 390" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 工作区唯一选中导航</title>
+  <desc id="desc">六个一级入口共用单层分段导航，桌面收纳处于选中态；打开设置时设置成为唯一选中项。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081220"/>
+      <stop offset="1" stop-color="#172a49"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f8cff"/>
+      <stop offset="1" stop-color="#8664ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="170%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".48"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="390" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="26" font-weight="700">当前位置必须一眼可见</text>
+  <text x="50" y="90" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">同一组入口只保留一个当前态；设置打开时不会与背后的工作区同时高亮</text>
+
+  <g transform="translate(50 124)" filter="url(#shadow)">
+    <rect width="980" height="108" rx="24" fill="#182642" stroke="#385078"/>
+    <text x="24" y="30" fill="#8fa4c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">桌面收纳工作区</text>
+    <g transform="translate(24 44)" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" font-weight="650">
+      <rect width="142" height="44" rx="12" fill="transparent" stroke="transparent"/><text x="71" y="28" text-anchor="middle" fill="#9fb1d1">概览</text>
+      <rect x="150" width="142" height="44" rx="12" fill="#243b65" stroke="#6998f7"/><rect x="172" y="39" width="98" height="3" rx="2" fill="url(#accent)"/><text x="221" y="28" text-anchor="middle" fill="#f4f7ff">桌面收纳</text>
+      <rect x="300" width="142" height="44" rx="12" fill="transparent" stroke="transparent"/><text x="371" y="28" text-anchor="middle" fill="#9fb1d1">任务</text>
+      <rect x="450" width="142" height="44" rx="12" fill="transparent" stroke="transparent"/><text x="521" y="28" text-anchor="middle" fill="#9fb1d1">番茄钟</text>
+      <rect x="600" width="142" height="44" rx="12" fill="transparent" stroke="transparent"/><text x="671" y="28" text-anchor="middle" fill="#9fb1d1">AI 助手</text>
+      <rect x="750" width="142" height="44" rx="12" fill="transparent" stroke="transparent"/><text x="821" y="28" text-anchor="middle" fill="#9fb1d1">设置</text>
+    </g>
+  </g>
+
+  <path d="M510 254v34" stroke="#6f88b2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M501 276l9 12 9-12" fill="none" stroke="#6f88b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="535" y="278" fill="#8fa4c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">打开设置覆盖层</text>
+
+  <g transform="translate(216 306)" filter="url(#shadow)" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" font-weight="650">
+    <rect width="648" height="54" rx="18" fill="#182642" stroke="#385078"/>
+    <text x="60" y="33" text-anchor="middle" fill="#748aaf">概览</text>
+    <text x="160" y="33" text-anchor="middle" fill="#748aaf">桌面收纳</text>
+    <text x="260" y="33" text-anchor="middle" fill="#748aaf">任务</text>
+    <text x="360" y="33" text-anchor="middle" fill="#748aaf">番茄钟</text>
+    <text x="460" y="33" text-anchor="middle" fill="#748aaf">AI 助手</text>
+    <rect x="532" y="5" width="108" height="44" rx="12" fill="#243b65" stroke="#6998f7"/>
+    <rect x="548" y="44" width="76" height="3" rx="2" fill="url(#accent)"/>
+    <text x="586" y="33" text-anchor="middle" fill="#f4f7ff">设置</text>
+  </g>
+</svg>

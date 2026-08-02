@@ -166,18 +166,47 @@
                         </Grid>
                         <UniformGrid Grid.Row="1" Columns="6"
                                      AutomationProperties.Name="主要功能快捷入口">
-                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
-                                    Content="概览" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
-                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
-                                    Content="桌面收纳" Command="{Binding NavigateCommand}" CommandParameter="Files"/>
-                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
-                                    Content="任务" Command="{Binding NavigateCommand}" CommandParameter="Tasks"/>
-                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
-                                    Content="番茄钟" Command="{Binding NavigateCommand}" CommandParameter="Pomodoro"/>
-                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
-                                    Content="AI 助手" Command="{Binding NavigateCommand}" CommandParameter="AI"/>
-                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
-                                    Content="设置" Click="SettingsMenuItem_Click"/>
+                            <RadioButton Margin="2" Height="40"
+                                         GroupName="WorkspaceNavigation"
+                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                         Content="概览"
+                                         IsChecked="{Binding IsDashboardWorkspaceActive, Mode=OneWay}"
+                                         Command="{Binding NavigateCommand}"
+                                         CommandParameter="Dashboard"/>
+                            <RadioButton Margin="2" Height="40"
+                                         GroupName="WorkspaceNavigation"
+                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                         Content="桌面收纳"
+                                         IsChecked="{Binding IsFilesWorkspaceActive, Mode=OneWay}"
+                                         Command="{Binding NavigateCommand}"
+                                         CommandParameter="Files"/>
+                            <RadioButton Margin="2" Height="40"
+                                         GroupName="WorkspaceNavigation"
+                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                         Content="任务"
+                                         IsChecked="{Binding IsTasksWorkspaceActive, Mode=OneWay}"
+                                         Command="{Binding NavigateCommand}"
+                                         CommandParameter="Tasks"/>
+                            <RadioButton Margin="2" Height="40"
+                                         GroupName="WorkspaceNavigation"
+                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                         Content="番茄钟"
+                                         IsChecked="{Binding IsPomodoroWorkspaceActive, Mode=OneWay}"
+                                         Command="{Binding NavigateCommand}"
+                                         CommandParameter="Pomodoro"/>
+                            <RadioButton Margin="2" Height="40"
+                                         GroupName="WorkspaceNavigation"
+                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                         Content="AI 助手"
+                                         IsChecked="{Binding IsAiWorkspaceActive, Mode=OneWay}"
+                                         Command="{Binding NavigateCommand}"
+                                         CommandParameter="AI"/>
+                            <RadioButton Margin="2" Height="40"
+                                         GroupName="WorkspaceNavigation"
+                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                         Content="设置"
+                                         IsChecked="{Binding IsSettingsWorkspaceActive, Mode=OneWay}"
+                                         Click="SettingsMenuItem_Click"/>
                         </UniformGrid>
                     </Grid>
 

@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.1\"",
+            "LauncherVersion = \"0.11.2\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1638,6 +1638,59 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "public bool IsTasksEntryActive",
             viewModel);
+    }
+
+    [Fact]
+    public void WorkspaceNavigation_UsesOneSegmentedSelectionGroup()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        int start = mainWindow.IndexOf(
+            "AutomationProperties.Name=\"主要功能快捷入口\"",
+            StringComparison.Ordinal);
+        int end = mainWindow.IndexOf(
+            "</UniformGrid>",
+            start,
+            StringComparison.Ordinal);
+
+        Assert.True(start >= 0 && end > start);
+        string navigation = mainWindow[start..end];
+        Assert.Equal(
+            6,
+            navigation.Split(
+                "<RadioButton",
+                StringSplitOptions.None).Length - 1);
+        Assert.Equal(
+            6,
+            navigation.Split(
+                "GroupName=\"WorkspaceNavigation\"",
+                StringSplitOptions.None).Length - 1);
+        Assert.Equal(
+            6,
+            navigation.Split(
+                "Style=\"{StaticResource FocusSegmentRadioButton}\"",
+                StringSplitOptions.None).Length - 1);
+        foreach (string state in new[]
+                 {
+                     "IsDashboardWorkspaceActive",
+                     "IsFilesWorkspaceActive",
+                     "IsTasksWorkspaceActive",
+                     "IsPomodoroWorkspaceActive",
+                     "IsAiWorkspaceActive",
+                     "IsSettingsWorkspaceActive"
+                 })
+        {
+            Assert.Contains(
+                $"IsChecked=\"{{Binding {state}, Mode=OneWay}}\"",
+                navigation);
+        }
+        Assert.DoesNotContain(
+            "FocusSecondaryButton",
+            navigation);
     }
 
     [Fact]
