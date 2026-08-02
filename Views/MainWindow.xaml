@@ -1626,8 +1626,34 @@
                                     Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="FocusCenterButton_Click"
-                                    AutomationProperties.Name="Focus 中心"
-                                    ToolTip="Focus 中心">
+                                    AutomationProperties.Name="Focus 中心与快捷工作区"
+                                    AutomationProperties.HelpText="按 Enter 打开 Focus 中心，按 Shift+Enter 直达上次使用的工作区，按 Shift+F10 选择桌面收纳、任务、番茄钟、AI 助手或设置"
+                                    ToolTip="Focus 中心 · Shift+左键直达上次工作区 · 右键选择功能">
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource FocusContextMenu}"
+                                                 Opened="TransientContextMenu_Opened"
+                                                 Closed="TransientContextMenu_Closed">
+                                        <MenuItem Header="打开上次使用的工作区"
+                                                  InputGestureText="Shift+Enter"
+                                                  Click="FocusLastWorkspaceMenuItem_Click"/>
+                                        <Separator/>
+                                        <MenuItem Header="桌面收纳"
+                                                  Tag="Files"
+                                                  Click="FocusWorkspaceMenuItem_Click"/>
+                                        <MenuItem Header="任务"
+                                                  Tag="Tasks"
+                                                  Click="FocusWorkspaceMenuItem_Click"/>
+                                        <MenuItem Header="番茄钟"
+                                                  Tag="Pomodoro"
+                                                  Click="FocusWorkspaceMenuItem_Click"/>
+                                        <MenuItem Header="AI 助手"
+                                                  Tag="AI"
+                                                  Click="FocusWorkspaceMenuItem_Click"/>
+                                        <Separator/>
+                                        <MenuItem Header="设置"
+                                                  Click="FocusSettingsMenuItem_Click"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
                                 <Grid Width="48" Height="48">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"

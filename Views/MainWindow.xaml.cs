@@ -873,6 +873,18 @@ public partial class MainWindow :
 
     private void FocusCenterButton_Click(object sender, RoutedEventArgs e)
     {
+        FocusEntryAction action =
+            FocusEntryPolicy.FromLeftClick(
+                Keyboard.Modifiers.HasFlag(
+                    ModifierKeys.Shift));
+        if (action
+            == FocusEntryAction.OpenLastWorkspace)
+        {
+            OpenFocusWorkspace(
+                _viewModel.LastWorkspace);
+            return;
+        }
+
         ToggleCompactOverlay(
             () => _viewModel.IsFocusCenterOpen
                 || _viewModel.IsSettingsOpen,
@@ -882,6 +894,46 @@ public partial class MainWindow :
             FocusCenterLastWorkspaceButton,
             isOpenAfterToggle:
                 () => _viewModel.IsFocusCenterOpen);
+    }
+
+    private void FocusLastWorkspaceMenuItem_Click(
+        object sender,
+        RoutedEventArgs e) =>
+        OpenFocusWorkspace(
+            _viewModel.LastWorkspace);
+
+    private void FocusWorkspaceMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is MenuItem
+            {
+                Tag: string destination
+            })
+        {
+            OpenFocusWorkspace(destination);
+        }
+    }
+
+    private void OpenFocusWorkspace(
+        string destination)
+    {
+        ExpandSidebar();
+        _viewModel.NavigateCommand.Execute(
+            destination);
+    }
+
+    private void FocusSettingsMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        CloseOverlayPanels();
+        _viewModel.ToggleSettingsCommand.Execute(null);
+        QueueOverlayFocus(
+            FocusCenterButton,
+            SettingsEnableReplacementButton,
+            () => _viewModel.IsSettingsOpen);
     }
 
     private void StatusCenterButton_Click(object sender, RoutedEventArgs e)

@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.91\"",
+            "LauncherVersion = \"0.10.92\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1459,6 +1459,85 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "IsStatusCenterOpen\n        || IsPowerMenuOpen",
             viewModel.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public void FocusEntry_OffersFastLastWorkspaceAndSingleLayerModuleMenu()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        int focusStart = mainWindow.IndexOf(
+            "x:Name=\"FocusCenterButton\"",
+            StringComparison.Ordinal);
+        int statusStart = mainWindow.IndexOf(
+            "x:Name=\"StatusCenterButton\"",
+            focusStart,
+            StringComparison.Ordinal);
+        Assert.True(focusStart >= 0);
+        Assert.True(statusStart > focusStart);
+        string focusEntry = mainWindow[
+            focusStart..statusStart];
+
+        Assert.Contains(
+            "Focus 中心 · Shift+左键直达上次工作区 · 右键选择功能",
+            focusEntry);
+        Assert.Contains(
+            "AutomationProperties.HelpText=\"按 Enter 打开 Focus 中心",
+            focusEntry);
+        Assert.Contains(
+            "Style=\"{StaticResource FocusContextMenu}\"",
+            focusEntry);
+        Assert.Contains(
+            "Opened=\"TransientContextMenu_Opened\"",
+            focusEntry);
+        Assert.Contains(
+            "Closed=\"TransientContextMenu_Closed\"",
+            focusEntry);
+        Assert.Contains(
+            "Header=\"打开上次使用的工作区\"",
+            focusEntry);
+        Assert.Contains(
+            "InputGestureText=\"Shift+Enter\"",
+            focusEntry);
+        foreach (string header in new[]
+                 {
+                     "桌面收纳",
+                     "任务",
+                     "番茄钟",
+                     "AI 助手",
+                     "设置"
+                 })
+        {
+            Assert.Contains(
+                $"Header=\"{header}\"",
+                focusEntry);
+        }
+
+        Assert.Contains(
+            "FocusEntryPolicy.FromLeftClick(",
+            codeBehind);
+        Assert.Contains(
+            "FocusEntryAction.OpenLastWorkspace",
+            codeBehind);
+        Assert.Contains(
+            "OpenFocusWorkspace(\n                _viewModel.LastWorkspace)",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "_viewModel.NavigateCommand.Execute(",
+            codeBehind);
+        Assert.Contains(
+            "FocusSettingsMenuItem_Click(",
+            codeBehind);
     }
 
     [Fact]
@@ -2197,10 +2276,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -3083,7 +3162,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);
