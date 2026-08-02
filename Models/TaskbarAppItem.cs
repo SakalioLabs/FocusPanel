@@ -21,7 +21,9 @@ public sealed class TaskbarAppItem : ObservableObject
     private WindowTaskItem? _runningTask;
     private TaskbarDropPlacement? _dropPlacement;
     private bool _isFileDropTarget;
-    private int? _shortcutSlotNumber;
+    private TaskbarSlotShortcutState
+        _shortcutState =
+            TaskbarSlotShortcutState.None;
 
     public string IdentityKey { get; init; } = string.Empty;
     public string DisplayName
@@ -126,15 +128,33 @@ public sealed class TaskbarAppItem : ObservableObject
                     ? "已固定 · 未运行"
                     : "未运行";
     public string ShortcutGestureText =>
-        _shortcutSlotNumber.HasValue
-            ? $"Ctrl+Alt+{_shortcutSlotNumber.Value}"
+        !_shortcutState.IsAvailable
+            ? string.Empty
+            : _shortcutState.CanActivateOrLaunch
+                ? $"Ctrl+Alt+{_shortcutState.SlotNumber}"
+                : $"Ctrl+Alt+Shift+{_shortcutState.SlotNumber}";
+    public string ShortcutSlotText =>
+        _shortcutState.IsAvailable
+            ? _shortcutState.SlotNumber
+                ?.ToString()
+              ?? string.Empty
             : string.Empty;
+    public string ShortcutDescription =>
+        !_shortcutState.IsAvailable
+            ? string.Empty
+            : _shortcutState.CanActivateOrLaunch
+                && _shortcutState.CanLaunchNewInstance
+                ? $"Ctrl+Alt+{_shortcutState.SlotNumber} 启动或切换，"
+                  + "加 Shift 启动新实例"
+                : _shortcutState.CanActivateOrLaunch
+                    ? $"Ctrl+Alt+{_shortcutState.SlotNumber} 启动或切换"
+                    : $"Ctrl+Alt+Shift+{_shortcutState.SlotNumber} 启动新实例";
     public bool HasShortcutGesture =>
-        _shortcutSlotNumber.HasValue;
+        _shortcutState.IsAvailable;
     public string AccessibleName =>
         HasShortcutGesture
             ? $"{DisplayName}，{StatusSummary}，"
-              + $"快速键 {ShortcutGestureText}"
+              + $"快速键 {ShortcutDescription}"
             : $"{DisplayName}，{StatusSummary}";
     public string InteractionHint
     {
@@ -157,8 +177,7 @@ public sealed class TaskbarAppItem : ObservableObject
                 ? $"{interaction}；Alt+↑/↓调整固定顺序"
                 : interaction;
             return HasShortcutGesture
-                ? $"{hint}；{ShortcutGestureText} 直接启动或切换，"
-                  + "加 Shift 启动新实例"
+                ? $"{hint}；{ShortcutDescription}"
                 : hint;
         }
     }
@@ -171,19 +190,21 @@ public sealed class TaskbarAppItem : ObservableObject
     public bool IsFileDropTarget =>
         _isFileDropTarget;
 
-    internal void SetShortcutSlot(
-        int? slotNumber)
+    internal void SetShortcutState(
+        TaskbarSlotShortcutState state)
     {
-        if (_shortcutSlotNumber
-            == slotNumber)
+        if (_shortcutState == state)
         {
             return;
         }
 
-        _shortcutSlotNumber =
-            slotNumber;
+        _shortcutState = state;
         OnPropertyChanged(
             nameof(ShortcutGestureText));
+        OnPropertyChanged(
+            nameof(ShortcutSlotText));
+        OnPropertyChanged(
+            nameof(ShortcutDescription));
         OnPropertyChanged(
             nameof(HasShortcutGesture));
         OnPropertyChanged(

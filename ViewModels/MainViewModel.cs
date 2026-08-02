@@ -85,6 +85,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private DashboardViewModel? _dashboardViewModel;
     private TasksViewModel? _tasksViewModel;
     private PomodoroViewModel? _pomodoroViewModel;
+    private TaskbarSlotHotkeyRegistration
+        _taskbarSlotHotkeyRegistration =
+            new(
+                Array.Empty<
+                    TaskbarSlotHotkeyBinding>());
     private FileOrganizerViewModel? _fileOrganizerViewModel;
     private AIAssistantViewModel? _aiAssistantViewModel;
     private bool _updatingAudioState;
@@ -816,16 +821,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         TaskbarSlotHotkeyRegistration
             registration)
     {
+        _taskbarSlotHotkeyRegistration =
+            registration;
         TaskbarSlotShortcutText =
             registration.DisplayText;
+        ApplyTaskbarShortcutStates();
     }
 
     internal void SetTaskbarSlotShortcutDisabled()
     {
+        _taskbarSlotHotkeyRegistration =
+            new TaskbarSlotHotkeyRegistration(
+                Array.Empty<
+                    TaskbarSlotHotkeyBinding>());
         TaskbarSlotShortcutText =
             EnableTaskbarSlotHotkeys
                 ? "快速应用快捷键将在任务栏接管成功后注册"
                 : "九槽位全局快速键已关闭";
+        ApplyTaskbarShortcutStates();
     }
 
     public void RefreshDisplayTargetOptions()
@@ -2622,18 +2635,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         TaskbarAppCollectionSynchronizer.Synchronize(
             TaskbarApps,
             _taskbarComposer.Compose(_appCatalog.GetPinned(), _windowTracker.GetSnapshot()));
-        for (int index = 0;
-             index < TaskbarApps.Count;
-             index++)
-        {
-            TaskbarApps[index]
-                .SetShortcutSlot(
-                    index
-                        < TaskbarSlotHotkeyPolicy
-                            .SlotCount
-                        ? index + 1
-                        : null);
-        }
+        ApplyTaskbarShortcutStates();
         ActiveTaskbarIdentity =
             TaskbarApps.FirstOrDefault(
                 item => item.IsActive)
@@ -2645,6 +2647,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 .ToArray());
         OnPropertyChanged(
             nameof(HasStartHubApps));
+    }
+
+    private void ApplyTaskbarShortcutStates()
+    {
+        for (int index = 0;
+             index < TaskbarApps.Count;
+             index++)
+        {
+            TaskbarAppItem item =
+                TaskbarApps[index];
+            TaskbarSlotShortcutState state =
+                _taskbarSlotHotkeyRegistration
+                    .GetShortcutState(index);
+            if (!item.CanLaunchNewInstance
+                && state.CanLaunchNewInstance)
+            {
+                state = state with
+                {
+                    CanLaunchNewInstance =
+                        false
+                };
+            }
+
+            item.SetShortcutState(state);
+        }
     }
 
     private void RefreshSearchResults()

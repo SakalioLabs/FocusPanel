@@ -1448,6 +1448,23 @@
                                                         <controls:AppIconPresenter
                                                             Icon="{Binding Icon}"
                                                             DisplayName="{Binding DisplayName}"/>
+                                                        <Border Width="16"
+                                                                Height="16"
+                                                                Margin="-3,-3,0,0"
+                                                                HorizontalAlignment="Left"
+                                                                VerticalAlignment="Top"
+                                                                CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                                                Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                                                BorderBrush="{DynamicResource FocusStrokeBrush}"
+                                                                BorderThickness="1"
+                                                                IsHitTestVisible="False"
+                                                                Visibility="{Binding HasShortcutGesture, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                            <TextBlock Text="{Binding ShortcutSlotText}"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"
+                                                                       Style="{StaticResource FocusMetaText}"
+                                                                       FontWeight="SemiBold"/>
+                                                        </Border>
                                                         <Border MinWidth="16"
                                                                 Height="16"
                                                                 Padding="2,0"

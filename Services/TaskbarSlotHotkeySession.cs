@@ -28,6 +28,40 @@ internal readonly record struct
             TaskbarSlotHotkeyBinding>
             Bindings)
 {
+    internal TaskbarSlotShortcutState
+        GetShortcutState(int slotIndex)
+    {
+        if (slotIndex < 0
+            || slotIndex
+                >= TaskbarSlotHotkeyPolicy
+                    .SlotCount)
+        {
+            return TaskbarSlotShortcutState
+                .None;
+        }
+
+        bool canActivateOrLaunch =
+            Bindings.Any(binding =>
+                binding.SlotIndex == slotIndex
+                && binding.Action
+                == TaskbarSlotHotkeyAction
+                    .ActivateOrLaunch);
+        bool canLaunchNewInstance =
+            Bindings.Any(binding =>
+                binding.SlotIndex == slotIndex
+                && binding.Action
+                == TaskbarSlotHotkeyAction
+                    .LaunchNewInstance);
+        return canActivateOrLaunch
+               || canLaunchNewInstance
+            ? new TaskbarSlotShortcutState(
+                slotIndex + 1,
+                canActivateOrLaunch,
+                canLaunchNewInstance)
+            : TaskbarSlotShortcutState
+                .None;
+    }
+
     internal int ActivationCount =>
         Bindings.Count(binding =>
             binding.Action
@@ -133,6 +167,25 @@ internal readonly record struct
         start == end
             ? start.ToString()
             : $"{start}–{end}";
+}
+
+internal readonly record struct
+    TaskbarSlotShortcutState(
+        int? SlotNumber,
+        bool CanActivateOrLaunch,
+        bool CanLaunchNewInstance)
+{
+    internal static TaskbarSlotShortcutState
+        None { get; } =
+        new(
+            null,
+            false,
+            false);
+
+    internal bool IsAvailable =>
+        SlotNumber.HasValue
+        && (CanActivateOrLaunch
+            || CanLaunchNewInstance);
 }
 
 internal enum TaskbarSlotInvocationKind

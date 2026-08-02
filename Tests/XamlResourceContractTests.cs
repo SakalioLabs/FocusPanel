@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.86\"",
+            "LauncherVersion = \"0.10.87\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1709,6 +1709,21 @@ public sealed class XamlResourceContractTests
             "TaskbarSlotHotkeysKey",
             viewModel);
         Assert.Contains(
+            "SetShortcutState(",
+            viewModel);
+        Assert.Contains(
+            "Text=\"{Binding ShortcutSlotText}\"",
+            mainWindow);
+        Assert.Contains(
+            "Visibility=\"{Binding HasShortcutGesture, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            mainWindow);
+        Assert.Contains(
+            ".GetShortcutState(index)",
+            viewModel);
+        Assert.Contains(
+            "ApplyTaskbarShortcutStates();",
+            viewModel);
+        Assert.DoesNotContain(
             "SetShortcutSlot(",
             viewModel);
     }

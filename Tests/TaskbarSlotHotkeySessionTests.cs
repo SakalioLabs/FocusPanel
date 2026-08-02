@@ -264,4 +264,58 @@ public sealed class
             "其他程序占用",
             registration.DisplayText);
     }
+
+    [Fact]
+    public void ShortcutState_ReflectsOnlyRegisteredActionsPerSlot()
+    {
+        TaskbarSlotHotkeyBinding activation =
+            TaskbarSlotHotkeyPolicy
+                .Bindings
+                .Single(binding =>
+                    binding.SlotIndex == 2
+                    && binding.Action
+                    == TaskbarSlotHotkeyAction
+                        .ActivateOrLaunch);
+        TaskbarSlotHotkeyBinding newInstance =
+            TaskbarSlotHotkeyPolicy
+                .Bindings
+                .Single(binding =>
+                    binding.SlotIndex == 4
+                    && binding.Action
+                    == TaskbarSlotHotkeyAction
+                        .LaunchNewInstance);
+        var registration =
+            new TaskbarSlotHotkeyRegistration(
+                new[]
+                {
+                    activation,
+                    newInstance
+                });
+
+        TaskbarSlotShortcutState activationState =
+            registration.GetShortcutState(2);
+        Assert.Equal(3, activationState.SlotNumber);
+        Assert.True(
+            activationState.CanActivateOrLaunch);
+        Assert.False(
+            activationState.CanLaunchNewInstance);
+
+        TaskbarSlotShortcutState newInstanceState =
+            registration.GetShortcutState(4);
+        Assert.Equal(5, newInstanceState.SlotNumber);
+        Assert.False(
+            newInstanceState.CanActivateOrLaunch);
+        Assert.True(
+            newInstanceState.CanLaunchNewInstance);
+
+        Assert.Equal(
+            TaskbarSlotShortcutState.None,
+            registration.GetShortcutState(1));
+        Assert.Equal(
+            TaskbarSlotShortcutState.None,
+            registration.GetShortcutState(-1));
+        Assert.Equal(
+            TaskbarSlotShortcutState.None,
+            registration.GetShortcutState(9));
+    }
 }

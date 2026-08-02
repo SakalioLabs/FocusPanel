@@ -4,10 +4,10 @@
     <OutputType>WinExe</OutputType>
     <StartupObject>FocusPanel.Program</StartupObject>
     <TargetFramework>net7.0-windows10.0.22621.0</TargetFramework>
-    <Version>0.10.86</Version>
-    <AssemblyVersion>0.10.86.0</AssemblyVersion>
-    <FileVersion>0.10.86.0</FileVersion>
-    <InformationalVersion>0.10.86</InformationalVersion>
+    <Version>0.10.87</Version>
+    <AssemblyVersion>0.10.87.0</AssemblyVersion>
+    <FileVersion>0.10.87.0</FileVersion>
+    <InformationalVersion>0.10.87</InformationalVersion>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>

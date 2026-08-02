@@ -11,11 +11,11 @@
   </defs>
   <rect width="1200" height="500" rx="28" fill="url(#background)"/>
   <g font-family="Microsoft YaHei UI,Segoe UI,sans-serif">
-    <text x="54" y="62" fill="#f8fafc" font-size="28" font-weight="700">九槽位快速应用 · 全局直达 · 冲突不抢占</text>
-    <text x="54" y="92" fill="#94a3b8" font-size="14">设置中明确开启且接管成功后注册；关闭选项、恢复任务栏、更新或退出前立即注销</text>
+    <text x="54" y="62" fill="#f8fafc" font-size="28" font-weight="700">九槽位快速应用 · 看得见才算可用</text>
+    <text x="54" y="92" fill="#94a3b8" font-size="14">数字角标来自本次真实注册结果；关闭、恢复或冲突时立即消失，不按列表序号猜测</text>
 
     <rect x="54" y="126" width="470" height="292" rx="24" fill="#111827" stroke="#475569"/>
-    <text x="82" y="164" fill="#e2e8f0" font-size="17" font-weight="600">统一应用栏当前顺序</text>
+    <text x="82" y="164" fill="#e2e8f0" font-size="17" font-weight="600">统一应用栏 · 左上角真实槽位角标</text>
     <g font-size="14">
       <g transform="translate(82 188)">
         <rect width="414" height="52" rx="15" fill="#1e3a8a"/>
@@ -42,7 +42,7 @@
     <text x="82" y="394" fill="#94a3b8" font-size="13">固定项优先；未固定运行项在其后保持稳定，不按前台跳动</text>
 
     <rect x="554" y="126" width="592" height="292" rx="24" fill="#111827" stroke="#475569"/>
-    <text x="582" y="164" fill="#e2e8f0" font-size="17" font-weight="600">一次按键，复用同一安全操作语义</text>
+    <text x="582" y="164" fill="#e2e8f0" font-size="17" font-weight="600">逐动作注册，提示不再笼统承诺</text>
     <g font-size="14" text-anchor="middle">
       <rect x="592" y="190" width="224" height="64" rx="17" fill="#0c4a6e"/>
       <text x="704" y="216" fill="#e0f2fe" font-weight="600">Ctrl + Alt + 数字</text>
@@ -54,7 +54,7 @@
     <path d="M704 272v34M986 272v34" stroke="url(#accent)" stroke-width="3" stroke-linecap="round"/>
     <rect x="592" y="306" width="516" height="70" rx="18" fill="#134e4a"/>
     <text x="850" y="334" text-anchor="middle" fill="#ccfbf1" font-size="15" font-weight="600">逐组合 RegisterHotKey</text>
-    <text x="850" y="358" text-anchor="middle" fill="#99f6e4" font-size="13">成功项启用 · 冲突项留给原程序 · 不使用键盘钩子</text>
+    <text x="850" y="358" text-anchor="middle" fill="#99f6e4" font-size="13">成功项显示角标 · 冲突项留给原程序 · 不使用键盘钩子</text>
     <text x="554" y="462" fill="#94a3b8" font-size="13">默认关闭以保护 AltGr 输入；Windows 原生任务栏恢复后不再持有任何槽位快捷键。</text>
   </g>
 </svg>

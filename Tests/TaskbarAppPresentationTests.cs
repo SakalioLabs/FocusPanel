@@ -324,18 +324,28 @@ public sealed class TaskbarAppPresentationTests
                 changed.Add(
                     e.PropertyName);
 
-        item.SetShortcutSlot(3);
+        item.SetShortcutState(
+            new TaskbarSlotShortcutState(
+                3,
+                CanActivateOrLaunch: true,
+                CanLaunchNewInstance: true));
 
         Assert.True(
             item.HasShortcutGesture);
         Assert.Equal(
             "Ctrl+Alt+3",
             item.ShortcutGestureText);
+        Assert.Equal(
+            "3",
+            item.ShortcutSlotText);
         Assert.Contains(
             "快速键 Ctrl+Alt+3",
             item.AccessibleName);
         Assert.Contains(
-            "Ctrl+Alt+3 直接启动或切换",
+            "Ctrl+Alt+3 启动或切换",
+            item.InteractionHint);
+        Assert.Contains(
+            "加 Shift 启动新实例",
             item.InteractionHint);
         Assert.Contains(
             nameof(
@@ -343,10 +353,24 @@ public sealed class TaskbarAppPresentationTests
                     .InteractionHint),
             changed);
 
-        item.SetShortcutSlot(null);
+        item.SetShortcutState(
+            new TaskbarSlotShortcutState(
+                3,
+                CanActivateOrLaunch: true,
+                CanLaunchNewInstance: false));
+
+        Assert.DoesNotContain(
+            "加 Shift",
+            item.InteractionHint);
+
+        item.SetShortcutState(
+            TaskbarSlotShortcutState.None);
 
         Assert.False(
             item.HasShortcutGesture);
+        Assert.Equal(
+            string.Empty,
+            item.ShortcutSlotText);
         Assert.DoesNotContain(
             "Ctrl+Alt",
             item.InteractionHint);
