@@ -182,6 +182,146 @@
                         <ContentControl Content="{Binding CurrentViewModel}"/>
                     </Border>
 
+                    <!-- FocusPanel start hub -->
+                    <Border Grid.RowSpan="2"
+                            Panel.ZIndex="12"
+                            Width="500"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Stretch"
+                            Margin="0,10,14,10"
+                            Padding="22"
+                            CornerRadius="{StaticResource FocusCardCornerRadius}"
+                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                            BorderBrush="{DynamicResource FocusStrokeBrush}"
+                            BorderThickness="1"
+                            Visibility="{Binding IsStartHubOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="开始"
+                                               Style="{StaticResource FocusSectionTitleText}"/>
+                                    <TextBlock Text="固定应用与常用系统入口"
+                                               Margin="0,4,0,0"
+                                               Style="{StaticResource FocusSecondaryBodyText}"/>
+                                </StackPanel>
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Padding="14,8"
+                                        Click="StartHubAllApps_Click"
+                                        AutomationProperties.Name="搜索全部应用"
+                                        Content="全部应用"/>
+                            </Grid>
+
+                            <ScrollViewer Grid.Row="1"
+                                          Margin="0,18,0,16"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <Grid>
+                                    <ItemsControl ItemsSource="{Binding StartHubApps}"
+                                                  AutomationProperties.Name="固定应用">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Width="108"
+                                                        Height="88"
+                                                        Margin="3"
+                                                        Padding="8"
+                                                        Style="{StaticResource FocusRowButton}"
+                                                        Click="StartHubApp_Click"
+                                                        AutomationProperties.Name="{Binding AccessibleName}"
+                                                        ToolTip="{Binding InteractionHint}">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="44"/>
+                                                            <RowDefinition Height="*"/>
+                                                        </Grid.RowDefinitions>
+                                                        <Grid Width="40" Height="40">
+                                                            <controls:AppIconPresenter
+                                                                Icon="{Binding Icon}"
+                                                                DisplayName="{Binding DisplayName}"/>
+                                                            <Ellipse Width="7"
+                                                                     Height="7"
+                                                                     HorizontalAlignment="Right"
+                                                                     VerticalAlignment="Bottom"
+                                                                     Fill="{DynamicResource FocusAccentBrightBrush}"
+                                                                     Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                        </Grid>
+                                                        <TextBlock Grid.Row="1"
+                                                                   Text="{Binding DisplayName}"
+                                                                   Margin="2,5,2,0"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Style="{StaticResource FocusCaptionText}"
+                                                                   TextAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="还没有固定应用，可在全部应用中固定常用项目。"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               MaxWidth="300">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock"
+                                                   BasedOn="{StaticResource FocusSecondaryBodyText}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasStartHubApps}" Value="False">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </ScrollViewer>
+
+                            <UniformGrid Grid.Row="2" Columns="4">
+                                <Button Margin="3"
+                                        Height="48"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="资源管理器"
+                                        Command="{Binding OpenManagementToolCommand}"
+                                        CommandParameter="{x:Static services:SystemManagementTool.FileExplorer}"/>
+                                <Button Margin="3"
+                                        Height="48"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="设置"
+                                        Command="{Binding OpenManagementToolCommand}"
+                                        CommandParameter="{x:Static services:SystemManagementTool.Settings}"/>
+                                <Button Margin="3"
+                                        Height="48"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="终端"
+                                        Command="{Binding OpenManagementToolCommand}"
+                                        CommandParameter="{x:Static services:SystemManagementTool.Terminal}"/>
+                                <Button Margin="3"
+                                        Height="48"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="任务管理器"
+                                        Command="{Binding OpenManagementToolCommand}"
+                                        CommandParameter="{x:Static services:SystemManagementTool.TaskManager}"/>
+                            </UniformGrid>
+                        </Grid>
+                    </Border>
+
                     <!-- Search overlay -->
                     <Border Grid.RowSpan="2"
                             Panel.ZIndex="10"
@@ -1005,12 +1145,15 @@
                                     Tag="CompactFixedEntry"
                                     Click="StartButton_Click"
                                     AutomationProperties.Name="开始"
-                                    AutomationProperties.HelpText="按 Enter 打开开始菜单，按 Shift+F10 打开系统管理菜单"
-                                    ToolTip="开始 · 右键打开系统管理菜单">
+                                    AutomationProperties.HelpText="按 Enter 打开 FocusPanel 开始中心，按 Shift+Enter 打开 Windows 开始菜单，按 Shift+F10 打开系统管理菜单"
+                                    ToolTip="开始 · Shift+左键打开 Windows 开始菜单 · 右键打开系统管理菜单">
                                 <Button.ContextMenu>
                                     <ContextMenu Style="{StaticResource FocusContextMenu}"
                                                  Opened="TransientContextMenu_Opened"
                                                  Closed="TransientContextMenu_Closed">
+                                        <MenuItem Header="Windows 开始菜单"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenStartMenuCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <Separator/>
                                         <MenuItem Header="安装的应用"
                                                   Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{x:Static services:SystemManagementTool.InstalledApps}"/>

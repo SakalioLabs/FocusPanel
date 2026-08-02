@@ -166,6 +166,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isSearchOpen;
 
     [ObservableProperty]
+    private bool isStartHubOpen;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(AppSearchStatusText))]
     private bool isTaskSearchLoading;
@@ -631,6 +634,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<ShellSearchResult> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+    public ObservableCollection<TaskbarAppItem> StartHubApps { get; } = new();
+    public bool HasStartHubApps =>
+        StartHubApps.Count > 0;
     public ObservableCollection<
         ApplicationAudioSessionItem>
         ApplicationAudioSessions
@@ -1981,6 +1987,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void ToggleStartHub()
+    {
+        bool open = !IsStartHubOpen;
+        CloseTransientPanels();
+        IsStartHubOpen = open;
+    }
+
+    [RelayCommand]
     private void ToggleCalendar()
     {
         bool open = !IsCalendarOpen;
@@ -2624,6 +2638,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             TaskbarApps.FirstOrDefault(
                 item => item.IsActive)
             ?.IdentityKey;
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            StartHubApps,
+            TaskbarApps
+                .Where(item => item.IsPinned)
+                .ToArray());
+        OnPropertyChanged(
+            nameof(HasStartHubApps));
     }
 
     private void RefreshSearchResults()
@@ -3860,6 +3881,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void CloseTransientPanels()
     {
+        IsStartHubOpen = false;
         IsSearchOpen = false;
         IsCalendarOpen = false;
         IsFocusCenterOpen = false;

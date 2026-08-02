@@ -1056,7 +1056,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.79\"",
+            "LauncherVersion = \"0.10.80\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -2344,7 +2344,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void SearchAndTaskbar_UseTheSameNonBlankIconPresenter()
+    public void SearchStartHubAndTaskbar_UseTheSameNonBlankIconPresenter()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -2356,7 +2356,7 @@ public sealed class XamlResourceContractTests
                 "AppIconPresenter.xaml"));
 
         Assert.Equal(
-            2,
+            3,
             Regex.Matches(
                 mainWindow,
                 @"<controls:AppIconPresenter(?:\s|>)").Count);
