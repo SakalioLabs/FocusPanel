@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.88\"",
+            "LauncherVersion = \"0.10.89\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -5126,6 +5126,21 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "ShellDisplayTarget.GetOptions(",
             viewModel);
+        Assert.Contains(
+            "AutoHideDelayKey",
+            repository);
+        Assert.Contains(
+            "OnAutoHideDelayMillisecondsChanged(",
+            viewModel);
+        Assert.Contains(
+            "ItemsSource=\"{Binding AutoHideDelayOptions}\"",
+            mainXaml);
+        Assert.Contains(
+            "SelectedValue=\"{Binding AutoHideDelayMilliseconds",
+            mainXaml);
+        Assert.Contains(
+            "AutomationProperties.Name=\"鼠标离开后自动收起速度\"",
+            mainXaml);
 
         string mainWindow = File.ReadAllText(
             Path.Combine(
@@ -5150,6 +5165,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "if (!_shellStartupReady",
             mainWindow);
+        Assert.Contains(
+            "int? delayMilliseconds = null",
+            mainWindow);
+        Assert.Contains(
+            "?? _viewModel\n                .AutoHideDelayMilliseconds",
+            mainWindow.Replace("\r\n", "\n"));
     }
 
     [Fact]

@@ -267,6 +267,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ShellDisplayTarget.OutermostRightValue;
 
     [ObservableProperty]
+    private int autoHideDelayMilliseconds =
+        ShellAutoHideDelayPolicy
+            .DefaultMilliseconds;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
@@ -671,6 +676,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     } = new();
     public bool HasWifiNetworks =>
         WifiNetworks.Count > 0;
+    public IReadOnlyList<
+        ShellAutoHideDelayOption>
+        AutoHideDelayOptions =>
+            ShellAutoHideDelayPolicy.Options;
     public string WifiNetworkToggleText =>
         IsWifiNetworkBusy
             ? "正在查找 Wi‑Fi…"
@@ -920,6 +929,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             DisplayTargetMode =
                 preferenceSnapshot
                     .DisplayTargetMode;
+            AutoHideDelayMilliseconds =
+                preferenceSnapshot
+                    .AutoHideDelayMilliseconds;
             IsOnboardingVisible =
                 !preferenceSnapshot
                     .FirstRunAccepted
@@ -1130,6 +1142,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ShellPreferenceRepository
                     .DisplayTargetModeKey,
                 normalized);
+        }
+    }
+
+    partial void OnAutoHideDelayMillisecondsChanged(
+        int value)
+    {
+        int normalized =
+            ShellAutoHideDelayPolicy.Normalize(
+                value);
+        if (normalized != value)
+        {
+            AutoHideDelayMilliseconds =
+                normalized;
+            return;
+        }
+
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .AutoHideDelayKey,
+                normalized.ToString());
         }
     }
 

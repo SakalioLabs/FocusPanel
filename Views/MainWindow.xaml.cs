@@ -570,7 +570,7 @@ public partial class MainWindow :
     }
 
     private void ScheduleAutoHide(
-        int delayMilliseconds = 350,
+        int? delayMilliseconds = null,
         bool ignoreInputFocus = false)
     {
         if (_desktopDragSession.IsActive)
@@ -578,7 +578,13 @@ public partial class MainWindow :
 
         _autoHideTimer.Stop();
         _autoHideIgnoresInputFocus = ignoreInputFocus;
-        _autoHideTimer.Interval = TimeSpan.FromMilliseconds(delayMilliseconds);
+        int resolvedDelay =
+            delayMilliseconds
+            ?? _viewModel
+                .AutoHideDelayMilliseconds;
+        _autoHideTimer.Interval =
+            TimeSpan.FromMilliseconds(
+                resolvedDelay);
         _autoHideTimer.Start();
     }
 

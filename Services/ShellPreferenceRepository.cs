@@ -14,7 +14,8 @@ internal sealed record ShellPreferenceSnapshot(
     string ThemeMode,
     bool DisableHotZoneInFullscreen,
     bool EnableTaskbarSlotHotkeys,
-    string DisplayTargetMode)
+    string DisplayTargetMode,
+    int AutoHideDelayMilliseconds)
 {
     internal static ShellPreferenceSnapshot Default { get; } =
         new(
@@ -24,7 +25,9 @@ internal sealed record ShellPreferenceSnapshot(
             true,
             false,
             ShellDisplayTarget
-                .OutermostRightValue);
+                .OutermostRightValue,
+            ShellAutoHideDelayPolicy
+                .DefaultMilliseconds);
 }
 
 internal interface IShellPreferenceRepository
@@ -56,6 +59,8 @@ internal sealed class ShellPreferenceRepository
         "Shell.EnableTaskbarSlotHotkeys";
     internal const string DisplayTargetModeKey =
         "Shell.DisplayTargetMode";
+    internal const string AutoHideDelayKey =
+        "Shell.AutoHideDelayMilliseconds";
 
     private static readonly string[] Keys =
     {
@@ -64,7 +69,8 @@ internal sealed class ShellPreferenceRepository
         ThemeModeKey,
         FullscreenHotZoneKey,
         TaskbarSlotHotkeysKey,
-        DisplayTargetModeKey
+        DisplayTargetModeKey,
+        AutoHideDelayKey
     };
 
     private readonly object _sync = new();
@@ -271,7 +277,13 @@ internal sealed class ShellPreferenceRepository
                     values,
                     DisplayTargetModeKey,
                     ShellDisplayTarget
-                        .OutermostRightValue)));
+                        .OutermostRightValue)),
+            ShellAutoHideDelayPolicy.Normalize(
+                ReadInt32(
+                    values,
+                    AutoHideDelayKey,
+                    ShellAutoHideDelayPolicy
+                        .DefaultMilliseconds)));
     }
 
     private static void SaveCore(
@@ -307,7 +319,11 @@ internal sealed class ShellPreferenceRepository
                     snapshot.ThemeMode),
             DisplayTargetMode =
                 ShellDisplayTarget.NormalizeValue(
-                    snapshot.DisplayTargetMode)
+                    snapshot.DisplayTargetMode),
+            AutoHideDelayMilliseconds =
+                ShellAutoHideDelayPolicy.Normalize(
+                    snapshot
+                        .AutoHideDelayMilliseconds)
         };
 
     private static string NormalizeTheme(
@@ -326,6 +342,19 @@ internal sealed class ShellPreferenceRepository
             && bool.TryParse(
                 raw,
                 out bool value)
+            ? value
+            : fallback;
+
+    private static int ReadInt32(
+        IReadOnlyDictionary<string, string> values,
+        string key,
+        int fallback) =>
+        values.TryGetValue(
+                key,
+                out string? raw)
+            && int.TryParse(
+                raw,
+                out int value)
             ? value
             : fallback;
 

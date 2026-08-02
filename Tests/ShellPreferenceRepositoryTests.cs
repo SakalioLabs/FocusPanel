@@ -17,6 +17,12 @@ public sealed class ShellPreferenceRepositoryTests
             ShellPreferenceSnapshot
                 .Default
                 .EnableTaskbarSlotHotkeys);
+        Assert.Equal(
+            ShellAutoHideDelayPolicy
+                .DefaultMilliseconds,
+            ShellPreferenceSnapshot
+                .Default
+                .AutoHideDelayMilliseconds);
     }
 
     [Fact]
@@ -31,7 +37,8 @@ public sealed class ShellPreferenceRepositoryTests
                         "Neon",
                         false,
                         true,
-                        "Unsupported"),
+                        "Unsupported",
+                        999),
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
@@ -50,6 +57,10 @@ public sealed class ShellPreferenceRepositoryTests
             ShellDisplayTarget
                 .OutermostRightValue,
             snapshot.DisplayTargetMode);
+        Assert.Equal(
+            ShellAutoHideDelayPolicy
+                .DefaultMilliseconds,
+            snapshot.AutoHideDelayMilliseconds);
     }
 
     [Fact]
@@ -64,7 +75,8 @@ public sealed class ShellPreferenceRepositoryTests
                         "System",
                         true,
                         false,
-                        @"device:  \\.\DISPLAY2  "),
+                        @"device:  \\.\DISPLAY2  ",
+                        800),
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
@@ -73,6 +85,9 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             @"Device:\\.\DISPLAY2",
             snapshot.DisplayTargetMode);
+        Assert.Equal(
+            800,
+            snapshot.AutoHideDelayMilliseconds);
     }
 
     [Fact]
@@ -103,7 +118,8 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         false,
                         ShellDisplayTarget
-                            .PrimaryValue);
+                            .PrimaryValue,
+                        1200);
                 },
                 (_, _) => { });
 
@@ -130,6 +146,9 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             ShellDisplayTarget.PrimaryValue,
             snapshot.DisplayTargetMode);
+        Assert.Equal(
+            1200,
+            snapshot.AutoHideDelayMilliseconds);
     }
 
     [Fact]
