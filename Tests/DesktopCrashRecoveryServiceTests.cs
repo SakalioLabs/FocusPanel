@@ -253,6 +253,64 @@ public sealed class DesktopCrashRecoveryServiceTests
         }
     }
 
+    [Fact]
+    public void CrashRecovery_DoesNotRestoreStableCollectedItems()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            string stablePath = Path.Combine(
+                directory,
+                "desktop",
+                "stable.txt");
+            string interruptedPath = Path.Combine(
+                directory,
+                "desktop",
+                "interrupted.txt");
+            var store = new FakeStore(
+                new DesktopCrashRecoveryItem(
+                    21,
+                    "stable.txt",
+                    stablePath,
+                    (long)FileAttributes.Normal,
+                    FocusPanel.Models.DesktopVisibilityOperation.Stable),
+                new DesktopCrashRecoveryItem(
+                    22,
+                    "interrupted.txt",
+                    interruptedPath,
+                    (long)FileAttributes.Normal,
+                    FocusPanel.Models.DesktopVisibilityOperation.Collecting));
+            var visibility = new FakeVisibility();
+            visibility.Add(
+                stablePath,
+                FileAttributes.Hidden | FileAttributes.System);
+            visibility.Add(
+                interruptedPath,
+                FileAttributes.Hidden | FileAttributes.System);
+            var service = CreateService(
+                store,
+                visibility,
+                directory);
+            service.Arm();
+
+            DesktopCrashRecoveryResult result =
+                service.RestoreIfRequested(force: false);
+
+            Assert.Equal(1, result.Restored);
+            Assert.Equal(
+                FileAttributes.Hidden | FileAttributes.System,
+                visibility.Attributes[stablePath]);
+            Assert.Equal(
+                FileAttributes.Normal,
+                visibility.Attributes[interruptedPath]);
+            Assert.Equal(new[] { 22 }, store.Restored);
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
     private static DesktopCrashRecoveryService
         CreateService(
             FakeStore store,

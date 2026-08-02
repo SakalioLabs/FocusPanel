@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="420" viewBox="0 0 1120 420" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 稳定收纳恢复策略</title>
+  <desc id="desc">稳定收纳项保持隐藏，只有未完成事务回滚；自动整理保留人工分区。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10192b"/>
+      <stop offset="1" stop-color="#172640"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#020713" flood-opacity=".36"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="420" rx="28" fill="url(#bg)"/>
+  <text x="56" y="66" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">收纳状态只按事务恢复，不再整批翻转</text>
+  <text x="56" y="99" fill="#aebbd0" font-family="Segoe UI, Microsoft YaHei" font-size="16">真实文件留在桌面原路径 · 人工分区优先 · 异常时只回滚未完成操作</text>
+
+  <g filter="url(#shadow)">
+    <rect x="56" y="138" width="294" height="220" rx="20" fill="#1d2d49" stroke="#365071"/>
+    <circle cx="94" cy="180" r="17" fill="#36c98f"/>
+    <path d="M86 180l6 6 11-13" fill="none" stroke="#071d16" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="124" y="188" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="21" font-weight="650">Stable 已稳定</text>
+    <text x="80" y="232" fill="#b9c7da" font-family="Segoe UI, Microsoft YaHei" font-size="16">闪退 / watchdog / 重启</text>
+    <text x="80" y="263" fill="#72deb2" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">保持收纳，不恢复图标</text>
+    <text x="80" y="310" fill="#8fa0b8" font-family="Segoe UI, Microsoft YaHei" font-size="14">不移动 · 不改名 · 不清空分区</text>
+  </g>
+
+  <path d="M374 248h82" stroke="#58708f" stroke-width="3" stroke-linecap="round"/>
+  <path d="M444 238l14 10-14 10" fill="none" stroke="#58708f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="464" y="138" width="294" height="220" rx="20" fill="#1d2d49" stroke="#365071"/>
+    <circle cx="502" cy="180" r="17" fill="#ffc857"/>
+    <path d="M502 168v14l9 6" fill="none" stroke="#382609" stroke-width="4" stroke-linecap="round"/>
+    <text x="532" y="188" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="21" font-weight="650">未完成事务</text>
+    <text x="488" y="232" fill="#b9c7da" font-family="Segoe UI, Microsoft YaHei" font-size="16">Collecting / Restoring</text>
+    <text x="488" y="263" fill="#ffd980" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">仅回滚这一项</text>
+    <text x="488" y="310" fill="#8fa0b8" font-family="Segoe UI, Microsoft YaHei" font-size="14">精确恢复原属性，保留可重试记录</text>
+  </g>
+
+  <path d="M782 248h58" stroke="#58708f" stroke-width="3" stroke-linecap="round"/>
+  <path d="M828 238l14 10-14 10" fill="none" stroke="#58708f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="848" y="138" width="216" height="220" rx="20" fill="#21324f" stroke="#466487"/>
+    <rect x="878" y="168" width="156" height="44" rx="12" fill="#2a4267"/>
+    <text x="896" y="196" fill="#edf5ff" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="600">客户项目</text>
+    <rect x="878" y="228" width="156" height="44" rx="12" fill="#263a5b"/>
+    <text x="896" y="256" fill="#afbdd1" font-family="Segoe UI, Microsoft YaHei" font-size="17">图片（自动）</text>
+    <text x="878" y="310" fill="#73b9ff" font-family="Segoe UI, Microsoft YaHei" font-size="16" font-weight="600">人工分区优先</text>
+    <text x="878" y="335" fill="#8fa0b8" font-family="Segoe UI, Microsoft YaHei" font-size="13">已有分类不会被顶替</text>
+  </g>
+</svg>

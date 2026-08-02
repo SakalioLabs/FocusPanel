@@ -37,7 +37,7 @@ public sealed class PartitionSwitchRecoveryContractTests
     }
 
     [Fact]
-    public void FatalExit_RestoresManagedItemsAndKeepsRecoveryMarker()
+    public void FatalExit_OnlyRollsBackInterruptedDesktopTransactions()
     {
         string root = FindRepositoryRoot();
         string app = File.ReadAllText(
@@ -49,9 +49,12 @@ public sealed class PartitionSwitchRecoveryContractTests
         Assert.Equal(
             2,
             app.Split(
-                    "RestoreCollectedItems();",
+                    "RestoreInterruptedItems();",
                     StringSplitOptions.None)
                 .Length - 1);
+        Assert.DoesNotContain(
+            "_desktopCrashRecovery\n            .RestoreCollectedItems();",
+            app);
         Assert.Contains(
             "if (!_fatalShutdown",
             app);

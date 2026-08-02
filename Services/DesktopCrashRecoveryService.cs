@@ -12,7 +12,9 @@ internal sealed record DesktopCrashRecoveryItem(
     int PreferenceId,
     string FilePath,
     string? ManagedPath,
-    long? OriginalAttributes);
+    long? OriginalAttributes,
+    DesktopVisibilityOperation OperationState =
+        DesktopVisibilityOperation.Collecting);
 
 internal readonly record struct DesktopCrashRecoveryResult(
     bool Attempted,
@@ -110,7 +112,8 @@ internal sealed class DesktopCrashRecoveryService
             bool keepMarker) =>
         force || File.Exists(_markerPath)
             ? RestoreCollectedItems(
-                keepMarker)
+                keepMarker,
+                interruptedOnly: true)
             : new DesktopCrashRecoveryResult(
                 false,
                 0,
@@ -144,7 +147,8 @@ internal sealed class DesktopCrashRecoveryService
 
             DesktopCrashRecoveryResult result =
                 RestoreCollectedItemsCore(
-                    keepMarker: false);
+                    keepMarker: false,
+                    interruptedOnly: true);
             if (result.Failed == 0)
             {
                 try
@@ -177,21 +181,34 @@ internal sealed class DesktopCrashRecoveryService
     {
         lock (_gate)
             return RestoreCollectedItemsCore(
-                keepMarker: false);
+                keepMarker: false,
+                interruptedOnly: false);
+    }
+
+    internal DesktopCrashRecoveryResult
+        RestoreInterruptedItems()
+    {
+        lock (_gate)
+            return RestoreCollectedItemsCore(
+                keepMarker: false,
+                interruptedOnly: true);
     }
 
     private DesktopCrashRecoveryResult
         RestoreCollectedItems(
-            bool keepMarker)
+            bool keepMarker,
+            bool interruptedOnly)
     {
         lock (_gate)
             return RestoreCollectedItemsCore(
-                keepMarker);
+                keepMarker,
+                interruptedOnly);
     }
 
     private DesktopCrashRecoveryResult
         RestoreCollectedItemsCore(
-            bool keepMarker)
+            bool keepMarker,
+            bool interruptedOnly)
     {
         int restored = 0;
         int failed = 0;
@@ -208,7 +225,14 @@ internal sealed class DesktopCrashRecoveryService
                 1);
         }
 
-        foreach (DesktopCrashRecoveryItem item in items)
+        IEnumerable<DesktopCrashRecoveryItem> candidates =
+            interruptedOnly
+                ? items.Where(item =>
+                    item.OperationState
+                    != DesktopVisibilityOperation.Stable)
+                : items;
+
+        foreach (DesktopCrashRecoveryItem item in candidates)
         {
             try
             {
@@ -331,7 +355,8 @@ internal sealed class AppDbDesktopCrashRecoveryStore
                     item.Id,
                     item.FilePath,
                     item.ManagedPath,
-                    item.OriginalAttributes))
+                    item.OriginalAttributes,
+                    item.OperationState))
             .ToArray();
     }
 

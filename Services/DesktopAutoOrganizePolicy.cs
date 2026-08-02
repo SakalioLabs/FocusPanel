@@ -26,6 +26,13 @@ public static class DesktopAutoOrganizePolicy
             ? partition
             : "其他";
 
+    public static string GetTargetPartition(
+        DesktopAutoOrganizeItem item) =>
+        !string.IsNullOrWhiteSpace(
+            item.PreferredPartition)
+            ? item.PreferredPartition
+            : GetPartitionName(item.FileType);
+
     public static IReadOnlyList<DesktopAutoOrganizeItem>
         SelectCreatedItems(
             IEnumerable<DesktopAutoOrganizeItem> items,
@@ -127,7 +134,7 @@ public static class DesktopAutoOrganizePolicy
             {
                 await collect(
                     item,
-                    GetPartitionName(item.FileType),
+                    GetTargetPartition(item),
                     allowCommonDesktopElevation);
                 collected++;
             }
@@ -218,7 +225,8 @@ public sealed record DesktopAutoOrganizeItem(
     string FileType,
     bool IsCollected = false,
     bool NeedsRecovery = false,
-    bool IsProtectedPanelLauncher = false);
+    bool IsProtectedPanelLauncher = false,
+    string? PreferredPartition = null);
 
 public sealed record DesktopOrganizeResult(
     int Attempted,

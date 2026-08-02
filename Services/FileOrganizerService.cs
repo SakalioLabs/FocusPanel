@@ -926,19 +926,21 @@ public class FileOrganizerService : IDisposable
         context.EnsureSchema();
         var collected = context.DesktopFilePreferences.Where(p => p.IsHiddenFromDesktop).ToList();
 
-        if (collected.Any(pref =>
-                DesktopAutoOrganizePolicy
-                    .IsProtectedPanelLauncher(
-                        pref.FilePath,
-                        pref.ManagedPath,
-                        Environment.ProcessPath)))
+        List<DesktopFilePreference> protectedLaunchers =
+            collected.Where(pref =>
+                    DesktopAutoOrganizePolicy
+                        .IsProtectedPanelLauncher(
+                            pref.FilePath,
+                            pref.ManagedPath,
+                            Environment.ProcessPath))
+                .ToList();
+        if (protectedLaunchers.Count > 0)
         {
-            // A managed FocusPanel launcher can only come from an old
-            // automatic-organize bug. Treat the whole attribute batch as
-            // poisoned and restore it before normal reconciliation, so a
-            // crash cannot leave the user without a way back into Panel.
+            // Repair only the launcher. Restoring the complete stable
+            // collection makes unrelated icons reappear and loses the
+            // user's layout when the watcher organizes them again.
             foreach (DesktopFilePreference pref
-                     in collected.Where(pref =>
+                     in protectedLaunchers.Where(pref =>
                          pref.CollectionMode
                          == DesktopCollectionMode.Attribute))
             {
@@ -1696,7 +1698,8 @@ public class FileOrganizerService : IDisposable
                         .IsProtectedPanelLauncher(
                             file.Name,
                             file.FullPath,
-                            Environment.ProcessPath)))
+                            Environment.ProcessPath),
+                    file.CustomPartition))
                 .ToArray();
             IReadOnlyList<DesktopAutoOrganizeItem> items =
                 DesktopAutoOrganizePolicy

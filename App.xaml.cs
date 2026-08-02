@@ -135,7 +135,7 @@ public partial class App : Application
         _fatalShutdown = true;
         LogException(e.Exception);
         _desktopCrashRecovery
-            .RestoreCollectedItems();
+            .RestoreInterruptedItems();
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
 
@@ -172,7 +172,7 @@ public partial class App : Application
     {
         _fatalShutdown = true;
         _desktopCrashRecovery
-            .RestoreCollectedItems();
+            .RestoreInterruptedItems();
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
         if (e.ExceptionObject is Exception ex)

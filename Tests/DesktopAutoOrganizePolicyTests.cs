@@ -120,6 +120,30 @@ public sealed class DesktopAutoOrganizePolicyTests
     }
 
     [Fact]
+    public async Task ExecutePreservesExistingCustomPartition()
+    {
+        var item = new DesktopAutoOrganizeItem(
+            "design.png",
+            @"C:\Desktop\design.png",
+            "Image",
+            PreferredPartition: "客户项目");
+        string? assignedPartition = null;
+
+        DesktopOrganizeResult result =
+            await DesktopAutoOrganizePolicy.ExecuteAsync(
+                new[] { item },
+                false,
+                (_, partition, _) =>
+                {
+                    assignedPartition = partition;
+                    return Task.CompletedTask;
+                });
+
+        Assert.Equal(1, result.Collected);
+        Assert.Equal("客户项目", assignedPartition);
+    }
+
+    [Fact]
     public async Task ProgressObserverFailure_DoesNotUndoCollection()
     {
         var items = new[]
