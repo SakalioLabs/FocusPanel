@@ -56,6 +56,21 @@ public sealed class StartHubContractTests
             "Click=\"CloseCurrentVirtualDesktop_Click\"",
             xaml);
         Assert.Contains(
+            "Content=\"上一个\"",
+            xaml);
+        Assert.Contains(
+            "Content=\"新建\"",
+            xaml);
+        Assert.Contains(
+            "Content=\"下一个\"",
+            xaml);
+        Assert.Contains(
+            "Content=\"关闭\"",
+            xaml);
+        Assert.Contains(
+            "固定应用、虚拟桌面与常用系统入口",
+            xaml);
+        Assert.Contains(
             "Header=\"Windows 开始菜单\"",
             xaml);
     }

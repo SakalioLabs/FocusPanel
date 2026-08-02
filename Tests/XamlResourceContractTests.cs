@@ -1056,7 +1056,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.82\"",
+            "LauncherVersion = \"0.10.83\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1546,6 +1546,12 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains(
             "AutomationProperties.Name=\"开始\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"统一搜索\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.HelpText=\"搜索应用、窗口、任务、系统命令和计算式\"",
             mainWindow);
         Assert.Contains("private void FocusCompactDock()", codeBehind);
         Assert.Equal(
