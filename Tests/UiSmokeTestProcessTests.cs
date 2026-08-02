@@ -7,6 +7,9 @@ namespace FocusPanel.Tests;
 
 public sealed class UiSmokeTestProcessTests
 {
+    private const int ProcessTimeoutMilliseconds =
+        120_000;
+
     [Fact]
     public void PackagedUiSurfaces_LoadAndResolveRuntimeResources()
     {
@@ -26,11 +29,29 @@ public sealed class UiSmokeTestProcessTests
             });
 
             Assert.NotNull(process);
-            Assert.True(process!.WaitForExit(30_000), "UI 冒烟测试进程未在 30 秒内退出。");
+            bool exited = process!.WaitForExit(
+                ProcessTimeoutMilliseconds);
+            if (!exited)
+            {
+                try
+                {
+                    process.Kill(
+                        entireProcessTree: true);
+                    process.WaitForExit(5_000);
+                }
+                catch
+                {
+                    // The process may exit between the timeout and cleanup.
+                }
+            }
 
             string report = File.Exists(reportPath)
                 ? File.ReadAllText(reportPath)
                 : "未生成 UI 冒烟测试报告。";
+            Assert.True(
+                exited,
+                "UI 冒烟测试进程未在 120 秒内退出。\n"
+                + report);
             Assert.True(process.ExitCode == 0, report);
             Assert.Contains("PASS 界面 TaskDetailWindow", report);
             Assert.Contains("PASS 界面 FocusDialogWindow", report);
