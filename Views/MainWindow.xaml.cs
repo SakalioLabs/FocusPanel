@@ -951,11 +951,43 @@ public partial class MainWindow :
 
     private void CalendarPanelButton_Click(object sender, RoutedEventArgs e)
     {
+        TimeEntryAction action =
+            TimeEntryPolicy.FromLeftClick(
+                Keyboard.Modifiers.HasFlag(
+                    ModifierKeys.Shift));
+        if (action
+            == TimeEntryAction.ShowDesktop)
+        {
+            ShowDesktopFromCompactEntry();
+            return;
+        }
+
         ToggleCompactOverlay(
             () => _viewModel.IsCalendarOpen,
             () => _viewModel.ToggleCalendarCommand
                 .Execute(null),
             TimeButton);
+    }
+
+    private void TimeButton_PreviewMouseDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton
+            != MouseButton.Middle)
+        {
+            return;
+        }
+
+        ShowDesktopFromCompactEntry();
+        e.Handled = true;
+    }
+
+    private void ShowDesktopFromCompactEntry()
+    {
+        CloseOverlayPanels();
+        _viewModel.ShowDesktopCommand.Execute(null);
+        ScheduleAutoHide(900);
     }
 
     private void ToggleCompactOverlay(

@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.92\"",
+            "LauncherVersion = \"0.10.93\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -2011,11 +2011,16 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void TimeEntry_RightClickOpensOfficialDateAndNotificationSettings()
+    public void TimeEntry_OffersDesktopCalendarAndOfficialSettingsActions()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
             Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
 
         int timeButtonStart = mainWindow.IndexOf(
             "x:Name=\"TimeButton\"",
@@ -2046,6 +2051,33 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "按 Shift+F10",
             timeButton);
+        Assert.Contains(
+            "Header=\"显示桌面\"",
+            timeButton);
+        Assert.Contains(
+            "InputGestureText=\"Win+D\"",
+            timeButton);
+        Assert.Contains(
+            "ShowDesktopCommand",
+            timeButton);
+        Assert.Contains(
+            "PreviewMouseDown=\"TimeButton_PreviewMouseDown\"",
+            timeButton);
+        Assert.Contains(
+            "Shift+左键或中键显示桌面",
+            timeButton);
+        Assert.Contains(
+            "TimeEntryPolicy.FromLeftClick(",
+            codeBehind);
+        Assert.Contains(
+            "TimeEntryAction.ShowDesktop",
+            codeBehind);
+        Assert.Contains(
+            "e.ChangedButton\n            != MouseButton.Middle",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "_viewModel.ShowDesktopCommand.Execute(null)",
+            codeBehind);
     }
 
     [Fact]

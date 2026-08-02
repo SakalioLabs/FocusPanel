@@ -1730,13 +1730,18 @@
                                     Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="CalendarPanelButton_Click"
-                                    AutomationProperties.Name="时间与今日任务"
-                                    AutomationProperties.HelpText="按 Enter 打开月历，按 Shift+F10 调整日期时间或通知设置"
-                                    ToolTip="时间与今日任务 · 右键打开系统设置">
+                                    PreviewMouseDown="TimeButton_PreviewMouseDown"
+                                    AutomationProperties.Name="时间、今日任务与显示桌面"
+                                    AutomationProperties.HelpText="按 Enter 打开月历，按 Shift+Enter 或鼠标中键显示桌面，按 Shift+F10 打开显示桌面、日期时间与通知菜单"
+                                    ToolTip="时间与今日任务 · Shift+左键或中键显示桌面 · 右键更多">
                                 <Button.ContextMenu>
                                     <ContextMenu Style="{StaticResource FocusContextMenu}"
                                                  Opened="TransientContextMenu_Opened"
                                                  Closed="TransientContextMenu_Closed">
+                                        <MenuItem Header="显示桌面"
+                                                  InputGestureText="Win+D"
+                                                  Command="{Binding PlacementTarget.DataContext.ShowDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <Separator/>
                                         <MenuItem Header="调整日期和时间"
                                                   Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{x:Static services:SystemManagementTool.DateAndTimeSettings}"/>
