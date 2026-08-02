@@ -108,6 +108,61 @@ internal sealed class DesktopCrashRecoveryService
                 0);
 
     internal DesktopCrashRecoveryResult
+        RestoreKnownCrashResidueOnce(
+            string recoveryVersion)
+    {
+        if (string.IsNullOrWhiteSpace(
+                recoveryVersion))
+        {
+            throw new ArgumentException(
+                "恢复版本不能为空。",
+                nameof(recoveryVersion));
+        }
+        lock (_gate)
+        {
+            string completionPath = Path.Combine(
+                Path.GetDirectoryName(_markerPath)
+                    ?? string.Empty,
+                $"desktop-recovery-{recoveryVersion}-completed");
+            if (File.Exists(completionPath)
+                || File.Exists(_markerPath))
+            {
+                return new DesktopCrashRecoveryResult(
+                    false,
+                    0,
+                    0);
+            }
+
+            DesktopCrashRecoveryResult result =
+                RestoreCollectedItemsCore();
+            if (result.Failed == 0)
+            {
+                try
+                {
+                    string? directory =
+                        Path.GetDirectoryName(
+                            completionPath);
+                    if (!string.IsNullOrWhiteSpace(
+                            directory))
+                    {
+                        Directory.CreateDirectory(
+                            directory);
+                    }
+                    File.WriteAllText(
+                        completionPath,
+                        DateTimeOffset.Now.ToString("O"));
+                }
+                catch
+                {
+                    // A failed completion marker only causes a harmless
+                    // retry on the next startup.
+                }
+            }
+            return result;
+        }
+    }
+
+    internal DesktopCrashRecoveryResult
         RestoreCollectedItems()
     {
         lock (_gate)

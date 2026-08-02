@@ -164,6 +164,53 @@ public sealed class DesktopCrashRecoveryServiceTests
         }
     }
 
+    [Fact]
+    public void KnownCrashResidue_IsRestoredAutomaticallyOnlyOnce()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            string path = Path.Combine(
+                directory,
+                "desktop",
+                "stale.txt");
+            var store = new FakeStore(
+                new DesktopCrashRecoveryItem(
+                    13,
+                    "stale.txt",
+                    path,
+                    (long)FileAttributes.Normal));
+            var visibility = new FakeVisibility();
+            visibility.Add(
+                path,
+                FileAttributes.Hidden
+                | FileAttributes.System);
+            var service = CreateService(
+                store,
+                visibility,
+                directory);
+
+            DesktopCrashRecoveryResult first =
+                service.RestoreKnownCrashResidueOnce(
+                    "0.10.78");
+            DesktopCrashRecoveryResult second =
+                service.RestoreKnownCrashResidueOnce(
+                    "0.10.78");
+
+            Assert.True(first.Attempted);
+            Assert.Equal(1, first.Restored);
+            Assert.False(second.Attempted);
+            Assert.Equal(1, visibility.SetCount);
+            Assert.True(File.Exists(Path.Combine(
+                directory,
+                "desktop-recovery-0.10.78-completed")));
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
     private static DesktopCrashRecoveryService
         CreateService(
             FakeStore store,

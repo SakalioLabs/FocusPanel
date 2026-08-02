@@ -310,6 +310,44 @@ public partial class MainWindow :
         Activate();
     }
 
+    internal void ShowDesktopRecoveryNotice(
+        DesktopCrashRecoveryResult recovery)
+    {
+        if (recovery.Restored == 0
+            && recovery.Failed == 0)
+        {
+            return;
+        }
+
+        _toastManager.Enqueue(
+            new FocusToastNotification(
+                "desktop-crash-recovery",
+                recovery.Failed == 0
+                    ? "桌面图标已自动恢复"
+                    : "部分桌面图标等待恢复",
+                recovery.Failed == 0
+                    ? $"FocusPanel 已自动恢复 {recovery.Restored} 个图标，原有分区仍然保留。"
+                    : $"已恢复 {recovery.Restored} 个图标；另有 {recovery.Failed} 个项目因权限或文件状态暂未恢复。",
+                "\uE777",
+                recovery.Failed == 0
+                    ? FocusToastKind.Success
+                    : FocusToastKind.Warning,
+                recovery.Failed == 0
+                    ? null
+                    : "查看桌面收纳",
+                recovery.Failed == 0
+                    ? null
+                    : OpenDesktopOrganizerWorkspace));
+    }
+
+    private void OpenDesktopOrganizerWorkspace()
+    {
+        _hiddenToTray = false;
+        ExpandSidebar();
+        _viewModel.NavigateCommand.Execute("Files");
+        Activate();
+    }
+
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
     {
         IntPtr hwnd = new WindowInteropHelper(this).Handle;

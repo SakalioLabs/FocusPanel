@@ -1189,6 +1189,17 @@ public partial class FileOrganizerViewModel :
         string fileName = file.Name;
         string targetPartition = partitionName ?? "Unsorted";
 
+        // A collected card already has its desktop visibility state. Moving
+        // it between boxes must only update metadata and must never touch
+        // filesystem attributes or request elevation again.
+        if (file.IsHidden)
+        {
+            await AssignFileToPartition(
+                file,
+                targetPartition);
+            return;
+        }
+
         try
         {
             await _fileService.HideFileFromDesktop(fileName, targetPartition);

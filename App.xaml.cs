@@ -96,25 +96,25 @@ public partial class App : Application
         DesktopCrashRecoveryResult desktopRecovery =
             _desktopCrashRecovery.RestoreIfRequested(
                 hadOrphanedTaskbarSession);
+        DesktopCrashRecoveryResult upgradeRecovery =
+            _desktopCrashRecovery
+                .RestoreKnownCrashResidueOnce(
+                    "0.10.78");
+        desktopRecovery = new DesktopCrashRecoveryResult(
+            desktopRecovery.Attempted
+                || upgradeRecovery.Attempted,
+            desktopRecovery.Restored
+                + upgradeRecovery.Restored,
+            desktopRecovery.Failed
+                + upgradeRecovery.Failed);
         _desktopCrashRecovery.Arm();
-        if (desktopRecovery.Restored > 0
-            || desktopRecovery.Failed > 0)
-        {
-            MessageBox.Show(
-                desktopRecovery.Failed == 0
-                    ? $"检测到上次异常退出，已恢复 {desktopRecovery.Restored} 个桌面图标。"
-                    : $"检测到上次异常退出，已恢复 {desktopRecovery.Restored} 个桌面图标；另有 {desktopRecovery.Failed} 个需要在桌面收纳中手动恢复。",
-                "FocusPanel 桌面恢复",
-                MessageBoxButton.OK,
-                desktopRecovery.Failed == 0
-                    ? MessageBoxImage.Information
-                    : MessageBoxImage.Warning);
-        }
 
         var mainWindow =
             new MainWindow(startupIndicator);
         MainWindow = mainWindow;
         mainWindow.Show();
+        mainWindow.ShowDesktopRecoveryNotice(
+            desktopRecovery);
     }
 
     protected override void OnExit(ExitEventArgs e)

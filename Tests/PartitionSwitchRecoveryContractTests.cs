@@ -93,6 +93,62 @@ public sealed class PartitionSwitchRecoveryContractTests
             view);
     }
 
+    [Fact]
+    public void CollectedCardPartitionSwitch_UsesMetadataOnly()
+    {
+        string root = FindRepositoryRoot();
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "FileOrganizerViewModel.cs"));
+
+        int guard = viewModel.IndexOf(
+            "if (file.IsHidden)",
+            StringComparison.Ordinal);
+        int metadataMutation = viewModel.IndexOf(
+            "await AssignFileToPartition(",
+            guard,
+            StringComparison.Ordinal);
+        int visibilityMutation = viewModel.IndexOf(
+            "await _fileService.HideFileFromDesktop(",
+            guard,
+            StringComparison.Ordinal);
+
+        Assert.True(guard >= 0);
+        Assert.True(metadataMutation > guard);
+        Assert.True(visibilityMutation > metadataMutation);
+    }
+
+    [Fact]
+    public void StartupRecovery_IsAutomaticAndNonBlocking()
+    {
+        string root = FindRepositoryRoot();
+        string app = File.ReadAllText(
+            Path.Combine(root, "App.xaml.cs"));
+        string shell = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "RestoreKnownCrashResidueOnce(",
+            app);
+        Assert.Contains(
+            "mainWindow.ShowDesktopRecoveryNotice(",
+            app);
+        Assert.DoesNotContain(
+            "FocusPanel 桌面恢复",
+            app);
+        Assert.Contains(
+            "桌面图标已自动恢复",
+            shell);
+        Assert.Contains(
+            "FocusToastNotification(",
+            shell);
+    }
+
     private static string FindRepositoryRoot()
     {
         DirectoryInfo? directory =

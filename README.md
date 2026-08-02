@@ -2,9 +2,9 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它提供桌面收纳、任务、番茄钟、AI、应用启动、运行窗口管理、系统状态与日期时间入口。旧版 OKR 表只为升级兼容保留，不再出现在产品界面，也不会被概览或 AI 读取。
 
-> 0.10.77 起，应用运行期间会维护一个仅用于异常恢复的本地会话标记。正常退出不会改变已经收纳的项目；发生未处理异常时会按每项保存的原始文件属性立即恢复桌面图标，被强制结束来不及恢复时则在下次启动补做。恢复不会移动文件或删除分区，权限不足和已丢失项目继续保留“需要恢复”记录。
+> 0.10.78 起，旧版本闪退可能遗留的桌面图标会在升级后首次启动时自动恢复，不要求用户进入修复工具，也不会弹出阻塞启动的对话框。恢复结果通过非阻塞提示告知；分区元数据继续保留，文件不会移动或删除。以后发生未处理异常或强制结束时，应用仍会根据本地恢复标记自动补做恢复。
 
-如果图标是在 0.10.76 或更早版本闪退后已经消失，旧版本可能没有留下可识别的崩溃标记。打开“桌面收纳”右上角的“修复工具”，点击“紧急恢复全部图标”即可主动恢复所有属性模式收纳项目；这不会移动文件、删除分区或操作旧版 `.FocusPanel` 仓库。
+已收纳卡片切换收纳盒只修改 FocusPanel 的分类数据，不再重新写文件属性、刷新 Explorer 或请求管理员权限。“紧急恢复全部图标”仍保留在桌面收纳的修复工具中，但只用于权限异常或损坏记录等极端情况，不属于正常操作流程。
 
 ![FocusPanel 0.9.49 总览](docs/images/readme-overview.svg)
 
@@ -517,7 +517,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.77 `
+  -Version 0.10.78 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -529,7 +529,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.77-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.78-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
