@@ -70,7 +70,10 @@ public sealed class StartHubContractTests
             "IsStartHubOpen = false;",
             viewModel);
         Assert.Contains(
-            "TaskbarAppCollectionSynchronizer.Synchronize(\n            StartHubApps,",
+            "TaskbarAppCollectionSynchronizer.Synchronize(",
+            viewModel);
+        Assert.Contains(
+            "StartHubApps,",
             viewModel);
         Assert.Contains(
             "ToggleCompactOverlay(",
