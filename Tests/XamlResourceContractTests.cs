@@ -1126,7 +1126,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.4\"",
+            "LauncherVersion = \"0.11.5\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1480,6 +1480,55 @@ public sealed class XamlResourceContractTests
         string onboarding = mainWindow[onboardingStart..];
         Assert.Contains("<Border Grid.Column=\"0\"", onboarding);
         Assert.DoesNotContain("Grid.ColumnSpan=\"2\"", onboarding);
+    }
+
+    [Fact]
+    public void CompactTaskEntry_OffersExplicitQuickCaptureWithoutChangingPrimaryClick()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+
+        Assert.Contains(
+            "Click=\"TasksButton_Click\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"快速添加到 Inbox…\"",
+            mainWindow);
+        Assert.Contains(
+            "Click=\"TaskQuickCaptureMenuItem_Click\"",
+            mainWindow);
+        Assert.Contains(
+            "左键打开任务 · 右键快速添加",
+            mainWindow);
+        Assert.Contains(
+            "QuickCapturePrefix",
+            codeBehind);
+        Assert.Contains(
+            "SearchBox.CaretIndex = SearchBox.Text.Length",
+            codeBehind);
+        Assert.Contains(
+            "SearchPanelTitle",
+            mainWindow);
+        Assert.Contains(
+            "SearchPanelInstruction",
+            mainWindow);
+        Assert.Contains(
+            "输入标题后按 Enter，直接保存到 Inbox",
+            viewModel);
     }
 
     [Fact]
@@ -2488,10 +2537,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            5,
+            6,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            5,
+            6,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -3430,7 +3479,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            5,
+            6,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);

@@ -158,6 +158,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "该日没有完成的专注记录";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsTaskQuickCaptureDraft))]
+    [NotifyPropertyChangedFor(
+        nameof(SearchPanelTitle))]
+    [NotifyPropertyChangedFor(
+        nameof(SearchPanelInstruction))]
     private string searchQuery = string.Empty;
 
     [ObservableProperty]
@@ -799,6 +805,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GetTaskEntryPresentation().BadgeText;
     public string TasksEntryAutomationName =>
         GetTaskEntryPresentation().AutomationName;
+    public bool IsTaskQuickCaptureDraft =>
+        SearchQuery.StartsWith(
+            TaskCaptureCommandParser
+                .QuickCapturePrefix,
+            StringComparison.Ordinal);
+    public string SearchPanelTitle =>
+        IsTaskQuickCaptureDraft
+            ? "快速添加到 Inbox"
+            : "应用、窗口、待办、命令与计算";
+    public string SearchPanelInstruction =>
+        IsTaskQuickCaptureDraft
+            ? "输入标题后按 Enter，直接保存到 Inbox"
+            : "输入关键词后用 ↑↓ 选择，按 Enter 执行";
     public bool IsOrganizerEntryActive =>
         string.Equals(
             LastWorkspace,

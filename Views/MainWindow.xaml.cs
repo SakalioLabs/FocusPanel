@@ -830,6 +830,34 @@ public partial class MainWindow :
         RoutedEventArgs e) =>
         OpenFocusWorkspace("Tasks");
 
+    private void TaskQuickCaptureMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        CloseOverlayPanels();
+        _viewModel.SearchQuery =
+            TaskCaptureCommandParser
+                .QuickCapturePrefix;
+        _viewModel.IsSearchOpen = true;
+        _overlayReturnFocusTarget =
+            TasksButton;
+        _ = Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (_isExit
+                    || !IsVisible
+                    || !_viewModel.IsSearchOpen)
+                {
+                    return;
+                }
+
+                SearchBox.Focus();
+                SearchBox.CaretIndex = SearchBox.Text.Length;
+            }),
+            DispatcherPriority.Input);
+    }
+
     private void OpenFocusWorkspace(
         string destination)
     {

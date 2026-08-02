@@ -236,8 +236,13 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Text="应用、窗口、待办、命令与计算"
-                                       Style="{StaticResource FocusSectionTitleText}"/>
+                            <StackPanel>
+                                <TextBlock Text="{Binding SearchPanelTitle}"
+                                           Style="{StaticResource FocusSectionTitleText}"/>
+                                <TextBlock Margin="0,3,0,0"
+                                           Text="{Binding SearchPanelInstruction}"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                            </StackPanel>
                             <Grid Grid.Row="1" Margin="0,14,0,12">
                                 <TextBox x:Name="SearchBox"
                                          Style="{StaticResource FocusSearchBox}"
@@ -1480,8 +1485,16 @@
                                     Tag="CompactFixedEntry"
                                     Click="TasksButton_Click"
                                     AutomationProperties.Name="{Binding TasksEntryAutomationName}"
-                                    AutomationProperties.HelpText="按 Enter 直接展开任务工作区"
-                                    ToolTip="{Binding TasksEntryAutomationName}">
+                                    AutomationProperties.HelpText="按 Enter 展开任务工作区；按 Shift+F10 可快速添加到 Inbox"
+                                    ToolTip="任务 · 左键打开任务 · 右键快速添加">
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource FocusContextMenu}"
+                                                 Opened="TransientContextMenu_Opened"
+                                                 Closed="TransientContextMenu_Closed">
+                                        <MenuItem Header="快速添加到 Inbox…"
+                                                  Click="TaskQuickCaptureMenuItem_Click"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
                                 <Grid Width="48" Height="48">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"

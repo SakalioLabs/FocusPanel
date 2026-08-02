@@ -5,6 +5,21 @@ namespace FocusPanel.Tests;
 
 public sealed class TaskCaptureCommandParserTests
 {
+    [Fact]
+    public void QuickCapturePrefix_IsAValidPrefixButNotAnEmptyTask()
+    {
+        Assert.Equal(
+            "任务 ",
+            TaskCaptureCommandParser
+                .QuickCapturePrefix);
+        Assert.False(
+            TaskCaptureCommandParser
+                .TryParse(
+                    TaskCaptureCommandParser
+                        .QuickCapturePrefix,
+                    out _));
+    }
+
     [Theory]
     [InlineData("任务 买牛奶", "买牛奶")]
     [InlineData("任务：整理周报", "整理周报")]

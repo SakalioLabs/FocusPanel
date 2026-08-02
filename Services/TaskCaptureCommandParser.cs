@@ -17,6 +17,9 @@ internal readonly record struct
 
 internal static class TaskCaptureCommandParser
 {
+    internal const string QuickCapturePrefix =
+        "任务 ";
+
     internal const int MaximumTitleLength =
         120;
 
