@@ -46,11 +46,62 @@ jobs:
           }
           "FOCUSPANEL_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: 构建与测试
+      - name: 构建
         shell: pwsh
         run: |
           dotnet build FocusPanel.csproj --configuration Release
-          dotnet test Tests\FocusPanel.Tests.csproj --configuration Release
+
+      - name: 测试
+        shell: pwsh
+        run: |
+          $resultsDirectory = "artifacts\test-results"
+          dotnet test Tests\FocusPanel.Tests.csproj `
+            --configuration Release `
+            --no-restore `
+            --logger "trx;LogFileName=FocusPanel.Tests.trx" `
+            --results-directory $resultsDirectory
+          $testExitCode = $LASTEXITCODE
+          if ($testExitCode -eq 0) {
+            exit 0
+          }
+
+          $reportPath = Join-Path `
+            $resultsDirectory `
+            "FocusPanel.Tests.trx"
+          if (Test-Path -LiteralPath $reportPath) {
+            [xml]$report = Get-Content `
+              -LiteralPath $reportPath `
+              -Raw
+            $failed = $report.SelectNodes(
+              "//*[local-name()='UnitTestResult' and @outcome='Failed']")
+            foreach ($result in $failed) {
+              $name = [string]$result.testName
+              $executionId = [string]$result.executionId
+              $output = $report.SelectSingleNode(
+                "//*[local-name()='UnitTestResult' and @executionId='$executionId']/*[local-name()='Output']/*[local-name()='ErrorInfo']/*[local-name()='Message']")
+              $message = if ($null -eq $output) {
+                "测试失败，TRX 未提供错误消息。"
+              } else {
+                $output.InnerText
+              }
+              $escaped = $message `
+                -replace '%', '%25' `
+                -replace "`r", '%0D' `
+                -replace "`n", '%0A'
+              Write-Output "::error title=测试失败：$name::$escaped"
+            }
+          } else {
+            Write-Output "::error title=测试进程失败::未生成 TRX 报告，退出码 $testExitCode。"
+          }
+          exit $testExitCode
+
+      - name: 保存测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocusPanel-${{ env.FOCUSPANEL_VERSION }}-test-results
+          path: artifacts/test-results/*
+          if-no-files-found: ignore
 
       - name: 恢复 Velopack 工具
         run: dotnet tool restore
