@@ -891,6 +891,56 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void StatusCenter_PutsCommonActionsBeforeScrollableDetails()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+
+        int commonStart = mainWindow.IndexOf(
+            "AutomationProperties.Name=\"常用系统操作\"",
+            StringComparison.Ordinal);
+        int networkStart = mainWindow.IndexOf(
+            "Text=\"{Binding NetworkGlyph}\"",
+            StringComparison.Ordinal);
+        int audioDetails = mainWindow.IndexOf(
+            "ItemsSource=\"{Binding ApplicationAudioSessions}\"",
+            StringComparison.Ordinal);
+
+        Assert.True(commonStart >= 0);
+        Assert.True(networkStart > commonStart);
+        Assert.True(audioDetails > networkStart);
+        foreach (string entry in new[]
+                 {
+                     "Content=\"快捷设置\"",
+                     "Content=\"通知中心\"",
+                     "Content=\"{Binding InputSwitcherLabel}\"",
+                     "Content=\"显示桌面\"",
+                     "Content=\"锁定\"",
+                     "Content=\"电源\""
+                 })
+        {
+            int position = mainWindow.IndexOf(
+                entry,
+                commonStart,
+                StringComparison.Ordinal);
+            Assert.InRange(
+                position,
+                commonStart + 1,
+                networkStart - 1);
+        }
+
+        Assert.Single(
+            Regex.Matches(
+                    mainWindow,
+                    "x:Name=\"StatusCenterQuickSettingsButton\"")
+                .Cast<Match>());
+    }
+
+    [Fact]
     public void Settings_UsesZeroConfigurationGitHubUpdates()
     {
         string root = FindRepositoryRoot();
@@ -1056,7 +1106,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.83\"",
+            "LauncherVersion = \"0.10.84\"",
             File.ReadAllText(
                 Path.Combine(
                     root,

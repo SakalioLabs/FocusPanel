@@ -636,9 +636,43 @@
                                 <Button Style="{StaticResource FocusSecondaryButton}" Content="重新接管任务栏"
                                         Command="{Binding EnableReplacementCommand}"
                                         Visibility="{Binding HasReplacementWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <TextBlock Text="常用"
+                                           Margin="4,14,0,7"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                                <UniformGrid Columns="3"
+                                             Margin="0,0,0,12"
+                                             AutomationProperties.Name="常用系统操作">
+                                    <Button x:Name="StatusCenterQuickSettingsButton"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="快捷设置"
+                                            Command="{Binding OpenQuickSettingsCommand}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="通知中心"
+                                            Command="{Binding OpenNotificationsCommand}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="{Binding InputSwitcherLabel}"
+                                            Command="{Binding OpenInputSwitcherCommand}"
+                                            ToolTip="{Binding InputSwitcherSummary}"
+                                            AutomationProperties.Name="{Binding InputSwitcherSummary}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="显示桌面"
+                                            Command="{Binding ShowDesktopCommand}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="锁定"
+                                            Command="{Binding LockComputerCommand}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="电源"
+                                            Click="PowerMenuItem_Click"/>
+                                </UniformGrid>
                                 <Grid Margin="0,14,0,12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="44"/><ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Style="{StaticResource FocusIconText}"
                                                Text="{Binding NetworkGlyph}"
@@ -650,11 +684,6 @@
                                         <TextBlock Text="{Binding NetworkDetail}"
                                                    Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
-                                    <Button x:Name="StatusCenterQuickSettingsButton"
-                                            Grid.Column="2"
-                                            Style="{StaticResource FocusSecondaryButton}"
-                                            Content="快捷设置"
-                                            Command="{Binding OpenQuickSettingsCommand}"/>
                                 </Grid>
                                 <UniformGrid Columns="2"
                                              Margin="0,0,0,4">
@@ -930,20 +959,6 @@
                                     <TextBlock Grid.Column="2"
                                                Text="{Binding BatteryValueText}"/>
                                 </Grid>
-                                <UniformGrid Columns="2">
-                                    <Button Style="{StaticResource FocusSecondaryButton}"
-                                            Content="{Binding InputSwitcherLabel}"
-                                            Command="{Binding OpenInputSwitcherCommand}"
-                                            ToolTip="{Binding InputSwitcherSummary}"
-                                            AutomationProperties.Name="{Binding InputSwitcherSummary}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="通知中心" Command="{Binding OpenNotificationsCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="显示桌面" Command="{Binding ShowDesktopCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="锁定" Command="{Binding LockComputerCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="睡眠" Command="{Binding SleepComputerCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}"
-                                            Content="电源"
-                                            Click="PowerMenuItem_Click"/>
-                                </UniformGrid>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>
