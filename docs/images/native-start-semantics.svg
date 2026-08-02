@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="430" viewBox="0 0 1080 430" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 原生开始按钮语义</title>
+  <desc id="desc">左键打开 Windows 开始菜单，右键打开系统管理菜单，应用继续由统一任务栏和搜索提供。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081220"/>
+      <stop offset="1" stop-color="#172a49"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f8cff"/>
+      <stop offset="1" stop-color="#8664ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="430" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="26" font-weight="700">开始按钮就应该像 Windows 开始按钮</text>
+  <text x="50" y="90" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">取消 Shift 隐藏规则与重复开始中心，恢复用户已经熟悉的左右键分工</text>
+
+  <g transform="translate(50 126)" filter="url(#shadow)">
+    <rect width="128" height="244" rx="24" fill="#182642" stroke="#385078"/>
+    <rect x="28" y="30" width="72" height="72" rx="20" fill="url(#accent)"/>
+    <g transform="translate(49 51)" fill="#fff">
+      <rect width="13" height="13" rx="1"/>
+      <rect x="17" width="13" height="13" rx="1"/>
+      <rect y="17" width="13" height="13" rx="1"/>
+      <rect x="17" y="17" width="13" height="13" rx="1"/>
+    </g>
+    <text x="64" y="130" text-anchor="middle" fill="#f4f7ff" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="650">开始</text>
+    <text x="64" y="170" text-anchor="middle" fill="#8fa4c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">左键 / Enter</text>
+    <text x="64" y="194" text-anchor="middle" fill="#dce8fb" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">原生开始菜单</text>
+    <text x="64" y="224" text-anchor="middle" fill="#8fa4c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">右键 / Shift+F10</text>
+  </g>
+
+  <path d="M204 248h70" stroke="#6f88b2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M262 239l12 9-12 9" fill="none" stroke="#6f88b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(302 126)" filter="url(#shadow)">
+    <rect width="300" height="244" rx="24" fill="#182642" stroke="#385078"/>
+    <text x="24" y="36" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="19" font-weight="650">Windows 开始菜单</text>
+    <rect x="24" y="58" width="252" height="40" rx="12" fill="#243653"/>
+    <circle cx="47" cy="78" r="7" fill="#7ca7ff"/>
+    <text x="66" y="83" fill="#aebed8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">搜索应用、设置和文件</text>
+    <g transform="translate(24 116)">
+      <rect width="52" height="52" rx="14" fill="#294268"/>
+      <rect x="64" width="52" height="52" rx="14" fill="#294268"/>
+      <rect x="128" width="52" height="52" rx="14" fill="#294268"/>
+      <rect x="192" width="52" height="52" rx="14" fill="#294268"/>
+      <circle cx="26" cy="26" r="8" fill="#72a1ff"/>
+      <rect x="84" y="18" width="12" height="16" rx="2" fill="#94b8ff"/>
+      <path d="M148 19h12v14h-12z" fill="none" stroke="#a78bfa" stroke-width="2"/>
+      <path d="M215 18l8 8-8 8-8-8z" fill="#c4b5fd"/>
+    </g>
+    <text x="24" y="206" fill="#8298bc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">由 Windows 维护 · 无需复制</text>
+  </g>
+
+  <path d="M628 248h70" stroke="#6f88b2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M686 239l12 9-12 9" fill="none" stroke="#6f88b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(726 126)" filter="url(#shadow)">
+    <rect width="304" height="244" rx="24" fill="#182642" stroke="#385078"/>
+    <text x="24" y="36" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="19" font-weight="650">右键系统管理</text>
+    <g font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#d8e4f7">
+      <text x="24" y="72">任务管理器</text>
+      <text x="166" y="72">设备管理器</text>
+      <text x="24" y="102">终端（管理员）</text>
+      <text x="166" y="102">磁盘管理</text>
+      <text x="24" y="132">设置</text>
+      <text x="166" y="132">资源管理器</text>
+      <text x="24" y="162">电源与锁定</text>
+      <text x="166" y="162">虚拟桌面</text>
+    </g>
+    <rect x="24" y="184" width="256" height="36" rx="11" fill="#263b61"/>
+    <text x="152" y="207" text-anchor="middle" fill="#9eb3d3" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">单层 Fluent 菜单 · 键盘可达</text>
+  </g>
+</svg>

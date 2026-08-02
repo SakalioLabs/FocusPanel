@@ -2,6 +2,10 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它提供桌面收纳、任务、番茄钟、AI、应用启动、运行窗口管理、系统状态与日期时间入口。旧版 OKR 表只为升级兼容保留，不再出现在产品界面，也不会被概览或 AI 读取。
 
+> 0.11.0 起，“开始”恢复 Windows 任务栏的原生肌肉记忆：左键或 Enter 直接打开 Windows 开始菜单，右键或 `Shift+F10` 打开完整系统管理菜单。FocusPanel 自制开始中心及其重复固定应用、系统工具和全部应用入口已经删除；虚拟桌面四项操作迁入右键菜单，固定/运行应用继续留在统一应用栏，全部应用继续由统一搜索承担。
+
+![原生开始按钮与系统管理菜单分工](docs/images/native-start-semantics.svg)
+
 > 0.10.99 起，状态中心首屏只保留任务栏状态、六个常用动作、主音量和亮度。网络与无线、应用音量、媒体与电池收进三个默认折叠的详情区；标题直接显示网络名称或音频会话摘要，需要时再以 44px Fluent 标题展开。功能没有删除，但不再把所有控制同时堆给用户。
 
 ![状态中心首屏与按需展开详情](docs/images/status-center-progressive-disclosure.svg)
@@ -48,7 +52,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 > 0.10.81 起，开始中心直接提供上一个、新建、下一个和关闭当前虚拟桌面，不再要求先唤起不可靠的任务视图浮层。关闭前会说明应用不会退出，Windows 会把窗口移到相邻桌面并要求确认。
 
-> 0.10.80 起，开始按钮普通点击打开 FocusPanel 自有开始中心，固定应用、资源管理器、设置、终端和任务管理器无需依赖原生任务栏即可使用；“全部应用”进入统一搜索。Shift+点击保留 Windows 原生开始菜单，右键保留 Win+X 管理菜单。开始中心再次点击只关闭自身，不会把整个侧栏收回。
+> 0.10.80 曾让普通点击打开 FocusPanel 自有开始中心；0.11.0 已删除该重复层级。现在普通点击就是 Windows 原生开始菜单，系统管理仍由右键菜单提供，应用仍由统一应用栏和搜索提供。
 
 > 0.10.79 起，恢复不再依赖下一次启动：主进程被任务管理器强制结束或用户按下 `Ctrl+Alt+Shift+F10` 时，独立 watchdog 会在恢复原任务栏后立即恢复已收纳桌面图标。正常退出会先撤销恢复标记，因此不会打乱正常收纳状态；权限或文件状态导致恢复失败时保留标记，下次启动继续重试。0.10.78 的旧事故首次启动自动恢复仍然保留。
 
@@ -202,7 +206,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 后台发现 GitHub 新版本后，紧凑栏“工作”入口显示更新状态点；点击进入最近工作区后，顶部“设置”入口直接进入一键更新，不依赖托盘气泡或重复更新卡片。
 - Velopack 安装定位和更新管理器在共享工作线程准备，主窗口构造与 XAML 首帧不再等待安装目录扫描；首次自动检查和设置页手动检查都会等待同一个初始化结果，安装版不会因为准备尚未结束而漏掉开机后的更新。
 - 更新包下载完成后，SQLite 完整性检查、在线备份和历史备份清理也在专用工作线程执行；设置页会保持忙碌与 Panel 交互锁，备份完成后才恢复原任务栏、桌面图标并启动 Velopack。准备失败会恢复右缘监测并显示原因，不会让界面停在“正在安全重启”或允许重复提交。
-- 开始按钮左键优先向 Explorer 宿主发送 Windows 公开的 `WM_SYSCOMMAND / SC_TASKLIST`，失败才回退模拟 Windows 键；右键提供 Win+X 风格系统管理菜单，包括安装的应用、电源选项、事件查看器、系统、设备管理器、网络连接、磁盘管理、计算机管理、终端、管理员终端、任务管理器、设置和文件资源管理器。公开命令语义见微软的 [WM_SYSCOMMAND 文档](https://learn.microsoft.com/en-us/windows/win32/menurc/wm-syscommand)。
+- 开始按钮左键优先向 Explorer 宿主发送 Windows 公开的 `WM_SYSCOMMAND / SC_TASKLIST`，失败才回退模拟 Windows 键；右键提供 Win+X 风格系统管理菜单，包括安装的应用、电源选项、事件查看器、系统、设备管理器、网络连接、磁盘管理、计算机管理、终端、管理员终端、任务管理器、设置和文件资源管理器。虚拟桌面的上一个、新建、下一个和关闭也位于该菜单内，关闭仍明确确认应用不会退出。公开命令语义见微软的 [WM_SYSCOMMAND 文档](https://learn.microsoft.com/en-us/windows/win32/menurc/wm-syscommand)。
 - 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
 
 ![五入口紧凑任务栏与滚动应用区](docs/images/five-entry-taskbar.svg)
@@ -575,7 +579,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.99 `
+  -Version 0.11.0 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -587,7 +591,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.99-full.nupkg`：完整更新包。
+- `FocusPanel-0.11.0-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

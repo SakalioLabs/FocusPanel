@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.99\"",
+            "LauncherVersion = \"0.11.0\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1493,8 +1493,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains("Text=\"搜索\"", compactDock);
         Assert.Contains("Text=\"工作\"", compactDock);
         Assert.Contains("Text=\"状态\"", compactDock);
-        Assert.Contains(
-            "Visibility=\"{Binding IsStartHubOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+        Assert.DoesNotContain(
+            "IsStartHubOpen",
             compactDock);
         Assert.Contains(
             "Visibility=\"{Binding IsSearchOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
@@ -2702,7 +2702,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void SearchStartHubAndTaskbar_UseTheSameNonBlankIconPresenter()
+    public void SearchAndTaskbar_UseTheSameNonBlankIconPresenter()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -2714,7 +2714,7 @@ public sealed class XamlResourceContractTests
                 "AppIconPresenter.xaml"));
 
         Assert.Equal(
-            3,
+            2,
             Regex.Matches(
                 mainWindow,
                 @"<controls:AppIconPresenter(?:\s|>)").Count);

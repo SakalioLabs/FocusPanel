@@ -748,59 +748,9 @@ public partial class MainWindow :
         RoutedEventArgs e)
     {
         e.Handled = true;
-        StartEntryAction action =
-            StartEntryPolicy.FromLeftClick(
-                Keyboard.Modifiers.HasFlag(
-                    ModifierKeys.Shift));
-        if (action
-            == StartEntryAction.OpenWindowsStart)
-        {
-            await InvokeShellEntryAfterClickAsync(
-                () => _viewModel.OpenStartMenuCommand
-                    .Execute(null));
-            return;
-        }
-
-        ToggleCompactOverlay(
-            () => _viewModel.IsStartHubOpen,
-            () => _viewModel.ToggleStartHubCommand
-                .Execute(null),
-            StartButton);
-    }
-
-    private void StartHubApp_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        if (sender is not Button
-            {
-                DataContext: TaskbarAppItem app
-            })
-        {
-            return;
-        }
-
-        _viewModel.IsStartHubOpen = false;
-        _viewModel.ActivateTaskbarAppCommand
-            .Execute(app);
-        ScheduleAutoHide(900);
-    }
-
-    private void StartHubAllApps_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        _viewModel.IsStartHubOpen = false;
-        _viewModel.SearchQuery = string.Empty;
-        if (!_viewModel.IsSearchOpen)
-        {
-            _viewModel.ToggleSearchCommand
-                .Execute(null);
-        }
-        QueueOverlayFocus(
-            SearchButton,
-            SearchBox,
-            () => _viewModel.IsSearchOpen);
+        await InvokeShellEntryAfterClickAsync(
+            () => _viewModel.OpenStartMenuCommand
+                .Execute(null));
     }
 
     private void CloseCurrentVirtualDesktop_Click(
@@ -817,7 +767,6 @@ public partial class MainWindow :
             return;
         }
 
-        _viewModel.IsStartHubOpen = false;
         _viewModel.CloseCurrentVirtualDesktopCommand
             .Execute(null);
     }
@@ -2534,7 +2483,6 @@ public partial class MainWindow :
 
     private void CloseOverlayPanels()
     {
-        _viewModel.IsStartHubOpen = false;
         _viewModel.IsSearchOpen = false;
         _viewModel.IsCalendarOpen = false;
         _viewModel.IsStatusCenterOpen = false;
@@ -2548,8 +2496,7 @@ public partial class MainWindow :
         if (e.Key != Key.Escape)
             return;
 
-        if (_viewModel.IsStartHubOpen
-            || _viewModel.IsSearchOpen
+        if (_viewModel.IsSearchOpen
             || _viewModel.IsCalendarOpen
             || _viewModel.IsStatusCenterOpen
             || _viewModel.IsSettingsOpen
