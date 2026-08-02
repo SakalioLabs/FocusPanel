@@ -77,4 +77,38 @@ public sealed class EdgeHotZoneDetectorTests
         Assert.False(detector.Update(new Point(1919, -1), PrimaryScreen, 0));
         Assert.False(detector.Update(new Point(1919, -1), PrimaryScreen, 200));
     }
+
+    [Theory]
+    [InlineData(40)]
+    [InlineData(180)]
+    [InlineData(300)]
+    public void Detector_UsesConfiguredDwell(
+        long dwellMilliseconds)
+    {
+        var detector =
+            new EdgeHotZoneDetector(
+                dwellMilliseconds:
+                    dwellMilliseconds);
+        var edgePoint =
+            new Point(1919, 500);
+
+        Assert.False(
+            detector.Update(
+                edgePoint,
+                PrimaryScreen,
+                10));
+        Assert.False(
+            detector.Update(
+                edgePoint,
+                PrimaryScreen,
+                10
+                + dwellMilliseconds
+                - 1));
+        Assert.True(
+            detector.Update(
+                edgePoint,
+                PrimaryScreen,
+                10
+                + dwellMilliseconds));
+    }
 }

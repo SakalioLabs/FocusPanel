@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="450" viewBox="0 0 1120 450" role="img" aria-labelledby="title desc">
   <title id="title">右缘热区后台采样与低频 UI 提交</title>
-  <desc id="desc">后台定时器每三十毫秒读取物理鼠标和全屏状态，纯逻辑检测器判断停留与锁定，只在状态改变或需要打开时向 WPF Dispatcher 提交事件；停止和显示器变化通过代际丢弃旧结果。</desc>
+  <desc id="desc">后台定时器每三十毫秒读取物理鼠标和全屏状态，纯逻辑检测器按用户选择的停留阈值判断与锁定，只在状态改变或需要打开时向 WPF Dispatcher 提交事件；切换灵敏度、停止和显示器变化都会重置检测状态。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0c1728"/>
@@ -19,7 +19,7 @@
   </defs>
   <rect width="1120" height="450" rx="28" fill="url(#bg)"/>
   <text x="54" y="62" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="28" font-weight="650">30ms 采样留在后台，WPF 只接收真正事件</text>
-  <text x="54" y="96" fill="#9fb0c8" font-family="Segoe UI, sans-serif" font-size="15">布局和动画繁忙时仍保持物理右缘停留判断</text>
+  <text x="54" y="96" fill="#9fb0c8" font-family="Segoe UI, sans-serif" font-size="15">40 / 100 / 180 / 300ms 四档可选，布局和动画繁忙时仍保持物理右缘判断</text>
 
   <g filter="url(#shadow)">
     <rect x="54" y="137" width="248" height="224" rx="22" fill="#1c2a42" stroke="#334966"/>
@@ -40,7 +40,7 @@
     <rect x="421" y="126" width="286" height="246" rx="22" fill="#1c2a42" stroke="#4f6388"/>
     <text x="449" y="171" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="19" font-weight="600">纯逻辑热区检测</text>
     <rect x="449" y="198" width="230" height="42" rx="12" fill="#142238"/>
-    <text x="469" y="225" fill="#bae6fd" font-family="Segoe UI, sans-serif" font-size="14">12px 感应带 · 100ms 停留</text>
+    <text x="469" y="225" fill="#bae6fd" font-family="Segoe UI, sans-serif" font-size="14">12px 感应带 · 可调停留阈值</text>
     <rect x="449" y="255" width="230" height="42" rx="12" fill="#142238"/>
     <text x="469" y="282" fill="#c7d2fe" font-family="Segoe UI, sans-serif" font-size="14">32px 复位 · 全屏抑制</text>
     <rect x="449" y="312" width="230" height="36" rx="11" fill="#26304c"/>
@@ -61,5 +61,5 @@
     <text x="878" y="307" fill="#ede9fe" font-family="Segoe UI, sans-serif" font-size="14">呼出 76px 紧凑栏</text>
   </g>
 
-  <text x="54" y="412" fill="#93a4bd" font-family="Segoe UI, sans-serif" font-size="13">稳定状态不重复提交；Stop、托盘隐藏或换屏后，旧采样即使完成也不会再打开 Panel。</text>
+  <text x="54" y="412" fill="#93a4bd" font-family="Segoe UI, sans-serif" font-size="13">切换灵敏度会清空当前停留；Stop、托盘隐藏或换屏后，旧采样即使完成也不会再打开 Panel。</text>
 </svg>

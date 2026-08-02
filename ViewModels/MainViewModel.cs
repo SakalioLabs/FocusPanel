@@ -272,6 +272,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             .DefaultMilliseconds;
 
     [ObservableProperty]
+    private int hotZoneDwellMilliseconds =
+        EdgeHotZoneSensitivityPolicy
+            .DefaultDwellMilliseconds;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
@@ -680,6 +685,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ShellAutoHideDelayOption>
         AutoHideDelayOptions =>
             ShellAutoHideDelayPolicy.Options;
+    public IReadOnlyList<
+        EdgeHotZoneSensitivityOption>
+        HotZoneSensitivityOptions =>
+            EdgeHotZoneSensitivityPolicy
+                .Options;
     public string WifiNetworkToggleText =>
         IsWifiNetworkBusy
             ? "正在查找 Wi‑Fi…"
@@ -932,6 +942,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             AutoHideDelayMilliseconds =
                 preferenceSnapshot
                     .AutoHideDelayMilliseconds;
+            HotZoneDwellMilliseconds =
+                preferenceSnapshot
+                    .HotZoneDwellMilliseconds;
             IsOnboardingVisible =
                 !preferenceSnapshot
                     .FirstRunAccepted
@@ -1163,6 +1176,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
             QueueShellPreference(
                 ShellPreferenceRepository
                     .AutoHideDelayKey,
+                normalized.ToString());
+        }
+    }
+
+    partial void OnHotZoneDwellMillisecondsChanged(
+        int value)
+    {
+        int normalized =
+            EdgeHotZoneSensitivityPolicy
+                .NormalizeDwell(value);
+        if (normalized != value)
+        {
+            HotZoneDwellMilliseconds =
+                normalized;
+            return;
+        }
+
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .HotZoneDwellKey,
                 normalized.ToString());
         }
     }

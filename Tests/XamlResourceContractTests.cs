@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.89\"",
+            "LauncherVersion = \"0.10.90\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -5141,6 +5141,21 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AutomationProperties.Name=\"鼠标离开后自动收起速度\"",
             mainXaml);
+        Assert.Contains(
+            "HotZoneDwellKey",
+            repository);
+        Assert.Contains(
+            "OnHotZoneDwellMillisecondsChanged(",
+            viewModel);
+        Assert.Contains(
+            "ItemsSource=\"{Binding HotZoneSensitivityOptions}\"",
+            mainXaml);
+        Assert.Contains(
+            "SelectedValue=\"{Binding HotZoneDwellMilliseconds",
+            mainXaml);
+        Assert.Contains(
+            "AutomationProperties.Name=\"右缘悬停呼出灵敏度\"",
+            mainXaml);
 
         string mainWindow = File.ReadAllText(
             Path.Combine(
@@ -5171,6 +5186,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "?? _viewModel\n                .AutoHideDelayMilliseconds",
             mainWindow.Replace("\r\n", "\n"));
+        Assert.Contains(
+            ".HotZoneDwellMilliseconds);",
+            mainWindow);
+        Assert.Contains(
+            ".SetDwellMilliseconds(",
+            mainWindow);
     }
 
     [Fact]

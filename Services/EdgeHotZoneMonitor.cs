@@ -20,7 +20,7 @@ public sealed class EdgeHotZoneMonitor : IDisposable
     private readonly Action<Action> _postToUi;
     private readonly Func<long> _clock;
     private readonly TimeSpan _pollInterval;
-    private readonly EdgeHotZoneDetector _detector;
+    private EdgeHotZoneDetector _detector;
     private Rectangle _targetBounds;
     private CancellationTokenSource? _pollCancellation;
     private Task _pollTask = Task.CompletedTask;
@@ -32,7 +32,8 @@ public sealed class EdgeHotZoneMonitor : IDisposable
     public EdgeHotZoneMonitor(
         IWindowTracker windowTracker,
         Func<bool>? suppressInFullscreen = null,
-        Func<Rectangle>? boundsProvider = null)
+        Func<Rectangle>? boundsProvider = null,
+        int dwellMilliseconds = 100)
         : this(
             boundsProvider
                 ?? (() =>
@@ -46,7 +47,8 @@ public sealed class EdgeHotZoneMonitor : IDisposable
             () => Stopwatch.GetTimestamp()
                 * 1000L
                 / Stopwatch.Frequency,
-            DefaultPollInterval)
+            DefaultPollInterval,
+            dwellMilliseconds)
     {
     }
 
@@ -56,7 +58,8 @@ public sealed class EdgeHotZoneMonitor : IDisposable
         Func<bool> isSuppressed,
         Action<Action> postToUi,
         Func<long> clock,
-        TimeSpan pollInterval)
+        TimeSpan pollInterval,
+        long dwellMilliseconds = 100)
     {
         _boundsProvider =
             boundsProvider
@@ -85,7 +88,9 @@ public sealed class EdgeHotZoneMonitor : IDisposable
         }
 
         _pollInterval = pollInterval;
-        _detector = new EdgeHotZoneDetector();
+        _detector = new EdgeHotZoneDetector(
+            dwellMilliseconds:
+                dwellMilliseconds);
         RefreshDisplayBounds();
     }
 
@@ -177,6 +182,25 @@ public sealed class EdgeHotZoneMonitor : IDisposable
             _targetBounds = bounds;
             _boundsRevision++;
             _detector.Reset();
+        }
+    }
+
+    internal void SetDwellMilliseconds(
+        int dwellMilliseconds)
+    {
+        int normalized =
+            EdgeHotZoneSensitivityPolicy
+                .NormalizeDwell(
+                    dwellMilliseconds);
+        lock (_sync)
+        {
+            if (_disposed)
+                return;
+
+            _detector =
+                new EdgeHotZoneDetector(
+                    dwellMilliseconds:
+                        normalized);
         }
     }
 

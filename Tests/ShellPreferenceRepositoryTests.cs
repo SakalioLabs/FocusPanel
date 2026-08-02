@@ -23,6 +23,12 @@ public sealed class ShellPreferenceRepositoryTests
             ShellPreferenceSnapshot
                 .Default
                 .AutoHideDelayMilliseconds);
+        Assert.Equal(
+            EdgeHotZoneSensitivityPolicy
+                .DefaultDwellMilliseconds,
+            ShellPreferenceSnapshot
+                .Default
+                .HotZoneDwellMilliseconds);
     }
 
     [Fact]
@@ -38,6 +44,7 @@ public sealed class ShellPreferenceRepositoryTests
                         false,
                         true,
                         "Unsupported",
+                        999,
                         999),
                 (_, _) => { });
 
@@ -61,6 +68,10 @@ public sealed class ShellPreferenceRepositoryTests
             ShellAutoHideDelayPolicy
                 .DefaultMilliseconds,
             snapshot.AutoHideDelayMilliseconds);
+        Assert.Equal(
+            EdgeHotZoneSensitivityPolicy
+                .DefaultDwellMilliseconds,
+            snapshot.HotZoneDwellMilliseconds);
     }
 
     [Fact]
@@ -76,7 +87,8 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         false,
                         @"device:  \\.\DISPLAY2  ",
-                        800),
+                        800,
+                        180),
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
@@ -88,6 +100,9 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             800,
             snapshot.AutoHideDelayMilliseconds);
+        Assert.Equal(
+            180,
+            snapshot.HotZoneDwellMilliseconds);
     }
 
     [Fact]
@@ -119,7 +134,8 @@ public sealed class ShellPreferenceRepositoryTests
                         false,
                         ShellDisplayTarget
                             .PrimaryValue,
-                        1200);
+                        1200,
+                        40);
                 },
                 (_, _) => { });
 
@@ -149,6 +165,9 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             1200,
             snapshot.AutoHideDelayMilliseconds);
+        Assert.Equal(
+            40,
+            snapshot.HotZoneDwellMilliseconds);
     }
 
     [Fact]

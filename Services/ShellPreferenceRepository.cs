@@ -15,7 +15,8 @@ internal sealed record ShellPreferenceSnapshot(
     bool DisableHotZoneInFullscreen,
     bool EnableTaskbarSlotHotkeys,
     string DisplayTargetMode,
-    int AutoHideDelayMilliseconds)
+    int AutoHideDelayMilliseconds,
+    int HotZoneDwellMilliseconds)
 {
     internal static ShellPreferenceSnapshot Default { get; } =
         new(
@@ -27,7 +28,9 @@ internal sealed record ShellPreferenceSnapshot(
             ShellDisplayTarget
                 .OutermostRightValue,
             ShellAutoHideDelayPolicy
-                .DefaultMilliseconds);
+                .DefaultMilliseconds,
+            EdgeHotZoneSensitivityPolicy
+                .DefaultDwellMilliseconds);
 }
 
 internal interface IShellPreferenceRepository
@@ -61,6 +64,8 @@ internal sealed class ShellPreferenceRepository
         "Shell.DisplayTargetMode";
     internal const string AutoHideDelayKey =
         "Shell.AutoHideDelayMilliseconds";
+    internal const string HotZoneDwellKey =
+        "Shell.HotZoneDwellMilliseconds";
 
     private static readonly string[] Keys =
     {
@@ -70,7 +75,8 @@ internal sealed class ShellPreferenceRepository
         FullscreenHotZoneKey,
         TaskbarSlotHotkeysKey,
         DisplayTargetModeKey,
-        AutoHideDelayKey
+        AutoHideDelayKey,
+        HotZoneDwellKey
     };
 
     private readonly object _sync = new();
@@ -283,7 +289,14 @@ internal sealed class ShellPreferenceRepository
                     values,
                     AutoHideDelayKey,
                     ShellAutoHideDelayPolicy
-                        .DefaultMilliseconds)));
+                        .DefaultMilliseconds)),
+            EdgeHotZoneSensitivityPolicy
+                .NormalizeDwell(
+                    ReadInt32(
+                        values,
+                        HotZoneDwellKey,
+                        EdgeHotZoneSensitivityPolicy
+                            .DefaultDwellMilliseconds)));
     }
 
     private static void SaveCore(
@@ -323,7 +336,12 @@ internal sealed class ShellPreferenceRepository
             AutoHideDelayMilliseconds =
                 ShellAutoHideDelayPolicy.Normalize(
                     snapshot
-                        .AutoHideDelayMilliseconds)
+                        .AutoHideDelayMilliseconds),
+            HotZoneDwellMilliseconds =
+                EdgeHotZoneSensitivityPolicy
+                    .NormalizeDwell(
+                        snapshot
+                            .HotZoneDwellMilliseconds)
         };
 
     private static string NormalizeTheme(

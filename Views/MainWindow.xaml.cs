@@ -384,7 +384,9 @@ public partial class MainWindow :
         _hotZoneMonitor = new EdgeHotZoneMonitor(
             _coordinator.Windows,
             () => _viewModel.DisableHotZoneInFullscreen,
-            GetTargetDisplayBounds);
+            GetTargetDisplayBounds,
+            _viewModel
+                .HotZoneDwellMilliseconds);
         _hotZoneMonitor.OpenRequested += (_, _) => OpenCompactDock();
         _hotZoneMonitor.AvailabilityChanged += isAvailable =>
         {
@@ -979,6 +981,18 @@ public partial class MainWindow :
         object? sender,
         PropertyChangedEventArgs e)
     {
+        if (e.PropertyName
+            == nameof(
+                MainViewModel
+                    .HotZoneDwellMilliseconds))
+        {
+            _hotZoneMonitor?
+                .SetDwellMilliseconds(
+                    _viewModel
+                        .HotZoneDwellMilliseconds);
+            return;
+        }
+
         if (e.PropertyName
             == nameof(
                 MainViewModel

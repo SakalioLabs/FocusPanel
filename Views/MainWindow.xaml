@@ -1120,6 +1120,18 @@
                                                Text="Panel、右缘热区和运行指示条会一起迁移。"
                                                TextWrapping="Wrap"
                                                Style="{StaticResource FocusCaptionText}"/>
+                                    <TextBlock Text="右缘呼出灵敏度"
+                                               Margin="0,12,0,5"
+                                               Style="{StaticResource FocusCaptionText}"/>
+                                    <ComboBox ItemsSource="{Binding HotZoneSensitivityOptions}"
+                                              DisplayMemberPath="DisplayName"
+                                              SelectedValuePath="DwellMilliseconds"
+                                              SelectedValue="{Binding HotZoneDwellMilliseconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              AutomationProperties.Name="右缘悬停呼出灵敏度"/>
+                                    <TextBlock Margin="0,5,0,0"
+                                               Text="灵敏档更容易快速呼出；稳妥和刻意档可减少经过屏幕右缘时的误触。"
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource FocusCaptionText}"/>
                                     <TextBlock Text="鼠标离开后自动收起"
                                                Margin="0,12,0,5"
                                                Style="{StaticResource FocusCaptionText}"/>
