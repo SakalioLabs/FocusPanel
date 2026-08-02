@@ -903,6 +903,12 @@ public sealed class XamlResourceContractTests
         int commonStart = mainWindow.IndexOf(
             "AutomationProperties.Name=\"常用系统操作\"",
             StringComparison.Ordinal);
+        int masterVolume = mainWindow.IndexOf(
+            "Value=\"{Binding MasterVolume, Mode=TwoWay",
+            StringComparison.Ordinal);
+        int brightness = mainWindow.IndexOf(
+            "Value=\"{Binding BrightnessPercent, Mode=TwoWay",
+            StringComparison.Ordinal);
         int networkStart = mainWindow.IndexOf(
             "Text=\"{Binding NetworkGlyph}\"",
             StringComparison.Ordinal);
@@ -911,7 +917,9 @@ public sealed class XamlResourceContractTests
             StringComparison.Ordinal);
 
         Assert.True(commonStart >= 0);
-        Assert.True(networkStart > commonStart);
+        Assert.True(masterVolume > commonStart);
+        Assert.True(brightness > masterVolume);
+        Assert.True(networkStart > brightness);
         Assert.True(audioDetails > networkStart);
         foreach (string entry in new[]
                  {
@@ -1106,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.84\"",
+            "LauncherVersion = \"0.10.85\"",
             File.ReadAllText(
                 Path.Combine(
                     root,

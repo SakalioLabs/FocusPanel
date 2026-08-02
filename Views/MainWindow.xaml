@@ -670,6 +670,67 @@
                                             Content="电源"
                                             Click="PowerMenuItem_Click"/>
                                 </UniformGrid>
+                                <TextBlock Text="音量与亮度"
+                                           Margin="4,2,0,7"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/></Grid.ColumnDefinitions>
+                                    <Button Style="{StaticResource FocusIconButton}"
+                                            Command="{Binding ToggleMuteCommand}"
+                                            IsEnabled="{Binding IsAudioAvailable}"
+                                            ToolTip="{Binding AudioToggleLabel}"
+                                            AutomationProperties.Name="{Binding AudioToggleLabel}">
+                                        <TextBlock Style="{StaticResource FocusIconText}"
+                                                   Text="{Binding AudioGlyph}"/>
+                                    </Button>
+                                    <Slider Grid.Column="1" Margin="8,0,14,0" Minimum="0" Maximum="1"
+                                            IsEnabled="{Binding IsAudioAvailable}"
+                                            Value="{Binding MasterVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding MasterVolume, StringFormat={}{0:P0}}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="1"
+                                               Grid.ColumnSpan="3"
+                                               Margin="4,5,0,0"
+                                               Text="{Binding AudioStatusText}"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,12"
+                                      AutomationProperties.Name="{Binding BrightnessSummary}">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="44"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="52"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               Text="&#xE706;"
+                                               ToolTip="显示亮度"/>
+                                    <Slider Grid.Column="1"
+                                            Margin="8,0,14,0"
+                                            Minimum="0"
+                                            Maximum="100"
+                                            TickFrequency="1"
+                                            IsSnapToTickEnabled="True"
+                                            IsEnabled="{Binding IsBrightnessAvailable}"
+                                            Value="{Binding BrightnessPercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            AutomationProperties.Name="内置显示器亮度"/>
+                                    <TextBlock Grid.Column="2"
+                                               VerticalAlignment="Center"
+                                               Text="{Binding BrightnessPercent, StringFormat={}{0}%}"/>
+                                    <TextBlock Grid.Row="1"
+                                               Grid.ColumnSpan="3"
+                                               Margin="4,5,0,0"
+                                               Text="{Binding BrightnessStatusText}"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                </Grid>
                                 <Grid Margin="0,14,0,12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="44"/><ColumnDefinition Width="*"/>
@@ -784,31 +845,6 @@
                                         Content="打开位置权限"
                                         Command="{Binding OpenWifiLocationSettingsCommand}"
                                         Visibility="{Binding HasWifiLocationAccessWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/></Grid.ColumnDefinitions>
-                                    <Button Style="{StaticResource FocusIconButton}"
-                                            Command="{Binding ToggleMuteCommand}"
-                                            IsEnabled="{Binding IsAudioAvailable}"
-                                            ToolTip="{Binding AudioToggleLabel}"
-                                            AutomationProperties.Name="{Binding AudioToggleLabel}">
-                                        <TextBlock Style="{StaticResource FocusIconText}"
-                                                   Text="{Binding AudioGlyph}"/>
-                                    </Button>
-                                    <Slider Grid.Column="1" Margin="8,0,14,0" Minimum="0" Maximum="1"
-                                            IsEnabled="{Binding IsAudioAvailable}"
-                                            Value="{Binding MasterVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding MasterVolume, StringFormat={}{0:P0}}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Row="1"
-                                               Grid.ColumnSpan="3"
-                                               Margin="4,5,0,0"
-                                               Text="{Binding AudioStatusText}"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"
-                                               TextWrapping="Wrap"/>
-                                </Grid>
                                 <Grid Margin="4,0,4,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -889,39 +925,6 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <Grid Margin="0,0,0,12"
-                                      AutomationProperties.Name="{Binding BrightnessSummary}">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="44"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="52"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Style="{StaticResource FocusIconText}"
-                                               Text="&#xE706;"
-                                               ToolTip="显示亮度"/>
-                                    <Slider Grid.Column="1"
-                                            Margin="8,0,14,0"
-                                            Minimum="0"
-                                            Maximum="100"
-                                            TickFrequency="1"
-                                            IsSnapToTickEnabled="True"
-                                            IsEnabled="{Binding IsBrightnessAvailable}"
-                                            Value="{Binding BrightnessPercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                            AutomationProperties.Name="内置显示器亮度"/>
-                                    <TextBlock Grid.Column="2"
-                                               VerticalAlignment="Center"
-                                               Text="{Binding BrightnessPercent, StringFormat={}{0}%}"/>
-                                    <TextBlock Grid.Row="1"
-                                               Grid.ColumnSpan="3"
-                                               Margin="4,5,0,0"
-                                               Text="{Binding BrightnessStatusText}"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"
-                                               TextWrapping="Wrap"/>
-                                </Grid>
                                 <TextBlock Text="媒体控制"
                                            Margin="4,2,0,7"
                                            Style="{StaticResource FocusCaptionText}"/>
