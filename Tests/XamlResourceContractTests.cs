@@ -1056,7 +1056,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.81\"",
+            "LauncherVersion = \"0.10.82\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1548,11 +1548,27 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"开始\"",
             mainWindow);
         Assert.Contains("private void FocusCompactDock()", codeBehind);
-        Assert.True(
+        Assert.Equal(
+            1,
             codeBehind.Split(
                 "FocusCompactDock();",
-                StringSplitOptions.None).Length - 1 >= 2);
+                StringSplitOptions.None).Length - 1);
         Assert.Contains("SearchButton.Focus();", codeBehind);
+        Assert.Contains(
+            "private void OpenSearchFromSummonHotkey()",
+            codeBehind);
+        Assert.Contains(
+            "OpenSearchFromSummonHotkey();",
+            codeBehind);
+        Assert.Contains(
+            "_viewModel.ToggleSearchCommand",
+            codeBehind);
+        Assert.Contains(
+            "if (!_viewModel.IsSearchOpen)",
+            codeBehind);
+        Assert.Contains(
+            "SearchBox.SelectAll();",
+            codeBehind);
         Assert.Contains(
             "Text=\"{Binding SummonShortcutText}\"",
             mainWindow);
@@ -1567,7 +1583,7 @@ public sealed class XamlResourceContractTests
                     "ViewModels",
                     "MainViewModel.cs")));
         Assert.DoesNotContain(
-            "Text=\"主动唤出：Ctrl + Alt + Space\"",
+            "Text=\"快速搜索：Ctrl + Alt + Space\"",
             mainWindow);
     }
 

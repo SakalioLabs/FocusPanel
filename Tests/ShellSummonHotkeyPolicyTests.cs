@@ -26,6 +26,9 @@ public sealed class ShellSummonHotkeyPolicyTests
         Assert.Contains(
             "Ctrl + Alt + Space",
             result.DisplayText);
+        Assert.Contains(
+            "快速搜索",
+            result.DisplayText);
         Assert.Single(attempts);
         Assert.NotEqual(
             0u,
@@ -74,6 +77,9 @@ public sealed class ShellSummonHotkeyPolicyTests
             attempts);
         Assert.Contains(
             "右缘热区",
+            result.DisplayText);
+        Assert.Contains(
+            "快速搜索",
             result.DisplayText);
     }
 

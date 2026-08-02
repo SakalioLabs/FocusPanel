@@ -2,6 +2,8 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它提供桌面收纳、任务、番茄钟、AI、应用启动、运行窗口管理、系统状态与日期时间入口。旧版 OKR 表只为升级兼容保留，不再出现在产品界面，也不会被概览或 AI 读取。
 
+> 0.10.82 起，全局快捷键不再只把焦点停在搜索图标上：按 `Ctrl+Alt+Space`（冲突时为 `Ctrl+Shift+Space`）会一步展开 Panel、打开统一搜索、聚焦输入框并全选原查询，可以直接输入。右缘悬停仍只唤出紧凑栏，托盘恢复仍回到紧凑栏，三种入口不会互相改变语义。
+
 > 0.10.81 起，开始中心直接提供上一个、新建、下一个和关闭当前虚拟桌面，不再要求先唤起不可靠的任务视图浮层。关闭前会说明应用不会退出，Windows 会把窗口移到相邻桌面并要求确认。
 
 > 0.10.80 起，开始按钮普通点击打开 FocusPanel 自有开始中心，固定应用、资源管理器、设置、终端和任务管理器无需依赖原生任务栏即可使用；“全部应用”进入统一搜索。Shift+点击保留 Windows 原生开始菜单，右键保留 Win+X 管理菜单。开始中心再次点击只关闭自身，不会把整个侧栏收回。
@@ -27,7 +29,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 桌面拖入、分区收纳和拖出恢复统一经过受观察的异步交互边界：文件属性操作完成前持续持有 Panel，异常会转为可恢复提示，任何成功、失败或提示异常路径都会释放拖拽与自动收起锁。
 - 从 Explorer 发起的外部拖拽与 Panel 自己发起的拖出使用独立会话语义；外部拖拽取消、离开或落下后立即复位，内部拖拽经过子控件时不会被重复 `DragEnter` 误判为外部操作。
 - 独占或无边框全屏应用前台时默认停用鼠标热区。
-- 全局主动唤出优先使用 `Ctrl+Alt+Space`；若被其他程序占用，自动回退 `Ctrl+Shift+Space`。设置页显示本次会话实际注册成功的组合，两者都不可用时仍可使用右缘热区。
+- 全局快速搜索优先使用 `Ctrl+Alt+Space`；若被其他程序占用，自动回退 `Ctrl+Shift+Space`。按下后直接打开统一搜索并全选原查询，不需要再按一次 Enter。设置页显示本次会话实际注册成功的组合，两者都不可用时仍可使用右缘热区。
 - 在设置中明确开启“九槽位全局快速键”且任务栏接管成功后，`Ctrl+Alt+1…9` 可从任意应用直接启动或切换统一应用栏前九个槽位，追加 `Shift` 则启动新实例；此选项默认关闭并写入 Shell 偏好，避免国际键盘的 AltGr 输入被意外占用。顺序始终按 Panel 当前从上到下的固定项与稳定运行项计算，图标工具提示和读屏名称会说明实际槽位。每个组合独立通过公开 `RegisterHotKey` 注册，冲突项留给原程序，设置页显示本次会话真实可用范围；关闭选项、恢复原任务栏、接管异常、更新或退出时立即幂等注销。FocusPanel 不用键盘钩子强抢 Windows 保留的 `Win+数字` 组合，依据见 [RegisterHotKey 文档](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey)。
 - 主动唤出后焦点落到搜索入口，可使用 Tab、Shift+Tab 或方向键循环浏览紧凑栏，Enter/Space 执行；应用按钮向读屏提供应用名称和窗口摘要，Shift+F10 或菜单键打开右键菜单。
 - 搜索、Focus 中心、状态中心、月历、设置和电源打开后都会把焦点送入首个有效内容；按 `Esc` 关闭时再返回原紧凑栏入口。快速切换或自动收起期间的迟到焦点请求会检查窗口生命周期，不会跳到已隐藏控件。
@@ -521,7 +523,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.81 `
+  -Version 0.10.82 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -533,7 +535,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.81-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.82-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

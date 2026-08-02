@@ -16,7 +16,7 @@ internal readonly record struct ShellHotkeyRegistration(
         Unavailable { get; } =
         new(
             false,
-            "主动唤出快捷键注册失败；请使用右缘热区");
+            "快速搜索快捷键注册失败；请使用右缘热区");
 }
 
 internal static class ShellSummonHotkeyPolicy
@@ -38,13 +38,13 @@ internal static class ShellSummonHotkeyPolicy
             | ModAlt
             | ModNoRepeat,
             VkSpace,
-            "主动唤出：Ctrl + Alt + Space"),
+            "快速搜索：Ctrl + Alt + Space"),
         new ShellHotkeyCandidate(
             ModControl
             | ModShift
             | ModNoRepeat,
             VkSpace,
-            "主动唤出：Ctrl + Shift + Space（备用）")
+            "快速搜索：Ctrl + Shift + Space（备用）")
     };
 
     internal static ShellHotkeyRegistration

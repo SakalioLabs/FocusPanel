@@ -2665,10 +2665,7 @@ public partial class MainWindow :
         }
         else if (message == WmHotkey && wParam.ToInt32() == SummonHotkeyId)
         {
-            _hiddenToTray = false;
-            ExpandSidebar();
-            Activate();
-            FocusCompactDock();
+            OpenSearchFromSummonHotkey();
             handled = true;
         }
         else if (message == WmHotkey
@@ -2825,6 +2822,38 @@ public partial class MainWindow :
 
             SearchButton.Focus();
         }, DispatcherPriority.Input);
+    }
+
+    private void OpenSearchFromSummonHotkey()
+    {
+        if (_isExit || !_shellStartupReady)
+        {
+            return;
+        }
+
+        _hiddenToTray = false;
+        ExpandSidebar();
+        Activate();
+        if (!_viewModel.IsSearchOpen)
+        {
+            _viewModel.ToggleSearchCommand
+                .Execute(null);
+        }
+
+        QueueOverlayFocus(
+            SearchButton,
+            SearchBox,
+            () => _viewModel.IsSearchOpen);
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (_viewModel.IsSearchOpen
+                    && SearchBox.IsKeyboardFocusWithin)
+                {
+                    SearchBox.SelectAll();
+                }
+            }),
+            DispatcherPriority.Input);
     }
 
     private void UpdateEdgeIndicatorVisibility()
