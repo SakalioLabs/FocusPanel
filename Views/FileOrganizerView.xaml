@@ -572,15 +572,21 @@
                                Opened="TransientPopup_Opened"
                                Closed="TransientPopup_Closed">
                             <Border Style="{StaticResource PopupPanelStyle}" Margin="0,8,0,0">
-                                <StackPanel Width="170">
+                                <StackPanel Width="210">
                                     <TextBlock Text="&#x4FEE;&#x590D;&#x5DE5;&#x5177;"
                                                Margin="0,0,0,10"
                                                Style="{StaticResource FocusCaptionText}"/>
+                                    <Button Command="{Binding RestoreAllCollectedDesktopItemsCommand}"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="8"
+                                            Margin="0,0,0,8"
+                                            Content="&#x7D27;&#x6025;&#x6062;&#x590D;&#x5168;&#x90E8;&#x56FE;&#x6807;"/>
                                     <Button Command="{Binding RescueCommand}"
                                             Style="{StaticResource FocusSecondaryButton}"
                                             HorizontalContentAlignment="Left"
                                             Padding="8"
-                                            Content="&#x6062;&#x590D;&#x684C;&#x9762;"/>
+                                            Content="&#x6551;&#x63F4;&#x672A;&#x5206;&#x7C7B;&#x6587;&#x4EF6;"/>
                                 </StackPanel>
                             </Border>
                         </Popup>

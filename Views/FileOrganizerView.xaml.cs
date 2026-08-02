@@ -342,7 +342,7 @@ public partial class FileOrganizerView : UserControl
         root.IsEnabled = root.Items.Count > 0;
     }
 
-    private static async void MoveToPartition_Click(
+    private static void MoveToPartition_Click(
         object sender,
         RoutedEventArgs e)
     {
@@ -354,12 +354,13 @@ public partial class FileOrganizerView : UserControl
             return;
         }
 
-        await ExecutePartitionActionAsync(
+        e.Handled = true;
+        QueuePartitionAction(
             target,
             collect: false);
     }
 
-    private static async void CollectToPartition_Click(
+    private static void CollectToPartition_Click(
         object sender,
         RoutedEventArgs e)
     {
@@ -371,39 +372,68 @@ public partial class FileOrganizerView : UserControl
             return;
         }
 
-        await ExecutePartitionActionAsync(
+        e.Handled = true;
+        QueuePartitionAction(
             target,
             collect: true);
     }
 
-    private static async Task ExecutePartitionActionAsync(
+    private static void QueuePartitionAction(
         PartitionActionTarget target,
         bool collect)
     {
         try
         {
             target.ContextMenu.IsOpen = false;
-            if (collect)
-            {
-                await target.ViewModel.HideDraggedFileToPanel(
-                    target.File,
-                    target.PartitionName);
-            }
-            else
-            {
-                await target.ViewModel.AssignFileToPartition(
-                    target.File,
-                    target.PartitionName);
-            }
+            target.ContextMenu.Dispatcher.BeginInvoke(
+                new Action(() =>
+                    AsyncInteractionRunner.Start(
+                        () => ExecutePartitionActionAsync(
+                            target,
+                            collect),
+                        ReportPartitionActionFailure)),
+                DispatcherPriority.Background);
         }
         catch (Exception ex)
         {
-            new CrashLogService().TryAppend(ex);
+            ReportPartitionActionFailure(ex);
+        }
+    }
+
+    private static async Task ExecutePartitionActionAsync(
+        PartitionActionTarget target,
+        bool collect)
+    {
+        if (collect)
+        {
+            await target.ViewModel.HideDraggedFileToPanel(
+                target.File,
+                target.PartitionName);
+        }
+        else
+        {
+            await target.ViewModel.AssignFileToPartition(
+                target.File,
+                target.PartitionName);
+        }
+    }
+
+    private static void ReportPartitionActionFailure(
+        Exception error)
+    {
+        new CrashLogService().TryAppend(error);
+        try
+        {
             FocusDialogService.Show(
-                $"更新收纳区域失败，原有布局已保留：{ex.Message}",
+                $"更新收纳区域失败，原有布局已保留：{error.Message}",
                 "桌面收纳",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
+        }
+        catch (Exception feedbackError)
+        {
+            new CrashLogService().TryAppend(
+                feedbackError);
         }
     }
 

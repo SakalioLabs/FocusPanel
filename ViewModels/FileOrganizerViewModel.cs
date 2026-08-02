@@ -752,6 +752,56 @@ public partial class FileOrganizerViewModel :
         }
     }
 
+    [RelayCommand]
+    private async Task RestoreAllCollectedDesktopItems()
+    {
+        var confirmation = FocusDialogService.Show(
+            "这会取消所有使用新属性模式收纳的桌面项目，并精确恢复它们收纳前的文件属性。\n\n"
+            + "文件不会被移动或删除；旧版 .FocusPanel 仓库中的项目不会受影响。是否继续？",
+            "紧急恢复桌面图标",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (confirmation != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            var recovery = new DesktopCrashRecoveryService();
+            DesktopCrashRecoveryResult result =
+                await Task.Run(recovery.RestoreCollectedItems);
+
+            // The application is still running. Re-arm crash recovery after
+            // this manual repair so a later fatal exit remains recoverable.
+            recovery.Arm();
+            await _fileService.RefreshFiles();
+            RequestLayoutRefresh();
+
+            string message = result.Failed == 0
+                ? $"已恢复 {result.Restored} 个桌面项目。"
+                : $"已恢复 {result.Restored} 个桌面项目，另有 {result.Failed} 个项目因不存在或权限不足未能恢复。恢复记录已保留，可稍后重试。";
+            FocusDialogService.Show(
+                message,
+                "紧急恢复桌面图标",
+                System.Windows.MessageBoxButton.OK,
+                result.Failed == 0
+                    ? System.Windows.MessageBoxImage.Information
+                    : System.Windows.MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            new CrashLogService().TryAppend(
+                new InvalidOperationException(
+                    "Manual desktop icon recovery failed.",
+                    ex));
+            FocusDialogService.Show(
+                $"恢复失败，原有文件和恢复记录未被删除：{ex.Message}",
+                "紧急恢复桌面图标",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+        }
+    }
+
     private bool CanOrganizeAll() =>
         !IsOrganizing;
 

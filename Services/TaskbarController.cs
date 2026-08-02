@@ -194,11 +194,14 @@ public sealed class TaskbarController : ITaskbarController
 
     public static void RestoreOrphanedSession()
     {
-        string localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string sessionFile = Path.Combine(localData, "FocusPanel", "taskbar-session.json");
+        string sessionFile =
+            GetDefaultSessionFile();
         if (File.Exists(sessionFile))
             RestoreSessionFile(sessionFile);
     }
+
+    internal static bool HasOrphanedSession() =>
+        File.Exists(GetDefaultSessionFile());
 
     internal static void RestoreSessionFile(string sessionFile)
         => RestoreSessionFile(sessionFile, new WindowsTaskbarNativeApi());

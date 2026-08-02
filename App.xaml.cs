@@ -15,7 +15,10 @@ public partial class App : Application
         new();
     private readonly DatabaseStartupCoordinator
         _databaseStartup;
+    private readonly DesktopCrashRecoveryService
+        _desktopCrashRecovery = new();
     private bool _handlingFatalException;
+    private bool _fatalShutdown;
 
     public App()
     {
@@ -41,6 +44,11 @@ public partial class App : Application
             return;
         }
 
+        // A stale taskbar session proves that the previous shell did not
+        // complete its normal shutdown path. Keep that signal so desktop
+        // item attributes can be repaired after the database is available.
+        bool hadOrphanedTaskbarSession =
+            TaskbarController.HasOrphanedSession();
         // Always repair a stale replacement session before normal startup.
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
@@ -85,6 +93,24 @@ public partial class App : Application
             return;
         }
 
+        DesktopCrashRecoveryResult desktopRecovery =
+            _desktopCrashRecovery.RestoreIfRequested(
+                hadOrphanedTaskbarSession);
+        _desktopCrashRecovery.Arm();
+        if (desktopRecovery.Restored > 0
+            || desktopRecovery.Failed > 0)
+        {
+            MessageBox.Show(
+                desktopRecovery.Failed == 0
+                    ? $"检测到上次异常退出，已恢复 {desktopRecovery.Restored} 个桌面图标。"
+                    : $"检测到上次异常退出，已恢复 {desktopRecovery.Restored} 个桌面图标；另有 {desktopRecovery.Failed} 个需要在桌面收纳中手动恢复。",
+                "FocusPanel 桌面恢复",
+                MessageBoxButton.OK,
+                desktopRecovery.Failed == 0
+                    ? MessageBoxImage.Information
+                    : MessageBoxImage.Warning);
+        }
+
         var mainWindow =
             new MainWindow(startupIndicator);
         MainWindow = mainWindow;
@@ -93,6 +119,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        if (!_fatalShutdown)
+            _desktopCrashRecovery.Disarm();
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
         base.OnExit(e);
@@ -101,7 +129,10 @@ public partial class App : Application
     private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         e.Handled = true;
+        _fatalShutdown = true;
         LogException(e.Exception);
+        _desktopCrashRecovery
+            .RestoreCollectedItems();
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
 
@@ -136,6 +167,9 @@ public partial class App : Application
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
+        _fatalShutdown = true;
+        _desktopCrashRecovery
+            .RestoreCollectedItems();
         TaskbarController.RestoreOrphanedSession();
         RestoreNativeDesktopIcons();
         if (e.ExceptionObject is Exception ex)
