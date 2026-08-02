@@ -31,7 +31,7 @@ public partial class MainWindow :
     private const double ExpandedWidth = 720;
     private const double ScreenMargin = 12;
     private const double CompactTaskbarScrollStep = 46;
-    private const double CompactTaskbarOverflowInset = 30;
+    private const double CompactTaskbarOverflowInset = 46;
     private const int TaskbarHoverOpenDelayMilliseconds = 420;
     private const int TaskbarHoverCloseDelayMilliseconds = 260;
     private const int TaskbarWindowCycleThrottleMilliseconds = 90;
@@ -1028,6 +1028,37 @@ public partial class MainWindow :
         ScrollChangedEventArgs e)
     {
         UpdateTaskbarOverflowControls();
+    }
+
+    private void TaskbarAppsHost_PreviewMouseWheel(
+        object sender,
+        MouseWheelEventArgs e)
+    {
+        int windowCount = 0;
+        if (e.OriginalSource is DependencyObject source
+            && ItemsControl.ContainerFromElement(
+                    TaskbarAppsItemsControl,
+                    source)
+                is FrameworkElement
+                {
+                    DataContext:
+                        TaskbarAppItem item
+                })
+        {
+            windowCount = item.WindowCount;
+        }
+
+        TaskbarWheelAction action =
+            TaskbarWheelPolicy.GetAction(
+                e.Delta,
+                Keyboard.Modifiers.HasFlag(
+                    ModifierKeys.Control),
+                windowCount);
+        if (action != TaskbarWheelAction.ScrollApps)
+            return;
+
+        ScrollTaskbarApps(e.Delta);
+        e.Handled = true;
     }
 
     private void TaskbarScrollUpButton_Click(

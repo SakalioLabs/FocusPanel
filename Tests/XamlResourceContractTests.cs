@@ -1126,7 +1126,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.7\"",
+            "LauncherVersion = \"0.11.8\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1844,11 +1844,32 @@ public sealed class XamlResourceContractTests
         Assert.Contains("x:Name=\"TaskbarAppsItemsControl\"", mainWindow);
         Assert.Contains("x:Name=\"TaskbarScrollUpButton\"", mainWindow);
         Assert.Contains("x:Name=\"TaskbarScrollDownButton\"", mainWindow);
+        Assert.Matches(
+            "x:Name=\"TaskbarAppsHost\"[\\s\\S]*?PreviewMouseWheel=\"TaskbarAppsHost_PreviewMouseWheel\"",
+            mainWindow);
+        Assert.Matches(
+            "x:Name=\"TaskbarScrollUpButton\"[\\s\\S]*?Height=\"44\"",
+            mainWindow);
+        Assert.Matches(
+            "x:Name=\"TaskbarScrollDownButton\"[\\s\\S]*?Height=\"44\"",
+            mainWindow);
         Assert.Contains(
             "ScrollChanged=\"TaskbarAppsScrollViewer_ScrollChanged\"",
             mainWindow);
         Assert.Contains(
             "CompactTaskbarScrollPolicy.GetState",
+            codeBehind);
+        Assert.Contains(
+            "private void TaskbarAppsHost_PreviewMouseWheel(",
+            codeBehind);
+        Assert.Contains(
+            "ItemsControl.ContainerFromElement(",
+            codeBehind);
+        Assert.Contains(
+            "TaskbarWheelPolicy.GetAction(",
+            codeBehind);
+        Assert.Contains(
+            "private const double CompactTaskbarOverflowInset = 46;",
             codeBehind);
         Assert.Contains(
             "TaskbarAppsScrollViewer.ScrollToVerticalOffset",
