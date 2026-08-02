@@ -661,6 +661,27 @@ public partial class MainWindow :
             selectAllText: true);
     }
 
+    private void SearchSuggestion_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not Button
+            {
+                Tag: string suggestion
+            }
+            || string.IsNullOrWhiteSpace(
+                suggestion))
+        {
+            return;
+        }
+
+        _viewModel.SearchQuery = suggestion;
+        SearchBox.Focus();
+        SearchBox.Select(
+            suggestion.Length,
+            0);
+    }
+
     private async void StartButton_Click(
         object sender,
         RoutedEventArgs e)

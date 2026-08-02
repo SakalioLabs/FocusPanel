@@ -389,6 +389,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock Text="应用、窗口、待办、命令与计算"
@@ -418,7 +419,57 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                             </Grid>
-                            <Grid Grid.Row="2">
+                            <WrapPanel Grid.Row="2"
+                                       Margin="0,0,0,8"
+                                       AutomationProperties.Name="搜索示例，点击后可编辑并按回车执行">
+                                <WrapPanel.Style>
+                                    <Style TargetType="WrapPanel">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SearchQuery}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </WrapPanel.Style>
+                                <TextBlock Text="试试"
+                                           Margin="4,0,7,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                                <Button Height="36"
+                                        Margin="3,0"
+                                        Padding="12,0"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="任务管理器"
+                                        Tag="任务管理器"
+                                        Click="SearchSuggestion_Click"
+                                        ToolTip="填入搜索框，按 Enter 执行"/>
+                                <Button Height="36"
+                                        Margin="3,0"
+                                        Padding="12,0"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="音量 50"
+                                        Tag="音量 50"
+                                        Click="SearchSuggestion_Click"
+                                        ToolTip="填入搜索框，按 Enter 执行"/>
+                                <Button Height="36"
+                                        Margin="3,0"
+                                        Padding="12,0"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="专注 25"
+                                        Tag="专注 25"
+                                        Click="SearchSuggestion_Click"
+                                        ToolTip="填入搜索框，按 Enter 执行"/>
+                                <Button Height="36"
+                                        Margin="3,0"
+                                        Padding="12,0"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="新建任务"
+                                        Tag="任务："
+                                        Click="SearchSuggestion_Click"
+                                        ToolTip="填入任务前缀，继续输入标题后按 Enter"/>
+                            </WrapPanel>
+                            <Grid Grid.Row="3">
                                 <ListBox x:Name="SearchResultsList"
                                          ItemsSource="{Binding SearchResults}"
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"

@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.85\"",
+            "LauncherVersion = \"0.10.86\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -2866,6 +2866,59 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Value=\"{DynamicResource FocusAccentSoftBrush}\"",
             theme);
+    }
+
+    [Fact]
+    public void AppSearch_EmptyQueryOffersEditableNonExecutingExamples()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "AutomationProperties.Name=\"搜索示例，点击后可编辑并按回车执行\"",
+            mainWindow);
+        Assert.Contains(
+            "DataTrigger Binding=\"{Binding SearchQuery}\" Value=\"\"",
+            mainWindow);
+        Assert.True(
+            Regex.Matches(
+                mainWindow,
+                "Click=\"SearchSuggestion_Click\"")
+                .Count
+            == 4);
+        Assert.Contains("Tag=\"任务管理器\"", mainWindow);
+        Assert.Contains("Tag=\"音量 50\"", mainWindow);
+        Assert.Contains("Tag=\"专注 25\"", mainWindow);
+        Assert.Contains("Tag=\"任务：\"", mainWindow);
+
+        int start = codeBehind.IndexOf(
+            "private void SearchSuggestion_Click(",
+            StringComparison.Ordinal);
+        int end = codeBehind.IndexOf(
+            "private async void StartButton_Click(",
+            start,
+            StringComparison.Ordinal);
+        Assert.True(start >= 0);
+        Assert.True(end > start);
+        string handler = codeBehind[start..end];
+        Assert.Contains(
+            "_viewModel.SearchQuery = suggestion;",
+            handler);
+        Assert.Contains("SearchBox.Focus();", handler);
+        Assert.Contains("SearchBox.Select(", handler);
+        Assert.DoesNotContain(
+            "ExecuteSearchResult",
+            handler);
+        Assert.DoesNotContain(".Execute(", handler);
     }
 
     [Fact]
