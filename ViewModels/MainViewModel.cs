@@ -2475,6 +2475,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ShellPreferenceRepository
                 .ReplacementEnabledKey,
             bool.FalseString);
+        PersistCompactDockPreference();
     }
 
     public void MarkReplacementEnabled(bool enabled)
@@ -2501,7 +2502,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ShellPreferenceRepository
                 .ReplacementEnabledKey,
             enabled.ToString());
+        PersistCompactDockPreference();
         ApplyStartupPreference(enabled && StartWithWindows);
+    }
+
+    private void PersistCompactDockPreference()
+    {
+        QueueShellPreference(
+            ShellPreferenceRepository
+                .KeepCompactDockVisibleKey,
+            KeepCompactDockVisible.ToString());
     }
 
     public void MarkReplacementStopped(TaskbarReplacementStopReason reason, string message)

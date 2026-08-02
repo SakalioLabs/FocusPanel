@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="440" viewBox="0 0 1080 440" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 新安装默认可见策略</title>
+  <desc id="desc">新安装默认显示紧凑栏，升级安装尊重已有选择，工作区离开后折回紧凑栏。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1324"/>
+      <stop offset="1" stop-color="#17213a"/>
+    </linearGradient>
+    <linearGradient id="dock" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5f79ff" stop-opacity=".88"/>
+      <stop offset="1" stop-color="#7f5cff" stop-opacity=".72"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#020617" flood-opacity=".45"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="440" rx="28" fill="url(#background)"/>
+  <text x="52" y="62" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="26" font-weight="700">启动即可看见，不再寻找隐藏入口</text>
+  <text x="52" y="94" fill="#a9b7d4" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">0.10.96 的默认规则只影响新安装，升级用户的选择保持不变</text>
+
+  <g transform="translate(52 132)" filter="url(#shadow)">
+    <rect width="288" height="242" rx="22" fill="#18243c" stroke="#30415f"/>
+    <circle cx="28" cy="31" r="7" fill="#68d391"/>
+    <text x="48" y="38" fill="#e7eefc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="18" font-weight="650">全新安装</text>
+    <text x="24" y="79" fill="#8ea3c7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">首次引导默认勾选</text>
+    <rect x="24" y="101" width="240" height="54" rx="14" fill="#23314f"/>
+    <rect x="38" y="118" width="20" height="20" rx="6" fill="#6d7dff"/>
+    <path d="M43 128l4 4 7-9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="70" y="133" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">始终显示紧凑栏</text>
+    <text x="24" y="188" fill="#c9d5ec" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">启动 → 立即可见</text>
+    <text x="24" y="215" fill="#91a5c9" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">无需触边，也不抢前台焦点</text>
+  </g>
+
+  <g transform="translate(396 132)" filter="url(#shadow)">
+    <rect width="288" height="242" rx="22" fill="#18243c" stroke="#30415f"/>
+    <circle cx="28" cy="31" r="7" fill="#60a5fa"/>
+    <text x="48" y="38" fill="#e7eefc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="18" font-weight="650">旧版升级</text>
+    <text x="24" y="79" fill="#8ea3c7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">保留用户已经形成的习惯</text>
+    <rect x="24" y="101" width="240" height="54" rx="14" fill="#23314f"/>
+    <path d="M49 116a12 12 0 1 0 8 21" fill="none" stroke="#73b7ff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M57 116v10H47" fill="none" stroke="#73b7ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="76" y="133" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">不强制改写偏好</text>
+    <text x="24" y="188" fill="#c9d5ec" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">明确开 / 关 → 原样保留</text>
+    <text x="24" y="215" fill="#91a5c9" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">旧配置缺项也保持旧行为</text>
+  </g>
+
+  <g transform="translate(740 132)" filter="url(#shadow)">
+    <rect width="288" height="242" rx="22" fill="#18243c" stroke="#30415f"/>
+    <circle cx="28" cy="31" r="7" fill="#c084fc"/>
+    <text x="48" y="38" fill="#e7eefc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="18" font-weight="650">日常使用</text>
+    <text x="24" y="79" fill="#8ea3c7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">功能展开，但入口不消失</text>
+    <rect x="24" y="101" width="240" height="54" rx="14" fill="#23314f"/>
+    <rect x="210" y="108" width="38" height="40" rx="12" fill="url(#dock)"/>
+    <circle cx="229" cy="119" r="4" fill="#fff"/>
+    <circle cx="229" cy="129" r="4" fill="#fff" fill-opacity=".82"/>
+    <circle cx="229" cy="139" r="4" fill="#fff" fill-opacity=".65"/>
+    <path d="M190 128h-54" stroke="#7f91b4" stroke-width="2" stroke-linecap="round"/>
+    <path d="M143 121l-8 7 8 7" fill="none" stroke="#7f91b4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="24" y="188" fill="#c9d5ec" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">展开 → 工作 → 折回 76px</text>
+    <text x="24" y="215" fill="#91a5c9" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">核心入口持续在场</text>
+  </g>
+</svg>

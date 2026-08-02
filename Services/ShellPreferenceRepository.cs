@@ -35,6 +35,26 @@ internal sealed record ShellPreferenceSnapshot(
             false);
 }
 
+internal static class PersistentCompactDockDefaultPolicy
+{
+    internal static bool Resolve(
+        bool firstRunAccepted,
+        string? storedValue)
+    {
+        if (bool.TryParse(
+                storedValue,
+                out bool explicitValue))
+        {
+            return explicitValue;
+        }
+
+        // A visible compact dock is the humane first-run default. Existing
+        // users who predate this preference retain the former auto-hide
+        // behavior until they opt in themselves.
+        return !firstRunAccepted;
+    }
+}
+
 internal interface IShellPreferenceRepository
     : IDisposable
 {
@@ -261,11 +281,17 @@ internal sealed class ShellPreferenceRepository
                     item => item.Value,
                     StringComparer.Ordinal);
 
-        return new ShellPreferenceSnapshot(
+        bool firstRunAccepted =
             ReadBoolean(
                 values,
                 FirstRunAcceptedKey,
-                false),
+                false);
+        values.TryGetValue(
+            KeepCompactDockVisibleKey,
+            out string? storedCompactDockPreference);
+
+        return new ShellPreferenceSnapshot(
+            firstRunAccepted,
             ReadBoolean(
                 values,
                 ReplacementEnabledKey,
@@ -302,10 +328,9 @@ internal sealed class ShellPreferenceRepository
                         HotZoneDwellKey,
                         EdgeHotZoneSensitivityPolicy
                             .DefaultDwellMilliseconds)),
-            ReadBoolean(
-                values,
-                KeepCompactDockVisibleKey,
-                false));
+            PersistentCompactDockDefaultPolicy.Resolve(
+                firstRunAccepted,
+                storedCompactDockPreference));
     }
 
     private static void SaveCore(

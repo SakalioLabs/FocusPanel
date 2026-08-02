@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.95\"",
+            "LauncherVersion = \"0.10.96\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -5313,8 +5313,17 @@ public sealed class XamlResourceContractTests
             "IsChecked=\"{Binding KeepCompactDockVisible}\"",
             mainXaml);
         Assert.Contains(
-            "AutomationProperties.Name=\"鼠标离开后保留紧凑任务栏\"",
+            "AutomationProperties.Name=\"始终显示紧凑任务栏\"",
             mainXaml);
+        Assert.Contains(
+            "AutomationProperties.Name=\"首次启动始终显示紧凑任务栏\"",
+            mainXaml);
+        Assert.Contains(
+            "PersistCompactDockPreference();",
+            viewModel);
+        Assert.Contains(
+            "PersistentCompactDockDefaultPolicy.Resolve(",
+            repository);
 
         string mainWindow = File.ReadAllText(
             Path.Combine(

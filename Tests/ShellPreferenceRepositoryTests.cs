@@ -10,6 +10,24 @@ namespace FocusPanel.Tests;
 
 public sealed class ShellPreferenceRepositoryTests
 {
+    [Theory]
+    [InlineData(false, null, true)]
+    [InlineData(false, "false", false)]
+    [InlineData(true, null, false)]
+    [InlineData(true, "true", true)]
+    [InlineData(true, "invalid", false)]
+    public void CompactDockDefault_OnlyChangesNewInstallations(
+        bool firstRunAccepted,
+        string? storedValue,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            PersistentCompactDockDefaultPolicy.Resolve(
+                firstRunAccepted,
+                storedValue));
+    }
+
     [Fact]
     public void Default_DoesNotClaimGlobalNumberShortcuts()
     {
