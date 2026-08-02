@@ -13,7 +13,8 @@ public sealed class TaskbarAppClickPolicyTests
             TaskbarAppClickPolicy.FromLeftClick(
                 shiftPressed: false,
                 controlPressed: false,
-                canLaunchNewInstance: true));
+                canLaunchNewInstance: true,
+                windowCount: 2));
     }
 
     [Fact]
@@ -24,7 +25,8 @@ public sealed class TaskbarAppClickPolicyTests
             TaskbarAppClickPolicy.FromLeftClick(
                 shiftPressed: true,
                 controlPressed: false,
-                canLaunchNewInstance: true));
+                canLaunchNewInstance: true,
+                windowCount: 2));
     }
 
     [Fact]
@@ -35,7 +37,8 @@ public sealed class TaskbarAppClickPolicyTests
             TaskbarAppClickPolicy.FromLeftClick(
                 shiftPressed: true,
                 controlPressed: false,
-                canLaunchNewInstance: false));
+                canLaunchNewInstance: false,
+                windowCount: 2));
     }
 
     [Fact]
@@ -46,7 +49,35 @@ public sealed class TaskbarAppClickPolicyTests
             TaskbarAppClickPolicy.FromLeftClick(
                 shiftPressed: true,
                 controlPressed: true,
-                canLaunchNewInstance: true));
+                canLaunchNewInstance: true,
+                windowCount: 2));
+    }
+
+    [Fact]
+    public void ControlLeftClick_CyclesMultiWindowApplication()
+    {
+        Assert.Equal(
+            TaskbarAppClickAction.CycleWindows,
+            TaskbarAppClickPolicy.FromLeftClick(
+                shiftPressed: false,
+                controlPressed: true,
+                canLaunchNewInstance: true,
+                windowCount: 2));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void ControlLeftClick_KeepsNormalActionWithoutMultipleWindows(
+        int windowCount)
+    {
+        Assert.Equal(
+            TaskbarAppClickAction.ActivateOrShowWindows,
+            TaskbarAppClickPolicy.FromLeftClick(
+                shiftPressed: false,
+                controlPressed: true,
+                canLaunchNewInstance: true,
+                windowCount));
     }
 
     [Fact]

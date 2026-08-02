@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.93\"",
+            "LauncherVersion = \"0.10.94\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -2415,6 +2415,18 @@ public sealed class XamlResourceContractTests
             codeBehind);
         Assert.Contains(
             "ModifierKeys.Control",
+            codeBehind);
+        Assert.Contains(
+            "TaskbarAppClickAction.CycleWindows",
+            codeBehind);
+        Assert.Contains(
+            "CycleTaskbarWindows(",
+            codeBehind);
+        Assert.Contains(
+            "applyThrottle: false",
+            codeBehind);
+        Assert.Contains(
+            "applyThrottle: true",
             codeBehind);
         Assert.Contains("PopulateTaskbarAppContextMenu", codeBehind);
         Assert.Contains("CloseWindowCommand", codeBehind);

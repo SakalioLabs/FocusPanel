@@ -3,6 +3,7 @@ namespace FocusPanel.Services;
 internal enum TaskbarAppClickAction
 {
     ActivateOrShowWindows,
+    CycleWindows,
     LaunchNewInstance,
     LaunchElevated,
     None
@@ -13,10 +14,17 @@ internal static class TaskbarAppClickPolicy
     internal static TaskbarAppClickAction FromLeftClick(
         bool shiftPressed,
         bool controlPressed,
-        bool canLaunchNewInstance)
+        bool canLaunchNewInstance,
+        int windowCount)
     {
         if (shiftPressed && controlPressed)
             return TaskbarAppClickAction.LaunchElevated;
+
+        if (controlPressed
+            && windowCount > 1)
+        {
+            return TaskbarAppClickAction.CycleWindows;
+        }
 
         return shiftPressed && canLaunchNewInstance
             ? TaskbarAppClickAction.LaunchNewInstance

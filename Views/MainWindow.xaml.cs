@@ -1346,7 +1346,8 @@ public partial class MainWindow :
         TaskbarAppClickAction action = TaskbarAppClickPolicy.FromLeftClick(
             Keyboard.Modifiers.HasFlag(ModifierKeys.Shift),
             Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-            task.CanLaunchNewInstance);
+            task.CanLaunchNewInstance,
+            task.WindowCount);
         if (action == TaskbarAppClickAction.LaunchElevated)
         {
             _viewModel.LaunchElevatedTaskbarAppCommand.Execute(task);
@@ -1355,6 +1356,14 @@ public partial class MainWindow :
         if (action == TaskbarAppClickAction.LaunchNewInstance)
         {
             _viewModel.LaunchNewTaskbarAppCommand.Execute(task);
+            return;
+        }
+        if (action == TaskbarAppClickAction.CycleWindows)
+        {
+            CycleTaskbarWindows(
+                task,
+                wheelDelta: -1,
+                applyThrottle: false);
             return;
         }
 
@@ -1426,8 +1435,21 @@ public partial class MainWindow :
             return;
         }
 
-        long now =
-            Environment.TickCount64;
+        if (CycleTaskbarWindows(
+                task,
+                e.Delta,
+                applyThrottle: true))
+        {
+            e.Handled = true;
+        }
+    }
+
+    private bool CycleTaskbarWindows(
+        TaskbarAppItem task,
+        int wheelDelta,
+        bool applyThrottle)
+    {
+        long now = Environment.TickCount64;
         bool sameCycleSession =
             string.Equals(
                 _lastTaskbarWindowCycleIdentity,
@@ -1438,24 +1460,24 @@ public partial class MainWindow :
             && now
                 - _lastTaskbarWindowCycleTick
                 <= TaskbarWindowCycleMemoryMilliseconds;
-        if (sameCycleSession
+        if (applyThrottle
+            && sameCycleSession
             && now
                 - _lastTaskbarWindowCycleTick
                 < TaskbarWindowCycleThrottleMilliseconds)
         {
-            e.Handled = true;
-            return;
+            return true;
         }
 
         WindowReference? target =
             TaskbarWindowCyclePolicy.SelectTarget(
                 task.Windows,
-                e.Delta,
+                wheelDelta,
                 sameCycleSession
                     ? _lastTaskbarWindowCycleHandle
                     : IntPtr.Zero);
         if (target == null)
-            return;
+            return false;
 
         _lastTaskbarWindowCycleIdentity =
             task.IdentityKey;
@@ -1465,7 +1487,7 @@ public partial class MainWindow :
             now;
         _viewModel.ActivateWindowCommand.Execute(
             target);
-        e.Handled = true;
+        return true;
     }
 
     private void ScrollTaskbarApps(int delta)
