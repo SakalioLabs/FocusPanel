@@ -741,6 +741,12 @@ public sealed class XamlResourceContractTests
             "PreviewMouseDown=\"StatusCenterButton_PreviewMouseDown\"",
             mainWindow);
         Assert.Contains(
+            "MouseEnter=\"StatusCenterButton_MouseEnter\"",
+            mainWindow);
+        Assert.Contains(
+            "_viewModel.RefreshSystemStatusForInteraction();",
+            mainWindowCode);
+        Assert.Contains(
             "e.ChangedButton",
             mainWindowCode);
         Assert.Contains(
@@ -1114,7 +1120,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.2\"",
+            "LauncherVersion = \"0.11.3\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1501,7 +1507,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains("Text=\"搜索\"", compactDock);
         Assert.Contains("Text=\"收纳\"", compactDock);
         Assert.Contains("Text=\"任务\"", compactDock);
-        Assert.Contains("Text=\"状态\"", compactDock);
+        Assert.Contains(
+            "Text=\"{Binding AudioCompactValueText}\"",
+            compactDock);
+        Assert.Contains(
+            "MouseEnter=\"StatusCenterButton_MouseEnter\"",
+            compactDock);
         Assert.DoesNotContain(
             "IsStartHubOpen",
             compactDock);
@@ -1525,6 +1536,9 @@ public sealed class XamlResourceContractTests
             viewModel);
         Assert.Contains(
             "public bool IsStatusEntryActive",
+            viewModel);
+        Assert.Contains(
+            "public string AudioCompactValueText",
             viewModel);
         Assert.Contains(
             "IsStatusCenterOpen\n        || IsPowerMenuOpen",

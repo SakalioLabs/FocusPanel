@@ -1528,6 +1528,7 @@
                                     PreviewMouseWheel="VolumeButton_PreviewMouseWheel"
                                     PreviewMouseDown="StatusCenterButton_PreviewMouseDown"
                                     MouseRightButtonUp="VolumeButton_MouseRightButtonUp"
+                                    MouseEnter="StatusCenterButton_MouseEnter"
                                     AutomationProperties.Name="{Binding StatusCenterAutomationName}"
                                     AutomationProperties.HelpText="鼠标滚轮调节音量，右键静音，中键播放或暂停媒体">
                                 <Button.ToolTip>
@@ -1555,7 +1556,7 @@
                                         <TextBlock Margin="0,-2,0,0"
                                                    HorizontalAlignment="Center"
                                                    Style="{StaticResource FocusMetaText}"
-                                                   Text="状态"/>
+                                                   Text="{Binding AudioCompactValueText}"/>
                                     </StackPanel>
                                     <Border Width="3"
                                             Height="22"

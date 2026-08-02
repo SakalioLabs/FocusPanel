@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="390" viewBox="0 0 1080 390" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 紧凑栏音频状态</title>
+  <desc id="desc">紧凑状态入口分别显示音量百分比、静音和音频设备不可用，并继续支持点击、滚轮、右键与中键操作。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081220"/>
+      <stop offset="1" stop-color="#172a49"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f8cff"/>
+      <stop offset="1" stop-color="#8664ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="390" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="26" font-weight="700">不打开面板，也能读到真实音量</text>
+  <text x="50" y="90" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">同一位置用图标和短值表达三个明确状态，不再显示无法提供信息的“状态”二字</text>
+
+  <g transform="translate(82 128)" filter="url(#shadow)">
+    <rect width="184" height="154" rx="26" fill="#182642" stroke="#385078"/>
+    <path d="M56 59h17l19-16v54L73 81H56z" fill="none" stroke="#8eb4ff" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M102 56c10 8 10 20 0 28M111 47c17 14 17 35 0 48" fill="none" stroke="#8eb4ff" stroke-width="4" stroke-linecap="round"/>
+    <text x="92" y="125" text-anchor="middle" fill="#f4f7ff" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="19" font-weight="700">45%</text>
+    <rect x="20" y="145" width="144" height="3" rx="2" fill="url(#accent)"/>
+  </g>
+  <text x="174" y="312" text-anchor="middle" fill="#90a5c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">正常输出 · 直接显示百分比</text>
+
+  <g transform="translate(330 128)" filter="url(#shadow)">
+    <rect width="184" height="154" rx="26" fill="#182642" stroke="#385078"/>
+    <path d="M56 59h17l19-16v54L73 81H56zM104 57l24 24M128 57l-24 24" fill="none" stroke="#b39bff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="92" y="125" text-anchor="middle" fill="#f4f7ff" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">静音</text>
+  </g>
+  <text x="422" y="312" text-anchor="middle" fill="#90a5c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">静音 · 不用猜 0% 是否真的静音</text>
+
+  <g transform="translate(578 128)" filter="url(#shadow)">
+    <rect width="184" height="154" rx="26" fill="#182642" stroke="#385078"/>
+    <circle cx="92" cy="68" r="28" fill="none" stroke="#f09a9a" stroke-width="4"/>
+    <path d="M92 51v21M92 84v1" stroke="#f09a9a" stroke-width="5" stroke-linecap="round"/>
+    <text x="92" y="125" text-anchor="middle" fill="#f4f7ff" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="17" font-weight="700">不可用</text>
+  </g>
+  <text x="670" y="312" text-anchor="middle" fill="#90a5c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">无默认设备 · 不伪装成 0%</text>
+
+  <g transform="translate(810 132)" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+    <text x="0" y="18" fill="#f3f6fc" font-size="17" font-weight="650">入口仍是一处</text>
+    <g fill="#a8bad7" font-size="13">
+      <text x="0" y="54">左键　打开状态中心</text>
+      <text x="0" y="84">滚轮　直接调节音量</text>
+      <text x="0" y="114">右键　静音 / 取消静音</text>
+      <text x="0" y="144">中键　播放 / 暂停媒体</text>
+      <text x="0" y="174">移入　合并刷新真实状态</text>
+    </g>
+  </g>
+</svg>

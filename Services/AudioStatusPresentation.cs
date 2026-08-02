@@ -5,7 +5,8 @@ namespace FocusPanel.Services;
 internal readonly record struct AudioStatusPresentation(
     string Glyph,
     string Summary,
-    string ToggleLabel);
+    string ToggleLabel,
+    string CompactValueText);
 
 internal static class AudioStatusPresentationComposer
 {
@@ -23,7 +24,8 @@ internal static class AudioStatusPresentationComposer
             return new AudioStatusPresentation(
                 UnavailableGlyph,
                 "音频设备不可用",
-                "音频设备不可用");
+                "音频设备不可用",
+                "不可用");
         }
 
         int percent = (int)Math.Round(
@@ -34,12 +36,14 @@ internal static class AudioStatusPresentationComposer
             return new AudioStatusPresentation(
                 MuteGlyph,
                 "已静音",
-                "取消静音");
+                "取消静音",
+                "静音");
         }
 
         return new AudioStatusPresentation(
             percent == 0 ? MuteGlyph : VolumeGlyph,
             $"音量 {percent}%",
-            "静音");
+            "静音",
+            $"{percent}%");
     }
 }

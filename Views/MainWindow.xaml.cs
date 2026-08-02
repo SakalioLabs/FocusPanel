@@ -851,6 +851,11 @@ public partial class MainWindow :
                 () => _viewModel.IsStatusCenterOpen);
     }
 
+    private void StatusCenterButton_MouseEnter(
+        object sender,
+        MouseEventArgs e) =>
+        _viewModel.RefreshSystemStatusForInteraction();
+
     private void CalendarPanelButton_Click(object sender, RoutedEventArgs e)
     {
         TimeEntryAction action =

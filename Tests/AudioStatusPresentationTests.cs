@@ -25,6 +25,9 @@ public sealed class AudioStatusPresentationTests
         Assert.Equal(summary, presentation.Summary);
         Assert.Equal(glyph, presentation.Glyph);
         Assert.Equal("静音", presentation.ToggleLabel);
+        Assert.Equal(
+            summary[3..],
+            presentation.CompactValueText);
     }
 
     [Fact]
@@ -41,6 +44,7 @@ public sealed class AudioStatusPresentationTests
             presentation.Glyph);
         Assert.Equal("已静音", presentation.Summary);
         Assert.Equal("取消静音", presentation.ToggleLabel);
+        Assert.Equal("静音", presentation.CompactValueText);
     }
 
     [Fact]
@@ -61,5 +65,8 @@ public sealed class AudioStatusPresentationTests
         Assert.Equal(
             "音频设备不可用",
             presentation.ToggleLabel);
+        Assert.Equal(
+            "不可用",
+            presentation.CompactValueText);
     }
 }

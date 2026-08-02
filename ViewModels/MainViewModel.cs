@@ -299,6 +299,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(AudioCompactValueText))]
     [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private float masterVolume;
@@ -307,6 +308,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(AudioCompactValueText))]
     [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isMuted;
@@ -315,6 +317,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(AudioGlyph))]
     [NotifyPropertyChangedFor(nameof(AudioSummary))]
     [NotifyPropertyChangedFor(nameof(AudioToggleLabel))]
+    [NotifyPropertyChangedFor(nameof(AudioCompactValueText))]
     [NotifyPropertyChangedFor(nameof(StatusCenterSummary))]
     [NotifyPropertyChangedFor(nameof(StatusCenterAutomationName))]
     private bool isAudioAvailable;
@@ -746,6 +749,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GetAudioPresentation().Summary;
     public string AudioToggleLabel =>
         GetAudioPresentation().ToggleLabel;
+    public string AudioCompactValueText =>
+        GetAudioPresentation().CompactValueText;
     public string BrightnessSummary =>
         IsBrightnessAvailable
             ? $"亮度 {BrightnessPercent}%"
@@ -888,6 +893,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RequestSystemStatusRefresh();
         }
         UpdateRefreshActivity();
+    }
+
+    public void RefreshSystemStatusForInteraction()
+    {
+        if (_isShellVisible)
+            RequestSystemStatusRefresh();
     }
 
     public event Action? RequestClose;
