@@ -2428,12 +2428,6 @@ public partial class MainWindow :
         e.Handled = true;
     }
 
-    private void VolumeButton_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-    {
-        _viewModel.ToggleMuteCommand.Execute(null);
-        e.Handled = true;
-    }
-
     private void WorkspaceMenuItem_Click(object sender, RoutedEventArgs e)
     {
         if (sender is MenuItem { Tag: string destination })

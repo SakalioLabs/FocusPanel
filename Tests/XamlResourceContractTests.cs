@@ -744,6 +744,12 @@ public sealed class XamlResourceContractTests
             "MouseEnter=\"StatusCenterButton_MouseEnter\"",
             mainWindow);
         Assert.Contains(
+            "右键打开状态快捷菜单",
+            mainWindow);
+        Assert.DoesNotContain(
+            "MouseRightButtonUp=\"VolumeButton_MouseRightButtonUp\"",
+            mainWindow);
+        Assert.Contains(
             "_viewModel.RefreshSystemStatusForInteraction();",
             mainWindowCode);
         Assert.Contains(
@@ -1120,7 +1126,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.3\"",
+            "LauncherVersion = \"0.11.4\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1454,8 +1460,12 @@ public sealed class XamlResourceContractTests
             "x:Name=\"StatusCenterButton\"",
             compactDock);
         Assert.DoesNotContain("OpenNotificationOverflow", compactDock);
-        Assert.DoesNotContain("OpenInputSwitcherCommand", compactDock);
-        Assert.DoesNotContain("OpenNotificationsCommand", compactDock);
+        Assert.Contains(
+            "Header=\"通知中心\"",
+            compactDock);
+        Assert.Contains(
+            "Header=\"切换输入法\"",
+            compactDock);
         Assert.DoesNotContain("ToggleSettingsCommand", compactDock);
         Assert.DoesNotContain("BatteryPercent", compactDock);
 
@@ -2478,10 +2488,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -2602,7 +2612,27 @@ public sealed class XamlResourceContractTests
         Assert.Contains("CloseWindowCommand", codeBehind);
         Assert.Contains("CloseTaskCommand", codeBehind);
         Assert.Contains("VolumeButton_PreviewMouseWheel", mainWindow);
-        Assert.Contains("VolumeButton_MouseRightButtonUp", mainWindow);
+        Assert.Contains(
+            "Header=\"{Binding PlacementTarget.DataContext.AudioToggleLabel",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"播放 / 暂停\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"快捷设置\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"通知中心\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"切换输入法\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"电源…\"",
+            mainWindow);
+        Assert.DoesNotContain(
+            "VolumeButton_MouseRightButtonUp",
+            codeBehind);
         Assert.Contains("foreach (WindowReference window in task.Windows)", viewModel);
     }
 
@@ -3400,7 +3430,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            4,
+            5,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);

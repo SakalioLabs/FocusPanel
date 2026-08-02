@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="430" viewBox="0 0 1080 430" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 状态入口快捷菜单</title>
+  <desc id="desc">右键状态入口打开明确菜单，包含静音、播放暂停、快捷设置、通知中心、输入法和电源；不再直接改变静音状态。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081220"/>
+      <stop offset="1" stop-color="#172a49"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f8cff"/>
+      <stop offset="1" stop-color="#8664ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="430" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="26" font-weight="700">右键应该打开菜单，而不是偷偷改系统状态</text>
+  <text x="50" y="90" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">保留高效手势，同时让所有快捷动作都能通过标准任务栏交互被发现</text>
+
+  <g transform="translate(82 132)" filter="url(#shadow)">
+    <rect width="152" height="222" rx="26" fill="#182642" stroke="#385078"/>
+    <rect x="38" y="30" width="76" height="76" rx="20" fill="#243653"/>
+    <path d="M54 56h15l17-14v48L69 76H54z" fill="none" stroke="#8eb4ff" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M95 55c9 7 9 19 0 26" fill="none" stroke="#8eb4ff" stroke-width="4" stroke-linecap="round"/>
+    <text x="76" y="95" text-anchor="middle" fill="#f4f7ff" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700">45%</text>
+    <text x="76" y="138" text-anchor="middle" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="650">状态入口</text>
+    <rect x="30" y="158" width="92" height="38" rx="12" fill="url(#accent)"/>
+    <text x="76" y="182" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" font-weight="650">右键</text>
+  </g>
+
+  <path d="M266 242h82" stroke="#6f88b2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M336 233l12 9-12 9" fill="none" stroke="#6f88b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(382 116)" filter="url(#shadow)">
+    <rect width="306" height="270" rx="22" fill="#1b2a45" stroke="#405a84"/>
+    <text x="24" y="36" fill="#8fa4c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">状态快捷菜单</text>
+    <g font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14" fill="#e8eef9">
+      <rect x="12" y="48" width="282" height="36" rx="10" fill="#263b61"/>
+      <text x="28" y="71">静音</text>
+      <text x="28" y="107">播放 / 暂停</text>
+      <path d="M18 122h270" stroke="#385078"/>
+      <text x="28" y="149">快捷设置</text><text x="270" y="149" text-anchor="end" fill="#8196b9">Win+A</text>
+      <text x="28" y="181">通知中心</text><text x="270" y="181" text-anchor="end" fill="#8196b9">Win+N</text>
+      <text x="28" y="213">切换输入法</text><text x="270" y="213" text-anchor="end" fill="#8196b9">Win+Space</text>
+      <path d="M18 228h270" stroke="#385078"/>
+      <text x="28" y="254">电源…</text>
+    </g>
+  </g>
+
+  <g transform="translate(746 140)" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+    <text x="0" y="18" fill="#f3f6fc" font-size="18" font-weight="650">保持高频动作</text>
+    <g fill="#a8bad7" font-size="14">
+      <text x="0" y="58">左键　完整状态中心</text>
+      <text x="0" y="92">滚轮　直接调节音量</text>
+      <text x="0" y="126">中键　播放 / 暂停</text>
+      <text x="0" y="160">右键　可发现的快捷菜单</text>
+    </g>
+    <rect x="0" y="188" width="260" height="54" rx="16" fill="#20324f"/>
+    <text x="18" y="211" fill="#86a8e6" font-size="12">菜单打开期间</text>
+    <text x="18" y="231" fill="#c9d7ec" font-size="13">Panel 不会自动收起</text>
+  </g>
+</svg>

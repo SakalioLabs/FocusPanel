@@ -1527,18 +1527,42 @@
                                     Click="StatusCenterButton_Click"
                                     PreviewMouseWheel="VolumeButton_PreviewMouseWheel"
                                     PreviewMouseDown="StatusCenterButton_PreviewMouseDown"
-                                    MouseRightButtonUp="VolumeButton_MouseRightButtonUp"
                                     MouseEnter="StatusCenterButton_MouseEnter"
                                     AutomationProperties.Name="{Binding StatusCenterAutomationName}"
-                                    AutomationProperties.HelpText="鼠标滚轮调节音量，右键静音，中键播放或暂停媒体">
+                                    AutomationProperties.HelpText="鼠标滚轮调节音量，右键打开状态快捷菜单，中键播放或暂停媒体">
                                 <Button.ToolTip>
                                     <StackPanel>
                                         <TextBlock Text="{Binding StatusCenterSummary}"/>
                                         <TextBlock Margin="0,4,0,0"
-                                                   Text="滚轮调音量 · 右键静音 · 中键播放/暂停"
+                                                   Text="滚轮调音量 · 右键快捷菜单 · 中键播放/暂停"
                                                    Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
                                 </Button.ToolTip>
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource FocusContextMenu}"
+                                                 Opened="TransientContextMenu_Opened"
+                                                 Closed="TransientContextMenu_Closed">
+                                        <MenuItem Header="{Binding PlacementTarget.DataContext.AudioToggleLabel, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  Command="{Binding PlacementTarget.DataContext.ToggleMuteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  IsEnabled="{Binding PlacementTarget.DataContext.IsAudioAvailable, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="播放 / 暂停"
+                                                  Command="{Binding PlacementTarget.DataContext.SendMediaCommandCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{x:Static services:MediaTransportAction.PlayPause}"/>
+                                        <Separator/>
+                                        <MenuItem Header="快捷设置"
+                                                  InputGestureText="Win+A"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenQuickSettingsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="通知中心"
+                                                  InputGestureText="Win+N"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenNotificationsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="切换输入法"
+                                                  InputGestureText="Win+Space"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenInputSwitcherCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <Separator/>
+                                        <MenuItem Header="电源…"
+                                                  Click="PowerMenuItem_Click"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
                                 <Grid Width="48" Height="48">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock HorizontalAlignment="Center">

@@ -2,7 +2,11 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它提供桌面收纳、任务、番茄钟、AI、应用启动、运行窗口管理、系统状态与日期时间入口。旧版 OKR 表只为升级兼容保留，不再出现在产品界面，也不会被概览或 AI 读取。
 
-> 0.11.3 起，紧凑栏系统状态不再只写含义宽泛的“状态”：音频正常时直接显示 `45%` 一类实时音量，静音显示“静音”，没有默认输出设备则显示“不可用”。鼠标移入时复用已有合并刷新队列读取一次真实系统状态；Panel 隐藏时仍不轮询，滚轮调音量、右键静音、中键播放/暂停和普通点击打开状态中心的语义保持不变。
+> 0.11.4 起，状态入口恢复符合任务栏习惯的右键菜单，不再一次右键就无提示切换静音。菜单以单层 Fluent 表面明确提供静音/取消静音、播放/暂停、快捷设置、通知中心、输入法和电源；左键打开完整状态中心、滚轮调音量和中键播放/暂停保持不变，固定入口数量也没有增加。
+
+![状态入口右键打开明确的快捷菜单](docs/images/status-context-menu.svg)
+
+> 0.11.3 起，紧凑栏系统状态不再只写含义宽泛的“状态”：音频正常时直接显示 `45%` 一类实时音量，静音显示“静音”，没有默认输出设备则显示“不可用”。鼠标移入时复用已有合并刷新队列读取一次真实系统状态；Panel 隐藏时仍不轮询。0.11.4 将当时的右键直接静音进一步改成了标准快捷菜单。
 
 ![紧凑栏直接显示音量、静音和设备状态](docs/images/compact-audio-glance.svg)
 
@@ -138,7 +142,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 ![状态中心附近 Wi-Fi 与已保存网络直连](docs/images/wifi-network-chooser.svg)
 
-- 媒体播放也不再依赖原生快捷设置：状态中心提供上一首、播放/暂停、下一首三个 44px 直接按钮，成功后保持状态中心打开，便于连续切歌；紧凑栏状态按钮中键可从任意应用一击播放或暂停，滚轮调音量和右键静音语义保持不变。统一搜索同步支持“上一曲”“播放暂停”“下一首”及英文 `previous track / play pause / next track`。执行使用 Windows SDK 公开的 `VK_MEDIA_*` 虚拟键和现有批量 `SendInput` 按下/释放链，不枚举、注入或读取播放器私有数据；系统阻止模拟输入时进入状态中心明确提示。
+- 媒体播放也不再依赖原生快捷设置：状态中心提供上一首、播放/暂停、下一首三个 44px 直接按钮，成功后保持状态中心打开，便于连续切歌；紧凑栏状态按钮中键可从任意应用一击播放或暂停，滚轮直接调音量，右键菜单也明确提供播放/暂停和静音。统一搜索同步支持“上一曲”“播放暂停”“下一首”及英文 `previous track / play pause / next track`。执行使用 Windows SDK 公开的 `VK_MEDIA_*` 虚拟键和现有批量 `SendInput` 按下/释放链，不枚举、注入或读取播放器私有数据；系统阻止模拟输入时进入状态中心明确提示。
 
 ![状态中心、紧凑栏与统一搜索的媒体控制](docs/images/media-transport-controls.svg)
 - 统一搜索也能一步开始专注：输入 `专注 25`、`开始番茄钟 45 分钟`、`focus 30 min` 或 `pomodoro 60`，按 Enter 后直接复用现有番茄钟状态机设置 1–180 分钟并开始，无需先打开工作区、番茄钟页面和时长按钮。计时浮窗初次显示不抢走当前激活窗口；运行中或已经暂停的会话绝不会被新命令重置，而会打开番茄钟工作区让用户继续处理。解析要求完整命令与显式时长，裸“专注”、越界值、小数、文件名和尾随文本不会启动计时。
@@ -591,7 +595,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.11.3 `
+  -Version 0.11.4 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -603,7 +607,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.11.3-full.nupkg`：完整更新包。
+- `FocusPanel-0.11.4-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
