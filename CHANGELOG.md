@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.10 - 2026-08-03
+
+- 窗口跟踪器新增系统级 `EVENT_SYSTEM_MINIMIZESTART` 与 `EVENT_SYSTEM_MINIMIZEEND` 订阅，外部应用自行最小化或还原时会主动刷新应用栏，不再依赖下一次前台窗口变化碰巧带回正确状态。
+- 新增顶层 `EVENT_OBJECT_LOCATIONCHANGE` 订阅，外部最大化、恢复大小及窗口几何状态变化会更新 `IsZoomed` 快照。事件仍严格过滤 `OBJID_WINDOW`，子控件位置变化不会触发应用级刷新。
+- 三类新事件全部复用现有 140ms Dispatcher 防抖、`CoalescingBackgroundRefresh` 单飞后台枚举和修订号丢弃机制；连续拖动或调整大小只在稳定后取最新快照，不新增轮询、不在 WinEvent 回调内枚举窗口。补充事件策略与架构接线测试，并更新 README、发布说明和事件流图。
+- Release 构建保持 0 错误、0 警告；1330 项自动化测试（含发布版 WPF UI 冒烟）全部通过。
+
 ## v0.11.9 - 2026-08-03
 
 - 复用窗口跟踪器已经采集的 `IsIconic`、`IsZoomed` 和前台窗口快照，应用状态现在准确区分“正在使用”“后台运行”和“已最小化”，不再把所有非活动应用笼统称为“正在运行”。

@@ -9,6 +9,10 @@ public sealed class WindowTrackingEventPolicyTests
     [InlineData(
         WindowTrackingEventPolicy.EventSystemForeground)]
     [InlineData(
+        WindowTrackingEventPolicy.EventSystemMinimizeStart)]
+    [InlineData(
+        WindowTrackingEventPolicy.EventSystemMinimizeEnd)]
+    [InlineData(
         WindowTrackingEventPolicy.EventObjectCreate)]
     [InlineData(
         WindowTrackingEventPolicy.EventObjectDestroy)]
@@ -16,6 +20,8 @@ public sealed class WindowTrackingEventPolicyTests
         WindowTrackingEventPolicy.EventObjectShow)]
     [InlineData(
         WindowTrackingEventPolicy.EventObjectHide)]
+    [InlineData(
+        WindowTrackingEventPolicy.EventObjectLocationChange)]
     [InlineData(
         WindowTrackingEventPolicy.EventObjectNameChange)]
     public void TopLevelWindowEvents_QueueRefresh(
@@ -47,7 +53,6 @@ public sealed class WindowTrackingEventPolicyTests
     [Theory]
     [InlineData(0x0004)]
     [InlineData(0x8004)]
-    [InlineData(0x800B)]
     [InlineData(0x800D)]
     public void UnrelatedEvents_AreIgnored(
         uint eventType)

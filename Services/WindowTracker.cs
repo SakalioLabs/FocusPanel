@@ -70,8 +70,14 @@ public sealed class WindowTracker : IWindowTracker
             WindowTrackingEventPolicy.EventSystemForeground,
             WindowTrackingEventPolicy.EventSystemForeground);
         AddHook(
+            WindowTrackingEventPolicy.EventSystemMinimizeStart,
+            WindowTrackingEventPolicy.EventSystemMinimizeEnd);
+        AddHook(
             WindowTrackingEventPolicy.EventObjectCreate,
             WindowTrackingEventPolicy.EventObjectHide);
+        AddHook(
+            WindowTrackingEventPolicy.EventObjectLocationChange,
+            WindowTrackingEventPolicy.EventObjectLocationChange);
         AddHook(
             WindowTrackingEventPolicy.EventObjectNameChange,
             WindowTrackingEventPolicy.EventObjectNameChange);

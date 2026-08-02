@@ -64,6 +64,28 @@ public sealed class WindowTrackerBackgroundRefreshContractTests
     }
 
     [Fact]
+    public void WindowVisualStateEvents_UseTheExistingCoalescedRefreshPath()
+    {
+        string tracker = ReadWindowTracker();
+
+        Assert.Contains(
+            "WindowTrackingEventPolicy.EventSystemMinimizeStart,\n"
+            + "            WindowTrackingEventPolicy.EventSystemMinimizeEnd",
+            NormalizeNewLines(tracker));
+        Assert.Contains(
+            "WindowTrackingEventPolicy.EventObjectLocationChange,\n"
+            + "            WindowTrackingEventPolicy.EventObjectLocationChange",
+            NormalizeNewLines(tracker));
+        Assert.DoesNotContain(
+            "CaptureSnapshot();\n        }\n\n        void RestartDebounce",
+            NormalizeNewLines(tracker));
+        Assert.Contains(
+            "_refreshDebounce.Stop();\n"
+            + "            _refreshDebounce.Start();",
+            NormalizeNewLines(tracker));
+    }
+
+    [Fact]
     public void MainViewModel_SubscribesBeforeReadingInitialSnapshot()
     {
         string root = FindRepositoryRoot();
