@@ -731,7 +731,24 @@
                                                Foreground="{DynamicResource FocusMutedTextBrush}"
                                                TextWrapping="Wrap"/>
                                 </Grid>
-                                <Grid Margin="0,14,0,12">
+                                <Expander Style="{StaticResource FocusDetailsExpander}"
+                                          AutomationProperties.Name="网络与无线详情">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="网络与无线"
+                                                       Style="{StaticResource FocusCardTitleText}"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="12,0,0,0"
+                                                       Text="{Binding NetworkDisplayName}"
+                                                       Style="{StaticResource FocusCaptionText}"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
+                                <Grid Margin="0,12,0,12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="44"/><ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
@@ -845,19 +862,27 @@
                                         Content="打开位置权限"
                                         Command="{Binding OpenWifiLocationSettingsCommand}"
                                         Visibility="{Binding HasWifiLocationAccessWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                <Grid Margin="4,0,4,6">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="应用音量"
-                                               Style="{StaticResource FocusCardTitleText}"/>
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding ApplicationAudioStatusText}"
-                                               Style="{StaticResource FocusCaptionText}"/>
-                                </Grid>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Style="{StaticResource FocusDetailsExpander}"
+                                          AutomationProperties.Name="应用音量详情">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="应用音量"
+                                                       Style="{StaticResource FocusCardTitleText}"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="12,0,0,0"
+                                                       Text="{Binding ApplicationAudioStatusText}"
+                                                       Style="{StaticResource FocusCaptionText}"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
                                 <ItemsControl ItemsSource="{Binding ApplicationAudioSessions}"
-                                              Margin="0,0,0,12"
+                                              Margin="0"
                                               AutomationProperties.Name="应用音量混音器">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -925,8 +950,17 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Style="{StaticResource FocusDetailsExpander}"
+                                          AutomationProperties.Name="媒体与电池详情">
+                                    <Expander.Header>
+                                        <TextBlock Text="媒体与电池"
+                                                   Style="{StaticResource FocusCardTitleText}"/>
+                                    </Expander.Header>
+                                    <StackPanel>
                                 <TextBlock Text="媒体控制"
-                                           Margin="4,2,0,7"
+                                           Margin="4,8,0,7"
                                            Style="{StaticResource FocusCaptionText}"/>
                                 <UniformGrid Columns="3"
                                              Margin="0,0,0,12">
@@ -962,6 +996,8 @@
                                     <TextBlock Grid.Column="2"
                                                Text="{Binding BatteryValueText}"/>
                                 </Grid>
+                                    </StackPanel>
+                                </Expander>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

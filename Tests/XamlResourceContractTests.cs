@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.98\"",
+            "LauncherVersion = \"0.10.99\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1318,6 +1318,69 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains("ApplyUpdateAvailability(update)", viewModel);
         Assert.Contains("ApplyUpdateAvailability(null)", viewModel);
+    }
+
+    [Fact]
+    public void StatusCenter_UsesProgressiveDisclosureForLowFrequencyDetails()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string theme = File.ReadAllText(
+            Path.Combine(root, "Themes", "FocusTheme.xaml"));
+        int statusStart = mainWindow.IndexOf(
+            "<!-- Status center -->",
+            StringComparison.Ordinal);
+        int calendarStart = mainWindow.IndexOf(
+            "<!-- Calendar and daily overview -->",
+            statusStart,
+            StringComparison.Ordinal);
+
+        Assert.True(
+            statusStart >= 0
+            && calendarStart > statusStart);
+        string statusCenter = mainWindow[
+            statusStart..calendarStart];
+        Assert.Equal(
+            3,
+            statusCenter.Split(
+                "Style=\"{StaticResource FocusDetailsExpander}\"",
+                StringSplitOptions.None).Length - 1);
+        Assert.Contains(
+            "AutomationProperties.Name=\"网络与无线详情\"",
+            statusCenter);
+        Assert.Contains(
+            "AutomationProperties.Name=\"应用音量详情\"",
+            statusCenter);
+        Assert.Contains(
+            "AutomationProperties.Name=\"媒体与电池详情\"",
+            statusCenter);
+        Assert.DoesNotContain(
+            "IsExpanded=\"True\"",
+            statusCenter);
+        Assert.True(
+            statusCenter.IndexOf(
+                "AutomationProperties.Name=\"内置显示器亮度\"",
+                StringComparison.Ordinal)
+            < statusCenter.IndexOf(
+                "AutomationProperties.Name=\"网络与无线详情\"",
+                StringComparison.Ordinal));
+
+        Assert.Contains(
+            "x:Key=\"FocusDetailsExpander\"",
+            theme);
+        Assert.Contains(
+            "TargetType=\"Expander\"",
+            theme);
+        Assert.Contains(
+            "IsExpanded, RelativeSource={RelativeSource TemplatedParent}",
+            theme);
+        Assert.Contains(
+            "x:Name=\"ExpandSite\"",
+            theme);
+        Assert.Contains(
+            "MinHeight=\"44\"",
+            theme);
     }
 
     [Fact]

@@ -215,6 +215,108 @@
         <Setter Property="Background" Value="{DynamicResource FocusSurfaceSoftBrush}"/>
     </Style>
 
+    <Style x:Key="FocusDetailsExpander"
+           TargetType="Expander">
+        <Setter Property="Foreground"
+                Value="{DynamicResource FocusTextBrush}"/>
+        <Setter Property="Background"
+                Value="{DynamicResource FocusSurfaceSoftBrush}"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="HorizontalContentAlignment"
+                Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <ToggleButton x:Name="HeaderToggle"
+                                          MinHeight="44"
+                                          Padding="14,0"
+                                          Cursor="Hand"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          HorizontalContentAlignment="Stretch"
+                                          FocusVisualStyle="{StaticResource FocusRoundedKeyboardVisual}"
+                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="HeaderChrome"
+                                                Padding="{TemplateBinding Padding}"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="{StaticResource FocusControlCornerRadius}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="28"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter Content="{TemplateBinding Content}"
+                                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                  VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="Chevron"
+                                                           Grid.Column="1"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           FontFamily="Segoe Fluent Icons"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource FocusMutedTextBrush}"
+                                                           Text="&#xE70D;"
+                                                           RenderTransformOrigin="0.5,0.5">
+                                                    <TextBlock.RenderTransform>
+                                                        <RotateTransform Angle="0"/>
+                                                    </TextBlock.RenderTransform>
+                                                </TextBlock>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="HeaderChrome"
+                                                        Property="Background"
+                                                        Value="{DynamicResource FocusHoverBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Chevron"
+                                                        Property="RenderTransform">
+                                                    <Setter.Value>
+                                                        <RotateTransform Angle="180"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <ContentPresenter Content="{TemplateBinding Header}"
+                                                  ContentTemplate="{TemplateBinding HeaderTemplate}"/>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ExpandSite"
+                                              Grid.Row="1"
+                                              Margin="14,0,14,14"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              ContentSource="Content"
+                                              Visibility="Collapsed"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True">
+                            <Setter TargetName="ExpandSite"
+                                    Property="Visibility"
+                                    Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.38"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="FocusRowButton"
            TargetType="Button"
            BasedOn="{StaticResource FocusIconButton}">

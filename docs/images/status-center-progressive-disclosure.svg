@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="460" viewBox="0 0 1080 460" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 状态中心渐进展示</title>
+  <desc id="desc">首屏显示常用动作、音量和亮度，网络、应用音量、媒体与电池按需展开。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081220"/>
+      <stop offset="1" stop-color="#172a49"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f8cff"/>
+      <stop offset="1" stop-color="#8664ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="460" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="26" font-weight="700">先给常用操作，细节需要时再展开</text>
+  <text x="50" y="90" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">状态中心不再把 Wi‑Fi 列表、应用混音器和媒体控制同时堆在首屏</text>
+
+  <g transform="translate(50 124)" filter="url(#shadow)">
+    <rect width="390" height="286" rx="24" fill="#182642" stroke="#385078"/>
+    <text x="24" y="34" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="19" font-weight="650">状态中心</text>
+    <text x="366" y="33" text-anchor="end" fill="#72d6a2" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">替代正常</text>
+    <g transform="translate(24 54)">
+      <rect width="106" height="42" rx="12" fill="#263b61"/>
+      <rect x="118" width="106" height="42" rx="12" fill="#263b61"/>
+      <rect x="236" width="106" height="42" rx="12" fill="#263b61"/>
+      <text x="53" y="27" text-anchor="middle" fill="#d8e4f7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">快捷设置</text>
+      <text x="171" y="27" text-anchor="middle" fill="#d8e4f7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">通知中心</text>
+      <text x="289" y="27" text-anchor="middle" fill="#d8e4f7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">输入法</text>
+      <rect y="50" width="106" height="42" rx="12" fill="#263b61"/>
+      <rect x="118" y="50" width="106" height="42" rx="12" fill="#263b61"/>
+      <rect x="236" y="50" width="106" height="42" rx="12" fill="#263b61"/>
+      <text x="53" y="77" text-anchor="middle" fill="#d8e4f7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">显示桌面</text>
+      <text x="171" y="77" text-anchor="middle" fill="#d8e4f7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">锁定</text>
+      <text x="289" y="77" text-anchor="middle" fill="#d8e4f7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">电源</text>
+    </g>
+    <text x="24" y="176" fill="#91a5c9" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">主音量</text>
+    <rect x="92" y="168" width="230" height="8" rx="4" fill="#283b5c"/>
+    <rect x="92" y="168" width="148" height="8" rx="4" fill="url(#accent)"/>
+    <circle cx="240" cy="172" r="7" fill="#dbe7ff"/>
+    <text x="366" y="177" text-anchor="end" fill="#dbe7f8" font-family="Segoe UI, sans-serif" font-size="12">64%</text>
+    <text x="24" y="216" fill="#91a5c9" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">亮度</text>
+    <rect x="92" y="208" width="230" height="8" rx="4" fill="#283b5c"/>
+    <rect x="92" y="208" width="182" height="8" rx="4" fill="url(#accent)"/>
+    <circle cx="274" cy="212" r="7" fill="#dbe7ff"/>
+    <text x="366" y="217" text-anchor="end" fill="#dbe7f8" font-family="Segoe UI, sans-serif" font-size="12">79%</text>
+    <rect x="24" y="238" width="342" height="32" rx="10" fill="#223653"/>
+    <text x="40" y="259" fill="#b9c9e2" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">网络与无线</text>
+    <text x="336" y="259" text-anchor="end" fill="#8298bc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="11">Home Wi‑Fi ⌄</text>
+  </g>
+
+  <path d="M468 268h74" stroke="#6f88b2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M530 259l12 9-12 9" fill="none" stroke="#6f88b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(570 124)" filter="url(#shadow)">
+    <rect width="460" height="286" rx="24" fill="#182642" stroke="#385078"/>
+    <text x="24" y="34" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="19" font-weight="650">按需展开</text>
+    <g transform="translate(24 56)">
+      <rect width="412" height="52" rx="14" fill="url(#accent)" fill-opacity=".9"/>
+      <text x="18" y="32" fill="#fff" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14" font-weight="650">网络与无线</text>
+      <text x="374" y="32" text-anchor="end" fill="#fff" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">Home Wi‑Fi</text>
+      <path d="M386 22l8 8 8-8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect y="64" width="412" height="48" rx="14" fill="#263b61"/>
+      <text x="18" y="94" fill="#d8e4f7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">应用音量</text>
+      <text x="374" y="94" text-anchor="end" fill="#8fa4c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">3 个会话</text>
+      <path d="M386 86l8 8 8-8" fill="none" stroke="#8fa4c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect y="124" width="412" height="48" rx="14" fill="#263b61"/>
+      <text x="18" y="154" fill="#d8e4f7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">媒体与电池</text>
+      <path d="M386 146l8 8 8-8" fill="none" stroke="#8fa4c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text x="24" y="254" fill="#8298bc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">功能完整保留 · 默认不占用首屏</text>
+  </g>
+</svg>
