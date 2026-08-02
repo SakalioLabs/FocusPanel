@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.94\"",
+            "LauncherVersion = \"0.10.95\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -2801,6 +2801,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "WindowsShellAction.ShowDesktop",
             shellSearchCatalog);
+        Assert.Contains(
+            "WindowsShellAction.SoundOutput",
+            shellSearchCatalog);
+        Assert.Contains(
+            "WindowsShellAction.ScreenSnipping",
+            shellSearchCatalog);
+        Assert.Contains(
+            "WindowsShellAction.ProjectDisplay",
+            shellSearchCatalog);
+        Assert.Contains(
+            "WindowsShellAction.CastDevices",
+            shellSearchCatalog);
         Assert.DoesNotContain(
             "VirtualDesktopClose",
             shellSearchCatalog);
@@ -2818,6 +2830,18 @@ public sealed class XamlResourceContractTests
             viewModel);
         Assert.Contains(
             "_systemStatus.ShowDesktop",
+            viewModel);
+        Assert.Contains(
+            "_systemStatus.OpenSoundOutput",
+            viewModel);
+        Assert.Contains(
+            "_systemStatus.OpenScreenSnipping",
+            viewModel);
+        Assert.Contains(
+            "_systemStatus.OpenProjectDisplay",
+            viewModel);
+        Assert.Contains(
+            "_systemStatus.OpenCastDevices",
             viewModel);
         Assert.Contains(
             "_systemStatus",

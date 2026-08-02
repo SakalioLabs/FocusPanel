@@ -1707,6 +1707,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     _systemStatus.OpenTaskView,
                 WindowsShellAction.Widgets =>
                     _systemStatus.OpenWidgets,
+                WindowsShellAction.SoundOutput =>
+                    _systemStatus.OpenSoundOutput,
+                WindowsShellAction.ScreenSnipping =>
+                    _systemStatus.OpenScreenSnipping,
+                WindowsShellAction.ProjectDisplay =>
+                    _systemStatus.OpenProjectDisplay,
+                WindowsShellAction.CastDevices =>
+                    _systemStatus.OpenCastDevices,
                 WindowsShellAction.ShowDesktop =>
                     _systemStatus.ShowDesktop,
                 WindowsShellAction

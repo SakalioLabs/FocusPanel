@@ -17,6 +17,10 @@ internal enum WindowsShellAction
     Search,
     Widgets,
     RunDialog,
+    SoundOutput,
+    ScreenSnipping,
+    ProjectDisplay,
+    CastDevices,
     ShowDesktop,
     MediaPreviousTrack,
     MediaPlayPause,
@@ -106,6 +110,12 @@ internal static class WindowsShellShortcutMap
         WindowsShellAction.Search => new(0x53, true),
         WindowsShellAction.Widgets => new(0x57, true),
         WindowsShellAction.RunDialog => new(0x52, true),
+        WindowsShellAction.SoundOutput =>
+            new(0x56, true, UsesControl: true),
+        WindowsShellAction.ScreenSnipping =>
+            new(0x53, true, UsesShift: true),
+        WindowsShellAction.ProjectDisplay => new(0x50, true),
+        WindowsShellAction.CastDevices => new(0x4B, true),
         WindowsShellAction.ShowDesktop => new(0x44, true),
         WindowsShellAction.MediaPreviousTrack =>
             new(0xB1, false),

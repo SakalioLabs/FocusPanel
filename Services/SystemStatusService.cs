@@ -394,6 +394,22 @@ public sealed class SystemStatusService : ISystemStatusService
 
     public bool OpenRunDialog() => TrySendWindowsShortcut(WindowsShellAction.RunDialog);
 
+    public bool OpenSoundOutput() =>
+        TrySendWindowsShortcut(
+            WindowsShellAction.SoundOutput);
+
+    public bool OpenScreenSnipping() =>
+        TrySendWindowsShortcut(
+            WindowsShellAction.ScreenSnipping);
+
+    public bool OpenProjectDisplay() =>
+        TrySendWindowsShortcut(
+            WindowsShellAction.ProjectDisplay);
+
+    public bool OpenCastDevices() =>
+        TrySendWindowsShortcut(
+            WindowsShellAction.CastDevices);
+
     public bool OpenManagementTool(SystemManagementTool tool)
     {
         SystemLaunchRequest request = SystemManagementToolCatalog.Get(tool);

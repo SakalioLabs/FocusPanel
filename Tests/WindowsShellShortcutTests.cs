@@ -18,6 +18,8 @@ public sealed class WindowsShellShortcutTests
             (WindowsShellAction.Search, 0x53),
             (WindowsShellAction.Widgets, 0x57),
             (WindowsShellAction.RunDialog, 0x52),
+            (WindowsShellAction.ProjectDisplay, 0x50),
+            (WindowsShellAction.CastDevices, 0x4B),
             (WindowsShellAction.ShowDesktop, 0x44)
         };
 
@@ -27,6 +29,59 @@ public sealed class WindowsShellShortcutTests
             Assert.True(shortcut.UsesWindowsKey);
             Assert.Equal(key, shortcut.Key);
         }
+    }
+
+    [Fact]
+    public void SoundOutput_UsesWindowsControlV()
+    {
+        WindowsShellShortcut shortcut =
+            WindowsShellShortcutMap.Get(
+                WindowsShellAction.SoundOutput);
+
+        Assert.True(shortcut.UsesWindowsKey);
+        Assert.True(shortcut.UsesControl);
+        Assert.False(shortcut.UsesAlt);
+        Assert.False(shortcut.UsesShift);
+        Assert.Equal((ushort)0x56, shortcut.Key);
+    }
+
+    [Fact]
+    public void ScreenSnipping_UsesWindowsShiftS()
+    {
+        WindowsShellShortcut shortcut =
+            WindowsShellShortcutMap.Get(
+                WindowsShellAction.ScreenSnipping);
+
+        Assert.True(shortcut.UsesWindowsKey);
+        Assert.False(shortcut.UsesControl);
+        Assert.False(shortcut.UsesAlt);
+        Assert.True(shortcut.UsesShift);
+        Assert.Equal((ushort)0x53, shortcut.Key);
+
+        WindowsShortcutKeyTransition[] transitions =
+            WindowsShortcutSequence.Build(shortcut).ToArray();
+        Assert.Equal(
+            new ushort[]
+            {
+                0x5B,
+                0x10,
+                0x53,
+                0x53,
+                0x10,
+                0x5B
+            },
+            transitions.Select(item => item.Key));
+        Assert.Equal(
+            new[]
+            {
+                true,
+                true,
+                true,
+                false,
+                false,
+                false
+            },
+            transitions.Select(item => item.IsDown));
     }
 
     [Fact]

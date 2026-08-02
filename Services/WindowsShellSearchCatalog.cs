@@ -40,6 +40,26 @@ internal static class WindowsShellSearchCatalog
                 "\uECA5",
                 "资讯 天气 widgets Win W"),
             new WindowsShellSearchEntry(
+                WindowsShellAction.SoundOutput,
+                "声音输出",
+                "\uE767",
+                "声音设备 输出设备 音量混合器 sound output audio device volume mixer Win Ctrl V"),
+            new WindowsShellSearchEntry(
+                WindowsShellAction.ScreenSnipping,
+                "屏幕截图",
+                "\uE7C4",
+                "截图 截屏 屏幕剪辑 snip screenshot screen capture Win Shift S"),
+            new WindowsShellSearchEntry(
+                WindowsShellAction.ProjectDisplay,
+                "投影到其他屏幕",
+                "\uE7F4",
+                "投影 多屏 扩展屏 复制屏幕 project display monitor Win P"),
+            new WindowsShellSearchEntry(
+                WindowsShellAction.CastDevices,
+                "连接无线显示器",
+                "\uE704",
+                "投屏 无线显示器 连接设备 cast connect wireless display Win K"),
+            new WindowsShellSearchEntry(
                 WindowsShellAction.ShowDesktop,
                 "显示桌面",
                 "\uE18A",

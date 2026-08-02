@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="430" rx="28" fill="url(#bg)"/>
+  <text x="60" y="66" fill="#f8fafc" font-size="31" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif" font-weight="700">不用离开 Panel 寻找系统入口</text>
+  <text x="60" y="101" fill="#94a3b8" font-size="16" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">打开统一搜索，输入自然语言并回车；不增加固定按钮，也不复制 Windows 私有界面。</text>
+  <g font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">
+    <g transform="translate(60 140)">
+      <rect width="250" height="205" rx="22" fill="#1e293b" stroke="#334155"/>
+      <circle cx="42" cy="42" r="22" fill="#1d4ed8"/><text x="42" y="50" text-anchor="middle" fill="#dbeafe" font-size="22">✂</text>
+      <text x="28" y="91" fill="#f8fafc" font-size="21" font-weight="600">屏幕截图</text>
+      <text x="28" y="123" fill="#93c5fd" font-size="14">截图 · 截屏 · screenshot</text>
+      <text x="28" y="172" fill="#64748b" font-size="14">Win + Shift + S</text>
+    </g>
+    <g transform="translate(335 140)">
+      <rect width="250" height="205" rx="22" fill="#1e293b" stroke="#334155"/>
+      <circle cx="42" cy="42" r="22" fill="#0f766e"/><text x="42" y="50" text-anchor="middle" fill="#ccfbf1" font-size="22">◖</text>
+      <text x="28" y="91" fill="#f8fafc" font-size="21" font-weight="600">声音输出</text>
+      <text x="28" y="123" fill="#5eead4" font-size="14">输出设备 · 音量混合器</text>
+      <text x="28" y="172" fill="#64748b" font-size="14">Win + Ctrl + V</text>
+    </g>
+    <g transform="translate(610 140)">
+      <rect width="250" height="205" rx="22" fill="#1e293b" stroke="#334155"/>
+      <circle cx="42" cy="42" r="22" fill="#7c3aed"/><text x="42" y="50" text-anchor="middle" fill="#ede9fe" font-size="22">▣</text>
+      <text x="28" y="91" fill="#f8fafc" font-size="21" font-weight="600">投影到其他屏幕</text>
+      <text x="28" y="123" fill="#c4b5fd" font-size="14">投影 · 多屏 · 扩展屏</text>
+      <text x="28" y="172" fill="#64748b" font-size="14">Win + P</text>
+    </g>
+    <g transform="translate(885 140)">
+      <rect width="250" height="205" rx="22" fill="#1e293b" stroke="#334155"/>
+      <circle cx="42" cy="42" r="22" fill="#b45309"/><text x="42" y="50" text-anchor="middle" fill="#fef3c7" font-size="22">⌁</text>
+      <text x="28" y="91" fill="#f8fafc" font-size="21" font-weight="600">连接无线显示器</text>
+      <text x="28" y="123" fill="#fcd34d" font-size="14">投屏 · 连接设备 · cast</text>
+      <text x="28" y="172" fill="#64748b" font-size="14">Win + K</text>
+    </g>
+  </g>
+  <rect x="340" y="374" width="520" height="34" rx="17" fill="#1e3a8a"/>
+  <text x="600" y="397" text-anchor="middle" fill="#dbeafe" font-size="14" font-family="Segoe UI Variable, Microsoft YaHei UI, sans-serif">系统拒绝快捷动作 → 状态中心给出原因和原生快捷键兜底</text>
+</svg>

@@ -25,6 +25,10 @@ public interface ISystemStatusService : IDisposable
     bool OpenWindowsSearch();
     bool OpenWidgets();
     bool OpenRunDialog();
+    bool OpenSoundOutput();
+    bool OpenScreenSnipping();
+    bool OpenProjectDisplay();
+    bool OpenCastDevices();
     bool OpenManagementTool(SystemManagementTool tool);
     bool OpenPowerSettings();
     bool OpenLocationPrivacySettings();

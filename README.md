@@ -2,6 +2,8 @@
 
 FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区。它提供桌面收纳、任务、番茄钟、AI、应用启动、运行窗口管理、系统状态与日期时间入口。旧版 OKR 表只为升级兼容保留，不再出现在产品界面，也不会被概览或 AI 读取。
 
+> 0.10.95 起，统一搜索补齐四个不依赖原生任务栏的高频 Windows 入口：输入“截图 / 截屏”“声音输出 / 音量混合器”“投影 / 扩展屏”或“无线显示器 / 投屏”即可回车打开对应系统面板。它们分别复用 Windows 公开的 `Win+Shift+S`、`Win+Ctrl+V`、`Win+P` 与 `Win+K` 语义，不增加紧凑栏按钮，也不会为了省一步而引入依赖当前输入焦点、容易把内容送错窗口的伪快捷操作。
+
 > 0.10.94 起，多窗口应用支持 Windows 任务栏式 `Ctrl+左键` 循环：普通左键仍打开文字窗口列表，`Ctrl+左键` 直接切到下一个窗口并在首尾环绕，连续点击沿用刚刚切换的真实窗口，不等待前台快照回写。提示文字同步纠正为 `Ctrl+滚轮`，不再错误宣称普通滚轮会切窗口。
 
 > 0.10.93 起，“显示桌面”不再只能进入状态中心寻找：紧凑栏时间入口支持 `Shift+左键`、`Shift+Enter` 或鼠标中键一步切换桌面；右键菜单也把“显示桌面 · Win+D”放在日期时间和通知设置之前。普通左键仍打开月历与今日任务，不新增第六个固定按钮。
@@ -81,7 +83,11 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![应用菜单直接管理窗口状态](docs/images/taskbar-window-state-actions.svg)
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
 - 应用搜索按“完整名称 → 可执行文件名 → 名称前缀 → 缩写 → 多词前缀 → 包含”分级匹配；`vsc` 可命中 Visual Studio Code，`studio co` 可按词查找，标点、大小写和重音符号会被统一规范化。固定状态只在同一匹配等级内作为次级排序，不会再把固定但弱相关的结果压到精确结果前面；不做易误启动的无限模糊纠错。
-- 搜索把应用、已打开窗口和 Windows 系统命令放在同一条结果列表中：输入窗口标题即可直接切换；输入“任务管理器”“设备管理器”“硬盘分区”“admin terminal”或 `taskmgr`、`devmgmt` 等命令名可执行管理工具；输入“运行”“快捷设置”“通知中心”“切换输入法”“小组件”“显示桌面”等别名可执行 Shell 动作。任务视图因在部分系统上无法可靠唤起已从按钮和搜索中移除。媒体命令继续支持上一首、播放/暂停和下一首。
+- 搜索把应用、已打开窗口和 Windows 系统命令放在同一条结果列表中：输入窗口标题即可直接切换；输入“任务管理器”“设备管理器”“硬盘分区”“admin terminal”或 `taskmgr`、`devmgmt` 等命令名可执行管理工具；输入“运行”“快捷设置”“通知中心”“切换输入法”“小组件”“显示桌面”等别名可执行 Shell 动作。0.10.95 进一步加入截图、声音输出、多屏投影和无线显示器四个高频入口；任务视图因在部分系统上无法可靠唤起已从按钮和搜索中移除。媒体命令继续支持上一首、播放/暂停和下一首。
+
+![统一搜索直达 Windows 高频入口](docs/images/search-productivity-shell-actions.svg)
+
+这些组合采用微软公开的 Windows 11 行为，参见 [Windows 键盘快捷方式](https://support.microsoft.com/zh-cn/windows/windows-%E4%B8%AD%E7%9A%84%E9%94%AE%E7%9B%98%E5%BF%AB%E6%8D%B7%E6%96%B9%E5%BC%8F-dcc61a57-8ff0-cffe-9796-cb9706c75eec)；虚拟键值使用 Windows SDK 公布的 [Virtual-Key Codes](https://learn.microsoft.com/windows/win32/inputdev/virtual-key-codes)。
 - 搜索框也可直接安全计算：支持括号、`+ - * / %`、小数、负数以及 `× / ÷ / （ ）`，结果固定显示在首位，点击或按 Enter 即复制。解析器不执行脚本或动态代码，最多接受 128 字符和 16 层括号；纯数字、路径、应用名、除零、指数语法和错误表达式不会伪装成结果。剪贴板被占用时会异步重试三次，持续失败才进入状态中心说明，不冻结搜索输入。
 - 统一搜索可以直接控制默认输出音量：输入 `音量 35` / `volume 35` 精确设置百分比，输入 `音量 +10`、`音量降低 5` 或 `volume up 10` 相对调整，输入“静音 / 取消静音”直接设定目标状态。结果固定排在普通应用前，点击或按 Enter 后进入既有串行 Core Audio 控制器，无需先展开状态中心；正音量会同时取消静音，结果按 `0–100%` 夹取，设备切换或写入失败仍由状态中心给出可恢复说明。相对调整只在当前默认设备音量已确认时执行，不会在启动读取完成前把未知音量误当成 0%；解析只接受完整、明确的命令，`音量`、`音量 101`、小数、文件名和尾随文本不会被误执行。
 - 状态中心新增内置显示器亮度滑块，不再为了调光先打开 Win+A；统一搜索同步支持 `亮度 35`、`亮度 +10`、`亮度降低 5`、`brightness 60` 和 `brightness down 10`。连续拖动只保留最新目标值并在后台串行写入，旧结果不能覆盖新的滑块位置；读取与写入使用 Windows 公开的 `WmiMonitorBrightness` / `WmiMonitorBrightnessMethods`，只控制系统实际公开的内置显示设备。外接显示器、远程桌面或驱动未公开亮度能力时，控件会禁用并说明原因，仍可点击“快捷设置”，不会调用 DDC 私有协议或假装成功。
@@ -551,7 +557,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.10.94 `
+  -Version 0.10.95 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -563,7 +569,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.10.94-full.nupkg`：完整更新包。
+- `FocusPanel-0.10.95-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 
