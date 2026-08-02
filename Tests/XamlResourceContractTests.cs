@@ -1056,7 +1056,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.80\"",
+            "LauncherVersion = \"0.10.81\"",
             File.ReadAllText(
                 Path.Combine(
                     root,

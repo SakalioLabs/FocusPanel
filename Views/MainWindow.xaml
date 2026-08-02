@@ -200,6 +200,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -293,7 +294,71 @@
                                 </Grid>
                             </ScrollViewer>
 
-                            <UniformGrid Grid.Row="2" Columns="4">
+                            <Grid Grid.Row="2"
+                                  Margin="3,0,3,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="虚拟桌面"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource FocusSecondaryBodyText}"/>
+                                <Button Grid.Column="1"
+                                        Width="44"
+                                        Height="44"
+                                        Margin="3"
+                                        Style="{StaticResource FocusIconButton}"
+                                        Command="{Binding SwitchVirtualDesktopCommand}"
+                                        CommandParameter="{x:Static services:VirtualDesktopDirection.Previous}"
+                                        AutomationProperties.Name="切换到上一个虚拟桌面"
+                                        ToolTip="上一个桌面 · Win+Ctrl+←">
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               FontSize="16"
+                                               Text="&#xE72B;"/>
+                                </Button>
+                                <Button Grid.Column="2"
+                                        Width="44"
+                                        Height="44"
+                                        Margin="3"
+                                        Style="{StaticResource FocusIconButton}"
+                                        Command="{Binding CreateVirtualDesktopCommand}"
+                                        AutomationProperties.Name="新建虚拟桌面"
+                                        ToolTip="新建桌面 · Win+Ctrl+D">
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               FontSize="16"
+                                               Text="&#xE710;"/>
+                                </Button>
+                                <Button Grid.Column="3"
+                                        Width="44"
+                                        Height="44"
+                                        Margin="3"
+                                        Style="{StaticResource FocusIconButton}"
+                                        Command="{Binding SwitchVirtualDesktopCommand}"
+                                        CommandParameter="{x:Static services:VirtualDesktopDirection.Next}"
+                                        AutomationProperties.Name="切换到下一个虚拟桌面"
+                                        ToolTip="下一个桌面 · Win+Ctrl+→">
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               FontSize="16"
+                                               Text="&#xE72A;"/>
+                                </Button>
+                                <Button Grid.Column="4"
+                                        Width="44"
+                                        Height="44"
+                                        Margin="3"
+                                        Style="{StaticResource FocusIconButton}"
+                                        Click="CloseCurrentVirtualDesktop_Click"
+                                        AutomationProperties.Name="关闭当前虚拟桌面"
+                                        ToolTip="关闭当前桌面 · 应用不会关闭">
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               FontSize="16"
+                                               Text="&#xE711;"/>
+                                </Button>
+                            </Grid>
+
+                            <UniformGrid Grid.Row="3" Columns="4">
                                 <Button Margin="3"
                                         Height="48"
                                         Style="{StaticResource FocusSecondaryButton}"

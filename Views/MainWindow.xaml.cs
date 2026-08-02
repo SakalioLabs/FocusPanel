@@ -721,6 +721,25 @@ public partial class MainWindow :
             () => _viewModel.IsSearchOpen);
     }
 
+    private void CloseCurrentVirtualDesktop_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        MessageBoxResult result = FocusDialogService.Show(
+            "关闭当前虚拟桌面？\n\n其中的应用不会被关闭，Windows 会把窗口移动到相邻桌面。",
+            "关闭虚拟桌面",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (result != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        _viewModel.IsStartHubOpen = false;
+        _viewModel.CloseCurrentVirtualDesktopCommand
+            .Execute(null);
+    }
+
     private async Task InvokeShellEntryAfterClickAsync(
         Action action)
     {

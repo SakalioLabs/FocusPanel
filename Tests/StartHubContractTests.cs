@@ -41,6 +41,21 @@ public sealed class StartHubContractTests
             "SystemManagementTool.TaskManager",
             xaml);
         Assert.Contains(
+            "Command=\"{Binding SwitchVirtualDesktopCommand}\"",
+            xaml);
+        Assert.Contains(
+            "VirtualDesktopDirection.Previous",
+            xaml);
+        Assert.Contains(
+            "VirtualDesktopDirection.Next",
+            xaml);
+        Assert.Contains(
+            "Command=\"{Binding CreateVirtualDesktopCommand}\"",
+            xaml);
+        Assert.Contains(
+            "Click=\"CloseCurrentVirtualDesktop_Click\"",
+            xaml);
+        Assert.Contains(
             "Header=\"Windows 开始菜单\"",
             xaml);
     }
@@ -86,6 +101,15 @@ public sealed class StartHubContractTests
             shell);
         Assert.DoesNotContain(
             "CollapseSidebar();\n        _viewModel.ToggleStartHubCommand",
+            shell);
+        Assert.Contains(
+            "_viewModel.CloseCurrentVirtualDesktopCommand",
+            shell);
+        Assert.Contains(
+            "其中的应用不会被关闭",
+            shell);
+        Assert.Contains(
+            "MessageBoxButton.YesNo",
             shell);
     }
 
