@@ -38,7 +38,6 @@ internal sealed record ShellPreferenceSnapshot(
 internal static class PersistentCompactDockDefaultPolicy
 {
     internal static bool Resolve(
-        bool firstRunAccepted,
         string? storedValue)
     {
         if (bool.TryParse(
@@ -48,11 +47,18 @@ internal static class PersistentCompactDockDefaultPolicy
             return explicitValue;
         }
 
-        // A visible compact dock is the humane first-run default. Existing
-        // users who predate this preference retain the former auto-hide
-        // behavior until they opt in themselves.
-        return !firstRunAccepted;
+        // Missing is not an explicit preference. Keep the shell discoverable
+        // for both new installations and upgrades from versions that did not
+        // persist this setting yet.
+        return true;
     }
+}
+
+internal static class FirstRunOnboardingPolicy
+{
+    internal static bool ShouldShow(
+        bool firstRunAccepted) =>
+        !firstRunAccepted;
 }
 
 internal interface IShellPreferenceRepository
@@ -329,7 +335,6 @@ internal sealed class ShellPreferenceRepository
                         EdgeHotZoneSensitivityPolicy
                             .DefaultDwellMilliseconds)),
             PersistentCompactDockDefaultPolicy.Resolve(
-                firstRunAccepted,
                 storedCompactDockPreference));
     }
 

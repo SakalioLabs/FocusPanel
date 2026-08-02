@@ -952,9 +952,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 preferenceSnapshot
                     .KeepCompactDockVisible;
             IsOnboardingVisible =
-                !preferenceSnapshot
-                    .FirstRunAccepted
-                || !IsReplacementEnabled;
+                FirstRunOnboardingPolicy.ShouldShow(
+                    preferenceSnapshot
+                        .FirstRunAccepted);
         }
         finally
         {

@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.96\"",
+            "LauncherVersion = \"0.10.97\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -5324,6 +5324,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "PersistentCompactDockDefaultPolicy.Resolve(",
             repository);
+        Assert.Contains(
+            "FirstRunOnboardingPolicy.ShouldShow(",
+            viewModel);
+        Assert.DoesNotContain(
+            "|| !IsReplacementEnabled",
+            viewModel);
+        Assert.Contains(
+            "Content=\"开始使用（保留任务栏）\"",
+            mainXaml);
+        Assert.Contains(
+            "Content=\"立即接管任务栏\"",
+            mainXaml);
 
         string mainWindow = File.ReadAllText(
             Path.Combine(
