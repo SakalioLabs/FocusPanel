@@ -1126,7 +1126,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.5\"",
+            "LauncherVersion = \"0.11.6\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1314,7 +1314,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void UpdateAvailability_IsVisibleFromCompactOrganizerEntry()
+    public void UpdateAvailability_BelongsToSettingsInsteadOfOrganizer()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -1322,14 +1322,45 @@ public sealed class XamlResourceContractTests
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
 
+        int organizerStart = mainWindow.IndexOf(
+            "x:Name=\"OrganizerButton\"",
+            StringComparison.Ordinal);
+        int tasksStart = mainWindow.IndexOf(
+            "x:Name=\"TasksButton\"",
+            organizerStart,
+            StringComparison.Ordinal);
+        Assert.True(
+            organizerStart >= 0
+            && tasksStart > organizerStart);
+        string organizer = mainWindow[
+            organizerStart..tasksStart];
+
+        Assert.DoesNotContain(
+            "IsUpdateAvailable",
+            organizer);
+        Assert.Contains(
+            "AutomationProperties.Name=\"{Binding OrganizerEntryAutomationName}\"",
+            organizer);
+        Assert.Contains(
+            "Visibility=\"{Binding HasCollectedDesktopItems",
+            organizer);
+        Assert.Contains(
+            "Text=\"{Binding CollectedDesktopItemCountBadgeText}\"",
+            organizer);
+        Assert.Contains(
+            "AutomationProperties.Name=\"FocusPanel 设置\"",
+            mainWindow);
         Assert.Contains(
             "Visibility=\"{Binding IsUpdateAvailable",
             mainWindow);
-        Assert.Contains(
-            "x:Name=\"OrganizerButton\"",
-            mainWindow);
         Assert.Contains("ApplyUpdateAvailability(update)", viewModel);
         Assert.Contains("ApplyUpdateAvailability(null)", viewModel);
+        Assert.Contains(
+            "CollectedCountChanged +=",
+            viewModel);
+        Assert.Contains(
+            "CollectedCountChanged -=",
+            viewModel);
     }
 
     [Fact]
@@ -1667,7 +1698,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains("Text=\"收纳\"", primaryEntries);
         Assert.Contains("Text=\"任务\"", primaryEntries);
         Assert.Contains(
-            "AutomationProperties.Name=\"桌面收纳\"",
+            "AutomationProperties.Name=\"{Binding OrganizerEntryAutomationName}\"",
             primaryEntries);
         Assert.Contains(
             "AutomationProperties.Name=\"{Binding TasksEntryAutomationName}\"",
@@ -1698,6 +1729,15 @@ public sealed class XamlResourceContractTests
             codeBehind);
         Assert.Contains(
             "public bool HasOpenTasks",
+            viewModel);
+        Assert.Contains(
+            "public bool HasCollectedDesktopItems",
+            viewModel);
+        Assert.Contains(
+            "public string CollectedDesktopItemCountBadgeText",
+            viewModel);
+        Assert.Contains(
+            "public string OrganizerEntryAutomationName",
             viewModel);
         Assert.Contains(
             "public string OpenTaskCountBadgeText",

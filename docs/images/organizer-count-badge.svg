@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="430" viewBox="0 0 1080 430" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 收纳数量角标</title>
+  <desc id="desc">收纳入口显示真实已收纳数量，软件更新圆点迁到设置入口，两个状态不再混淆。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081220"/>
+      <stop offset="1" stop-color="#172a49"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f8cff"/>
+      <stop offset="1" stop-color="#8664ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="430" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" fill="#f8fafc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="26" font-weight="700">角标只表达这个入口真正负责的状态</text>
+  <text x="50" y="90" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15">收纳数量归收纳，软件更新归设置；用户不再猜一个圆点到底是什么意思</text>
+
+  <g transform="translate(72 130)" filter="url(#shadow)">
+    <rect width="166" height="226" rx="26" fill="#182642" stroke="#385078"/>
+    <rect x="45" y="30" width="76" height="76" rx="20" fill="#243653"/>
+    <path d="M61 57h44v34H61zM68 49h30l7 8H61z" fill="none" stroke="#8eb4ff" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="119" cy="36" r="9" fill="#8664ff"/>
+    <path d="M115 32l8 8M123 32l-8 8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    <text x="83" y="137" text-anchor="middle" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="650">收纳</text>
+    <text x="83" y="172" text-anchor="middle" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">更新圆点：含义错误</text>
+    <rect x="33" y="188" width="100" height="25" rx="10" fill="#3a2436"/>
+    <text x="83" y="205" text-anchor="middle" fill="#ff9fae" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="11">已移除</text>
+  </g>
+
+  <path d="M269 242h78" stroke="#6f88b2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M335 233l12 9-12 9" fill="none" stroke="#6f88b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(382 116)" filter="url(#shadow)">
+    <rect width="190" height="252" rx="26" fill="#182642" stroke="#405a84"/>
+    <rect x="56" y="36" width="76" height="76" rx="20" fill="#243653"/>
+    <path d="M72 63h44v34H72zM79 55h30l7 8H72z" fill="none" stroke="#8eb4ff" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="118" y="28" width="34" height="25" rx="10" fill="#20324f" stroke="#6f9fff"/>
+    <text x="135" y="45" text-anchor="middle" fill="#8eb4ff" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700">12</text>
+    <text x="94" y="146" text-anchor="middle" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="16" font-weight="650">收纳</text>
+    <text x="94" y="176" text-anchor="middle" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">已收纳 12 个项目</text>
+    <rect x="30" y="197" width="130" height="34" rx="12" fill="url(#accent)"/>
+    <text x="95" y="219" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12" font-weight="650">即时数量反馈</text>
+  </g>
+
+  <path d="M606 242h78" stroke="#6f88b2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M672 233l12 9-12 9" fill="none" stroke="#6f88b2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(720 130)" filter="url(#shadow)">
+    <rect width="300" height="226" rx="24" fill="#1b2a45" stroke="#405a84"/>
+    <text x="24" y="38" fill="#8fa4c8" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12">展开工作区导航</text>
+    <rect x="18" y="56" width="264" height="58" rx="15" fill="#263b61"/>
+    <text x="42" y="91" fill="#eef3fb" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="650">设置</text>
+    <circle cx="93" cy="85" r="5" fill="#6f9fff"/>
+    <text x="24" y="150" fill="#f3f6fc" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="16" font-weight="650">软件更新 → 设置</text>
+    <text x="24" y="178" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">圆点旁边就是检查与安装入口</text>
+    <text x="24" y="202" fill="#9fb1d1" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13">不再污染桌面收纳的含义</text>
+  </g>
+
+  <text x="72" y="400" fill="#a8bad7" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="14">隐藏、恢复、自动整理和文件刷新 → 复用同一 FilesChanged 事件 → 角标只在数量变化时更新</text>
+</svg>

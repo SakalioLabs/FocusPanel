@@ -51,6 +51,9 @@ public partial class FileOrganizerViewModel :
     private bool _isDisposed;
     private Task? _disposeTask;
 
+    public event Action<int>?
+        CollectedCountChanged;
+
     // Split partitions for Masonry/Staggered Layout
     public ObservableCollection<PartitionViewModel> PartitionsCol1 { get; } = new();
     public ObservableCollection<PartitionViewModel> PartitionsCol2 { get; } = new();
@@ -87,6 +90,9 @@ public partial class FileOrganizerViewModel :
 
     [ObservableProperty]
     private bool isAutoOrganizeEnabled;
+
+    [ObservableProperty]
+    private int collectedItemCount;
 
     [ObservableProperty]
     private string autoOrganizeStatus =
@@ -161,6 +167,10 @@ public partial class FileOrganizerViewModel :
         if (!_applyingLayoutOptions)
             QueueLayoutOptionsSave();
     }
+
+    partial void OnCollectedItemCountChanged(
+        int value) =>
+        CollectedCountChanged?.Invoke(value);
     
     private void QueueLayoutOptionsSave()
     {
@@ -306,16 +316,28 @@ public partial class FileOrganizerViewModel :
         _fileService.DesktopItemsCreated +=
             FileService_DesktopItemsCreated;
 
+        RefreshCollectedItemCount();
         RequestLayoutRefresh();
     }
 
     private void FileService_FilesChanged()
     {
+        RefreshCollectedItemCount();
         if (!IsOrganizing)
         {
             RefreshPendingCommonDesktopItems();
         }
         RequestLayoutRefresh();
+    }
+
+    private void RefreshCollectedItemCount()
+    {
+        if (_isDisposed)
+            return;
+
+        CollectedItemCount =
+            _fileService.AllFiles.Count(
+                file => file.IsHidden);
     }
 
     private Task FileService_DesktopItemsCreated(
@@ -1339,6 +1361,7 @@ public partial class FileOrganizerViewModel :
             OnLayoutOptionsSaved;
         _layoutSaveQueue.ItemSaveFailed -=
             OnLayoutOptionsSaveFailed;
+        CollectedCountChanged = null;
         _disposeTask =
             CompleteDisposeAsync();
         return _disposeTask;

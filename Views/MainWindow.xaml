@@ -204,9 +204,19 @@
                             <RadioButton Margin="2" Height="40"
                                          GroupName="WorkspaceNavigation"
                                          Style="{StaticResource FocusSegmentRadioButton}"
-                                         Content="设置"
                                          IsChecked="{Binding IsSettingsWorkspaceActive, Mode=OneWay}"
-                                         Click="SettingsMenuItem_Click"/>
+                                         Click="SettingsMenuItem_Click"
+                                         AutomationProperties.Name="FocusPanel 设置">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="设置"/>
+                                    <Ellipse Width="7"
+                                             Height="7"
+                                             Margin="6,0,0,0"
+                                             VerticalAlignment="Center"
+                                             Fill="{DynamicResource FocusAccentBrightBrush}"
+                                             Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                </StackPanel>
+                            </RadioButton>
                         </UniformGrid>
                     </Grid>
 
@@ -1451,9 +1461,9 @@
                                     Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="OrganizerButton_Click"
-                                    AutomationProperties.Name="桌面收纳"
+                                    AutomationProperties.Name="{Binding OrganizerEntryAutomationName}"
                                     AutomationProperties.HelpText="按 Enter 直接展开桌面收纳工作区"
-                                    ToolTip="桌面收纳 · 管理已收纳文件与分区">
+                                    ToolTip="{Binding OrganizerEntryAutomationName}">
                                 <Grid Width="48" Height="48">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"
@@ -1472,12 +1482,25 @@
                                             Background="{DynamicResource FocusAccentBrightBrush}"
                                             IsHitTestVisible="False"
                                             Visibility="{Binding IsOrganizerEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                    <Ellipse Width="8"
-                                             Height="8"
+                                    <Border MinWidth="16"
+                                             Height="16"
+                                             Padding="2,0"
+                                             Margin="0,-4,-4,0"
                                              HorizontalAlignment="Right"
                                              VerticalAlignment="Top"
-                                             Fill="{DynamicResource FocusAccentBrightBrush}"
-                                             Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                             CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                             Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                             BorderBrush="{DynamicResource FocusAccentBrightBrush}"
+                                             BorderThickness="1"
+                                             IsHitTestVisible="False"
+                                             Visibility="{Binding HasCollectedDesktopItems, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="{Binding CollectedDesktopItemCountBadgeText}"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
                                 </Grid>
                             </Button>
                             <Button x:Name="TasksButton"

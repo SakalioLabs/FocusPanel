@@ -467,6 +467,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private int openTaskCount;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(HasCollectedDesktopItems))]
+    [NotifyPropertyChangedFor(
+        nameof(CollectedDesktopItemCountBadgeText))]
+    [NotifyPropertyChangedFor(
+        nameof(OrganizerEntryAutomationName))]
+    private int collectedDesktopItemCount;
+
+    [ObservableProperty]
     private string currentAppVersion = "0.0.0";
 
     [ObservableProperty]
@@ -805,6 +814,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GetTaskEntryPresentation().BadgeText;
     public string TasksEntryAutomationName =>
         GetTaskEntryPresentation().AutomationName;
+    public bool HasCollectedDesktopItems =>
+        GetOrganizerEntryPresentation().HasBadge;
+    public string CollectedDesktopItemCountBadgeText =>
+        GetOrganizerEntryPresentation().BadgeText;
+    public string OrganizerEntryAutomationName =>
+        GetOrganizerEntryPresentation().AutomationName;
     public bool IsTaskQuickCaptureDraft =>
         SearchQuery.StartsWith(
             TaskCaptureCommandParser
@@ -845,6 +860,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GetTaskEntryPresentation() =>
         CompactTaskEntryPresentationComposer
             .Compose(OpenTaskCount);
+
+    private CompactOrganizerEntryPresentation
+        GetOrganizerEntryPresentation() =>
+        CompactOrganizerEntryPresentationComposer
+            .Compose(CollectedDesktopItemCount);
 
     private WorkspaceNavigationState
         GetWorkspaceNavigationState() =>
@@ -1401,8 +1421,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            _fileOrganizerViewModel ??=
-                viewModel;
+            if (_fileOrganizerViewModel == null)
+            {
+                _fileOrganizerViewModel =
+                    viewModel;
+                _fileOrganizerViewModel
+                    .CollectedCountChanged +=
+                    FileOrganizer_CollectedCountChanged;
+                ApplyCollectedDesktopItemCount(
+                    _fileOrganizerViewModel
+                        .CollectedItemCount);
+            }
             if (WorkspaceLoadApplyPolicy.CanApply(
                     navigationRevision,
                     Volatile.Read(
@@ -1428,6 +1457,35 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     "桌面收纳暂时无法载入；"
                     + "请收起后重试启动 FocusPanel。");
             }
+        }
+    }
+
+    private void FileOrganizer_CollectedCountChanged(
+        int count)
+    {
+        if (_isDisposed)
+            return;
+
+        if (!_uiDispatcher.CheckAccess())
+        {
+            _uiDispatcher.BeginInvoke(
+                () =>
+                    ApplyCollectedDesktopItemCount(
+                        count),
+                DispatcherPriority.Background);
+            return;
+        }
+
+        ApplyCollectedDesktopItemCount(count);
+    }
+
+    private void ApplyCollectedDesktopItemCount(
+        int count)
+    {
+        if (!_isDisposed)
+        {
+            CollectedDesktopItemCount =
+                Math.Max(0, count);
         }
     }
 
@@ -4396,6 +4454,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _aiAssistantViewModel?.Dispose();
         if (_fileOrganizerViewModel != null)
         {
+            _fileOrganizerViewModel
+                .CollectedCountChanged -=
+                FileOrganizer_CollectedCountChanged;
             completions.Add(
                 _fileOrganizerViewModel
                     .DisposeAsync());
