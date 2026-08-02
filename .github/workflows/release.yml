@@ -57,7 +57,6 @@ jobs:
           $resultsDirectory = "artifacts\test-results"
           dotnet test Tests\FocusPanel.Tests.csproj `
             --configuration Release `
-            --no-restore `
             --logger "trx;LogFileName=FocusPanel.Tests.trx" `
             --results-directory $resultsDirectory
           $testExitCode = $LASTEXITCODE
