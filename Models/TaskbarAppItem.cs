@@ -68,6 +68,12 @@ public sealed class TaskbarAppItem : ObservableObject
     public int WindowCount => Windows.Count;
     public bool HasMultipleWindows =>
         WindowCount > 1;
+    public bool IsFullyMinimized =>
+        WindowCount > 0
+        && Windows.All(
+            window =>
+                window.State
+                == TrackedWindowState.Minimized);
     public bool HasWindowPreview =>
         WindowCount > 0;
     public string WindowCountBadgeText =>
@@ -122,11 +128,13 @@ public sealed class TaskbarAppItem : ObservableObject
     public string StatusSummary =>
         IsActive
             ? $"正在使用 · {WindowCount} 个窗口"
-            : IsRunning
-                ? $"正在运行 · {WindowCount} 个窗口"
-                : IsPinned
-                    ? "已固定 · 未运行"
-                    : "未运行";
+            : IsFullyMinimized
+                ? $"已最小化 · {WindowCount} 个窗口"
+                : IsRunning
+                    ? $"后台运行 · {WindowCount} 个窗口"
+                    : IsPinned
+                        ? "已固定 · 未运行"
+                        : "未运行";
     public string ShortcutGestureText =>
         !_shortcutState.IsAvailable
             ? string.Empty
@@ -162,9 +170,13 @@ public sealed class TaskbarAppItem : ObservableObject
         {
             string primaryAction = WindowCount > 1
                 ? "左键打开窗口列表，Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用"
-                : IsRunning
-                    ? "左键切换或最小化，右键管理应用"
-                    : "左键启动，右键管理应用";
+                : IsFullyMinimized
+                    ? "左键还原并切换，右键管理应用"
+                    : IsActive
+                        ? "左键最小化，右键管理应用"
+                        : IsRunning
+                            ? "左键切换，右键管理应用"
+                            : "左键启动，右键管理应用";
             string interaction =
                 CanLaunchNewInstance
                 ? $"{primaryAction}；Shift+左键或中键启动新实例；"
@@ -223,7 +235,9 @@ public sealed class TaskbarAppItem : ObservableObject
             .Select(window =>
                 "• "
                 + NormalizeWindowTitle(
-                    window.Title))
+                    window.Title)
+                + GetWindowStateSuffix(
+                    window))
             .ToList();
         if (WindowCount > WindowPreviewLimit)
         {
@@ -234,6 +248,22 @@ public sealed class TaskbarAppItem : ObservableObject
         return string.Join(
             Environment.NewLine,
             lines);
+    }
+
+    private static string GetWindowStateSuffix(
+        WindowReference window)
+    {
+        if (window.IsActive)
+            return " · 当前窗口";
+
+        return window.State switch
+        {
+            TrackedWindowState.Minimized =>
+                " · 已最小化",
+            TrackedWindowState.Maximized =>
+                " · 已最大化",
+            _ => string.Empty
+        };
     }
 
     private string NormalizeWindowTitle(
@@ -347,6 +377,7 @@ public sealed class TaskbarAppItem : ObservableObject
         OnPropertyChanged(nameof(Windows));
         OnPropertyChanged(nameof(WindowCount));
         OnPropertyChanged(nameof(HasMultipleWindows));
+        OnPropertyChanged(nameof(IsFullyMinimized));
         OnPropertyChanged(nameof(HasWindowPreview));
         OnPropertyChanged(nameof(WindowCountBadgeText));
         OnPropertyChanged(nameof(WindowPreviewText));

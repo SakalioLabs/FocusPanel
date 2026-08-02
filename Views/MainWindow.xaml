@@ -1414,6 +1414,10 @@
                                                             <Setter Property="Height" Value="12"/>
                                                             <Setter Property="Opacity" Value="0.58"/>
                                                             <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsFullyMinimized}" Value="True">
+                                                                    <Setter Property="Opacity" Value="0.34"/>
+                                                                    <Setter Property="Height" Value="7"/>
+                                                                </DataTrigger>
                                                                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                                                                     <Setter Property="Opacity" Value="1"/>
                                                                     <Setter Property="Height" Value="24"/>

@@ -193,6 +193,11 @@ public sealed class TaskbarAppCollectionSynchronizerTests
             {
                 current
             };
+        var changed =
+            new List<string?>();
+        current.PropertyChanged +=
+            (_, args) => changed.Add(
+                args.PropertyName);
 
         TaskbarAppCollectionSynchronizer
             .Synchronize(
@@ -205,13 +210,25 @@ public sealed class TaskbarAppCollectionSynchronizerTests
                         1,
                         false,
                         TrackedWindowState
-                            .Maximized)
+                            .Minimized)
                 });
 
         Assert.Same(current, items[0]);
         Assert.Equal(
-            TrackedWindowState.Maximized,
+            TrackedWindowState.Minimized,
             items[0].Windows[0].State);
+        Assert.True(
+            items[0].IsFullyMinimized);
+        Assert.Contains(
+            nameof(
+                TaskbarAppItem
+                    .IsFullyMinimized),
+            changed);
+        Assert.Contains(
+            nameof(
+                TaskbarAppItem
+                    .StatusSummary),
+            changed);
     }
 
     [Fact]

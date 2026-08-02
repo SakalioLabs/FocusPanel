@@ -38,14 +38,70 @@ public sealed class TaskbarAppPresentationTests
             active: false);
 
         Assert.Equal(
-            "正在运行 · 1 个窗口",
+            "后台运行 · 1 个窗口",
             item.StatusSummary);
         Assert.Equal(
-            "左键切换或最小化，右键管理应用；"
+            "左键切换，右键管理应用；"
             + "Shift+左键或中键启动新实例；"
             + "Ctrl+Shift+左键以管理员身份启动；"
             + "可拖入文件用此应用打开",
             item.InteractionHint);
+    }
+
+    [Fact]
+    public void MinimizedApplication_DescribesRestoreInsteadOfAmbiguousToggle()
+    {
+        TaskbarAppItem item = Running(
+            windowCount: 1,
+            active: false,
+            state: TrackedWindowState.Minimized);
+
+        Assert.True(item.IsFullyMinimized);
+        Assert.Equal(
+            "已最小化 · 1 个窗口",
+            item.StatusSummary);
+        Assert.Equal(
+            "编辑器，已最小化 · 1 个窗口",
+            item.AccessibleName);
+        Assert.StartsWith(
+            "左键还原并切换，右键管理应用",
+            item.InteractionHint);
+        Assert.Equal(
+            "• 文档 1 · 已最小化",
+            item.WindowPreviewText);
+    }
+
+    [Fact]
+    public void ActiveSingleWindow_DescribesTheActualMinimizeAction()
+    {
+        TaskbarAppItem item = Running(
+            windowCount: 1,
+            active: true);
+
+        Assert.False(item.IsFullyMinimized);
+        Assert.StartsWith(
+            "左键最小化，右键管理应用",
+            item.InteractionHint);
+        Assert.Equal(
+            "• 文档 1 · 当前窗口",
+            item.WindowPreviewText);
+    }
+
+    [Fact]
+    public void WindowPreview_LabelsMaximizedWindowsWithoutChangingNormalTitles()
+    {
+        TaskbarAppItem item = Running(
+            windowCount: 1,
+            active: false,
+            state: TrackedWindowState.Maximized);
+
+        Assert.False(item.IsFullyMinimized);
+        Assert.Equal(
+            "后台运行 · 1 个窗口",
+            item.StatusSummary);
+        Assert.Equal(
+            "• 文档 1 · 已最大化",
+            item.WindowPreviewText);
     }
 
     [Fact]
@@ -257,7 +313,7 @@ public sealed class TaskbarAppPresentationTests
 
         Assert.False(item.CanLaunchNewInstance);
         Assert.Equal(
-            "左键切换或最小化，右键管理应用",
+            "左键切换，右键管理应用",
             item.InteractionHint);
     }
 
@@ -488,7 +544,9 @@ public sealed class TaskbarAppPresentationTests
 
     private static TaskbarAppItem Running(
         int windowCount,
-        bool active)
+        bool active,
+        TrackedWindowState state =
+            TrackedWindowState.Normal)
     {
         var windows = new WindowReference[
             windowCount];
@@ -500,7 +558,8 @@ public sealed class TaskbarAppPresentationTests
                 new WindowReference(
                     new IntPtr(index + 1),
                     $"文档 {index + 1}",
-                    active && index == 0);
+                    active && index == 0,
+                    state);
         }
 
         return new TaskbarAppItem

@@ -1126,7 +1126,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.8\"",
+            "LauncherVersion = \"0.11.9\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -2465,6 +2465,12 @@ public sealed class XamlResourceContractTests
             "<Setter Property=\"Height\" Value=\"12\"/>",
             mainWindow);
         Assert.Contains(
+            "Binding=\"{Binding IsFullyMinimized}\"",
+            mainWindow);
+        Assert.Contains(
+            "<Setter Property=\"Height\" Value=\"7\"/>",
+            mainWindow);
+        Assert.Contains(
             "<Setter Property=\"Height\" Value=\"24\"/>",
             mainWindow);
         Assert.Contains(
@@ -2487,6 +2493,9 @@ public sealed class XamlResourceContractTests
             model);
         Assert.Contains(
             "public bool HasMultipleWindows",
+            model);
+        Assert.Contains(
+            "public bool IsFullyMinimized",
             model);
         Assert.Contains(
             "WindowCount > 99",
