@@ -1126,7 +1126,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.6\"",
+            "LauncherVersion = \"0.11.7\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -2248,6 +2248,9 @@ public sealed class XamlResourceContractTests
             "x:Name=\"SettingsEnableReplacementButton\"",
             mainWindow);
         Assert.Contains(
+            "x:Name=\"SettingsNavigationButton\"",
+            mainWindow);
+        Assert.Contains(
             "x:Name=\"PowerMenuLockButton\"",
             mainWindow);
         Assert.Contains(
@@ -2277,6 +2280,58 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain(
             "bool returnToSearch",
             codeBehind);
+    }
+
+    [Fact]
+    public void SettingsEntry_ReturnsToSettings_AndUpdateToastTargetsTheUpdateAction()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+
+        Assert.Matches(
+            "x:Name=\"SettingsNavigationButton\"[\\s\\S]*?IsChecked=\"\\{Binding IsSettingsWorkspaceActive",
+            mainWindow);
+        Assert.Matches(
+            "x:Name=\"SettingsUpdateCard\"[\\s\\S]*?Text=\"软件更新\"[\\s\\S]*?x:Name=\"SettingsUpdateActionButton\"",
+            mainWindow);
+
+        int settingsHandlerStart = codeBehind.IndexOf(
+            "private void SettingsMenuItem_Click",
+            StringComparison.Ordinal);
+        int powerHandlerStart = codeBehind.IndexOf(
+            "private void PowerMenuItem_Click",
+            settingsHandlerStart,
+            StringComparison.Ordinal);
+        string settingsHandler = codeBehind[settingsHandlerStart..powerHandlerStart];
+
+        Assert.Contains(
+            "SettingsNavigationButton",
+            settingsHandler);
+        Assert.DoesNotContain(
+            "OrganizerButton",
+            settingsHandler);
+
+        int updateHandlerStart = codeBehind.IndexOf(
+            "private void OpenUpdateSettings()",
+            StringComparison.Ordinal);
+        int pomodoroHandlerStart = codeBehind.IndexOf(
+            "private void OpenPomodoroWorkspace()",
+            updateHandlerStart,
+            StringComparison.Ordinal);
+        string updateHandler = codeBehind[updateHandlerStart..pomodoroHandlerStart];
+
+        Assert.Contains(
+            "SettingsUpdateCard.BringIntoView();",
+            updateHandler);
+        Assert.Contains(
+            "SettingsUpdateActionButton",
+            updateHandler);
+        Assert.Contains(
+            "SettingsNavigationButton",
+            updateHandler);
     }
 
     [Fact]

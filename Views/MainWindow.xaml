@@ -201,7 +201,8 @@
                                          IsChecked="{Binding IsAiWorkspaceActive, Mode=OneWay}"
                                          Command="{Binding NavigateCommand}"
                                          CommandParameter="AI"/>
-                            <RadioButton Margin="2" Height="40"
+                            <RadioButton x:Name="SettingsNavigationButton"
+                                         Margin="2" Height="40"
                                          GroupName="WorkspaceNavigation"
                                          Style="{StaticResource FocusSegmentRadioButton}"
                                          IsChecked="{Binding IsSettingsWorkspaceActive, Mode=OneWay}"
@@ -1016,7 +1017,9 @@
                                     </Border>
                                 </StackPanel>
                             </Border>
-                            <Border Style="{StaticResource FocusCard}" Margin="0,0,0,12">
+                            <Border x:Name="SettingsUpdateCard"
+                                    Style="{StaticResource FocusCard}"
+                                    Margin="0,0,0,12">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -1053,7 +1056,8 @@
                                                  Maximum="100"
                                                  Value="{Binding UpdateProgress}"
                                                  Visibility="{Binding IsUpdateBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                    <Button Command="{Binding CheckAndInstallUpdateCommand}"
+                                    <Button x:Name="SettingsUpdateActionButton"
+                                            Command="{Binding CheckAndInstallUpdateCommand}"
                                             Content="一键检查并安装更新">
                                         <Button.Style>
                                             <Style TargetType="Button" BasedOn="{StaticResource FocusPrimaryButton}">

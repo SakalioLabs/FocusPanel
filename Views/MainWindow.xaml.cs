@@ -318,6 +318,23 @@ public partial class MainWindow :
         CloseOverlayPanels();
         _viewModel.IsSettingsOpen = true;
         Activate();
+        QueueOverlayFocus(
+            SettingsNavigationButton,
+            SettingsUpdateActionButton,
+            () => _viewModel.IsSettingsOpen);
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (_isExit
+                    || !IsVisible
+                    || !_viewModel.IsSettingsOpen)
+                {
+                    return;
+                }
+
+                SettingsUpdateCard.BringIntoView();
+            }),
+            DispatcherPriority.Loaded);
     }
 
     private void OpenPomodoroWorkspace()
@@ -2467,7 +2484,7 @@ public partial class MainWindow :
         ExpandSidebar();
         _viewModel.ToggleSettingsCommand.Execute(null);
         QueueOverlayFocus(
-            OrganizerButton,
+            SettingsNavigationButton,
             SettingsEnableReplacementButton,
             () => _viewModel.IsSettingsOpen);
     }
