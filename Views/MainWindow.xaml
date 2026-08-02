@@ -28,6 +28,12 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <Style x:Key="CompactLabeledEntryButton"
+               TargetType="Button"
+               BasedOn="{StaticResource FocusIconButton}">
+            <Setter Property="Width" Value="54"/>
+            <Setter Property="Height" Value="54"/>
+        </Style>
 
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
             <local:DashboardView/>
@@ -1263,7 +1269,7 @@
 
                         <StackPanel Grid.Row="0">
                             <Button x:Name="StartButton"
-                                    Style="{StaticResource FocusIconButton}"
+                                    Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="StartButton_Click"
                                     AutomationProperties.Name="开始"
@@ -1337,16 +1343,52 @@
                                                   Command="{Binding PlacementTarget.DataContext.ShowDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE782;"/>
+                                <Grid Width="48" Height="48">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource FocusIconText}"
+                                                   HorizontalAlignment="Center"
+                                                   Text="&#xE782;"/>
+                                        <TextBlock Margin="0,-2,0,0"
+                                                   HorizontalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Text="开始"/>
+                                    </StackPanel>
+                                    <Border Width="3"
+                                            Height="22"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusAccentBrightBrush}"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding IsStartHubOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                </Grid>
                             </Button>
                             <Button x:Name="SearchButton"
                                     Tag="CompactFixedEntry"
-                                    Style="{StaticResource FocusIconButton}"
+                                    Style="{StaticResource CompactLabeledEntryButton}"
                                     Click="SearchButton_Click"
                                     AutomationProperties.Name="统一搜索"
                                     AutomationProperties.HelpText="搜索应用、窗口、任务、系统命令和计算式"
                                     ToolTip="搜索应用、窗口、任务和命令">
-                                <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE721;"/>
+                                <Grid Width="48" Height="48">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource FocusIconText}"
+                                                   HorizontalAlignment="Center"
+                                                   Text="&#xE721;"/>
+                                        <TextBlock Margin="0,-2,0,0"
+                                                   HorizontalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Text="搜索"/>
+                                    </StackPanel>
+                                    <Border Width="3"
+                                            Height="22"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusAccentBrightBrush}"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding IsSearchOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                </Grid>
                             </Button>
                             <Border Height="1"
                                     Margin="11,6"
@@ -1549,14 +1591,29 @@
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
                             <Button x:Name="FocusCenterButton"
-                                    Style="{StaticResource FocusIconButton}"
+                                    Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="FocusCenterButton_Click"
                                     AutomationProperties.Name="Focus 中心"
                                     ToolTip="Focus 中心">
-                                <Grid Width="32" Height="32">
-                                    <TextBlock Style="{StaticResource FocusIconText}"
-                                               Text="&#xE8B7;"/>
+                                <Grid Width="48" Height="48">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource FocusIconText}"
+                                                   HorizontalAlignment="Center"
+                                                   Text="&#xE8B7;"/>
+                                        <TextBlock Margin="0,-2,0,0"
+                                                   HorizontalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Text="Focus"/>
+                                    </StackPanel>
+                                    <Border Width="3"
+                                            Height="22"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusAccentBrightBrush}"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding IsFocusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                     <Ellipse Width="8"
                                              Height="8"
                                              HorizontalAlignment="Right"
@@ -1566,7 +1623,7 @@
                                 </Grid>
                             </Button>
                             <Button x:Name="StatusCenterButton"
-                                    Style="{StaticResource FocusIconButton}"
+                                    Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="StatusCenterButton_Click"
                                     PreviewMouseWheel="VolumeButton_PreviewMouseWheel"
@@ -1582,21 +1639,37 @@
                                                    Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
                                 </Button.ToolTip>
-                                <TextBlock>
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
-                                            <Setter Property="Text" Value="{Binding AudioGlyph}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasReplacementWarning}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource FocusDangerBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Grid Width="48" Height="48">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock HorizontalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
+                                                    <Setter Property="Text" Value="{Binding AudioGlyph}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasReplacementWarning}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource FocusDangerBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Margin="0,-2,0,0"
+                                                   HorizontalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Text="状态"/>
+                                    </StackPanel>
+                                    <Border Width="3"
+                                            Height="22"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusAccentBrightBrush}"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding IsStatusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                </Grid>
                             </Button>
                             <Button x:Name="TimeButton"
-                                    Style="{StaticResource FocusIconButton}"
+                                    Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="CalendarPanelButton_Click"
                                     AutomationProperties.Name="时间与今日任务"
@@ -1614,16 +1687,26 @@
                                                   CommandParameter="{x:Static services:SystemManagementTool.NotificationSettings}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm}}"
-                                               HorizontalAlignment="Center"
-                                               FontSize="11"
-                                               FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:M/d}}"
-                                               HorizontalAlignment="Center"
-                                               FontSize="9"
-                                               Foreground="{DynamicResource FocusMutedTextBrush}"/>
-                                </StackPanel>
+                                <Grid Width="48" Height="48">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm}}"
+                                                   HorizontalAlignment="Center"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:M/d}}"
+                                                   HorizontalAlignment="Center"
+                                                   FontSize="9"
+                                                   Foreground="{DynamicResource FocusMutedTextBrush}"/>
+                                    </StackPanel>
+                                    <Border Width="3"
+                                            Height="22"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusAccentBrightBrush}"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding IsCalendarOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                </Grid>
                             </Button>
                         </StackPanel>
                     </Grid>

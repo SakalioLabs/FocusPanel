@@ -194,15 +194,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isCalendarOpen;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsFocusEntryActive))]
     private bool isFocusCenterOpen;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsStatusEntryActive))]
     private bool isStatusCenterOpen;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsFocusEntryActive))]
     private bool isSettingsOpen;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsStatusEntryActive))]
     private bool isPowerMenuOpen;
 
     [ObservableProperty]
@@ -642,6 +650,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<TaskbarAppItem> StartHubApps { get; } = new();
     public bool HasStartHubApps =>
         StartHubApps.Count > 0;
+    public bool IsFocusEntryActive =>
+        IsFocusCenterOpen
+        || IsSettingsOpen;
+    public bool IsStatusEntryActive =>
+        IsStatusCenterOpen
+        || IsPowerMenuOpen;
     public ObservableCollection<
         ApplicationAudioSessionItem>
         ApplicationAudioSessions

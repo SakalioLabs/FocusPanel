@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.87\"",
+            "LauncherVersion = \"0.10.88\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1395,6 +1395,70 @@ public sealed class XamlResourceContractTests
         string onboarding = mainWindow[onboardingStart..];
         Assert.Contains("<Border Grid.Column=\"0\"", onboarding);
         Assert.DoesNotContain("Grid.ColumnSpan=\"2\"", onboarding);
+    }
+
+    [Fact]
+    public void CompactDock_FixedEntriesUseLabelsAndOwnedSurfaceIndicators()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        int dockStart = mainWindow.IndexOf(
+            "<!-- Compact app dock -->",
+            StringComparison.Ordinal);
+        int onboardingStart = mainWindow.IndexOf(
+            "<!-- First-run safety onboarding -->",
+            StringComparison.Ordinal);
+
+        Assert.True(
+            dockStart >= 0
+            && onboardingStart > dockStart);
+        string compactDock =
+            mainWindow[dockStart..onboardingStart];
+        Assert.Equal(
+            5,
+            compactDock.Split(
+                "Style=\"{StaticResource CompactLabeledEntryButton}\"",
+                StringSplitOptions.None).Length - 1);
+        Assert.Contains("Text=\"开始\"", compactDock);
+        Assert.Contains("Text=\"搜索\"", compactDock);
+        Assert.Contains("Text=\"Focus\"", compactDock);
+        Assert.Contains("Text=\"状态\"", compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding IsStartHubOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding IsSearchOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding IsFocusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding IsStatusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding IsCalendarOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            compactDock);
+        Assert.Contains(
+            "public bool IsFocusEntryActive",
+            viewModel);
+        Assert.Contains(
+            "IsFocusCenterOpen\n        || IsSettingsOpen",
+            viewModel.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "public bool IsStatusEntryActive",
+            viewModel);
+        Assert.Contains(
+            "IsStatusCenterOpen\n        || IsPowerMenuOpen",
+            viewModel.Replace("\r\n", "\n"));
     }
 
     [Fact]
