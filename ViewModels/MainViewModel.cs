@@ -195,17 +195,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(
-        nameof(IsFocusEntryActive))]
-    private bool isFocusCenterOpen;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(
         nameof(IsStatusEntryActive))]
     private bool isStatusCenterOpen;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(
-        nameof(IsFocusEntryActive))]
     private bool isSettingsOpen;
 
     [ObservableProperty]
@@ -663,9 +656,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<TaskbarAppItem> StartHubApps { get; } = new();
     public bool HasStartHubApps =>
         StartHubApps.Count > 0;
-    public bool IsFocusEntryActive =>
-        IsFocusCenterOpen
-        || IsSettingsOpen;
     public bool IsStatusEntryActive =>
         IsStatusCenterOpen
         || IsPowerMenuOpen;
@@ -2209,14 +2199,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ToggleFocusCenter()
-    {
-        bool open = !IsFocusCenterOpen;
-        CloseTransientPanels();
-        IsFocusCenterOpen = open;
-    }
-
-    [RelayCommand]
     private void ToggleWorkspacePin() =>
         IsWorkspacePinned =
             !IsWorkspacePinned;
@@ -2519,9 +2501,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ReplacementStopReason = reason;
         MarkReplacementEnabled(false, message);
     }
-
-    [RelayCommand]
-    private void OpenLastWorkspace() => Navigate(LastWorkspace);
 
     [RelayCommand]
     private void CloseApp() => RequestClose?.Invoke();
@@ -4030,7 +4009,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsStartHubOpen = false;
         IsSearchOpen = false;
         IsCalendarOpen = false;
-        IsFocusCenterOpen = false;
         IsStatusCenterOpen = false;
         IsSettingsOpen = false;
         IsPowerMenuOpen = false;

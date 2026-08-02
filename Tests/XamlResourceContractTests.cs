@@ -766,7 +766,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains("Content=\"快捷设置\"", mainWindow);
         Assert.Contains("Visibility=\"{Binding IsCalendarOpen", mainWindow);
         Assert.Contains("Visibility=\"{Binding IsStatusCenterOpen", mainWindow);
-        Assert.Contains("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
+        Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.DoesNotContain("OpenNotificationOverflow", mainWindow);
 
@@ -1114,7 +1114,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.10.97\"",
+            "LauncherVersion = \"0.10.98\"",
             File.ReadAllText(
                 Path.Combine(
                     root,
@@ -1302,7 +1302,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void UpdateAvailability_IsVisibleFromCompactAndFocusCenters()
+    public void UpdateAvailability_IsVisibleFromCompactWorkspaceEntry()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -1310,14 +1310,12 @@ public sealed class XamlResourceContractTests
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
 
-        Assert.True(
-            mainWindow.Split(
-                "Visibility=\"{Binding IsUpdateAvailable",
-                StringSplitOptions.None).Length - 1 >= 2);
         Assert.Contains(
-            "Text=\"{Binding AvailableUpdateVersion, StringFormat=可更新到 v{0}}\"",
+            "Visibility=\"{Binding IsUpdateAvailable",
             mainWindow);
-        Assert.Contains("打开设置一键安装", mainWindow);
+        Assert.Contains(
+            "x:Name=\"WorkspaceButton\"",
+            mainWindow);
         Assert.Contains("ApplyUpdateAvailability(update)", viewModel);
         Assert.Contains("ApplyUpdateAvailability(null)", viewModel);
     }
@@ -1346,7 +1344,7 @@ public sealed class XamlResourceContractTests
             "x:Name=\"TaskbarAppsScrollViewer\"",
             StringComparison.Ordinal);
         int focusCenter = compactDock.IndexOf(
-            "Click=\"FocusCenterButton_Click\"",
+            "Click=\"WorkspaceButton_Click\"",
             StringComparison.Ordinal);
         int statusCenter = compactDock.IndexOf(
             "Click=\"StatusCenterButton_Click\"",
@@ -1361,7 +1359,7 @@ public sealed class XamlResourceContractTests
             && applications < focusCenter
             && focusCenter < statusCenter
             && statusCenter < time);
-        Assert.Contains("Click=\"FocusCenterButton_Click\"", compactDock);
+        Assert.Contains("Click=\"WorkspaceButton_Click\"", compactDock);
         Assert.Contains("Click=\"StatusCenterButton_Click\"", compactDock);
         Assert.DoesNotContain(
             "x:Name=\"TaskViewButton\"",
@@ -1373,7 +1371,7 @@ public sealed class XamlResourceContractTests
             "x:Name=\"StartButton\"",
             compactDock);
         Assert.Contains(
-            "x:Name=\"FocusCenterButton\"",
+            "x:Name=\"WorkspaceButton\"",
             compactDock);
         Assert.Contains(
             "x:Name=\"StatusCenterButton\"",
@@ -1430,7 +1428,7 @@ public sealed class XamlResourceContractTests
                 StringSplitOptions.None).Length - 1);
         Assert.Contains("Text=\"开始\"", compactDock);
         Assert.Contains("Text=\"搜索\"", compactDock);
-        Assert.Contains("Text=\"Focus\"", compactDock);
+        Assert.Contains("Text=\"工作\"", compactDock);
         Assert.Contains("Text=\"状态\"", compactDock);
         Assert.Contains(
             "Visibility=\"{Binding IsStartHubOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
@@ -1439,7 +1437,7 @@ public sealed class XamlResourceContractTests
             "Visibility=\"{Binding IsSearchOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
             compactDock);
         Assert.Contains(
-            "Visibility=\"{Binding IsFocusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            "Visibility=\"{Binding IsSettingsOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
             compactDock);
         Assert.Contains(
             "Visibility=\"{Binding IsStatusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
@@ -1447,12 +1445,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Visibility=\"{Binding IsCalendarOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
             compactDock);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "public bool IsFocusEntryActive",
             viewModel);
-        Assert.Contains(
-            "IsFocusCenterOpen\n        || IsSettingsOpen",
-            viewModel.Replace("\r\n", "\n"));
         Assert.Contains(
             "public bool IsStatusEntryActive",
             viewModel);
@@ -1462,7 +1457,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void FocusEntry_OffersFastLastWorkspaceAndSingleLayerModuleMenu()
+    public void WorkspaceEntry_OpensLastWorkspaceAndOffersSingleLayerModuleMenu()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -1477,7 +1472,7 @@ public sealed class XamlResourceContractTests
                 "MainWindow.xaml.cs"));
 
         int focusStart = mainWindow.IndexOf(
-            "x:Name=\"FocusCenterButton\"",
+            "x:Name=\"WorkspaceButton\"",
             StringComparison.Ordinal);
         int statusStart = mainWindow.IndexOf(
             "x:Name=\"StatusCenterButton\"",
@@ -1488,11 +1483,34 @@ public sealed class XamlResourceContractTests
         string focusEntry = mainWindow[
             focusStart..statusStart];
 
+        Assert.DoesNotContain(
+            "<!-- Focus center -->",
+            mainWindow);
+        Assert.DoesNotContain(
+            "IsFocusCenterOpen",
+            mainWindow);
         Assert.Contains(
-            "Focus 中心 · Shift+左键直达上次工作区 · 右键选择功能",
+            "Columns=\"6\"",
+            mainWindow);
+        foreach (string destination in new[]
+                 {
+                     "Dashboard",
+                     "Files",
+                     "Tasks",
+                     "Pomodoro",
+                     "AI"
+                 })
+        {
+            Assert.Contains(
+                $"CommandParameter=\"{destination}\"",
+                mainWindow);
+        }
+
+        Assert.Contains(
+            "打开最近工作区：{0}",
             focusEntry);
         Assert.Contains(
-            "AutomationProperties.HelpText=\"按 Enter 打开 Focus 中心",
+            "AutomationProperties.HelpText=\"按 Enter 直接打开最近工作区",
             focusEntry);
         Assert.Contains(
             "Style=\"{StaticResource FocusContextMenu}\"",
@@ -1506,11 +1524,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Header=\"打开上次使用的工作区\"",
             focusEntry);
-        Assert.Contains(
-            "InputGestureText=\"Shift+Enter\"",
-            focusEntry);
         foreach (string header in new[]
                  {
+                     "今日概览",
                      "桌面收纳",
                      "任务",
                      "番茄钟",
@@ -1523,20 +1539,17 @@ public sealed class XamlResourceContractTests
                 focusEntry);
         }
 
-        Assert.Contains(
+        Assert.DoesNotContain(
             "FocusEntryPolicy.FromLeftClick(",
             codeBehind);
         Assert.Contains(
-            "FocusEntryAction.OpenLastWorkspace",
-            codeBehind);
-        Assert.Contains(
-            "OpenFocusWorkspace(\n                _viewModel.LastWorkspace)",
+            "=> OpenFocusWorkspace(\n            _viewModel.LastWorkspace)",
             codeBehind.Replace("\r\n", "\n"));
         Assert.Contains(
             "_viewModel.NavigateCommand.Execute(",
             codeBehind);
         Assert.Contains(
-            "FocusSettingsMenuItem_Click(",
+            "WorkspaceSettingsMenuItem_Click(",
             codeBehind);
     }
 
@@ -1961,7 +1974,7 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
 
         Assert.Contains(
-            "x:Name=\"FocusCenterButton\"",
+            "x:Name=\"WorkspaceButton\"",
             mainWindow);
         Assert.Contains(
             "x:Name=\"StatusCenterButton\"",
@@ -1969,7 +1982,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "x:Name=\"TimeButton\"",
             mainWindow);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "x:Name=\"FocusCenterLastWorkspaceButton\"",
             mainWindow);
         Assert.Contains(
@@ -1987,7 +2000,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "private void QueueOverlayFocus(",
             codeBehind);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "FocusCenterLastWorkspaceButton",
             codeBehind);
         Assert.Contains(

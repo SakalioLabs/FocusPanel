@@ -871,38 +871,17 @@ public partial class MainWindow :
         e.Handled = true;
     }
 
-    private void FocusCenterButton_Click(object sender, RoutedEventArgs e)
-    {
-        FocusEntryAction action =
-            FocusEntryPolicy.FromLeftClick(
-                Keyboard.Modifiers.HasFlag(
-                    ModifierKeys.Shift));
-        if (action
-            == FocusEntryAction.OpenLastWorkspace)
-        {
-            OpenFocusWorkspace(
-                _viewModel.LastWorkspace);
-            return;
-        }
+    private void WorkspaceButton_Click(object sender, RoutedEventArgs e)
+        => OpenFocusWorkspace(
+            _viewModel.LastWorkspace);
 
-        ToggleCompactOverlay(
-            () => _viewModel.IsFocusCenterOpen
-                || _viewModel.IsSettingsOpen,
-            () => _viewModel.ToggleFocusCenterCommand
-                .Execute(null),
-            FocusCenterButton,
-            FocusCenterLastWorkspaceButton,
-            isOpenAfterToggle:
-                () => _viewModel.IsFocusCenterOpen);
-    }
-
-    private void FocusLastWorkspaceMenuItem_Click(
+    private void WorkspaceLastMenuItem_Click(
         object sender,
         RoutedEventArgs e) =>
         OpenFocusWorkspace(
             _viewModel.LastWorkspace);
 
-    private void FocusWorkspaceMenuItem_Click(
+    private void WorkspaceShortcutMenuItem_Click(
         object sender,
         RoutedEventArgs e)
     {
@@ -923,7 +902,7 @@ public partial class MainWindow :
             destination);
     }
 
-    private void FocusSettingsMenuItem_Click(
+    private void WorkspaceSettingsMenuItem_Click(
         object sender,
         RoutedEventArgs e)
     {
@@ -931,7 +910,7 @@ public partial class MainWindow :
         CloseOverlayPanels();
         _viewModel.ToggleSettingsCommand.Execute(null);
         QueueOverlayFocus(
-            FocusCenterButton,
+            WorkspaceButton,
             SettingsEnableReplacementButton,
             () => _viewModel.IsSettingsOpen);
     }
@@ -2538,7 +2517,7 @@ public partial class MainWindow :
         ExpandSidebar();
         _viewModel.ToggleSettingsCommand.Execute(null);
         QueueOverlayFocus(
-            FocusCenterButton,
+            WorkspaceButton,
             SettingsEnableReplacementButton,
             () => _viewModel.IsSettingsOpen);
     }
@@ -2558,7 +2537,6 @@ public partial class MainWindow :
         _viewModel.IsStartHubOpen = false;
         _viewModel.IsSearchOpen = false;
         _viewModel.IsCalendarOpen = false;
-        _viewModel.IsFocusCenterOpen = false;
         _viewModel.IsStatusCenterOpen = false;
         _viewModel.IsSettingsOpen = false;
         _viewModel.IsPowerMenuOpen = false;
@@ -2573,7 +2551,6 @@ public partial class MainWindow :
         if (_viewModel.IsStartHubOpen
             || _viewModel.IsSearchOpen
             || _viewModel.IsCalendarOpen
-            || _viewModel.IsFocusCenterOpen
             || _viewModel.IsStatusCenterOpen
             || _viewModel.IsSettingsOpen
             || _viewModel.IsPowerMenuOpen)

@@ -164,8 +164,10 @@
                             </Button>
                             </StackPanel>
                         </Grid>
-                        <UniformGrid Grid.Row="1" Columns="5"
+                        <UniformGrid Grid.Row="1" Columns="6"
                                      AutomationProperties.Name="主要功能快捷入口">
+                            <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
+                                    Content="概览" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
                             <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
                                     Content="桌面收纳" Command="{Binding NavigateCommand}" CommandParameter="Files"/>
                             <Button Margin="2" Height="40" Style="{StaticResource FocusSecondaryButton}"
@@ -602,65 +604,6 @@
                                            Visibility="{Binding IsAppSearchStatusVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             </Grid>
                         </Grid>
-                    </Border>
-
-                    <!-- Focus center -->
-                    <Border Grid.RowSpan="2"
-                            Panel.ZIndex="11"
-                            Width="390"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Stretch"
-                            Margin="0,10,14,10"
-                            Padding="22"
-                            CornerRadius="{StaticResource FocusCardCornerRadius}"
-                            Background="{DynamicResource FocusSurfaceStrongBrush}"
-                            BorderBrush="{DynamicResource FocusStrokeBrush}"
-                            BorderThickness="1"
-                            Visibility="{Binding IsFocusCenterOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel>
-                                <TextBlock Text="Focus 中心"
-                                           Style="{StaticResource FocusSectionTitleText}"/>
-                                <Button Margin="0,14,0,0"
-                                        Height="50"
-                                        Style="{StaticResource FocusPrimaryButton}"
-                                        Content="打开今日概览"
-                                        Command="{Binding NavigateCommand}"
-                                        CommandParameter="Dashboard"/>
-                                <Button Height="64"
-                                        Margin="0,12,0,0"
-                                        Padding="14,0"
-                                        Style="{StaticResource FocusSecondaryButton}"
-                                        Click="SettingsMenuItem_Click"
-                                        Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                        ToolTip="打开设置并安装更新">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding AvailableUpdateVersion, StringFormat=可更新到 v{0}}"
-                                                   HorizontalAlignment="Center"
-                                                   Style="{StaticResource FocusCardTitleText}"
-                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"/>
-                                        <TextBlock Text="打开设置一键安装"
-                                                   Margin="0,3,0,0"
-                                                   HorizontalAlignment="Center"
-                                                   Style="{StaticResource FocusCaptionText}"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="FocusCenterLastWorkspaceButton"
-                                        Margin="0,14,0,10"
-                                        Style="{StaticResource FocusSecondaryButton}"
-                                        AutomationProperties.Name="{Binding CurrentSectionTitle, StringFormat=打开最近使用的模块：{0}}"
-                                        Command="{Binding OpenLastWorkspaceCommand}">
-                                    <TextBlock Text="{Binding CurrentSectionTitle, StringFormat=最近使用 · {0}}"/>
-                                </Button>
-                                <UniformGrid Columns="2">
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="桌面收纳" Command="{Binding NavigateCommand}" CommandParameter="Files"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="任务" Command="{Binding NavigateCommand}" CommandParameter="Tasks"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="番茄钟" Command="{Binding NavigateCommand}" CommandParameter="Pomodoro"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="AI 助手" Command="{Binding NavigateCommand}" CommandParameter="AI"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}" Content="设置与更新" Click="SettingsMenuItem_Click"/>
-                                </UniformGrid>
-                            </StackPanel>
-                        </ScrollViewer>
                     </Border>
 
                     <!-- Status center -->
@@ -1622,36 +1565,45 @@
 
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
-                            <Button x:Name="FocusCenterButton"
+                            <Button x:Name="WorkspaceButton"
                                     Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"
-                                    Click="FocusCenterButton_Click"
-                                    AutomationProperties.Name="Focus 中心与快捷工作区"
-                                    AutomationProperties.HelpText="按 Enter 打开 Focus 中心，按 Shift+Enter 直达上次使用的工作区，按 Shift+F10 选择桌面收纳、任务、番茄钟、AI 助手或设置"
-                                    ToolTip="Focus 中心 · Shift+左键直达上次工作区 · 右键选择功能">
+                                    Click="WorkspaceButton_Click"
+                                    AutomationProperties.Name="{Binding CurrentSectionTitle, StringFormat=打开最近工作区：{0}}"
+                                    AutomationProperties.HelpText="按 Enter 直接打开最近工作区，按 Shift+F10 选择今日概览、桌面收纳、任务、番茄钟、AI 助手或设置">
+                                <Button.ToolTip>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding CurrentSectionTitle, StringFormat=打开最近工作区：{0}}"/>
+                                        <TextBlock Margin="0,4,0,0"
+                                                   Text="右键选择其他功能"
+                                                   Style="{StaticResource FocusCaptionText}"/>
+                                    </StackPanel>
+                                </Button.ToolTip>
                                 <Button.ContextMenu>
                                     <ContextMenu Style="{StaticResource FocusContextMenu}"
                                                  Opened="TransientContextMenu_Opened"
                                                  Closed="TransientContextMenu_Closed">
                                         <MenuItem Header="打开上次使用的工作区"
-                                                  InputGestureText="Shift+Enter"
-                                                  Click="FocusLastWorkspaceMenuItem_Click"/>
+                                                  Click="WorkspaceLastMenuItem_Click"/>
                                         <Separator/>
+                                        <MenuItem Header="今日概览"
+                                                  Tag="Dashboard"
+                                                  Click="WorkspaceShortcutMenuItem_Click"/>
                                         <MenuItem Header="桌面收纳"
                                                   Tag="Files"
-                                                  Click="FocusWorkspaceMenuItem_Click"/>
+                                                  Click="WorkspaceShortcutMenuItem_Click"/>
                                         <MenuItem Header="任务"
                                                   Tag="Tasks"
-                                                  Click="FocusWorkspaceMenuItem_Click"/>
+                                                  Click="WorkspaceShortcutMenuItem_Click"/>
                                         <MenuItem Header="番茄钟"
                                                   Tag="Pomodoro"
-                                                  Click="FocusWorkspaceMenuItem_Click"/>
+                                                  Click="WorkspaceShortcutMenuItem_Click"/>
                                         <MenuItem Header="AI 助手"
                                                   Tag="AI"
-                                                  Click="FocusWorkspaceMenuItem_Click"/>
+                                                  Click="WorkspaceShortcutMenuItem_Click"/>
                                         <Separator/>
                                         <MenuItem Header="设置"
-                                                  Click="FocusSettingsMenuItem_Click"/>
+                                                  Click="WorkspaceSettingsMenuItem_Click"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
                                 <Grid Width="48" Height="48">
@@ -1662,7 +1614,7 @@
                                         <TextBlock Margin="0,-2,0,0"
                                                    HorizontalAlignment="Center"
                                                    Style="{StaticResource FocusMetaText}"
-                                                   Text="Focus"/>
+                                                   Text="工作"/>
                                     </StackPanel>
                                     <Border Width="3"
                                             Height="22"
@@ -1671,7 +1623,7 @@
                                             CornerRadius="{StaticResource FocusControlCornerRadius}"
                                             Background="{DynamicResource FocusAccentBrightBrush}"
                                             IsHitTestVisible="False"
-                                            Visibility="{Binding IsFocusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            Visibility="{Binding IsSettingsOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                     <Ellipse Width="8"
                                              Height="8"
                                              HorizontalAlignment="Right"
@@ -1805,7 +1757,7 @@
                                       IsChecked="{Binding KeepCompactDockVisible}"
                                       AutomationProperties.Name="首次启动始终显示紧凑任务栏"/>
                             <TextBlock Margin="24,5,0,0"
-                                       Text="无需寻找屏幕热区；常用应用、Focus 中心、状态和时间会一直可见，工作区仍按需展开。"
+                                       Text="无需寻找屏幕热区；常用应用、工作区、状态和时间会一直可见，工作区仍按需展开。"
                                        TextWrapping="Wrap"
                                        Style="{StaticResource FocusCaptionText}"/>
                             <TextBlock Margin="0,14,0,0"
