@@ -9,6 +9,26 @@ namespace FocusPanel.Tests;
 public sealed class AppSearchPolicyTests
 {
     [Fact]
+    public void ExactSecondaryPhraseOutranksSeparatedWordPrefixes()
+    {
+        int? exactPhrase =
+            AppSearchPolicy.GetTextRank(
+                "快捷设置",
+                "音量 网络 quick settings Win A",
+                "win a");
+        int? separatedPrefixes =
+            AppSearchPolicy.GetTextRank(
+                "声音输出",
+                "声音设备 audio device Win Ctrl V",
+                "win a");
+
+        Assert.NotNull(exactPhrase);
+        Assert.NotNull(separatedPrefixes);
+        Assert.True(
+            exactPhrase < separatedPrefixes);
+    }
+
+    [Fact]
     public void ExactName_BeatsPinnedSubstring()
     {
         AppLaunchItem[] results = Search(

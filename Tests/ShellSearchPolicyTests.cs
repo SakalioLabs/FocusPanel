@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using FocusPanel.Models;
 using FocusPanel.Services;
@@ -8,6 +9,46 @@ namespace FocusPanel.Tests;
 
 public sealed class ShellSearchPolicyTests
 {
+    [Fact]
+    public void Compose_ExactShortcutPhraseIsCultureIndependent()
+    {
+        CultureInfo originalCulture =
+            CultureInfo.CurrentCulture;
+        CultureInfo originalUiCulture =
+            CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture =
+                CultureInfo.GetCultureInfo(
+                    "en-US");
+            CultureInfo.CurrentUICulture =
+                CultureInfo.CurrentCulture;
+
+            ShellSearchResult result =
+                ShellSearchPolicy.Compose(
+                        Array.Empty<
+                            AppLaunchItem>(),
+                        Array.Empty<
+                            WindowTaskItem>(),
+                        "win a")
+                    .First(item =>
+                        item.ShellAction
+                            .HasValue);
+
+            Assert.Equal(
+                "QuickSettings",
+                result.ShellAction
+                    ?.ToString());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture =
+                originalCulture;
+            CultureInfo.CurrentUICulture =
+                originalUiCulture;
+        }
+    }
+
     [Fact]
     public void Compose_EmptyQueryPreservesApplicationOrderAndOmitsWindows()
     {

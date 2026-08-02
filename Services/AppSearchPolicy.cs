@@ -120,6 +120,16 @@ internal static class AppSearchPolicy
         {
             return 3;
         }
+        if (query.Words.Count > 1
+            && (display.Normalized.Contains(
+                    query.Normalized,
+                    StringComparison.Ordinal)
+                || executable.Normalized.Contains(
+                    query.Normalized,
+                    StringComparison.Ordinal)))
+        {
+            return 4;
+        }
         if (query.Collapsed.Length >= 2
             && (display.Acronym.StartsWith(
                     query.Collapsed,
@@ -128,7 +138,7 @@ internal static class AppSearchPolicy
                     query.Collapsed,
                     StringComparison.Ordinal)))
         {
-            return 4;
+            return 5;
         }
         if (query.Words.Count > 0
             && query.Words.All(
@@ -144,7 +154,7 @@ internal static class AppSearchPolicy
                                 token,
                                 StringComparison.Ordinal))))
         {
-            return 5;
+            return 6;
         }
         if (query.Collapsed.Length > 0
             && (display.Collapsed.Contains(
@@ -154,7 +164,7 @@ internal static class AppSearchPolicy
                     query.Collapsed,
                     StringComparison.Ordinal)))
         {
-            return 6;
+            return 7;
         }
         if (query.Words.Count > 0
             && query.Words.All(
@@ -166,7 +176,7 @@ internal static class AppSearchPolicy
                         token,
                         StringComparison.Ordinal)))
         {
-            return 7;
+            return 8;
         }
 
         return null;
