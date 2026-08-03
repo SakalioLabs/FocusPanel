@@ -1,0 +1,66 @@
+using System;
+using System.Collections.Generic;
+using FocusPanel.Models;
+using FocusPanel.Services;
+using Xunit;
+
+namespace FocusPanel.Tests;
+
+public sealed class DesktopSmartPartitionAgentTests
+{
+    [Theory]
+    [InlineData("帮我智能分区这些文件", true)]
+    [InlineData("重新整理收纳盒", true)]
+    [InlineData("什么是磁盘分区", false)]
+    [InlineData("帮我安排今天", false)]
+    public void ChatIntent_OnlyMatchesExplicitOrganizerActions(
+        string text,
+        bool expected) =>
+        Assert.Equal(
+            expected,
+            SmartPartitionAgentIntent.IsRequested(text));
+
+    [Fact]
+    public void ApplyPolicy_RejectsLockedSourceOrTargetAndStalePlan()
+    {
+        var assignment = new SmartPartitionAssignment(
+            7,
+            "报价.docx",
+            "文档",
+            "工作");
+        var preference = new DesktopFilePreference
+        {
+            Id = 7,
+            FilePath = "报价.docx",
+            PartitionName = "文档",
+            IsHiddenFromDesktop = true
+        };
+
+        Assert.True(
+            OrganizerLayoutRepository.SmartPartitionApplyPolicy
+                .CanApply(
+                    assignment,
+                    preference,
+                    new HashSet<string>(
+                        new[] { "文档", "工作" },
+                        StringComparer.OrdinalIgnoreCase)));
+        Assert.False(
+            OrganizerLayoutRepository.SmartPartitionApplyPolicy
+                .CanApply(
+                    assignment,
+                    preference,
+                    new HashSet<string>(
+                        new[] { "文档" },
+                        StringComparer.OrdinalIgnoreCase)));
+
+        preference.PartitionName = "其他";
+        Assert.False(
+            OrganizerLayoutRepository.SmartPartitionApplyPolicy
+                .CanApply(
+                    assignment,
+                    preference,
+                    new HashSet<string>(
+                        new[] { "文档", "工作", "其他" },
+                        StringComparer.OrdinalIgnoreCase)));
+    }
+}

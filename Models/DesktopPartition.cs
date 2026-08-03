@@ -9,4 +9,5 @@ public class DesktopPartition
     public string Name { get; set; } = string.Empty;
     public int OrderIndex { get; set; }
     public int ColumnIndex { get; set; } // 0 or 1
+    public bool IsLocked { get; set; }
 }

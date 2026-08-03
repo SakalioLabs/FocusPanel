@@ -286,6 +286,16 @@
                                                Style="{StaticResource FocusMetaText}"
                                                Foreground="{DynamicResource FocusAccentBrush}"/>
                                 </Border>
+                                <Border Background="{DynamicResource FocusAccentSoftBrush}"
+                                        CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                        Padding="7,1"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding IsLocked, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="已锁定"
+                                               Style="{StaticResource FocusMetaText}"
+                                               Foreground="{DynamicResource FocusAccentBrush}"/>
+                                </Border>
                             </StackPanel>
 
                             <Grid Grid.Column="2">
@@ -320,6 +330,18 @@
                                                     Style="{StaticResource FocusSecondaryButton}"
                                                     HorizontalContentAlignment="Left"
                                                     Content="重命名"/>
+                                            <Button Command="{Binding Data.TogglePartitionLockCommand, Source={StaticResource VmProxy}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding IsLocked, Converter={StaticResource InverseBoolConverter}}"
+                                                    Style="{StaticResource FocusSecondaryButton}"
+                                                    HorizontalContentAlignment="Left"
+                                                    Content="锁定 AI 调整"/>
+                                            <Button Command="{Binding Data.TogglePartitionLockCommand, Source={StaticResource VmProxy}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding IsLocked, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Style="{StaticResource FocusSecondaryButton}"
+                                                    HorizontalContentAlignment="Left"
+                                                    Content="允许 AI 调整"/>
                                             <Button Command="{Binding Data.DeletePartitionCommand, Source={StaticResource VmProxy}}"
                                                     CommandParameter="{Binding}"
                                                     Visibility="{Binding IsCustom, Converter={StaticResource BooleanToVisibilityConverter}}"
@@ -554,7 +576,14 @@
                         </Popup>
                     </Grid>
 
-                    <Button Command="{Binding OrganizeAllCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="&#x81EA;&#x52A8;&#x6574;&#x7406;">
+                    <Button Command="{Binding SmartPartitionCommand}"
+                            Style="{StaticResource FocusPrimaryButton}"
+                            MinHeight="40"
+                            MinWidth="118"
+                            Margin="4,0"
+                            Content="AI 智能分区"
+                            ToolTip="预览并重新分配未锁定收纳盒中的已收纳项目"/>
+                    <Button Command="{Binding OrganizeAllCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="本地按类型整理">
                         <TextBlock Style="{StaticResource FocusIconText}" Text="&#xE9D2;" FontSize="18"/>
                     </Button>
                     <Button Command="{Binding RefreshCommand}" Style="{StaticResource ToolbarButtonStyle}" ToolTip="&#x5237;&#x65B0;">

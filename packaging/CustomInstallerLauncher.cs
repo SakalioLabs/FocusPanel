@@ -15,7 +15,7 @@ internal static class CustomInstallerLauncher
     private const string ProbeArgument =
         "--verify-install-location-picker";
     private const int ProbeExitCode = 42;
-    private const string LauncherVersion = "0.11.13";
+    private const string LauncherVersion = "0.11.14";
 
     [STAThread]
     private static int Main(string[] args)

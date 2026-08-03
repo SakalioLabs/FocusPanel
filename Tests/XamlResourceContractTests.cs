@@ -41,6 +41,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains("AI 服务配置", view);
         Assert.Contains("DeepSeek", view);
         Assert.Contains("AI 智能分区", view);
+        Assert.Contains("ApplyAgentActionCommand", view);
+        Assert.Contains("CancelAgentActionCommand", view);
         Assert.Contains("不读取文件内容", view);
         Assert.Contains("IncludeLocalContext", viewModel);
         Assert.Contains("StopCommand", view);
@@ -51,6 +53,25 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain(
             "Text=\"AI Assistant\"",
             view);
+    }
+
+    [Fact]
+    public void Organizer_ExposesSmartPartitionAndPersistentLocks()
+    {
+        string root = FindRepositoryRoot();
+        string view = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml"));
+        string model = File.ReadAllText(
+            Path.Combine(root, "Models", "DesktopPartition.cs"));
+        string schema = File.ReadAllText(
+            Path.Combine(root, "Data", "AppDbContext.cs"));
+
+        Assert.Contains("Content=\"AI 智能分区\"", view);
+        Assert.Contains("SmartPartitionCommand", view);
+        Assert.Contains("TogglePartitionLockCommand", view);
+        Assert.Contains("已锁定", view);
+        Assert.Contains("IsLocked", model);
+        Assert.Contains("DesktopPartitions ADD COLUMN IsLocked", schema);
     }
 
     [Fact]
@@ -1128,7 +1149,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.13\"",
+            "LauncherVersion = \"0.11.14\"",
             File.ReadAllText(
                 Path.Combine(
                     root,

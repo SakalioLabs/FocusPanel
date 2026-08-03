@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071221"/><stop offset="1" stop-color="#1b2948"/></linearGradient>
+    <linearGradient id="ai" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#50d5ff"/><stop offset="1" stop-color="#7a72ff"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="16" flood-opacity=".3"/></filter>
+  </defs>
+  <rect width="1200" height="520" rx="32" fill="url(#bg)"/>
+  <text x="58" y="66" fill="#f7f9ff" font-family="Segoe UI, sans-serif" font-size="30" font-weight="700">智能分区成为可见、可锁定、可确认的 Agent 动作</text>
+  <text x="58" y="101" fill="#9db0ca" font-family="Segoe UI, sans-serif" font-size="16">工具栏与正常聊天共用同一计划/应用事务；锁定盒与文件内容不会进入 AI</text>
+
+  <g filter="url(#shadow)">
+    <rect x="58" y="140" width="322" height="318" rx="22" fill="#14243d" stroke="#34506f"/>
+    <text x="84" y="183" fill="#f7f9ff" font-family="Segoe UI, sans-serif" font-size="20" font-weight="600">桌面收纳工具栏</text>
+    <rect x="84" y="210" width="270" height="54" rx="14" fill="url(#ai)"/>
+    <text x="219" y="244" text-anchor="middle" fill="white" font-family="Segoe UI, sans-serif" font-size="18" font-weight="700">AI 智能分区</text>
+    <rect x="84" y="290" width="270" height="60" rx="14" fill="#203754"/>
+    <text x="106" y="326" fill="#e7effc" font-family="Segoe UI, sans-serif" font-size="16">工作</text>
+    <text x="330" y="326" text-anchor="end" fill="#9edfff" font-family="Segoe UI, sans-serif" font-size="14">可调整</text>
+    <rect x="84" y="364" width="270" height="60" rx="14" fill="#1a2b45" stroke="#58708e"/>
+    <text x="106" y="400" fill="#e7effc" font-family="Segoe UI, sans-serif" font-size="16">私人资料</text>
+    <rect x="263" y="379" width="71" height="30" rx="15" fill="#2d4260"/>
+    <text x="299" y="399" text-anchor="middle" fill="#b9c9dc" font-family="Segoe UI, sans-serif" font-size="13">已锁定</text>
+  </g>
+
+  <path d="M400 298h75" stroke="#50d5ff" stroke-width="4" stroke-linecap="round"/><path d="m463 288 14 10-14 10" fill="none" stroke="#50d5ff" stroke-width="4" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="500" y="140" width="300" height="318" rx="22" fill="#14243d" stroke="#34506f"/>
+    <text x="526" y="183" fill="#f7f9ff" font-family="Segoe UI, sans-serif" font-size="20" font-weight="600">AI 只生成预览</text>
+    <rect x="526" y="214" width="248" height="58" rx="13" fill="#203754"/>
+    <text x="548" y="249" fill="#dce8f8" font-family="Segoe UI, sans-serif" font-size="15">报价.docx　文档 → 工作</text>
+    <rect x="526" y="286" width="248" height="58" rx="13" fill="#203754"/>
+    <text x="548" y="321" fill="#dce8f8" font-family="Segoe UI, sans-serif" font-size="15">会议纪要.md　其他 → 工作</text>
+    <text x="526" y="376" fill="#9db0ca" font-family="Segoe UI, sans-serif" font-size="14">锁定收纳盒：完全跳过</text>
+    <text x="526" y="402" fill="#9db0ca" font-family="Segoe UI, sans-serif" font-size="14">实体文件：不移动、不改名</text>
+    <text x="526" y="428" fill="#9db0ca" font-family="Segoe UI, sans-serif" font-size="14">确认前：数据库零写入</text>
+  </g>
+
+  <path d="M820 298h75" stroke="#7a72ff" stroke-width="4" stroke-linecap="round"/><path d="m883 288 14 10-14 10" fill="none" stroke="#7a72ff" stroke-width="4" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="920" y="140" width="222" height="318" rx="22" fill="#14243d" stroke="#34506f"/>
+    <text x="946" y="183" fill="#f7f9ff" font-family="Segoe UI, sans-serif" font-size="20" font-weight="600">聊天 Agent</text>
+    <rect x="946" y="211" width="170" height="68" rx="16" fill="#26375b"/>
+    <text x="1031" y="240" text-anchor="middle" fill="#dce8f8" font-family="Segoe UI, sans-serif" font-size="14">“帮我智能分区”</text>
+    <text x="1031" y="263" text-anchor="middle" fill="#aebde0" font-family="Segoe UI, sans-serif" font-size="13">生成同一份预览</text>
+    <rect x="946" y="306" width="76" height="46" rx="12" fill="#24344e"/>
+    <text x="984" y="335" text-anchor="middle" fill="#c5d1e0" font-family="Segoe UI, sans-serif" font-size="14">取消</text>
+    <rect x="1034" y="306" width="82" height="46" rx="12" fill="url(#ai)"/>
+    <text x="1075" y="335" text-anchor="middle" fill="white" font-family="Segoe UI, sans-serif" font-size="14" font-weight="600">应用分区</text>
+    <text x="1031" y="393" text-anchor="middle" fill="#9db0ca" font-family="Segoe UI, sans-serif" font-size="13">确认后单事务提交</text>
+    <text x="1031" y="418" text-anchor="middle" fill="#9db0ca" font-family="Segoe UI, sans-serif" font-size="13">过期计划自动拒绝</text>
+  </g>
+</svg>

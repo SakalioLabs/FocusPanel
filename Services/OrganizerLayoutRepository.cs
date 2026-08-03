@@ -22,7 +22,8 @@ internal sealed record OrganizerLegacyLayout(
 internal sealed record OrganizerPartitionSnapshot(
     string Name,
     int ColumnIndex,
-    int OrderIndex);
+    int OrderIndex,
+    bool IsLocked = false);
 
 internal sealed record OrganizerFilePreferenceSnapshot(
     string FilePath,
@@ -74,6 +75,13 @@ internal interface IOrganizerLayoutRepository
     bool AssignFileToPartition(
         string fileName,
         string partitionName);
+
+    bool SetPartitionLocked(
+        string partitionName,
+        bool isLocked);
+
+    int ApplySmartPartitionAssignments(
+        IReadOnlyList<SmartPartitionAssignment> assignments);
 }
 
 internal sealed record OrganizerLayoutMutationHandlers(
@@ -273,6 +281,30 @@ internal sealed class OrganizerLayoutRepository
                     partitionName?.Trim()
                     ?? string.Empty));
 
+    public bool SetPartitionLocked(
+        string partitionName,
+        bool isLocked) =>
+        ExecuteMutation(
+            () => SetPartitionLockedCore(
+                RequireName(partitionName),
+                isLocked));
+
+    public int ApplySmartPartitionAssignments(
+        IReadOnlyList<SmartPartitionAssignment> assignments)
+    {
+        ArgumentNullException.ThrowIfNull(assignments);
+        _gate.Wait();
+        try
+        {
+            return ApplySmartPartitionAssignmentsCore(
+                assignments);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private bool ExecuteMutation(
         Func<bool> mutation)
     {
@@ -419,7 +451,8 @@ internal sealed class OrganizerLayoutRepository
                         new OrganizerPartitionSnapshot(
                             item.Name,
                             item.ColumnIndex,
-                            item.OrderIndex))
+                            item.OrderIndex,
+                            item.IsLocked))
                 .ToArray();
         OrganizerFilePreferenceSnapshot[] preferences =
             context.DesktopFilePreferences
@@ -643,6 +676,77 @@ internal sealed class OrganizerLayoutRepository
         preference.PartitionName = partitionName;
         context.SaveChanges();
         return true;
+    }
+
+    internal static bool SetPartitionLockedCore(
+        string partitionName,
+        bool isLocked)
+    {
+        using var context = new AppDbContext();
+        DesktopPartition? partition = FindPartition(
+            context.DesktopPartitions.ToList(),
+            partitionName);
+        if (partition == null || partition.IsLocked == isLocked)
+            return false;
+        partition.IsLocked = isLocked;
+        context.SaveChanges();
+        return true;
+    }
+
+    internal static int ApplySmartPartitionAssignmentsCore(
+        IReadOnlyList<SmartPartitionAssignment> assignments)
+    {
+        using var context = new AppDbContext();
+        using var transaction = context.Database.BeginTransaction();
+        List<DesktopPartition> partitions =
+            context.DesktopPartitions.ToList();
+        var unlocked = new HashSet<string>(
+            partitions.Where(item => !item.IsLocked)
+                .Select(item => item.Name),
+            StringComparer.OrdinalIgnoreCase);
+        List<DesktopFilePreference> preferences =
+            context.DesktopFilePreferences.ToList();
+        int changed = 0;
+        foreach (SmartPartitionAssignment assignment in assignments)
+        {
+            DesktopFilePreference? preference = preferences
+                .Where(item => item.Id == assignment.PreferenceId)
+                .LastOrDefault();
+            if (!SmartPartitionApplyPolicy.CanApply(
+                    assignment,
+                    preference,
+                    unlocked))
+            {
+                continue;
+            }
+            preference!.PartitionName = assignment.TargetPartition;
+            changed++;
+        }
+        context.SaveChanges();
+        transaction.Commit();
+        return changed;
+    }
+
+    internal static class SmartPartitionApplyPolicy
+    {
+        internal static bool CanApply(
+            SmartPartitionAssignment assignment,
+            DesktopFilePreference? preference,
+            ISet<string> unlockedPartitions) =>
+            preference != null
+            && preference.IsHiddenFromDesktop
+            && unlockedPartitions.Contains(
+                assignment.SourcePartition)
+            && unlockedPartitions.Contains(
+                assignment.TargetPartition)
+            && string.Equals(
+                preference.PartitionName,
+                assignment.SourcePartition,
+                StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(
+                preference.PartitionName,
+                assignment.TargetPartition,
+                StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool CreatePartitionInContext(

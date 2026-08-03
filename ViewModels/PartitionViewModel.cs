@@ -15,6 +15,9 @@ public partial class PartitionViewModel : ObservableObject
     [ObservableProperty]
     private bool isExpanded = true;
 
+    [ObservableProperty]
+    private bool isLocked;
+
     public ObservableCollection<DesktopFile> Files { get; } = new();
 
     // Command to handle file dropping or adding (future)

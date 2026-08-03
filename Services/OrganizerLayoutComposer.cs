@@ -60,7 +60,8 @@ internal static class OrganizerLayoutComposer
                 new PartitionViewModel(stored.Name)
                 {
                     IsCustom = true,
-                    ColumnIndex = stored.ColumnIndex
+                    ColumnIndex = stored.ColumnIndex,
+                    IsLocked = stored.IsLocked
                 };
             partitionMap[stored.Name] = partition;
             viewModels.Add(partition);

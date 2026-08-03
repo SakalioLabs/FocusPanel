@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.14 将智能分区从隐蔽的配置开关升级为桌面收纳工具栏上的明确主按钮。AI 可以重新规划已经分好区、但所在收纳盒未锁定的项目；每个收纳盒都能持久化锁定，锁定来源和目标均不参与 AI。所有调整先显示逐项预览，确认后才在一个 SQLite 事务中更新分类，不移动、不改名、不重新隐藏文件。AI 聊天新增同一 Agent 动作接口，输入“帮我智能分区”或“重新整理收纳盒”会生成待确认计划，聊天不能绕过确认直接修改数据。
+
+![智能分区按钮、收纳盒锁与聊天 Agent 确认](docs/images/smart-partition-agent-confirmation.svg)
+
 > 0.11.13 为 AI 助手默认提供 DeepSeek 接入，同时保留旧 OpenAI 配置并严格隔离两套 API Key。桌面收纳保留“本地按类型”和“DeepSeek 智能分区”两种方式：用户手动分区始终优先；AI 只接收文件名、扩展名和项目类型，不接收完整路径或文件内容，未配置、关闭、离线或返回无效结果时自动回退本地分区，不阻断文件属性事务。
 
 ![DeepSeek 助手与双方式智能分区](docs/images/deepseek-smart-organizer.svg)
@@ -510,6 +514,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - AI 助手提供中文 Fluent 对话、快速提示、可取消请求、提供方与模型选择；全新配置默认接入 DeepSeek Chat Completions，升级用户原有 OpenAI Responses 配置保持 OpenAI，不会被自动迁移或混用。
 - DeepSeek 与 OpenAI API Key 分别通过 Windows DPAPI 加密，仅当前 Windows 用户可解密；切换提供方会清空尚未保存的密码输入，界面不回显已保存 Key，也不会写入日志。
 - 桌面收纳保留两种分区方式：默认本地规则按图片、文档、视频等类型离线归类；用户在 AI 配置中主动开启后，DeepSeek 可依据文件名语义在现有自定义收纳盒和内置分区间选择。已有手动分区优先于 AI，AI 优先于本地类型回退。
+- 桌面收纳工具栏始终显示带文字的“AI 智能分区”按钮；它会检查已经收纳且位于未锁定收纳盒中的项目，展示来源→目标预览后再请求确认。收纳盒菜单可“锁定 AI 调整”或重新允许，锁定状态持久化到 `DesktopPartitions.IsLocked`。
+- AI 助手提供受控的桌面分区 Agent 动作：明确说“帮我智能分区”“重新分区”或“重新整理收纳盒”会生成同一份计划，并在对话区显示“取消/应用分区”。该接口只有计划与经确认应用两阶段，不允许模型直接写数据库。
 - 智能分区只发送经过长度限制的文件名、扩展名和项目类型；不发送完整路径、文件内容、文件属性、数据库记录或 API Key。模型只能选择现有允许分区，未知分区、遗漏项目、空响应、网络异常和无 Key 都会逐项使用本地规则。
 - AI 默认无权读取 FocusPanel 数据。用户主动开启授权后，只附带任务标题与状态和近 7 天专注统计；不读取文件内容、文件路径、旧版 OKR 表或凭据。
 - AI 助手保持只读，不直接执行删除、关机、外部发送、付费或修改任务等操作。
@@ -633,7 +639,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.11.13 `
+  -Version 0.11.14 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -645,7 +651,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.11.13-full.nupkg`：完整更新包。
+- `FocusPanel-0.11.14-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

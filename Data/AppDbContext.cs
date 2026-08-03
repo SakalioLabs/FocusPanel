@@ -83,7 +83,8 @@ public class AppDbContext : DbContext
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Name TEXT,
                     OrderIndex INTEGER NOT NULL,
-                    ColumnIndex INTEGER DEFAULT 0
+                    ColumnIndex INTEGER DEFAULT 0,
+                    IsLocked INTEGER NOT NULL DEFAULT 0
                 );
 
                 CREATE TABLE IF NOT EXISTS DesktopFilePreferences (
@@ -222,6 +223,12 @@ public class AppDbContext : DbContext
                 Database.ExecuteSqlRaw("ALTER TABLE DesktopPartitions ADD COLUMN ColumnIndex INTEGER DEFAULT 0;");
             } 
             catch { /* Column likely exists */ }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopPartitions ADD COLUMN IsLocked INTEGER NOT NULL DEFAULT 0;");
+            }
+            catch { }
         }
         catch { }
     }

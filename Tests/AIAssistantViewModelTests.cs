@@ -131,6 +131,50 @@ public sealed class AIAssistantViewModelTests
         Assert.Contains("凭据不可读", viewModel.StatusText);
     }
 
+    [Fact]
+    public async Task ChatSmartPartition_CreatesPreviewWithoutImmediateMutation()
+    {
+        var agent = new FakeSmartPartitionAgent();
+        using var viewModel = new AIAssistantViewModel(
+            new FakeAssistant(),
+            new FakeSettings(),
+            new FakeContext(),
+            agent)
+        {
+            Prompt = "帮我智能分区已收纳的项目"
+        };
+        await viewModel.InitializationTask;
+
+        await viewModel.SendCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, agent.PlanCount);
+        Assert.Equal(0, agent.ApplyCount);
+        Assert.True(viewModel.HasPendingAgentAction);
+        Assert.Contains("文档 → 工作", viewModel.AgentActionPreview);
+    }
+
+    [Fact]
+    public async Task ConfirmedChatSmartPartition_AppliesSharedAgentPlan()
+    {
+        var agent = new FakeSmartPartitionAgent();
+        using var viewModel = new AIAssistantViewModel(
+            new FakeAssistant(),
+            new FakeSettings(),
+            new FakeContext(),
+            agent)
+        {
+            Prompt = "重新整理收纳盒"
+        };
+        await viewModel.InitializationTask;
+        await viewModel.SendCommand.ExecuteAsync(null);
+
+        await viewModel.ApplyAgentActionCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, agent.ApplyCount);
+        Assert.False(viewModel.HasPendingAgentAction);
+        Assert.Contains("已重新分区", viewModel.Messages[^1].Content);
+    }
+
     private sealed class FakeAssistant :
         IAiAssistantService
     {
@@ -241,5 +285,40 @@ public sealed class AIAssistantViewModelTests
 
         public Task ClearApiKeyAsync() =>
             Task.CompletedTask;
+    }
+
+    private sealed class FakeSmartPartitionAgent :
+        IDesktopSmartPartitionAgent
+    {
+        internal int PlanCount { get; private set; }
+        internal int ApplyCount { get; private set; }
+        public event Action<int>? Applied;
+
+        public Task<SmartPartitionPlan> CreatePlanAsync(
+            CancellationToken cancellationToken = default)
+        {
+            PlanCount++;
+            return Task.FromResult(
+                new SmartPartitionPlan(
+                    new[]
+                    {
+                        new SmartPartitionAssignment(
+                            1,
+                            "报价.docx",
+                            "文档",
+                            "工作")
+                    },
+                    1,
+                    "建议移动 1 个项目"));
+        }
+
+        public Task<int> ApplyAsync(
+            SmartPartitionPlan plan,
+            CancellationToken cancellationToken = default)
+        {
+            ApplyCount++;
+            Applied?.Invoke(plan.Assignments.Count);
+            return Task.FromResult(plan.Assignments.Count);
+        }
     }
 }

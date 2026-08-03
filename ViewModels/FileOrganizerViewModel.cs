@@ -42,6 +42,8 @@ public partial class FileOrganizerViewModel :
         _desktopDropPreflight = new();
     private readonly ShellPathOpenCoordinator
         _shellOpen;
+    private readonly IDesktopSmartPartitionAgent
+        _smartPartitionAgent;
     private readonly SemaphoreSlim
         _organizePresentationGate =
             new(1, 1);
@@ -117,6 +119,8 @@ public partial class FileOrganizerViewModel :
         nameof(OrganizeAllCommand))]
     [NotifyCanExecuteChangedFor(
         nameof(CollectPendingCommonDesktopCommand))]
+    [NotifyCanExecuteChangedFor(
+        nameof(SmartPartitionCommand))]
     private bool isOrganizing;
 
     [ObservableProperty]
@@ -259,6 +263,10 @@ public partial class FileOrganizerViewModel :
         _shellOpen =
             shellOpen
             ?? new ShellPathOpenCoordinator();
+        _smartPartitionAgent =
+            DesktopSmartPartitionAgent.Shared;
+        _smartPartitionAgent.Applied +=
+            SmartPartitionAgent_Applied;
 
         AppSettings legacySettings =
             _settingsService.CurrentSettings;
@@ -586,6 +594,22 @@ public partial class FileOrganizerViewModel :
         }
 
         _layoutRefresh.Request();
+    }
+
+    private void SmartPartitionAgent_Applied(int changed)
+    {
+        if (_isDisposed)
+            return;
+        _uiDispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (_isDisposed)
+                    return;
+                AutoOrganizeStatus =
+                    $"AI 已重新分区 {changed} 个项目";
+                RequestLayoutRefresh();
+            }),
+            DispatcherPriority.Background);
     }
 
     private PendingOrganizerLayoutSnapshot
@@ -990,6 +1014,91 @@ public partial class FileOrganizerViewModel :
         }
         NewPartitionName = string.Empty;
     }
+
+    private bool CanSmartPartition() => !IsOrganizing;
+
+    [RelayCommand(CanExecute = nameof(CanSmartPartition))]
+    private async Task SmartPartition()
+    {
+        IsOrganizing = true;
+        AutoOrganizeStatus = "AI 正在检查未锁定收纳盒…";
+        try
+        {
+            SmartPartitionPlan plan =
+                await _smartPartitionAgent.CreatePlanAsync();
+            if (!plan.HasChanges)
+            {
+                AutoOrganizeStatus = plan.Message;
+                FocusDialogService.Show(
+                    plan.Message,
+                    "AI 智能分区",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+                return;
+            }
+
+            string preview = string.Join(
+                Environment.NewLine,
+                plan.Assignments.Take(12).Select(item =>
+                    $"• {item.FileName}：{item.SourcePartition} → {item.TargetPartition}"));
+            if (plan.Assignments.Count > 12)
+            {
+                preview += Environment.NewLine
+                    + $"…另有 {plan.Assignments.Count - 12} 个项目";
+            }
+            var confirmation = FocusDialogService.Show(
+                plan.Message + "\n\n" + preview
+                + "\n\n是否应用以上调整？",
+                "预览 AI 智能分区",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
+            if (confirmation != System.Windows.MessageBoxResult.Yes)
+            {
+                AutoOrganizeStatus = "已取消；现有分区保持不变";
+                return;
+            }
+
+            int changed = await _smartPartitionAgent.ApplyAsync(plan);
+            AutoOrganizeStatus = changed > 0
+                ? $"AI 已重新分区 {changed} 个项目"
+                : "分区在确认期间已变化，没有应用过期建议";
+            RequestLayoutRefresh();
+        }
+        catch (Exception ex)
+        {
+            AutoOrganizeStatus =
+                "AI 智能分区失败；现有分区保持不变";
+            FocusDialogService.Show(
+                ex.Message,
+                "AI 智能分区失败",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Warning);
+        }
+        finally
+        {
+            IsOrganizing = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task TogglePartitionLock(
+        PartitionViewModel? partition)
+    {
+        if (partition == null)
+            return;
+        bool target = !partition.IsLocked;
+        bool changed = await RunLayoutMutationAsync(
+            () => _layoutRepository.SetPartitionLocked(
+                partition.Name,
+                target),
+            target ? "锁定收纳盒" : "解锁收纳盒");
+        if (changed)
+        {
+            AutoOrganizeStatus = target
+                ? $"“{partition.Name}”已锁定，AI 不会移动其中项目"
+                : $"“{partition.Name}”已解锁，可参与 AI 智能分区";
+        }
+    }
     
     [RelayCommand]
     private void OpenRenameDialog(PartitionViewModel? partition)
@@ -1352,6 +1461,8 @@ public partial class FileOrganizerViewModel :
             return _disposeTask;
 
         _isDisposed = true;
+        _smartPartitionAgent.Applied -=
+            SmartPartitionAgent_Applied;
         _layoutRefresh.Dispose();
         _fileService.FilesChanged -=
             FileService_FilesChanged;

@@ -26,6 +26,8 @@ public partial class AIAssistantViewModel :
     private readonly IAiAssistantService _assistant;
     private readonly IAiSettingsService _settings;
     private readonly IAiLocalContextBuilder _contextBuilder;
+    private readonly IDesktopSmartPartitionAgent
+        _smartPartitionAgent;
     private readonly Task _initializationTask;
     private CancellationTokenSource? _requestCancellation;
     private bool _disposed;
@@ -64,22 +66,34 @@ public partial class AIAssistantViewModel :
     [ObservableProperty]
     private bool hasMessages;
 
+    [ObservableProperty]
+    private bool hasPendingAgentAction;
+
+    [ObservableProperty]
+    private string agentActionPreview = string.Empty;
+
+    private SmartPartitionPlan? _pendingSmartPartitionPlan;
+
     public AIAssistantViewModel()
         : this(
             new AiAssistantRouter(),
             new AiSettingsService(),
-            new AiLocalContextBuilder())
+            new AiLocalContextBuilder(),
+            DesktopSmartPartitionAgent.Shared)
     {
     }
 
     internal AIAssistantViewModel(
         IAiAssistantService assistant,
         IAiSettingsService settings,
-        IAiLocalContextBuilder contextBuilder)
+        IAiLocalContextBuilder contextBuilder,
+        IDesktopSmartPartitionAgent? smartPartitionAgent = null)
     {
         _assistant = assistant;
         _settings = settings;
         _contextBuilder = contextBuilder;
+        _smartPartitionAgent = smartPartitionAgent
+            ?? DesktopSmartPartitionAgent.Shared;
         SelectedModel = AiSettingsService.DefaultModel;
         StatusText = "正在读取 AI 配置…";
         _initializationTask = InitializeSettingsAsync();
@@ -169,6 +183,13 @@ public partial class AIAssistantViewModel :
 
         try
         {
+            if (SmartPartitionAgentIntent.IsRequested(userText))
+            {
+                await PrepareSmartPartitionActionAsync(
+                    _requestCancellation.Token);
+                return;
+            }
+
             string input = BuildConversationInput();
             if (IncludeLocalContext)
             {
@@ -278,9 +299,99 @@ public partial class AIAssistantViewModel :
     private void ClearConversation()
     {
         Messages.Clear();
+        ClearPendingAgentAction();
         StatusText = HasApiKey
             ? "对话已清空"
             : $"先保存 {SelectedProvider} API Key 才能开始";
+    }
+
+    private async Task PrepareSmartPartitionActionAsync(
+        CancellationToken cancellationToken)
+    {
+        StatusText = "正在生成智能分区预览…";
+        SmartPartitionPlan plan =
+            await _smartPartitionAgent.CreatePlanAsync(
+                cancellationToken);
+        _pendingSmartPartitionPlan = plan.HasChanges
+            ? plan
+            : null;
+        HasPendingAgentAction = plan.HasChanges;
+        AgentActionPreview = BuildPlanPreview(plan);
+        Messages.Add(
+            new AiChatMessage(
+                false,
+                plan.HasChanges
+                    ? plan.Message
+                        + " 我已生成预览，确认后才会应用。"
+                    : plan.Message,
+                DateTime.Now));
+        StatusText = plan.HasChanges
+            ? "等待确认智能分区"
+            : "智能分区未产生待执行操作";
+    }
+
+    [RelayCommand]
+    private async Task ApplyAgentAction()
+    {
+        SmartPartitionPlan? plan =
+            _pendingSmartPartitionPlan;
+        if (plan == null || IsBusy)
+            return;
+        IsBusy = true;
+        try
+        {
+            int changed = await _smartPartitionAgent.ApplyAsync(plan);
+            Messages.Add(
+                new AiChatMessage(
+                    false,
+                    changed > 0
+                        ? $"已重新分区 {changed} 个项目。锁定收纳盒未改变。"
+                        : "分区状态已经变化，没有应用过期建议。",
+                    DateTime.Now));
+            StatusText = changed > 0
+                ? "智能分区已应用"
+                : "没有应用过期建议";
+            ClearPendingAgentAction();
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"应用智能分区失败：{ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private void CancelAgentAction()
+    {
+        ClearPendingAgentAction();
+        StatusText = "已取消；现有分区保持不变";
+    }
+
+    private void ClearPendingAgentAction()
+    {
+        _pendingSmartPartitionPlan = null;
+        HasPendingAgentAction = false;
+        AgentActionPreview = string.Empty;
+    }
+
+    private static string BuildPlanPreview(
+        SmartPartitionPlan plan)
+    {
+        if (!plan.HasChanges)
+            return plan.Message;
+        string preview = string.Join(
+            Environment.NewLine,
+            plan.Assignments.Take(8).Select(item =>
+                $"• {item.FileName}：{item.SourcePartition} → {item.TargetPartition}"));
+        if (plan.Assignments.Count > 8)
+        {
+            preview += Environment.NewLine
+                + $"…另有 {plan.Assignments.Count - 8} 个项目";
+        }
+        return preview;
     }
 
     private string BuildConversationInput()

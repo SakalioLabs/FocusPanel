@@ -8,6 +8,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid>
@@ -106,8 +107,8 @@
                           Margin="2,12,0,0"
                           Padding="2,5"
                           IsChecked="{Binding SmartOrganizerEnabled}"
-                          Content="AI 智能分区（保留本地按类型分区作为另一种方式）"
-                          ToolTip="仅在收纳时发送文件名、扩展名和项目类型；不上传路径或文件内容。调用失败会自动使用本地分区。"/>
+                          Content="自动收纳新增项目时优先使用 AI"
+                          ToolTip="工具栏和聊天中的手动智能分区不受此开关限制；只发送文件名、扩展名和项目类型。"/>
             </Grid>
         </Border>
 
@@ -204,11 +205,47 @@
                             Content="复盘专注"
                             Command="{Binding UseQuickPromptCommand}"
                             CommandParameter="请根据可用信息帮我复盘最近的专注状态，并提出一个改进建议。"/>
+                    <Button Style="{StaticResource FocusSecondaryButton}"
+                            Margin="8,1,0,1"
+                            Content="智能整理收纳盒"
+                            Command="{Binding UseQuickPromptCommand}"
+                            CommandParameter="帮我智能分区已收纳的桌面项目。"/>
                 </WrapPanel>
             </StackPanel>
         </Grid>
 
         <Border Grid.Row="3"
+                Style="{StaticResource FocusCard}"
+                Margin="0,12,0,0"
+                Visibility="{Binding HasPendingAgentAction, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="待确认 · AI 智能分区"
+                               Style="{StaticResource FocusCardTitleText}"/>
+                    <TextBlock Text="{Binding AgentActionPreview}"
+                               Margin="0,7,12,0"
+                               Style="{StaticResource FocusSecondaryBodyText}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Style="{StaticResource FocusSecondaryButton}"
+                            Content="取消"
+                            Command="{Binding CancelAgentActionCommand}"/>
+                    <Button Style="{StaticResource FocusPrimaryButton}"
+                            Margin="8,1,0,1"
+                            Content="应用分区"
+                            Command="{Binding ApplyAgentActionCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="4"
                 Style="{StaticResource FocusCard}"
                 Margin="0,14,0,0">
             <Grid>
