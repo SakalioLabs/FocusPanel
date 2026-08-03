@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Collections.Specialized;
 using FocusPanel.Services;
 
 namespace FocusPanel.Controls;
@@ -193,7 +194,56 @@ public sealed class ViewportVirtualizingPanel :
         base.OnItemsChanged(
             sender,
             args);
+        switch (args.Action)
+        {
+            case NotifyCollectionChangedAction.Remove:
+            case NotifyCollectionChangedAction.Replace:
+                RemoveStaleChildren(
+                    args.Position,
+                    args.ItemUICount);
+                break;
+            case NotifyCollectionChangedAction.Move:
+                RemoveStaleChildren(
+                    args.OldPosition,
+                    args.ItemUICount);
+                break;
+            case NotifyCollectionChangedAction.Reset:
+                if (InternalChildren.Count > 0)
+                {
+                    RemoveInternalChildRange(
+                        0,
+                        InternalChildren.Count);
+                }
+                break;
+        }
         InvalidateMeasure();
+    }
+
+    private void RemoveStaleChildren(
+        GeneratorPosition position,
+        int count)
+    {
+        if (count <= 0
+            || InternalChildren.Count == 0)
+        {
+            return;
+        }
+
+        int startIndex = Math.Max(
+            0,
+            position.Index);
+        if (startIndex >= InternalChildren.Count)
+            return;
+
+        int safeCount = Math.Min(
+            count,
+            InternalChildren.Count - startIndex);
+        if (safeCount > 0)
+        {
+            RemoveInternalChildRange(
+                startIndex,
+                safeCount);
+        }
     }
 
     private void RealizeRange(
@@ -279,6 +329,17 @@ public sealed class ViewportVirtualizingPanel :
             int itemIndex =
                 generator.IndexFromGeneratorPosition(
                     position);
+            if (itemIndex < 0)
+            {
+                // ItemContainerGenerator already discarded this slot after
+                // a source collection mutation. Calling Remove/Recycle with
+                // the stale position enters WPF with an invalid generator
+                // node and can throw from inside ItemContainerGenerator.
+                RemoveInternalChildRange(
+                    childIndex,
+                    1);
+                continue;
+            }
             if (layout.HasRealizedItems
                 && itemIndex
                     >= layout.FirstRealizedIndex

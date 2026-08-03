@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.12 - 2026-08-03
+
+- 根据 0.11.11 实机 `crash.log` 确认根因位于 `ViewportVirtualizingPanel.CleanUpItems`：跨分区移动后，WPF 容器生成器已经更新映射，自定义面板仍拿旧 `GeneratorPosition` 调用 `Remove/Recycle`，最终在 `ItemContainerGenerator.Remove` 内部触发空引用。
+- `OnItemsChanged` 现在针对删除、替换、移动和重置同步清理对应的 `InternalChildren`；测量清理阶段遇到生成器已丢弃的槽位时只移除孤立视觉子项，不再二次操作无效生成器节点。
+- 新增真实 STA/WPF `ItemsControl` 回归测试：在两个已经完成测量的虚拟化分区间反复双向移动项目并清空目标分区。0.11.11 原实现稳定复现用户日志中的相同调用栈，修复后通过。
+- 收纳切换仍只更新分区元数据，不移动、不改名桌面文件，也不重新写入隐藏属性。
+
 ## v0.11.11 - 2026-08-03
 
 - 将崩溃恢复从“恢复所有已收纳项目”收紧为只回滚未完成的 `Collecting`、`Restoring` 与 `RecoveryRequired` 事务；`Stable` 项目在闪退、watchdog 恢复或遗留标记存在时继续保持收纳，避免图标整批突然回到桌面并打乱 Explorer 排列。
