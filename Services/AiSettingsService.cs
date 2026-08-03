@@ -10,7 +10,15 @@ namespace FocusPanel.Services;
 
 public readonly record struct AiSettingsState(
     bool HasApiKey,
-    string Model);
+    string Model,
+    string Provider = AiProvider.DeepSeek,
+    bool SmartOrganizerEnabled = false);
+
+public static class AiProvider
+{
+    public const string DeepSeek = "DeepSeek";
+    public const string OpenAi = "OpenAI";
+}
 
 public interface IAiSettingsService
 {
@@ -18,7 +26,9 @@ public interface IAiSettingsService
     Task<string?> LoadApiKeyAsync();
     Task<AiSettingsState> SaveAsync(
         string apiKey,
-        string model);
+        string model,
+        string provider,
+        bool smartOrganizerEnabled);
     Task ClearApiKeyAsync();
 }
 
@@ -41,7 +51,15 @@ public sealed class AiSettingsService : IAiSettingsService
         "AI.OpenAI.ApiKeyProtected";
     internal const string ModelConfigKey =
         "AI.OpenAI.Model";
-    public const string DefaultModel = "gpt-5.6-sol";
+    internal const string DeepSeekApiKeyConfigKey =
+        "AI.DeepSeek.ApiKeyProtected";
+    internal const string DeepSeekModelConfigKey =
+        "AI.DeepSeek.Model";
+    internal const string ProviderConfigKey = "AI.Provider";
+    internal const string SmartOrganizerConfigKey =
+        "AI.SmartOrganizer.Enabled";
+    public const string DefaultModel = "deepseek-v4-flash";
+    public const string DefaultOpenAiModel = "gpt-5.6-sol";
 
     private readonly IAiConfigStore _store;
     private readonly IApiKeyProtector _protector;
@@ -66,23 +84,31 @@ public sealed class AiSettingsService : IAiSettingsService
         RunSerializedAsync(
             () =>
             {
+                string provider = ResolveProvider();
                 bool hasApiKey = !string.IsNullOrWhiteSpace(
-                    _store.Read(ApiKeyConfigKey));
-                string? value = _store.Read(ModelConfigKey);
+                    _store.Read(GetApiKeyConfigKey(provider)));
+                string? value = _store.Read(
+                    GetModelConfigKey(provider));
                 string model = string.IsNullOrWhiteSpace(value)
-                    ? DefaultModel
+                    ? GetDefaultModel(provider)
                     : value;
                 return new AiSettingsState(
                     hasApiKey,
-                    model);
+                    model,
+                    provider,
+                    string.Equals(
+                        _store.Read(SmartOrganizerConfigKey),
+                        bool.TrueString,
+                        StringComparison.OrdinalIgnoreCase));
             });
 
     public Task<string?> LoadApiKeyAsync() =>
         RunSerializedAsync(
             () =>
             {
-                string? encrypted =
-                    _store.Read(ApiKeyConfigKey);
+                string provider = ResolveProvider();
+                string? encrypted = _store.Read(
+                    GetApiKeyConfigKey(provider));
                 if (string.IsNullOrWhiteSpace(encrypted))
                     return null;
                 try
@@ -97,36 +123,87 @@ public sealed class AiSettingsService : IAiSettingsService
 
     public Task<AiSettingsState> SaveAsync(
         string apiKey,
-        string model) =>
+        string model,
+        string provider,
+        bool smartOrganizerEnabled) =>
         RunSerializedAsync(
             () =>
             {
+                string savedProvider = NormalizeProvider(provider);
+                string apiKeyConfigKey =
+                    GetApiKeyConfigKey(savedProvider);
                 if (!string.IsNullOrWhiteSpace(apiKey))
                 {
                     _store.Write(
-                        ApiKeyConfigKey,
+                        apiKeyConfigKey,
                         _protector.Protect(apiKey.Trim()));
                 }
 
                 string savedModel =
                     string.IsNullOrWhiteSpace(model)
-                        ? DefaultModel
+                        ? GetDefaultModel(savedProvider)
                         : model.Trim();
-                _store.Write(ModelConfigKey, savedModel);
+                _store.Write(ProviderConfigKey, savedProvider);
+                _store.Write(
+                    GetModelConfigKey(savedProvider),
+                    savedModel);
+                _store.Write(
+                    SmartOrganizerConfigKey,
+                    smartOrganizerEnabled.ToString());
                 bool hasApiKey = !string.IsNullOrWhiteSpace(
-                    _store.Read(ApiKeyConfigKey));
+                    _store.Read(apiKeyConfigKey));
                 return new AiSettingsState(
                     hasApiKey,
-                    savedModel);
+                    savedModel,
+                    savedProvider,
+                    smartOrganizerEnabled);
             });
 
     public Task ClearApiKeyAsync() =>
         RunSerializedAsync(
             () =>
             {
-                _store.Delete(ApiKeyConfigKey);
+                _store.Delete(
+                    GetApiKeyConfigKey(ResolveProvider()));
                 return true;
             });
+
+    private string ResolveProvider()
+    {
+        string? configured = _store.Read(ProviderConfigKey);
+        if (!string.IsNullOrWhiteSpace(configured))
+            return NormalizeProvider(configured);
+
+        // Existing installations used OpenAI only. Keep their credential
+        // on OpenAI instead of ever presenting it to the new default provider.
+        return !string.IsNullOrWhiteSpace(_store.Read(ApiKeyConfigKey))
+            || !string.IsNullOrWhiteSpace(_store.Read(ModelConfigKey))
+            ? AiProvider.OpenAi
+            : AiProvider.DeepSeek;
+    }
+
+    internal static string NormalizeProvider(string? provider) =>
+        string.Equals(
+            provider,
+            AiProvider.OpenAi,
+            StringComparison.OrdinalIgnoreCase)
+            ? AiProvider.OpenAi
+            : AiProvider.DeepSeek;
+
+    internal static string GetDefaultModel(string provider) =>
+        NormalizeProvider(provider) == AiProvider.OpenAi
+            ? DefaultOpenAiModel
+            : DefaultModel;
+
+    private static string GetApiKeyConfigKey(string provider) =>
+        NormalizeProvider(provider) == AiProvider.OpenAi
+            ? ApiKeyConfigKey
+            : DeepSeekApiKeyConfigKey;
+
+    private static string GetModelConfigKey(string provider) =>
+        NormalizeProvider(provider) == AiProvider.OpenAi
+            ? ModelConfigKey
+            : DeepSeekModelConfigKey;
 
     private async Task<T> RunSerializedAsync<T>(
         Func<T> operation)

@@ -32,6 +32,8 @@ public class FileOrganizerService : IDisposable
     private readonly IDesktopItemVisibilityService _visibility;
     private readonly IDesktopVisibilityIo
         _visibilityIo;
+    private readonly IAiDesktopPartitionService
+        _aiPartitionService;
     private FileSystemWatcher _desktopWatcher = null!;
     private FileSystemWatcher? _commonDesktopWatcher;
     private FileSystemWatcher? _storageWatcher;
@@ -74,7 +76,8 @@ public class FileOrganizerService : IDisposable
     internal FileOrganizerService(
         string desktopPath,
         string commonDesktopPath,
-        IDesktopItemVisibilityService visibility)
+        IDesktopItemVisibilityService visibility,
+        IAiDesktopPartitionService? aiPartitionService = null)
     {
         _desktopPath = desktopPath;
         _commonDesktopPath = commonDesktopPath;
@@ -83,6 +86,8 @@ public class FileOrganizerService : IDisposable
         _visibilityIo =
             new DesktopVisibilityIo(
                 visibility);
+        _aiPartitionService = aiPartitionService
+            ?? new AiDesktopPartitionService();
         _debounceTimer = new System.Threading.Timer(
             _ => _ = ProcessPendingChangesSafelyAsync(),
             null,
@@ -1706,6 +1711,19 @@ public class FileOrganizerService : IDisposable
                     .SelectCreatedItems(
                         candidates,
                         paths);
+            IReadOnlyDictionary<string, string> aiPartitions =
+                await _aiPartitionService.ResolveAsync(items)
+                    .ConfigureAwait(false);
+            if (aiPartitions.Count > 0)
+            {
+                items = items.Select(item =>
+                    aiPartitions.TryGetValue(
+                        item.FullPath,
+                        out string? partition)
+                        ? item with { AiPartition = partition }
+                        : item)
+                    .ToArray();
+            }
 
             IDisposable? elevatedBatch = null;
             bool elevationReady =
@@ -1863,5 +1881,7 @@ public class FileOrganizerService : IDisposable
         _commonDesktopWatcher?.Dispose();
         _storageWatcher?.Dispose();
         _debounceTimer.Dispose();
+        if (_aiPartitionService is IDisposable disposable)
+            disposable.Dispose();
     }
 }

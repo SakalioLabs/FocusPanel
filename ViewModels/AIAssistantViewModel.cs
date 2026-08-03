@@ -29,6 +29,7 @@ public partial class AIAssistantViewModel :
     private readonly Task _initializationTask;
     private CancellationTokenSource? _requestCancellation;
     private bool _disposed;
+    private bool _applyingSettings;
 
     [ObservableProperty]
     private string prompt = string.Empty;
@@ -52,6 +53,12 @@ public partial class AIAssistantViewModel :
     private string selectedModel;
 
     [ObservableProperty]
+    private string selectedProvider = AiProvider.DeepSeek;
+
+    [ObservableProperty]
+    private bool smartOrganizerEnabled;
+
+    [ObservableProperty]
     private string statusText;
 
     [ObservableProperty]
@@ -59,7 +66,7 @@ public partial class AIAssistantViewModel :
 
     public AIAssistantViewModel()
         : this(
-            new OpenAiResponsesService(),
+            new AiAssistantRouter(),
             new AiSettingsService(),
             new AiLocalContextBuilder())
     {
@@ -92,10 +99,30 @@ public partial class AIAssistantViewModel :
         get;
     } = new()
     {
-        "gpt-5.6-sol",
-        "gpt-5.6-terra",
-        "gpt-5.6-luna"
+        "deepseek-v4-flash",
+        "deepseek-v4-pro"
     };
+
+    public ObservableCollection<string> AvailableProviders
+    {
+        get;
+    } = new()
+    {
+        AiProvider.DeepSeek,
+        AiProvider.OpenAi
+    };
+
+    partial void OnSelectedProviderChanged(string value)
+    {
+        if (_applyingSettings)
+            return;
+
+        ReplaceModels(value);
+        SelectedModel = AiSettingsService.GetDefaultModel(value);
+        ApiKeyInput = string.Empty;
+        HasApiKey = false;
+        StatusText = $"请输入 {value} API Key 并保存";
+    }
 
     [RelayCommand]
     private async Task Send()
@@ -123,7 +150,7 @@ public partial class AIAssistantViewModel :
         {
             HasApiKey = false;
             IsSettingsOpen = true;
-            StatusText = "请先保存有效的 OpenAI API Key";
+            StatusText = $"请先保存有效的 {SelectedProvider} API Key";
             return;
         }
 
@@ -205,24 +232,22 @@ public partial class AIAssistantViewModel :
         try
         {
             await _initializationTask;
-            if (!HasApiKey
-                && string.IsNullOrWhiteSpace(ApiKeyInput))
-            {
-                StatusText = "首次配置时请输入 API Key";
-                return;
-            }
-
             AiSettingsState state =
                 await _settings.SaveAsync(
                     ApiKeyInput,
-                    SelectedModel);
+                    SelectedModel,
+                    SelectedProvider,
+                    SmartOrganizerEnabled);
             ApiKeyInput = string.Empty;
             HasApiKey = state.HasApiKey;
             SelectedModel = state.Model;
+            SelectedProvider = state.Provider;
+            SmartOrganizerEnabled =
+                state.SmartOrganizerEnabled;
             IsSettingsOpen = !HasApiKey;
             StatusText = HasApiKey
                 ? "配置已加密保存，仅当前 Windows 用户可解密"
-                : "API Key 保存失败";
+                : $"请为 {SelectedProvider} 输入 API Key 后再保存";
         }
         catch (Exception ex)
         {
@@ -255,7 +280,7 @@ public partial class AIAssistantViewModel :
         Messages.Clear();
         StatusText = HasApiKey
             ? "对话已清空"
-            : "先保存 OpenAI API Key 才能开始";
+            : $"先保存 {SelectedProvider} API Key 才能开始";
     }
 
     private string BuildConversationInput()
@@ -278,11 +303,23 @@ public partial class AIAssistantViewModel :
                 await _settings.LoadStateAsync();
             if (_disposed)
                 return;
-            HasApiKey = state.HasApiKey;
-            SelectedModel = state.Model;
+            _applyingSettings = true;
+            try
+            {
+                SelectedProvider = state.Provider;
+                ReplaceModels(state.Provider);
+                SelectedModel = state.Model;
+                SmartOrganizerEnabled =
+                    state.SmartOrganizerEnabled;
+                HasApiKey = state.HasApiKey;
+            }
+            finally
+            {
+                _applyingSettings = false;
+            }
             StatusText = HasApiKey
                 ? "已就绪 · 对话仅在点击发送后联网"
-                : "先保存 OpenAI API Key 才能开始";
+                : $"先保存 {SelectedProvider} API Key 才能开始";
             IsSettingsOpen = !HasApiKey;
         }
         catch (Exception ex)
@@ -293,6 +330,26 @@ public partial class AIAssistantViewModel :
             IsSettingsOpen = true;
             StatusText = $"读取配置失败：{ex.Message}";
         }
+    }
+
+    private void ReplaceModels(string provider)
+    {
+        string[] values = AiSettingsService.NormalizeProvider(provider)
+            == AiProvider.OpenAi
+            ? new[]
+            {
+                "gpt-5.6-sol",
+                "gpt-5.6-terra",
+                "gpt-5.6-luna"
+            }
+            : new[]
+            {
+                "deepseek-v4-flash",
+                "deepseek-v4-pro"
+            };
+        AvailableModels.Clear();
+        foreach (string value in values)
+            AvailableModels.Add(value);
     }
 
     public void Dispose()

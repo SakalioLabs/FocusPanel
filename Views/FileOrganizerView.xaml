@@ -504,6 +504,10 @@
                                                Style="{StaticResource FocusMetaText}"
                                                TextWrapping="Wrap"
                                                AutomationProperties.LiveSetting="Polite"/>
+                                    <TextBlock Margin="2,5,2,0"
+                                               Style="{StaticResource FocusMetaText}"
+                                               TextWrapping="Wrap"
+                                               Text="分区方式可在 AI 助手中选择：本地按类型，或 DeepSeek 智能分区；手动分区始终优先。"/>
                                     <Button Margin="0,8,0,0"
                                             MinHeight="44"
                                             Style="{StaticResource FocusSecondaryButton}"

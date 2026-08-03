@@ -38,7 +38,9 @@ public sealed class XamlResourceContractTests
 
         Assert.Contains("AI 助手", view);
         Assert.Contains("FocusCard", view);
-        Assert.Contains("OpenAI API 配置", view);
+        Assert.Contains("AI 服务配置", view);
+        Assert.Contains("DeepSeek", view);
+        Assert.Contains("AI 智能分区", view);
         Assert.Contains("不读取文件内容", view);
         Assert.Contains("IncludeLocalContext", viewModel);
         Assert.Contains("StopCommand", view);
@@ -1126,7 +1128,7 @@ public sealed class XamlResourceContractTests
                     "packaging",
                     "CustomInstallerLauncher.cs")));
         Assert.Contains(
-            "LauncherVersion = \"0.11.12\"",
+            "LauncherVersion = \"0.11.13\"",
             File.ReadAllText(
                 Path.Combine(
                     root,

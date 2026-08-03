@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.13 - 2026-08-03
+
+- AI 助手新增 DeepSeek 官方 Chat Completions 接入，全新配置默认使用 `deepseek-v4-flash`，可选择 `deepseek-v4-pro`；OpenAI Responses 继续保留为可选提供方。
+- DeepSeek 与 OpenAI 使用独立的 DPAPI 加密凭据和模型配置；升级检测到旧 OpenAI 配置时保持原提供方，绝不把旧 Key 自动发送给 DeepSeek。切换提供方会清空未保存的密码输入。
+- 桌面收纳保留两种分区方式：稳定的本地按类型分区，以及用户主动开启的 AI 智能分区。手动指定分区优先，AI 只在现有收纳盒与内置分区中选择，失败、无 Key、离线、空响应或无效 JSON 时自动回退本地规则。
+- 智能分区请求只包含长度受限的文件名、扩展名和项目类型，不包含完整路径、文件内容、文件属性或业务数据库内容；AI 决策在文件属性事务前完成，不能阻断隐藏、恢复及失败回滚。
+- 新增提供方迁移隔离、DeepSeek 请求解析、敏感路径排除、允许分区校验、手动分区优先和 AI 失败回退测试，并更新 AI 配置与桌面收纳说明图。
+
 ## v0.11.12 - 2026-08-03
 
 - 根据 0.11.11 实机 `crash.log` 确认根因位于 `ViewportVirtualizingPanel.CleanUpItems`：跨分区移动后，WPF 容器生成器已经更新映射，自定义面板仍拿旧 `GeneratorPosition` 调用 `Remove/Recycle`，最终在 `ItemContainerGenerator.Remove` 内部触发空引用。

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#08111f"/><stop offset="1" stop-color="#182844"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#5ad7ff"/><stop offset="1" stop-color="#7772ff"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1200" height="520" rx="32" fill="url(#bg)"/>
+  <text x="64" y="72" fill="#f6f9ff" font-family="Segoe UI, sans-serif" font-size="30" font-weight="700">DeepSeek 助手与双方式智能分区</text>
+  <text x="64" y="108" fill="#9fb0c9" font-family="Segoe UI, sans-serif" font-size="17">AI 是可选决策层；文件属性事务始终由 FocusPanel 本地执行</text>
+
+  <g filter="url(#shadow)">
+    <rect x="64" y="146" width="276" height="300" rx="22" fill="#14233a" stroke="#304969"/>
+    <circle cx="110" cy="194" r="22" fill="url(#accent)"/>
+    <path d="M99 194h22M110 183v22" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <text x="146" y="201" fill="#f6f9ff" font-family="Segoe UI, sans-serif" font-size="21" font-weight="600">待收纳项目</text>
+    <rect x="88" y="238" width="228" height="52" rx="13" fill="#1d304c"/>
+    <text x="108" y="270" fill="#dce9fa" font-family="Segoe UI, sans-serif" font-size="16">客户报价单.docx</text>
+    <rect x="88" y="302" width="228" height="52" rx="13" fill="#1d304c"/>
+    <text x="108" y="334" fill="#dce9fa" font-family="Segoe UI, sans-serif" font-size="16">旅行合照.png</text>
+    <rect x="88" y="366" width="228" height="52" rx="13" fill="#1d304c"/>
+    <text x="108" y="398" fill="#dce9fa" font-family="Segoe UI, sans-serif" font-size="16">项目资料</text>
+  </g>
+
+  <path d="M360 296h72" stroke="#5ad7ff" stroke-width="4" stroke-linecap="round"/>
+  <path d="m420 286 14 10-14 10" fill="none" stroke="#5ad7ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="454" y="146" width="292" height="300" rx="22" fill="#14233a" stroke="#304969"/>
+    <text x="484" y="194" fill="#f6f9ff" font-family="Segoe UI, sans-serif" font-size="21" font-weight="600">选择分区方式</text>
+    <rect x="484" y="226" width="232" height="82" rx="16" fill="#203753" stroke="#516c8e"/>
+    <circle cx="514" cy="256" r="10" fill="#5ad7ff"/>
+    <text x="538" y="262" fill="#f6f9ff" font-family="Segoe UI, sans-serif" font-size="18" font-weight="600">本地按类型</text>
+    <text x="514" y="290" fill="#aebed2" font-family="Segoe UI, sans-serif" font-size="14">离线、确定、永远可用</text>
+    <rect x="484" y="324" width="232" height="92" rx="16" fill="#252d5a" stroke="#7772ff"/>
+    <circle cx="514" cy="356" r="10" fill="#7772ff"/>
+    <text x="538" y="362" fill="#f6f9ff" font-family="Segoe UI, sans-serif" font-size="18" font-weight="600">DeepSeek 智能</text>
+    <text x="514" y="389" fill="#bfc6f3" font-family="Segoe UI, sans-serif" font-size="14">理解名称语义，失败自动回退</text>
+  </g>
+
+  <path d="M766 296h72" stroke="#7772ff" stroke-width="4" stroke-linecap="round"/>
+  <path d="m826 286 14 10-14 10" fill="none" stroke="#7772ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="862" y="146" width="274" height="300" rx="22" fill="#14233a" stroke="#304969"/>
+    <text x="892" y="194" fill="#f6f9ff" font-family="Segoe UI, sans-serif" font-size="21" font-weight="600">安全落入收纳盒</text>
+    <rect x="892" y="230" width="214" height="55" rx="14" fill="#1d304c"/>
+    <text x="916" y="264" fill="#dce9fa" font-family="Segoe UI, sans-serif" font-size="16">工作 · 1</text>
+    <rect x="892" y="297" width="214" height="55" rx="14" fill="#1d304c"/>
+    <text x="916" y="331" fill="#dce9fa" font-family="Segoe UI, sans-serif" font-size="16">图片 · 1</text>
+    <rect x="892" y="364" width="214" height="55" rx="14" fill="#1d304c"/>
+    <text x="916" y="398" fill="#dce9fa" font-family="Segoe UI, sans-serif" font-size="16">项目 · 1</text>
+  </g>
+
+  <rect x="384" y="466" width="432" height="32" rx="16" fill="#101d30" stroke="#2c4564"/>
+  <text x="600" y="488" text-anchor="middle" fill="#aebed2" font-family="Segoe UI, sans-serif" font-size="14">仅发送文件名、扩展名、类型 · 不发送完整路径与文件内容</text>
+</svg>

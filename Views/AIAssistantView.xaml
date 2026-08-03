@@ -42,6 +42,7 @@
                 Visibility="{Binding IsSettingsOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="180"/>
                     <ColumnDefinition Width="Auto"/>
@@ -50,27 +51,35 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <StackPanel Grid.ColumnSpan="3">
-                    <TextBlock Text="OpenAI API 配置"
+                <StackPanel Grid.ColumnSpan="4">
+                    <TextBlock Text="AI 服务配置"
                                Style="{StaticResource FocusSectionTitleText}"/>
                     <TextBlock Margin="0,4,0,12"
                                Style="{StaticResource FocusCaptionText}"
                                TextWrapping="Wrap"
-                               Text="API Key 使用 Windows DPAPI 加密，仅当前 Windows 用户可解密；不会显示或写入日志。ChatGPT 订阅不等同于 API Key。"/>
+                               Text="新设备默认使用 DeepSeek；旧版 OpenAI 凭据保持原提供方。API Key 使用 Windows DPAPI 加密，仅当前 Windows 用户可解密。"/>
                 </StackPanel>
+                <ComboBox Grid.Row="1"
+                          Style="{StaticResource FocusComboBox}"
+                          ItemsSource="{Binding AvailableProviders}"
+                          SelectedItem="{Binding SelectedProvider}"
+                          SelectionChanged="Provider_SelectionChanged"/>
                 <PasswordBox x:Name="ApiKeyBox"
                              Grid.Row="1"
+                             Grid.Column="1"
+                             Margin="10,0,0,0"
                              Style="{StaticResource FocusPasswordBox}"
-                             ToolTip="输入新的 OpenAI API Key"/>
+                             ToolTip="输入所选服务的 API Key"/>
                 <ComboBox Grid.Row="1"
-                          Grid.Column="1"
+                          Grid.Column="2"
                           Margin="10,0,0,0"
                           Style="{StaticResource FocusComboBox}"
                           ItemsSource="{Binding AvailableModels}"
                           SelectedItem="{Binding SelectedModel}"/>
                 <Button Grid.Row="1"
-                        Grid.Column="2"
+                        Grid.Column="3"
                         Margin="10,1,0,1"
                         Style="{StaticResource FocusPrimaryButton}"
                         MinWidth="88"
@@ -78,7 +87,7 @@
                         Click="CredentialAction_Click"
                         Command="{Binding SaveSettingsCommand}"/>
                 <StackPanel Grid.Row="2"
-                            Grid.ColumnSpan="3"
+                            Grid.ColumnSpan="4"
                             Margin="0,12,0,0"
                             Orientation="Horizontal">
                     <Button Style="{StaticResource FocusDangerButton}"
@@ -92,6 +101,13 @@
                                Style="{StaticResource FocusCaptionText}"
                                Text="更换 Key 时直接输入新值并保存；留空只更新模型。"/>
                 </StackPanel>
+                <CheckBox Grid.Row="3"
+                          Grid.ColumnSpan="4"
+                          Margin="2,12,0,0"
+                          Padding="2,5"
+                          IsChecked="{Binding SmartOrganizerEnabled}"
+                          Content="AI 智能分区（保留本地按类型分区作为另一种方式）"
+                          ToolTip="仅在收纳时发送文件名、扩展名和项目类型；不上传路径或文件内容。调用失败会自动使用本地分区。"/>
             </Grid>
         </Border>
 

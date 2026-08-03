@@ -38,6 +38,14 @@ public partial class AIAssistantView : UserControl
             viewModel.ApiKeyInput = ApiKeyBox.Password;
     }
 
+    private void Provider_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs e)
+    {
+        if (IsLoaded && ApiKeyBox.Password.Length > 0)
+            ApiKeyBox.Clear();
+    }
+
     private void OnMessagesChanged(
         object? sender,
         NotifyCollectionChangedEventArgs e)

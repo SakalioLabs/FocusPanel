@@ -31,7 +31,9 @@ public static class DesktopAutoOrganizePolicy
         !string.IsNullOrWhiteSpace(
             item.PreferredPartition)
             ? item.PreferredPartition
-            : GetPartitionName(item.FileType);
+            : !string.IsNullOrWhiteSpace(item.AiPartition)
+                ? item.AiPartition
+                : GetPartitionName(item.FileType);
 
     public static IReadOnlyList<DesktopAutoOrganizeItem>
         SelectCreatedItems(
@@ -226,7 +228,8 @@ public sealed record DesktopAutoOrganizeItem(
     bool IsCollected = false,
     bool NeedsRecovery = false,
     bool IsProtectedPanelLauncher = false,
-    string? PreferredPartition = null);
+    string? PreferredPartition = null,
+    string? AiPartition = null);
 
 public sealed record DesktopOrganizeResult(
     int Attempted,

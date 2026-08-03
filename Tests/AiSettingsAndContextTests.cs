@@ -16,7 +16,11 @@ public sealed class AiSettingsAndContextTests
         var protector = new PrefixProtector();
         var service = new AiSettingsService(store, protector);
 
-        await service.SaveAsync(" sk-example ", "gpt-test");
+        await service.SaveAsync(
+            " sk-example ",
+            "gpt-test",
+            AiProvider.OpenAi,
+            false);
 
         AiSettingsState state = await service.LoadStateAsync();
         Assert.True(state.HasApiKey);
@@ -25,7 +29,11 @@ public sealed class AiSettingsAndContextTests
         Assert.Equal("sk-example", await service.LoadApiKeyAsync());
         Assert.Equal("gpt-test", state.Model);
 
-        await service.SaveAsync(string.Empty, "gpt-next");
+        await service.SaveAsync(
+            string.Empty,
+            "gpt-next",
+            AiProvider.OpenAi,
+            false);
 
         Assert.Equal("sk-example", await service.LoadApiKeyAsync());
         Assert.Equal(
@@ -40,7 +48,11 @@ public sealed class AiSettingsAndContextTests
         var service = new AiSettingsService(
             store,
             new PrefixProtector());
-        await service.SaveAsync("key", "gpt-test");
+        await service.SaveAsync(
+            "key",
+            "gpt-test",
+            AiProvider.OpenAi,
+            false);
 
         await service.ClearApiKeyAsync();
 
@@ -48,6 +60,55 @@ public sealed class AiSettingsAndContextTests
         Assert.False(state.HasApiKey);
         Assert.Null(await service.LoadApiKeyAsync());
         Assert.Equal("gpt-test", state.Model);
+    }
+
+    [Fact]
+    public async Task FreshSettings_DefaultToDeepSeekWithoutMigratingOpenAiKey()
+    {
+        var store = new MemoryConfigStore();
+        var service = new AiSettingsService(
+            store,
+            new PrefixProtector());
+
+        AiSettingsState fresh = await service.LoadStateAsync();
+        Assert.Equal(AiProvider.DeepSeek, fresh.Provider);
+        Assert.Equal("deepseek-v4-flash", fresh.Model);
+
+        store.Write(
+            AiSettingsService.ApiKeyConfigKey,
+            "protected:legacy-openai");
+        AiSettingsState legacy = await service.LoadStateAsync();
+        Assert.Equal(AiProvider.OpenAi, legacy.Provider);
+        Assert.Equal(
+            "legacy-openai",
+            await service.LoadApiKeyAsync());
+    }
+
+    [Fact]
+    public async Task ProviderKeysRemainStrictlySeparated()
+    {
+        var store = new MemoryConfigStore();
+        var service = new AiSettingsService(
+            store,
+            new PrefixProtector());
+        await service.SaveAsync(
+            "deepseek-key",
+            "deepseek-v4-flash",
+            AiProvider.DeepSeek,
+            true);
+        await service.SaveAsync(
+            "openai-key",
+            "gpt-5.6-sol",
+            AiProvider.OpenAi,
+            true);
+
+        Assert.Equal("openai-key", await service.LoadApiKeyAsync());
+        Assert.Equal(
+            "protected:deepseek-key",
+            store.Values[AiSettingsService.DeepSeekApiKeyConfigKey]);
+        Assert.Equal(
+            "protected:openai-key",
+            store.Values[AiSettingsService.ApiKeyConfigKey]);
     }
 
     [Fact]

@@ -173,12 +173,19 @@ public sealed class AIAssistantViewModelTests
 
         public Task<AiSettingsState> SaveAsync(
             string apiKey,
-            string model)
+            string model,
+            string provider,
+            bool smartOrganizerEnabled)
         {
             if (!string.IsNullOrWhiteSpace(apiKey))
                 ApiKey = apiKey;
             Model = model;
-            return LoadStateAsync();
+            return Task.FromResult(
+                new AiSettingsState(
+                    !string.IsNullOrWhiteSpace(ApiKey),
+                    Model,
+                    provider,
+                    smartOrganizerEnabled));
         }
 
         public Task ClearApiKeyAsync()
@@ -222,8 +229,15 @@ public sealed class AIAssistantViewModelTests
 
         public Task<AiSettingsState> SaveAsync(
             string apiKey,
-            string model) =>
-            Task.FromResult(new AiSettingsState(true, model));
+            string model,
+            string provider,
+            bool smartOrganizerEnabled) =>
+            Task.FromResult(
+                new AiSettingsState(
+                    true,
+                    model,
+                    provider,
+                    smartOrganizerEnabled));
 
         public Task ClearApiKeyAsync() =>
             Task.CompletedTask;
