@@ -148,6 +148,9 @@ public sealed class AIAssistantViewModelTests
         await viewModel.SendCommand.ExecuteAsync(null);
 
         Assert.Equal(1, agent.PlanCount);
+        Assert.Equal(
+            "帮我智能分区已收纳的项目",
+            agent.LastInstruction);
         Assert.Equal(0, agent.ApplyCount);
         Assert.True(viewModel.HasPendingAgentAction);
         Assert.Contains("文档 → 工作", viewModel.AgentActionPreview);
@@ -292,12 +295,15 @@ public sealed class AIAssistantViewModelTests
     {
         internal int PlanCount { get; private set; }
         internal int ApplyCount { get; private set; }
+        internal string? LastInstruction { get; private set; }
         public event Action<int>? Applied;
 
         public Task<SmartPartitionPlan> CreatePlanAsync(
+            string? userInstruction = null,
             CancellationToken cancellationToken = default)
         {
             PlanCount++;
+            LastInstruction = userInstruction;
             return Task.FromResult(
                 new SmartPartitionPlan(
                     new[]
@@ -306,7 +312,9 @@ public sealed class AIAssistantViewModelTests
                             1,
                             "报价.docx",
                             "文档",
-                            "工作")
+                            "工作",
+                            0.91,
+                            "客户报价属于工作资料")
                     },
                     1,
                     "建议移动 1 个项目"));

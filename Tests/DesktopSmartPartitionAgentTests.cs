@@ -63,4 +63,21 @@ public sealed class DesktopSmartPartitionAgentTests
                         new[] { "文档", "工作", "其他" },
                         StringComparer.OrdinalIgnoreCase)));
     }
+
+    [Theory]
+    [InlineData(0.67, false)]
+    [InlineData(0.68, true)]
+    [InlineData(0.95, true)]
+    public void ConfidencePolicy_KeepsUncertainItemsInPlace(
+        double confidence,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            DesktopSmartPartitionAgent.ShouldApplyDecision(
+                new AiDesktopPartitionDecision(
+                    "工作",
+                    confidence,
+                    "测试理由")));
+    }
 }

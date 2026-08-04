@@ -1040,7 +1040,11 @@ public partial class FileOrganizerViewModel :
             string preview = string.Join(
                 Environment.NewLine,
                 plan.Assignments.Take(12).Select(item =>
-                    $"• {item.FileName}：{item.SourcePartition} → {item.TargetPartition}"));
+                    $"• {item.FileName}：{item.SourcePartition} → {item.TargetPartition}"
+                    + $"（{item.Confidence:P0}）"
+                    + (string.IsNullOrWhiteSpace(item.Reason)
+                        ? string.Empty
+                        : $" · {item.Reason}")));
             if (plan.Assignments.Count > 12)
             {
                 preview += Environment.NewLine

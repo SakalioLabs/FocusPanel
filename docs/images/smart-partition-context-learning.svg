@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="420" viewBox="0 0 1160 420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="1" stop-color="#18283d"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#64b5ff"/>
+      <stop offset="1" stop-color="#8c7dff"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-opacity=".25"/></filter>
+  </defs>
+  <rect width="1160" height="420" rx="28" fill="url(#bg)"/>
+  <text x="48" y="62" fill="#f4f8ff" font-family="Segoe UI, sans-serif" font-size="28" font-weight="600">智能分区现在理解你的现有布局</text>
+  <text x="48" y="92" fill="#9fb0c6" font-family="Segoe UI, sans-serif" font-size="15">当前分区成为上下文样例 · 聊天偏好真正参与 · 不确定时保持原位</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="126" width="270" height="236" rx="20" fill="#213047" stroke="#354963"/>
+    <text x="72" y="160" fill="#c9d8ea" font-family="Segoe UI, sans-serif" font-size="14">现有未锁定收纳盒</text>
+    <rect x="72" y="180" width="222" height="48" rx="12" fill="#2b3d56"/>
+    <text x="90" y="210" fill="#f1f6fd" font-family="Segoe UI, sans-serif" font-size="16">工作 · 报价 / 合同 / 项目</text>
+    <rect x="72" y="240" width="222" height="48" rx="12" fill="#2b3d56"/>
+    <text x="90" y="270" fill="#f1f6fd" font-family="Segoe UI, sans-serif" font-size="16">学习 · 课程 / 论文 / 笔记</text>
+    <rect x="72" y="300" width="222" height="38" rx="12" fill="#162234" stroke="#426181"/>
+    <text x="90" y="324" fill="#9fcfff" font-family="Segoe UI, sans-serif" font-size="14">聊天偏好：客户资料放工作</text>
+  </g>
+
+  <path d="M338 244 H414" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M405 234 L418 244 L405 254" fill="none" stroke="#817fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="438" y="126" width="276" height="236" rx="20" fill="#202e44" stroke="#4d5e85"/>
+    <circle cx="480" cy="171" r="19" fill="url(#accent)"/>
+    <path d="M471 171h18M480 162v18" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="512" y="178" fill="#f4f8ff" font-family="Segoe UI, sans-serif" font-size="19" font-weight="600">上下文规划</text>
+    <text x="466" y="221" fill="#bdcbe0" font-family="Segoe UI, sans-serif" font-size="15">1. 推断每个收纳盒的用途</text>
+    <text x="466" y="254" fill="#bdcbe0" font-family="Segoe UI, sans-serif" font-size="15">2. 识别明显放错的项目</text>
+    <text x="466" y="287" fill="#bdcbe0" font-family="Segoe UI, sans-serif" font-size="15">3. 输出目标、置信度与理由</text>
+    <rect x="466" y="313" width="220" height="28" rx="9" fill="#172236"/>
+    <text x="482" y="332" fill="#8fa4be" font-family="Segoe UI, sans-serif" font-size="12">完整路径和文件内容不会发送</text>
+  </g>
+
+  <path d="M734 244 H810" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M801 234 L814 244 L801 254" fill="none" stroke="#817fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="834" y="126" width="278" height="236" rx="20" fill="#213047" stroke="#354963"/>
+    <text x="858" y="161" fill="#c9d8ea" font-family="Segoe UI, sans-serif" font-size="14">确认前预览</text>
+    <text x="858" y="202" fill="#f3f7fd" font-family="Segoe UI, sans-serif" font-size="16">客户报价.docx</text>
+    <text x="858" y="231" fill="#9fb0c6" font-family="Segoe UI, sans-serif" font-size="14">文档 → 工作</text>
+    <rect x="858" y="249" width="230" height="8" rx="4" fill="#34445b"/>
+    <rect x="858" y="249" width="207" height="8" rx="4" fill="url(#accent)"/>
+    <text x="858" y="286" fill="#9fcfff" font-family="Segoe UI, sans-serif" font-size="13">置信度 90% · 客户报价属于工作资料</text>
+    <rect x="858" y="310" width="110" height="32" rx="11" fill="#33445b"/>
+    <text x="893" y="331" fill="#c6d3e3" font-family="Segoe UI, sans-serif" font-size="13">取消</text>
+    <rect x="978" y="310" width="110" height="32" rx="11" fill="url(#accent)"/>
+    <text x="1007" y="331" fill="white" font-family="Segoe UI, sans-serif" font-size="13" font-weight="600">应用分区</text>
+  </g>
+</svg>

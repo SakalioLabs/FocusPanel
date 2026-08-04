@@ -81,6 +81,92 @@ public sealed class AiDesktopPartitionServiceTests
                 item with { AiPartition = "工作" }));
     }
 
+    [Fact]
+    public async Task ExplicitPlan_SendsCurrentLayoutAndUserPreference()
+    {
+        var assistant = new FakeAssistant(
+            """{"assignments":[{"id":0,"partition":"工作","confidence":0.92,"reason":"客户报价属于工作资料"}]}""");
+        var service = new AiDesktopPartitionService(
+            new FakeSettings(true, "key"),
+            assistant,
+            new FakeCatalog("文档", "工作"));
+        var item = new DesktopAutoOrganizeItem(
+            "客户报价单.docx",
+            @"C:\Users\someone\Desktop\客户报价单.docx",
+            "Document",
+            CurrentPartition: "文档",
+            SemanticHint: "报价工具");
+
+        IReadOnlyDictionary<string, AiDesktopPartitionDecision> result =
+            await service.ResolveExplicitPlanAsync(
+                new[] { item },
+                new[] { "文档", "工作" },
+                "客户资料统一放到工作区");
+
+        Assert.Equal("工作", result[item.FullPath].Partition);
+        Assert.Equal(0.92, result[item.FullPath].Confidence, 2);
+        Assert.Equal("客户报价属于工作资料", result[item.FullPath].Reason);
+        Assert.Contains("currentPartition", assistant.Input);
+        Assert.Contains("文档", assistant.Input);
+        Assert.Contains("客户资料统一放到工作区", assistant.Input);
+        Assert.Contains("报价工具", assistant.Input);
+        Assert.DoesNotContain("C:\\Users", assistant.Input);
+    }
+
+    [Fact]
+    public async Task ExplicitPlan_BatchesAllItemsInsteadOfDroppingAfterEighty()
+    {
+        var assistant = new FakeAssistant(
+            """{"assignments":[{"id":0,"partition":"工作","confidence":0.9,"reason":"测试"}]}""");
+        var service = new AiDesktopPartitionService(
+            new FakeSettings(true, "key"),
+            assistant,
+            new FakeCatalog("文档", "工作"));
+        var items = new List<DesktopAutoOrganizeItem>();
+        for (int index = 0; index < 81; index++)
+        {
+            items.Add(new DesktopAutoOrganizeItem(
+                $"项目{index}.txt",
+                $@"C:\Desktop\项目{index}.txt",
+                "Document",
+                CurrentPartition: "文档"));
+        }
+
+        IReadOnlyDictionary<string, AiDesktopPartitionDecision> result =
+            await service.ResolveExplicitPlanAsync(
+                items,
+                new[] { "文档", "工作" });
+
+        Assert.Equal(2, assistant.CallCount);
+        Assert.Equal(2, result.Count);
+        Assert.Contains(items[0].FullPath, result.Keys);
+        Assert.Contains(items[80].FullPath, result.Keys);
+    }
+
+    [Fact]
+    public void DecisionParser_RejectsUnknownPartitionAndInvalidConfidence()
+    {
+        var item = new DesktopAutoOrganizeItem(
+            "one.txt",
+            @"C:\Desktop\one.txt",
+            "Document",
+            CurrentPartition: "文档");
+
+        IReadOnlyDictionary<string, AiDesktopPartitionDecision> unknown =
+            AiDesktopPartitionService.ParseDecisionResponse(
+                """{"assignments":[{"id":0,"partition":"不存在","confidence":0.9,"reason":"猜测"}]}""",
+                new[] { item },
+                new[] { "文档", "工作" });
+        IReadOnlyDictionary<string, AiDesktopPartitionDecision> invalid =
+            AiDesktopPartitionService.ParseDecisionResponse(
+                """{"assignments":[{"id":0,"partition":"工作","confidence":"high","reason":"猜测"}]}""",
+                new[] { item },
+                new[] { "文档", "工作" });
+
+        Assert.Empty(unknown);
+        Assert.Empty(invalid);
+    }
+
     private sealed class FakeSettings : IAiSettingsService
     {
         private readonly bool _enabled;

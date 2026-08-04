@@ -14,12 +14,15 @@ internal sealed record SmartPartitionAssignment(
     int PreferenceId,
     string FileName,
     string SourcePartition,
-    string TargetPartition);
+    string TargetPartition,
+    double Confidence = 1,
+    string Reason = "");
 
 internal sealed record SmartPartitionPlan(
     IReadOnlyList<SmartPartitionAssignment> Assignments,
     int CandidateCount,
-    string Message)
+    string Message,
+    int LowConfidenceCount = 0)
 {
     internal bool HasChanges => Assignments.Count > 0;
 }
@@ -29,6 +32,7 @@ internal interface IDesktopSmartPartitionAgent
     event Action<int>? Applied;
 
     Task<SmartPartitionPlan> CreatePlanAsync(
+        string? userInstruction = null,
         CancellationToken cancellationToken = default);
 
     Task<int> ApplyAsync(
@@ -39,6 +43,7 @@ internal interface IDesktopSmartPartitionAgent
 internal sealed class DesktopSmartPartitionAgent :
     IDesktopSmartPartitionAgent
 {
+    private const double MinimumConfidence = 0.68;
     internal static DesktopSmartPartitionAgent Shared { get; } =
         new();
 
@@ -68,6 +73,7 @@ internal sealed class DesktopSmartPartitionAgent :
     public event Action<int>? Applied;
 
     public async Task<SmartPartitionPlan> CreatePlanAsync(
+        string? userInstruction = null,
         CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);
@@ -96,20 +102,30 @@ internal sealed class DesktopSmartPartitionAgent :
                     "未找到位于未锁定收纳盒中的已收纳项目。");
             }
 
-            IReadOnlyDictionary<string, string> resolved =
-                await _ai.ResolveExplicitAsync(
+            IReadOnlyDictionary<string, AiDesktopPartitionDecision> resolved =
+                await _ai.ResolveExplicitPlanAsync(
                     snapshot.Items.Select(item => item.Item).ToArray(),
                     snapshot.Partitions,
+                    userInstruction,
                     cancellationToken);
             var assignments = new List<SmartPartitionAssignment>();
+            int lowConfidence = 0;
             foreach (SmartPartitionCandidate candidate in snapshot.Items)
             {
                 if (!resolved.TryGetValue(
                         candidate.Item.FullPath,
-                        out string? target)
-                    || string.Equals(
+                        out AiDesktopPartitionDecision? decision))
+                {
+                    continue;
+                }
+                if (!ShouldApplyDecision(decision))
+                {
+                    lowConfidence++;
+                    continue;
+                }
+                if (string.Equals(
                         candidate.SourcePartition,
-                        target,
+                        decision.Partition,
                         StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
@@ -119,18 +135,28 @@ internal sealed class DesktopSmartPartitionAgent :
                         candidate.PreferenceId,
                         candidate.Item.Name,
                         candidate.SourcePartition,
-                        target));
+                        decision.Partition,
+                        decision.Confidence,
+                        decision.Reason));
             }
 
             return assignments.Count == 0
                 ? new SmartPartitionPlan(
                     Array.Empty<SmartPartitionAssignment>(),
                     snapshot.Items.Count,
-                    "AI 已检查未锁定收纳盒，没有建议需要移动的项目。")
+                    lowConfidence > 0
+                        ? $"AI 已检查未锁定收纳盒；{lowConfidence} 个低置信度建议保持原位。"
+                        : "AI 已检查未锁定收纳盒，没有建议需要移动的项目。",
+                    lowConfidence)
                 : new SmartPartitionPlan(
                     assignments,
                     snapshot.Items.Count,
-                    $"AI 建议调整 {assignments.Count} 个项目；锁定收纳盒未参与。只会修改分类数据。" );
+                    $"AI 建议调整 {assignments.Count} 个项目；"
+                    + (lowConfidence > 0
+                        ? $"另有 {lowConfidence} 个低置信度项目保持原位；"
+                        : string.Empty)
+                    + "锁定收纳盒未参与。只会修改分类数据。",
+                    lowConfidence);
         }
         finally
         {
@@ -185,7 +211,6 @@ internal sealed class DesktopSmartPartitionAgent :
                         == DesktopVisibilityOperation.Stable)
                 .ToArray()
                 .Where(item => allowed.Contains(item.PartitionName))
-                .Take(80)
                 .Select(CreateCandidate)
                 .ToArray();
         return new SmartPartitionCandidateSnapshot(
@@ -206,13 +231,41 @@ internal sealed class DesktopSmartPartitionAgent :
             ? "Folder"
             : FileOrganizerService.ClassifyFileStatic(
                 Path.GetExtension(preference.FilePath));
+        string? semanticHint = GetSemanticHint(path);
         return new SmartPartitionCandidate(
             preference.Id,
             preference.PartitionName,
             new DesktopAutoOrganizeItem(
                 preference.FilePath,
                 path,
-                type));
+                type,
+                CurrentPartition: preference.PartitionName,
+                SemanticHint: semanticHint));
+    }
+
+    private static string? GetSemanticHint(string path)
+    {
+        if (!string.Equals(
+                Path.GetExtension(path),
+                ".lnk",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        ShortcutIdentity identity =
+            new WindowsAppIdentityNative().ResolveShortcut(path);
+        string? targetName = string.IsNullOrWhiteSpace(identity.ExecutablePath)
+            ? null
+            : Path.GetFileNameWithoutExtension(identity.ExecutablePath);
+        string? appId = string.IsNullOrWhiteSpace(identity.ApplicationUserModelId)
+            ? null
+            : identity.ApplicationUserModelId;
+        string hint = string.Join(
+            " · ",
+            new[] { targetName, appId }
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+        return hint.Length == 0 ? null : hint;
     }
 
     private static SmartPartitionPlan Empty(string message) =>
@@ -220,6 +273,10 @@ internal sealed class DesktopSmartPartitionAgent :
             Array.Empty<SmartPartitionAssignment>(),
             0,
             message);
+
+    internal static bool ShouldApplyDecision(
+        AiDesktopPartitionDecision decision) =>
+        decision.Confidence >= MinimumConfidence;
 
     private void NotifyApplied(int changed)
     {

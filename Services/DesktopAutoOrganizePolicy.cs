@@ -229,7 +229,9 @@ public sealed record DesktopAutoOrganizeItem(
     bool NeedsRecovery = false,
     bool IsProtectedPanelLauncher = false,
     string? PreferredPartition = null,
-    string? AiPartition = null);
+    string? AiPartition = null,
+    string? CurrentPartition = null,
+    string? SemanticHint = null);
 
 public sealed record DesktopOrganizeResult(
     int Attempted,

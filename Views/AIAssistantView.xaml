@@ -108,7 +108,7 @@
                           Padding="2,5"
                           IsChecked="{Binding SmartOrganizerEnabled}"
                           Content="自动收纳新增项目时优先使用 AI"
-                          ToolTip="工具栏和聊天中的手动智能分区不受此开关限制；只发送文件名、扩展名和项目类型。"/>
+                          ToolTip="工具栏和聊天中的手动智能分区不受此开关限制；发送文件名、类型、当前收纳盒及快捷方式的目标应用名，不发送完整路径或内容。"/>
             </Grid>
         </Border>
 

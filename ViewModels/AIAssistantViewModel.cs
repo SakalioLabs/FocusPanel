@@ -186,6 +186,7 @@ public partial class AIAssistantViewModel :
             if (SmartPartitionAgentIntent.IsRequested(userText))
             {
                 await PrepareSmartPartitionActionAsync(
+                    userText,
                     _requestCancellation.Token);
                 return;
             }
@@ -306,11 +307,13 @@ public partial class AIAssistantViewModel :
     }
 
     private async Task PrepareSmartPartitionActionAsync(
+        string userInstruction,
         CancellationToken cancellationToken)
     {
         StatusText = "正在生成智能分区预览…";
         SmartPartitionPlan plan =
             await _smartPartitionAgent.CreatePlanAsync(
+                userInstruction,
                 cancellationToken);
         _pendingSmartPartitionPlan = plan.HasChanges
             ? plan
@@ -385,7 +388,11 @@ public partial class AIAssistantViewModel :
         string preview = string.Join(
             Environment.NewLine,
             plan.Assignments.Take(8).Select(item =>
-                $"• {item.FileName}：{item.SourcePartition} → {item.TargetPartition}"));
+                $"• {item.FileName}：{item.SourcePartition} → {item.TargetPartition}"
+                + $"（{item.Confidence:P0}）"
+                + (string.IsNullOrWhiteSpace(item.Reason)
+                    ? string.Empty
+                    : $" · {item.Reason}")));
         if (plan.Assignments.Count > 8)
         {
             preview += Environment.NewLine
