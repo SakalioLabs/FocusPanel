@@ -253,6 +253,7 @@ public sealed class TaskbarController : ITaskbarController
         bool visibilityRestored = taskbar != IntPtr.Zero;
         bool surfaceRestored = taskbar != IntPtr.Zero;
         bool cloakRestored = taskbar != IntPtr.Zero;
+        bool appBarRestored = state == null;
         if (taskbar != IntPtr.Zero)
         {
             if (state?.UsesEmptyWindowRegion == true
@@ -284,10 +285,19 @@ public sealed class TaskbarController : ITaskbarController
             }
 
             if (state != null)
+            {
                 native.SetAppBarState(taskbar, state.OriginalAppBarState);
+                appBarRestored =
+                    native.GetAppBarState(taskbar)
+                    == state.OriginalAppBarState;
+            }
 
             bool shouldBeVisible = state == null || state.TaskbarWasVisible;
-            visibilityRestored = false;
+            bool originalUsesAutoHide =
+                state != null
+                && (state.OriginalAppBarState & AbsAutoHide) != 0;
+            visibilityRestored = originalUsesAutoHide
+                && appBarRestored;
             for (int attempt = 0; attempt < 3; attempt++)
             {
                 if (native.SetTaskbarVisible(taskbar, shouldBeVisible)
@@ -302,6 +312,7 @@ public sealed class TaskbarController : ITaskbarController
         if (!workAreaRestored
             || !surfaceRestored
             || !cloakRestored
+            || !appBarRestored
             || !visibilityRestored)
             return;
 
@@ -590,48 +601,34 @@ public sealed class TaskbarController : ITaskbarController
             return false;
         }
 
-        if (_state?.UsesEmptyWindowRegion == true
-            && !_native.IsTaskbarSurfaceSuppressed(
-                taskbar))
+        bool surfaceSuppressed =
+            _state?.UsesEmptyWindowRegion == true
+            && _native.IsTaskbarSurfaceSuppressed(taskbar);
+        bool cloakSuppressed =
+            _state?.UsesDwmCloak == true
+            && _native.TryGetTaskbarAppCloaked(
+                taskbar,
+                out bool appCloaked)
+            && appCloaked;
+        bool windowHidden = !_native.IsWindowVisible(taskbar);
+        if (!surfaceSuppressed
+            && !cloakSuppressed
+            && !windowHidden)
         {
             _lastApplyError =
-                "Windows 已恢复原生任务栏的显示与命中区域";
-            _lastStopReason = TaskbarReplacementStopReason.WindowsTaskbarReappeared;
-            return false;
-        }
-
-        if (_state?.UsesDwmCloak == true
-            && (!_native.TryGetTaskbarAppCloaked(
-                    taskbar,
-                    out bool appCloaked)
-                || !appCloaked))
-        {
-            _lastApplyError =
-                "Windows 已恢复原生任务栏的 DWM 合成表面";
+                "Windows 已恢复原生任务栏的全部呈现层";
             _lastStopReason =
                 TaskbarReplacementStopReason
                     .WindowsTaskbarReappeared;
             return false;
         }
 
-        if (_state is
-                {
-                    UsesEmptyWindowRegion: false,
-                    UsesDwmCloak: false
-                }
-            && _native.IsWindowVisible(taskbar))
+        if ((_native.GetAppBarState(taskbar) & AbsAutoHide) != 0
+            && !surfaceSuppressed
+            && !cloakSuppressed)
         {
             _lastApplyError =
-                "Windows 已重新显示原生任务栏窗口";
-            _lastStopReason =
-                TaskbarReplacementStopReason
-                    .WindowsTaskbarReappeared;
-            return false;
-        }
-
-        if ((_native.GetAppBarState(taskbar) & AbsAutoHide) != 0)
-        {
-            _lastApplyError = "Windows 已重新启用原生任务栏的边缘呼出";
+                "Windows 已重新启用原生任务栏的边缘呼出，且呈现抑制层已经失效";
             _lastStopReason = TaskbarReplacementStopReason.Unknown;
             return false;
         }

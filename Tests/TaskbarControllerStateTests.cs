@@ -472,7 +472,10 @@ public sealed class TaskbarControllerStateTests
             "FocusPanel.Tests",
             Guid.NewGuid().ToString("N"));
         string sessionFile = Path.Combine(directory, "taskbar-session.json");
-        var native = new FakeTaskbarNativeApi();
+        var native = new FakeTaskbarNativeApi
+        {
+            AppBarState = 2
+        };
 
         try
         {
@@ -489,6 +492,45 @@ public sealed class TaskbarControllerStateTests
 
             Assert.True(File.Exists(sessionFile));
             Assert.False(native.Visible);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void AutoHideRestore_ClearsSessionWithoutRequiringStableWindowVisibility()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi
+        {
+            AppBarState = 1
+        };
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            native.VisibilityWritesSucceed = false;
+
+            controller.Restore();
+
+            Assert.Equal((uint)1, native.AppBarState);
+            Assert.False(native.TaskbarSurfaceSuppressed);
+            Assert.False(native.TaskbarAppCloaked);
+            Assert.False(File.Exists(sessionFile));
         }
         finally
         {
@@ -789,6 +831,8 @@ public sealed class TaskbarControllerStateTests
             Assert.True(controller.TryEnableReplacement(out _));
             native.AppBarState = 3;
             native.SetAppBarStateSucceeds = false;
+            native.TaskbarSurfaceSuppressed = false;
+            native.TaskbarAppCloaked = false;
 
             controller.RunGuardOnceForTests();
 
@@ -847,7 +891,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void LostTaskbarSurfaceSuppression_StopsWithoutRewriteLoop()
+    public void LostTaskbarSurfaceSuppression_RemainsProtectedByDwmCloak()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -880,18 +924,12 @@ public sealed class TaskbarControllerStateTests
 
             controller.RunGuardOnceForTests();
 
-            Assert.False(
+            Assert.True(
                 controller.IsReplacementEnabled);
-            Assert.NotNull(stopped);
+            Assert.Null(stopped);
+            Assert.True(native.TaskbarAppCloaked);
             Assert.Equal(
-                TaskbarReplacementStopReason
-                    .WindowsTaskbarReappeared,
-                stopped.Reason);
-            Assert.Contains(
-                "显示与命中区域",
-                stopped.Message);
-            Assert.Equal(
-                writes + 1,
+                writes,
                 native.SurfaceSuppressionWriteCount);
         }
         finally
@@ -998,7 +1036,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void LostDwmCloak_StopsWithoutRewriteLoop()
+    public void LostDwmCloak_RemainsProtectedByEmptyWindowRegion()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -1029,19 +1067,60 @@ public sealed class TaskbarControllerStateTests
 
             controller.RunGuardOnceForTests();
 
-            Assert.False(
+            Assert.True(
                 controller.IsReplacementEnabled);
+            Assert.Null(stopped);
+            Assert.True(native.TaskbarSurfaceSuppressed);
+            Assert.Equal(
+                writes,
+                native.CloakWriteCount);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void AllPresentationLayersLost_StopsOnlyAfterTaskbarActuallyReappears()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller = new TaskbarController(
+                native,
+                new FakeWatchdogLauncher(),
+                sessionFile);
+            TaskbarReplacementStoppedEvent? stopped = null;
+            controller.ReplacementStopped += value => stopped = value;
+
+            Assert.True(controller.TryEnableReplacement(out _));
+            native.TaskbarSurfaceSuppressed = false;
+            native.TaskbarAppCloaked = false;
+
+            controller.RunGuardOnceForTests();
+
+            Assert.True(controller.IsReplacementEnabled);
+            Assert.Null(stopped);
+
+            native.Visible = true;
+            controller.RunGuardOnceForTests();
+
+            Assert.False(controller.IsReplacementEnabled);
             Assert.NotNull(stopped);
             Assert.Equal(
-                TaskbarReplacementStopReason
-                    .WindowsTaskbarReappeared,
+                TaskbarReplacementStopReason.WindowsTaskbarReappeared,
                 stopped.Reason);
-            Assert.Contains(
-                "DWM 合成表面",
-                stopped.Message);
-            Assert.Equal(
-                writes + 1,
-                native.CloakWriteCount);
+            Assert.Contains("全部呈现层", stopped.Message);
         }
         finally
         {
