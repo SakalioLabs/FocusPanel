@@ -157,6 +157,30 @@ public sealed class AIAssistantViewModelTests
     }
 
     [Fact]
+    public async Task NaturalIconSortingPhrase_RoutesToPartitionAgent()
+    {
+        var agent = new FakeSmartPartitionAgent();
+        using var viewModel = new AIAssistantViewModel(
+            new FakeAssistant(),
+            new FakeSettings(),
+            new FakeContext(),
+            agent)
+        {
+            Prompt = "帮我继续把那二十几个应用程序图标分下区"
+        };
+        await viewModel.InitializationTask;
+
+        await viewModel.SendCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, agent.PlanCount);
+        Assert.Equal(0, agent.ApplyCount);
+        Assert.Equal(
+            "帮我继续把那二十几个应用程序图标分下区",
+            agent.LastInstruction);
+        Assert.True(viewModel.HasPendingAgentAction);
+    }
+
+    [Fact]
     public async Task ConfirmedChatSmartPartition_AppliesSharedAgentPlan()
     {
         var agent = new FakeSmartPartitionAgent();

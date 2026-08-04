@@ -311,18 +311,36 @@ internal static class SmartPartitionAgentIntent
     internal static bool IsRequested(string text)
     {
         string value = text.Trim();
-        if (!value.Contains("分区", StringComparison.OrdinalIgnoreCase)
-            && !value.Contains("收纳盒", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
         string[] actions =
         {
             "智能分区", "重新分区", "帮我分区", "整理分区",
             "调整分区", "重新整理收纳盒", "智能整理收纳盒"
         };
-        return actions.Any(action =>
+        if (actions.Any(action =>
+                value.Contains(action, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        string[] organizerObjects =
+        {
+            "桌面图标", "应用程序图标", "应用图标", "这些图标",
+            "那些图标", "桌面文件", "这些文件", "那些文件",
+            "已收纳", "收纳项目", "收纳盒"
+        };
+        if (!organizerObjects.Any(item =>
+                value.Contains(item, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        string[] organizerActions =
+        {
+            "分类", "归类", "分到", "归到", "放到", "整理",
+            "重新分", "继续分", "继续整理", "分一下区",
+            "分下区", "分个区"
+        };
+        return organizerActions.Any(action =>
             value.Contains(action, StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -1,5 +1,7 @@
 # FocusPanel
 
+> 0.11.17 修复 AI 助手把“继续把应用程序图标分下区”误当成普通聊天的问题。“分下区、分类、归类、继续整理”等自然说法只要明确指向桌面图标、文件或收纳项目，就会直接进入受控分区 Agent，读取现有未锁定收纳布局并生成待确认预览，不再要求用户重复提供截图或图标清单；硬盘分区等无关语义不会误触。
+
 > 0.11.16 修复“底部悬停重新呼出 Windows 任务栏，同时 FocusPanel 显示已安全恢复”：任务栏原本启用自动隐藏时，遗留恢复会话现在可以正确完成并清理；接管守护按空区域、DWM cloak 与窗口隐藏的整体结果判断，不再因单层瞬时失效就退出。只有所有抑制层都失效且原生任务栏实际重新出现时才安全恢复，过程中不循环隐藏、不反复写工作区。
 
 > 0.11.15 将智能分区从“按文件名猜测”升级为上下文规划：模型会看到项目当前所在的未锁定收纳盒，从整组布局推断你的分类习惯；聊天中输入的整理要求会进入本次计划。每条建议显示置信度与理由，低于 68% 的不确定项目保持原位，确认前仍不会修改任何分类数据。
@@ -645,7 +647,7 @@ dotnet run --project FocusPanel.csproj
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\package-release.ps1 `
-  -Version 0.11.16 `
+  -Version 0.11.17 `
   -Dotnet8Path dotnet `
   -PublishDotnetPath dotnet
 ```
@@ -657,7 +659,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 - `FocusPanel-win-Setup.exe`：个人设备唯一推荐入口。双击后必须先出现“选择 FocusPanel 安装位置”窗口，可直接输入或浏览到 D/E 盘任意绝对目录；如果没有看到这个窗口，说明运行的不是当前发布包，请删除旧下载后从 Latest Release 重新下载。向导同时设置 MSI 的 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`，安装完成后直接检查所选根目录下的 `current\FocusPanel.exe`，不再依赖 MSI 可能使用 GUID 的卸载注册项；程序若实际落到其他盘会明确报出所选目录和检测目录，绝不把返回代码 0 当成成功。有至少 512MB 可用空间的非系统固定盘时优先推荐其中剩余空间最大的一块；否则才回退当前用户目录。旧版识别会同时枚举 Velopack 名称项和 MSI GUID 项；若旧版位于另一目录，向导会先确认、等待旧卸载注册和程序文件真正释放，再安装到新位置。任务、收纳记录和设置保留在用户 AppData。
 - 安装器只把真实存在 `current\FocusPanel.exe` 或根目录程序文件的位置视为有效旧版；只剩卸载注册或 `Update.exe` 缓存的 C 盘记录不会再预填或锁定目标。有效旧版位于系统盘且 D/E 等非系统固定盘可用时，0.10.71 起直接预选空间最大的非系统盘；确认后通过旧版正式卸载器或 Windows Installer 注销残留，再开始新安装。残留无法安全清理时中止，不会静默回退 C 盘；最终落盘与所选目录不一致时会自动尝试撤销错误安装。
 - `FocusPanel-win.msi`：标准 Windows Installer，负责当前用户/整机范围与企业部署；任意路径的无人值守部署应同时传入 `VELOPACK_INSTALLDIR` 与 `INSTALLFOLDER`。
-- `FocusPanel-0.11.16-full.nupkg`：完整更新包。
+- `FocusPanel-0.11.17-full.nupkg`：完整更新包。
 - `releases.win.json` 和 `RELEASES`：Velopack 更新清单。
 - 后续版本生成的 delta 包：用于减少更新下载量。
 

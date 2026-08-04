@@ -11,7 +11,13 @@ public sealed class DesktopSmartPartitionAgentTests
     [Theory]
     [InlineData("帮我智能分区这些文件", true)]
     [InlineData("重新整理收纳盒", true)]
+    [InlineData("帮我继续把那二十几个应用程序图标分下区", true)]
+    [InlineData("把这些图标分类", true)]
+    [InlineData("继续整理这些桌面文件", true)]
     [InlineData("什么是磁盘分区", false)]
+    [InlineData("帮我给硬盘分区", false)]
+    [InlineData("帮我给硬盘分下区", false)]
+    [InlineData("应用程序图标是什么", false)]
     [InlineData("帮我安排今天", false)]
     public void ChatIntent_OnlyMatchesExplicitOrganizerActions(
         string text,
