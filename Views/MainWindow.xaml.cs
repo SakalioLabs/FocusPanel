@@ -2190,6 +2190,34 @@ public partial class MainWindow :
         if (task.Windows.Count > 0)
         {
             menu.Items.Add(new Separator());
+            if (task.WindowCount > 1
+                && task.Windows.Any(window =>
+                    window.State
+                    != TrackedWindowState.Minimized))
+            {
+                menu.Items.Add(new MenuItem
+                {
+                    Header = "最小化此应用全部窗口",
+                    Command =
+                        _viewModel
+                            .MinimizeTaskWindowsCommand,
+                    CommandParameter = task
+                });
+            }
+            if (task.WindowCount > 1
+                && task.Windows.Any(window =>
+                    window.State
+                    == TrackedWindowState.Minimized))
+            {
+                menu.Items.Add(new MenuItem
+                {
+                    Header = "还原此应用已最小化窗口",
+                    Command =
+                        _viewModel
+                            .RestoreTaskWindowsCommand,
+                    CommandParameter = task
+                });
+            }
             menu.Items.Add(new MenuItem
             {
                 Header = task.WindowCount > 1 ? "关闭所有窗口" : "关闭窗口",

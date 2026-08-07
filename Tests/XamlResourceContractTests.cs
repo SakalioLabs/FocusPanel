@@ -2921,7 +2921,12 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain(
             "VolumeButton_MouseRightButtonUp",
             codeBehind);
-        Assert.Contains("foreach (WindowReference window in task.Windows)", viewModel);
+        Assert.Contains(
+            "WindowBatchActionCoordinator.Execute(",
+            viewModel);
+        Assert.Contains(
+            "_windowTracker.Close(",
+            viewModel);
     }
 
     [Fact]
@@ -3167,6 +3172,38 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "TaskbarWindowPreview_StateActionRequested",
             mainWindow);
+    }
+
+    [Fact]
+    public void TaskbarAppMenu_OffersBatchWindowStateActions()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+
+        Assert.Contains(
+            "Header = \"最小化此应用全部窗口\"",
+            mainWindow);
+        Assert.Contains(
+            "Header = \"还原此应用已最小化窗口\"",
+            mainWindow);
+        Assert.Contains(
+            "MinimizeTaskWindowsCommand",
+            mainWindow);
+        Assert.Contains(
+            "RestoreTaskWindowsCommand",
+            mainWindow);
+        Assert.Contains(
+            "WindowBatchActionCoordinator.Execute(",
+            viewModel);
     }
 
     [Fact]

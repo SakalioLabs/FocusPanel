@@ -2433,26 +2433,90 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void MinimizeTaskWindows(
+        TaskbarAppItem? task)
+    {
+        if (task == null)
+            return;
+
+        WindowBatchActionResult result =
+            WindowBatchActionCoordinator.Execute(
+                task.Windows,
+                window =>
+                    window.State
+                    != TrackedWindowState.Minimized,
+                handle =>
+                    _windowTracker.Minimize(
+                        handle));
+        CompleteTaskbarBatchAction(
+            task,
+            result,
+            "最小化",
+            "窗口可能已经关闭，或应用拒绝了状态更改。");
+    }
+
+    [RelayCommand]
+    private void RestoreTaskWindows(
+        TaskbarAppItem? task)
+    {
+        if (task == null)
+            return;
+
+        WindowBatchActionResult result =
+            WindowBatchActionCoordinator.Execute(
+                task.Windows,
+                window =>
+                    window.State
+                    == TrackedWindowState.Minimized,
+                handle =>
+                    _windowTracker.Restore(
+                        handle));
+        CompleteTaskbarBatchAction(
+            task,
+            result,
+            "还原",
+            "窗口可能已经关闭，或应用拒绝了状态更改。");
+    }
+
+    [RelayCommand]
     private void CloseTask(TaskbarAppItem? task)
     {
         if (task == null)
             return;
 
-        bool succeeded = true;
-        foreach (WindowReference window in task.Windows)
+        WindowBatchActionResult result =
+            WindowBatchActionCoordinator.Execute(
+                task.Windows,
+                _ => true,
+                handle =>
+                    _windowTracker.Close(
+                        handle));
+        CompleteTaskbarBatchAction(
+            task,
+            result,
+            "关闭",
+            "窗口可能已经关闭，或应用拒绝了关闭消息。");
+    }
+
+    private void CompleteTaskbarBatchAction(
+        TaskbarAppItem task,
+        WindowBatchActionResult result,
+        string actionName,
+        string failureReason)
+    {
+        if (!result.HasWork
+            || result.Succeeded)
         {
-            if (!SystemActionExecution.Try(
-                    () => _windowTracker.Close(
-                        window.Handle)))
-            {
-                succeeded = false;
-            }
+            SystemActionMessage = string.Empty;
+            return;
         }
 
-        CompleteTaskbarWindowAction(
-            succeeded,
-            $"未能关闭“{task.DisplayName}”的全部窗口。"
-            + "部分窗口可能已经关闭或拒绝了关闭消息。");
+        ReportTaskbarActionFailure(
+            $"“{task.DisplayName}”有 {result.FailedCount} 个窗口"
+            + $"未能{actionName}。"
+            + (result.SucceededCount > 0
+                ? $"另有 {result.SucceededCount} 个窗口已{actionName}。"
+                : failureReason));
     }
 
     [RelayCommand]

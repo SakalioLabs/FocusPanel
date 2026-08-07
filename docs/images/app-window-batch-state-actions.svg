@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">多窗口应用一步最小化或还原</title>
+  <desc id="desc">FocusPanel 应用任务栏的右键菜单直接最小化全部窗口，并可还原该应用已最小化的窗口。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#17263c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#354a66" stop-opacity=".92"/>
+      <stop offset="1" stop-color="#1c2a40" stop-opacity=".84"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#02060d" flood-opacity=".52"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="620" rx="34" fill="url(#bg)"/>
+  <circle cx="140" cy="95" r="190" fill="#1989ff" opacity=".16"/>
+  <circle cx="1090" cy="550" r="240" fill="#60d5c8" opacity=".1"/>
+
+  <g filter="url(#shadow)">
+    <rect x="120" y="72" width="116" height="476" rx="28" fill="#202f45" stroke="#7794b8" stroke-opacity=".4"/>
+    <rect x="141" y="108" width="74" height="74" rx="17" fill="#176fc0"/>
+    <circle cx="178" cy="145" r="21" fill="#6bc3ff"/>
+    <path d="M160 143h36M178 127c8 9 8 27 0 36M178 127c-8 9-8 27 0 36" fill="none" stroke="#0d3155" stroke-width="3"/>
+    <rect x="157" y="174" width="42" height="4" rx="2" fill="#59b2ff"/>
+    <circle cx="205" cy="115" r="13" fill="#4ca5ff"/>
+    <text x="205" y="120" fill="#fff" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" text-anchor="middle">4</text>
+    <rect x="141" y="204" width="74" height="74" rx="17" fill="#2b3c55"/>
+    <rect x="158" y="221" width="40" height="40" rx="10" fill="#697e99"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="274" y="92" width="430" height="424" rx="22" fill="url(#glass)" stroke="#7794b8" stroke-opacity=".38"/>
+    <text x="308" y="137" fill="#f4f7fb" font-family="Segoe UI, sans-serif" font-size="22" font-weight="650">浏览器 · 4 个窗口</text>
+    <line x1="298" y1="158" x2="680" y2="158" stroke="#8ea4bf" stroke-opacity=".25"/>
+    <g font-family="Segoe UI, sans-serif" font-size="16">
+      <text x="312" y="196" fill="#dce7f5">启动新实例</text>
+      <text x="312" y="236" fill="#dce7f5">固定到任务栏</text>
+      <text x="312" y="286" fill="#aebbd0">项目主页</text>
+      <text x="312" y="326" fill="#aebbd0">资料检索</text>
+      <line x1="298" y1="350" x2="680" y2="350" stroke="#8ea4bf" stroke-opacity=".25"/>
+      <rect x="292" y="366" width="394" height="46" rx="12" fill="#177fd2"/>
+      <text x="312" y="395" fill="#fff" font-weight="600">最小化此应用全部窗口</text>
+      <text x="312" y="443" fill="#dce7f5">还原此应用已最小化窗口</text>
+      <text x="312" y="483" fill="#ffb8b8">关闭所有窗口</text>
+    </g>
+  </g>
+
+  <g font-family="Segoe UI, sans-serif">
+    <text x="770" y="148" fill="#f4f7fb" font-size="27" font-weight="650">从逐个处理到应用级操作</text>
+    <g fill="#aebdd0" font-size="17">
+      <text x="770" y="202">① 只选择需要变化的窗口</text>
+      <text x="770" y="242">② 重复句柄只处理一次</text>
+      <text x="770" y="282">③ 单个失败不阻断后续窗口</text>
+      <text x="770" y="322">④ 部分成功给出准确数量</text>
+    </g>
+    <rect x="770" y="370" width="312" height="68" rx="16" fill="#263a53" stroke="#62adf5" stroke-opacity=".45"/>
+    <text x="926" y="399" fill="#72b8ff" text-anchor="middle" font-size="15">浏览器、资源管理器、编辑器</text>
+    <text x="926" y="423" fill="#e7eff8" text-anchor="middle" font-size="16" font-weight="600">多个窗口一键收起 / 恢复</text>
+    <text x="770" y="490" fill="#8fa2bb" font-size="14">复用现有 IWindowTracker，不新增 Shell 私有接口</text>
+  </g>
+</svg>
