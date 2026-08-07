@@ -5,22 +5,6 @@ namespace FocusPanel.Tests;
 
 public sealed class SystemStatusShellEntryTests
 {
-    [Fact]
-    public void TaskView_UsesWinTabShortcutBoundary()
-    {
-        WindowsShellShortcut? captured = null;
-        using var service = new SystemStatusService(
-            shortcut =>
-            {
-                captured = shortcut;
-                return true;
-            });
-
-        Assert.True(service.OpenTaskView());
-        Assert.Equal((ushort)0x09, captured?.Key);
-        Assert.True(captured?.UsesWindowsKey);
-    }
-
     [Theory]
     [InlineData(
         "SoundOutput",

@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.43 继续把高频状态操作收回 Panel：统一搜索中的“快捷设置 / Win+A”现在直接打开“网络与无线”，“键盘 / Win+Space”直接打开输入法详情，“音量混合器”和“电池”也进入对应 Panel 详情；状态按钮右键提供相同的 Panel 原生入口，不再发送 Win+A、Win+Space 或已移除的 Win+Tab。Windows 通知中心仍作为明确标注的系统表面保留。收纳图标布局新增完整 WPF 运行时验收，720px 工作区实测使用 6 列和 664px 可用宽度，防止再次退化成一行一个。
+
+![搜索和状态按钮直接进入 Panel 原生详情](docs/images/panel-native-status-search.svg)
+
 > 0.11.42 把最后一个伪“运行”入口从 Windows `Win+R` 收回 Panel：在统一搜索输入 `>` 后直接键入程序、文档、网址或带参数命令，支持带空格路径的引号和环境变量，不经过 `cmd.exe`，开始右键的“Panel 运行…”也进入同一界面。同时继续修正桌面收纳：右键任意收纳卡片可选择自己的 `.ico` 并永久保存，已有快捷方式图标会在隐藏前固化；图标视图强制使用完整可用宽度测量，不再偶发缩成一列。状态中心只进入 Panel 自有“后台应用与窗口”，不存在弹出原生任务栏隐藏图标区的入口。
 
 ![Panel 原生运行入口](docs/images/panel-native-run-command.svg)
@@ -263,25 +267,25 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 ![应用菜单直接管理窗口状态](docs/images/taskbar-window-state-actions.svg)
 - 搜索结果和统一任务栏共用同一个应用图标组件；Shell 无法读取图标时显示带应用名称首字符的 Fluent 圆角占位，不再留下无法识别的空白按钮。中文、英文、数字和特殊字符名称均有稳定降级。
 - 应用搜索按“完整名称 → 可执行文件名 → 名称前缀 → 缩写 → 多词前缀 → 包含”分级匹配；`vsc` 可命中 Visual Studio Code，`studio co` 可按词查找，标点、大小写和重音符号会被统一规范化。固定状态只在同一匹配等级内作为次级排序，不会再把固定但弱相关的结果压到精确结果前面；不做易误启动的无限模糊纠错。
-- 搜索顶部提供“全部 / 窗口数量 / 应用 / 系统”四个可见范围。点击“窗口”无需输入即可浏览所有已跟踪窗口，当前窗口置顶，点击直接切换；输入标题可继续筛选。点击“系统”可直接浏览管理入口；“全部”继续把应用、已打开窗口、待办和系统命令放在同一条结果列表中。输入“任务管理器”“设备管理器”“硬盘分区”“admin terminal”或 `taskmgr`、`devmgmt` 等命令名可执行管理工具；输入 `>` 进入 Panel 原生运行模式，例如 `> notepad` 或 `> "D:\Tools\app.exe" --safe`，不再唤起 Win+R，也不经过 `cmd.exe`。快捷设置、通知中心、小组件与显示桌面仍是明确标注的 Windows 公开系统动作；任务视图因在部分系统上无法可靠唤起已从按钮和搜索中移除。媒体命令继续支持上一首、播放/暂停和下一首。
+- 搜索顶部提供“全部 / 窗口数量 / 应用 / 系统”四个可见范围。点击“窗口”无需输入即可浏览所有已跟踪窗口，当前窗口置顶，点击直接切换；输入标题可继续筛选。点击“系统”可直接浏览管理入口；“全部”继续把应用、已打开窗口、待办和系统命令放在同一条结果列表中。输入“任务管理器”“设备管理器”“硬盘分区”“admin terminal”或 `taskmgr`、`devmgmt` 等命令名可执行管理工具；输入 `>` 进入 Panel 原生运行模式，例如 `> notepad` 或 `> "D:\Tools\app.exe" --safe`，不再唤起 Win+R，也不经过 `cmd.exe`。搜索“快捷设置 / Win+A”“键盘 / Win+Space”“音量混合器”或“电池”会直接打开 Panel 对应状态详情；通知中心、小组件与显示桌面仍是明确标注的 Windows 公开系统动作。任务视图及其隐藏服务链已经移除。媒体命令继续支持上一首、播放/暂停和下一首。
 
 ![统一搜索直达 Windows 高频入口](docs/images/search-productivity-shell-actions.svg)
 
 这些组合采用微软公开的 Windows 11 行为，参见 [Windows 键盘快捷方式](https://support.microsoft.com/zh-cn/windows/windows-%E4%B8%AD%E7%9A%84%E9%94%AE%E7%9B%98%E5%BF%AB%E6%8D%B7%E6%96%B9%E5%BC%8F-dcc61a57-8ff0-cffe-9796-cb9706c75eec)；虚拟键值使用 Windows SDK 公布的 [Virtual-Key Codes](https://learn.microsoft.com/windows/win32/inputdev/virtual-key-codes)。
 - 搜索框也可直接安全计算：支持括号、`+ - * / %`、小数、负数以及 `× / ÷ / （ ）`，结果固定显示在首位，点击或按 Enter 即复制。解析器不执行脚本或动态代码，最多接受 128 字符和 16 层括号；纯数字、路径、应用名、除零、指数语法和错误表达式不会伪装成结果。剪贴板被占用时会异步重试三次，持续失败才进入状态中心说明，不冻结搜索输入。
 - 统一搜索可以直接控制默认输出音量：输入 `音量 35` / `volume 35` 精确设置百分比，输入 `音量 +10`、`音量降低 5` 或 `volume up 10` 相对调整，输入“静音 / 取消静音”直接设定目标状态。结果固定排在普通应用前，点击或按 Enter 后进入既有串行 Core Audio 控制器，无需先展开状态中心；正音量会同时取消静音，结果按 `0–100%` 夹取，设备切换或写入失败仍由状态中心给出可恢复说明。相对调整只在当前默认设备音量已确认时执行，不会在启动读取完成前把未知音量误当成 0%；解析只接受完整、明确的命令，`音量`、`音量 101`、小数、文件名和尾随文本不会被误执行。
-- 状态中心新增内置显示器亮度滑块，不再为了调光先打开 Win+A；统一搜索同步支持 `亮度 35`、`亮度 +10`、`亮度降低 5`、`brightness 60` 和 `brightness down 10`。连续拖动只保留最新目标值并在后台串行写入，旧结果不能覆盖新的滑块位置；读取与写入使用 Windows 公开的 `WmiMonitorBrightness` / `WmiMonitorBrightnessMethods`，只控制系统实际公开的内置显示设备。外接显示器、远程桌面或驱动未公开亮度能力时，控件会禁用并说明原因，仍可点击“快捷设置”，不会调用 DDC 私有协议或假装成功。
+- 状态中心新增内置显示器亮度滑块，不再为了调光先打开 Win+A；统一搜索同步支持 `亮度 35`、`亮度 +10`、`亮度降低 5`、`brightness 60` 和 `brightness down 10`。连续拖动只保留最新目标值并在后台串行写入，旧结果不能覆盖新的滑块位置；读取与写入使用 Windows 公开的 `WmiMonitorBrightness` / `WmiMonitorBrightnessMethods`，只控制系统实际公开的内置显示设备。外接显示器、远程桌面或驱动未公开亮度能力时，控件会禁用并说明原因，不调用 DDC 私有协议、不自动弹出快捷设置，也不假装成功。
 
 ![状态中心与统一搜索直接控制内置屏亮度](docs/images/direct-brightness-control.svg)
 - 状态中心内置应用级音量混音器：直接列出默认输出设备上尚未过期的音频会话，显示正在播放状态，并为每个应用提供独立音量与静音，不必再从任务栏打开快捷设置、进入声音混合器。活动会话优先、名称与会话实例标识稳定，最多显示 12 项并由状态中心整体滚动；系统声音使用明确标签，受保护进程无法读取产品名时降级为进程名，不按窗口标题猜测身份。滑块连续变化按会话合并最后值，不同应用严格串行；写入期间暂停旧快照覆盖，当前会话结束或设备切换时回滚到最后确认值并刷新列表。实现仅使用 Windows 公开的 `IAudioSessionManager2`、`IAudioSessionEnumerator`、`IAudioSessionControl2` 和 `ISimpleAudioVolume`，不读取播放器私有数据，也不影响独占模式音频流。
 
 ![状态中心应用级音量混音器](docs/images/application-volume-mixer.svg)
 
-- 状态中心新增 Wi‑Fi 与蓝牙直接开关：打开状态中心即可按当前真实 Radio 状态开启或关闭，不再先展开 Win+A。第一次主动切换时才请求 Windows 无线控制权限，并在本次会话复用结果；系统仅接受请求还不算成功，Panel 会重新读取最终硬件状态后再更新按钮。飞行模式、硬件开关、驱动或组织策略禁用、权限拒绝和设备移除都会显示具体原因，同时保留“快捷设置”作为公开系统入口。实现使用 Windows 公开 [`Radio.GetRadiosAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.getradiosasync)、[`Radio.RequestAccessAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.requestaccessasync) 与 [`Radio.SetStateAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.setstateasync)，不读取 Explorer 托盘私有数据。
+- 状态中心新增 Wi‑Fi 与蓝牙直接开关：打开状态中心即可按当前真实 Radio 状态开启或关闭，不再先展开 Win+A。第一次主动切换时才请求 Windows 无线控制权限，并在本次会话复用结果；系统仅接受请求还不算成功，Panel 会重新读取最终硬件状态后再更新按钮。飞行模式、硬件开关、驱动或组织策略禁用、权限拒绝和设备移除都会留在 Panel 内显示具体原因，不自动弹出任务栏快捷设置。实现使用 Windows 公开 [`Radio.GetRadiosAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.getradiosasync)、[`Radio.RequestAccessAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.requestaccessasync) 与 [`Radio.SetStateAsync`](https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radio.setstateasync)，不读取 Explorer 托盘私有数据。
 
 ![状态中心直接切换 Wi-Fi 与蓝牙](docs/images/direct-radio-controls.svg)
 
-- 状态中心可直接查找附近 Wi‑Fi 并连接 Windows 已保存的网络：用户点击“查找网络”后才调用公开 Native Wi‑Fi API，等待扫描完成通知并按“当前连接优先、信号强度、名称”稳定排列，最多显示 10 项，避免网络较多时淹没其他状态控制。点击已保存网络后调用 `WlanConnect`，但只有重新读取到真实 Connected 标记才显示成功；网络离开范围、配置删除、Radio 关闭、WLAN AutoConfig 停止或连接超时都会保留 Panel 并说明原因。未保存网络不会读取或保存密码，而是明确转入 Windows 快捷设置完成首次连接。
+- 状态中心可直接查找附近 Wi‑Fi 并连接 Windows 已保存的网络：用户点击“查找网络”后才调用公开 Native Wi‑Fi API，等待扫描完成通知并按“当前连接优先、信号强度、名称”稳定排列，最多显示 10 项，避免网络较多时淹没其他状态控制。点击已保存网络后调用 `WlanConnect`，但只有重新读取到真实 Connected 标记才显示成功；网络离开范围、配置删除、Radio 关闭、WLAN AutoConfig 停止或连接超时都会保留 Panel 并说明原因。未保存网络不会读取或保存密码，也不会自动跳出 Panel；首次凭据仍需用户明确进入 Windows 网络设置保存。
 - Windows 11 24H2 会把附近 Wi‑Fi 列表作为精确位置能力管理；首次扫描可能出现一次系统授权，拒绝时 Panel 显示“打开位置权限”，直达“设置 > 隐私和安全性 > 位置”。依据见微软的 [Wi‑Fi 访问和位置行为变更](https://learn.microsoft.com/en-us/windows/win32/nativewifi/wi-fi-access-location-changes)、[`WlanScan`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlanscan)、[`WlanGetAvailableNetworkList`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlangetavailablenetworklist) 与 [`WlanConnect`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlanconnect)。FocusPanel 不导出 Wi‑Fi 配置、不读取明文密钥，也不注入 Explorer 网络面板。
 
 ![状态中心附近 Wi-Fi 与已保存网络直连](docs/images/wifi-network-chooser.svg)
@@ -355,14 +359,14 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 多屏定位以 Windows 主屏的物理边界和主屏 DPI 为唯一基准；紧凑栏、展开动画、12px 热区和 3px 指示条不会混用窗口当前屏的 WPF DIP。主屏存在负坐标、位于副屏右侧或采用不同缩放时，Panel 仍完整向主屏内部展开。
 - 中部应用列表超出可视高度时显示轻量悬浮上下导航；到达顶部或底部后相应箭头自动消失，点击按一个应用图标步长移动，鼠标滚轮仍可直接滚动。
 - 展开工作区直接显示概览、桌面收纳、任务、番茄钟、AI 和设置六个一级入口，并以唯一选中态明确当前位置；紧凑栏“收纳”和“任务”普通点击分别直达两个最高频工作区。状态中心继续集中音量、静音、网络、电池、通知、输入法、显示桌面和电源操作。
-- 状态中心首屏优先提供 Panel 自有后台与窗口、网络与无线、应用音量、媒体与电池、输入法、显示桌面、锁定、电源、主音量和亮度；四组详情互斥展开并显示选中态。快捷设置和通知归入明确的 Windows 辅助入口。系统操作均返回明确结果；成功后保持当前状态中心便于连续调整，系统拒绝或启动失败时显示可操作的替代方式。
+- 状态中心首屏优先提供 Panel 自有后台与窗口、网络与无线、应用音量、媒体与电池、输入法、显示桌面、锁定、电源、主音量和亮度；四组详情互斥展开并显示选中态。快捷设置入口已经删除，Windows 通知中心单独标注为系统表面。系统操作均返回明确结果；成功后保持当前状态中心便于连续调整，系统拒绝或启动失败时留在 Panel 显示原因。
 - Panel 开始、统一搜索和 `>` 运行模式均由 Panel 自己承载；小组件、Win+X 管理工具、电源设置、显示桌面、锁定、睡眠以及确认后的重启/关机通过后台系统动作协调器执行。
 - 音量和静音使用一次性 Core Audio 快照区分“真实 0%”与“没有默认输出设备”；端点切换或写入失败时滑块回到最后确认值并显示原因。无输出设备时控件自动停用，设备恢复后由状态刷新重新启用；紧凑栏滚轮只有在音量写入成功后才会取消静音。
 - 音量 Slider 的高频变化、静音点击和紧凑栏滚轮改由单消费者后台控制器执行；等待中的音量请求只保留最终值，音量与静音严格串行。每次工作线程操作独立初始化 Core Audio COM、创建并释放端点枚举器，旧修订结果不会覆盖新操作；写入期间暂停旧状态快照回填，最新请求失败才回退到最后真实成功值并提示。
 - 紧凑栏状态入口和状态中心静音按钮会根据当前音量显示 Segoe Fluent 音量、静音或设备不可用图标；紧凑栏短标签同步显示百分比、“静音”或“不可用”，工具提示和读屏名称继续提供网络、音频与电池完整摘要。Panel 从隐藏状态重新唤出或鼠标移入状态入口时通过同一合并队列刷新一次，不需要先打开状态中心，也不会在隐藏期间常驻轮询。
 - 电池状态通过单次快照同步读取是否存在、百分比和充电状态；紧凑栏状态入口的一个提示整合网络、音量与电池，不再为每项状态增加独立按钮。
 - 网络状态通过单次快照生成可用性、连接类型、接口名称和详情；状态中心按无线、有线、其他连接显示 WiFi、Ethernet 或 Globe 图标，离线时显示 Error。接口切换或枚举失败不会再把不同采样时刻的在线/离线文案拼在一起，也不读取 Explorer 私有托盘数据。
-- 输入法详情通过微软公开的 [`GetKeyboardLayoutList`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeyboardlayoutlist) 枚举系统当前输入区域，显示“中 / 拼”“中 / 五”“EN”等简称、完整输入法名称和当前项；选择后向用户刚才使用的外部窗口投递 [`WM_INPUTLANGCHANGEREQUEST`](https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-inputlangchangerequest)，并短时读取目标线程的实际布局确认结果。相同语言的多个输入法按真实布局句柄区分，过期布局不会执行；目标窗口关闭、权限隔离、尚未处理或拒绝请求而无法确认时，才建议使用详情底部的 Win+Space 兼容入口。
+- 输入法详情通过微软公开的 [`GetKeyboardLayoutList`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeyboardlayoutlist) 枚举系统当前输入区域，显示“中 / 拼”“中 / 五”“EN”等简称、完整输入法名称和当前项；选择后向用户刚才使用的外部窗口投递 [`WM_INPUTLANGCHANGEREQUEST`](https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-inputlangchangerequest)，并短时读取目标线程的实际布局确认结果。相同语言的多个输入法按真实布局句柄区分，过期布局不会执行；目标窗口关闭、权限隔离、尚未处理或拒绝请求时留在 Panel 内提示，详情底部不再放置 Win+Space 系统浮层入口。
 - 时间入口提供周一开头的 6 周月历，可切换月份、回到今天或直接选择日期；方向键按日/周移动，`PageUp` / `PageDown` 跨月，`Ctrl+Home` 回到今天，键盘焦点始终跟随所选日期。`Shift+左键`、`Shift+Enter` 或中键可一步切换显示桌面；右键菜单同时提供显示桌面、Windows 日期时间与通知设置。完成过番茄钟的日期显示专注圆点，底部汇总所选日期的专注次数和分钟数。
 - 后台发现 GitHub 新版本后，紧凑栏“收纳”入口显示更新状态点；点击展开工作区后，顶部“设置”入口直接进入一键更新，不依赖托盘气泡或重复更新卡片。
 - Velopack 安装定位和更新管理器在共享工作线程准备，主窗口构造与 XAML 首帧不再等待安装目录扫描；首次自动检查和设置页手动检查都会等待同一个初始化结果，安装版不会因为准备尚未结束而漏掉开机后的更新。
@@ -563,7 +567,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - Explorer 重启或任务栏状态改变：停止本次替代并恢复原设置，避免可见性循环
 - 恢复会话：`%LOCALAPPDATA%\FocusPanel\taskbar-session.json`
 
-遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。完整替代后，Win+A、Win+N、Win+Space 等公开系统快捷入口继续可用；第三方托盘图标不会被复制，也不会通过原生任务栏抽屉伪装成 Panel 能力，后台可操作应用统一进入 Panel 自有窗口总览。
+遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。Panel 不拦截用户主动按下的 Windows 系统快捷键，但自身界面不再发送 Win+A、Win+Space 或 Win+Tab；Win+N 通知中心仍明确作为 Windows 系统表面。第三方托盘图标不会被复制，也不会通过原生任务栏抽屉伪装成 Panel 能力，后台可操作应用统一进入 Panel 自有窗口总览。
 
 ![任务栏安全状态机](docs/images/taskbar-safety-flow.svg)
 

@@ -1115,6 +1115,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<int, string>? TaskCompleted;
     public event Action? DisplayTargetChanged;
     public event Action<bool>? WorkspacePinChanged;
+    internal event Action<StatusCenterDetail>?
+        StatusCenterDetailRequested;
 
     internal void SetSummonShortcutStatus(
         ShellHotkeyRegistration registration)
@@ -1759,6 +1761,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        if (result?.StatusDetail
+            is StatusCenterDetail statusDetail)
+        {
+            ShowStatusCenterDetail(statusDetail);
+            return;
+        }
+
         if (result?.ManagementTool
             is SystemManagementTool tool)
         {
@@ -2032,7 +2041,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             ReportBrightnessFailure(
                 "此设备没有向 Windows 公开内置显示器亮度控制。"
-                + "外接显示器请使用显示器按键，或尝试 Win+A。");
+                + "外接显示器请使用显示器按键。Panel 不会弹出任务栏快捷设置。");
             return;
         }
 
@@ -2060,14 +2069,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         Func<bool> operation =
             action switch
             {
-                WindowsShellAction.QuickSettings =>
-                    _systemStatus.OpenQuickSettings,
                 WindowsShellAction.Notifications =>
                     _systemStatus.OpenNotifications,
-                WindowsShellAction.InputSwitcher =>
-                    _systemStatus.OpenInputSwitcher,
-                WindowsShellAction.TaskView =>
-                    _systemStatus.OpenTaskView,
                 WindowsShellAction.Widgets =>
                     _systemStatus.OpenWidgets,
                 WindowsShellAction.SoundOutput =>
@@ -2889,6 +2892,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsStatusCenterOpen = open;
     }
 
+    internal void ShowStatusCenterDetail(
+        StatusCenterDetail detail)
+    {
+        if (detail == StatusCenterDetail.None)
+            return;
+
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
+        StatusCenterDetailRequested?.Invoke(detail);
+    }
+
     [RelayCommand]
     private void ToggleSettings()
     {
@@ -2980,12 +2994,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task OpenQuickSettings()
-        => await RunSystemActionAsync(
-            _systemStatus.OpenQuickSettings,
-            "无法唤起 Windows 快捷设置，请使用 Win+A。");
-
-    [RelayCommand]
     private async Task OpenWifiLocationSettings()
         => await RunSystemActionAsync(
             _systemStatus
@@ -2998,12 +3006,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         => await RunSystemActionAsync(
             _systemStatus.OpenNotifications,
             "无法唤起 Windows 通知中心，请使用 Win+N。");
-
-    [RelayCommand]
-    private async Task OpenInputSwitcher()
-        => await RunSystemActionAsync(
-            _systemStatus.OpenInputSwitcher,
-            "无法唤起输入法切换器，请使用 Win+Space。");
 
     [RelayCommand]
     private async Task ActivateInputMethod(
@@ -3029,7 +3031,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SystemActionMessage =
                 $"未能确认“{inputMethod.DisplayName}”已应用到刚才使用的窗口。"
                 + "目标应用可能已关闭、以更高权限运行、尚未处理或拒绝切换；"
-                + "可使用下方 Windows 输入法浮层继续。";
+                + "Panel 保留当前列表，请重新选择或切回目标窗口后重试。";
             IsStatusCenterOpen = true;
             return;
         }
@@ -3053,12 +3055,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         await Task.Delay(120);
         RequestSystemStatusRefresh();
     }
-
-    [RelayCommand]
-    private async Task OpenTaskView()
-        => await RunSystemActionAsync(
-            _systemStatus.OpenTaskView,
-            "无法唤起任务视图，请使用 Win+Tab。");
 
     [RelayCommand]
     private async Task SwitchVirtualDesktop(
@@ -3932,7 +3928,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (completion.CurrentFailed)
         {
             ReportAudioFailure(
-                "无法调整音量或静音。请检查默认音频输出设备，或使用 Win+A。");
+                "无法调整音量或静音。请检查默认音频输出设备；Panel 不会弹出任务栏快捷设置。");
             return;
         }
 
@@ -4179,8 +4175,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             SystemActionMessage =
                 $"“{network.DisplayName}”尚未保存密码，"
-                + "请在 Windows 快捷设置中首次连接。";
-            await OpenQuickSettings();
+                + "Panel 当前不会擅自打开任务栏浮层；"
+                + "请先在 Windows 网络设置中保存一次凭据。";
+            IsStatusCenterOpen = true;
             return;
         }
 
@@ -4226,7 +4223,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SystemActionMessage =
             ComposeWifiConnectFailure(result);
         WifiNetworkStatusText =
-            "连接没有完成，可使用快捷设置继续处理";
+            "连接没有完成；Panel 已保留网络列表，可直接重试";
         IsStatusCenterOpen = true;
     }
 
@@ -4301,8 +4298,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 .ServiceUnavailable =>
                 "Windows WLAN AutoConfig 服务不可用",
             _ =>
-                "无法读取附近 Wi‑Fi，"
-                + "可使用快捷设置重试"
+                "无法读取附近 Wi‑Fi，请检查无线服务后重试"
         };
 
     private static string
@@ -4313,7 +4309,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             WifiNetworkConnectStatus
                 .NeedsCredentials =>
                 $"“{result.DisplayName}”需要首次输入密码，"
-                + "请使用 Windows 快捷设置。",
+                + "请先在 Windows 网络设置中保存凭据。",
             WifiNetworkConnectStatus.AccessDenied =>
                 "Windows 拒绝读取 Wi‑Fi 连接状态。"
                 + "请检查精确位置权限。",
@@ -4329,8 +4325,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 $"已请求连接“{result.DisplayName}”，"
                 + "但 Windows 未确认连接成功。",
             _ =>
-                $"无法连接“{result.DisplayName}”。"
-                + "可使用快捷设置重试。"
+                $"无法连接“{result.DisplayName}”，请在 Panel 中刷新后重试。"
         };
 
     private async Task ToggleSystemRadioAsync(
@@ -4414,10 +4409,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             SystemRadioSetStatus.DeniedByUser =>
                 $"Windows 未授予 {name} 控制权限。"
-                + "可使用“快捷设置”手动切换。",
+                + "请在系统隐私权限中允许无线控制。",
             SystemRadioSetStatus.DeniedBySystem =>
                 $"{name} 被系统策略禁止由应用控制。"
-                + "可使用“快捷设置”查看原因。",
+                + "Panel 不会绕过系统策略。",
             SystemRadioSetStatus.HardwareDisabled =>
                 $"{name} 已被硬件开关或驱动禁用，"
                 + "Panel 无法强制开启。",
@@ -4428,8 +4423,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 $"{name} 切换请求已发送，但硬件状态没有确认改变。"
                 + "请检查飞行模式、驱动或硬件开关。",
             _ =>
-                $"无法切换 {name}。"
-                + "可使用“快捷设置”重试。"
+                $"无法切换 {name}，请在 Panel 中刷新状态后重试。"
         };
     }
 

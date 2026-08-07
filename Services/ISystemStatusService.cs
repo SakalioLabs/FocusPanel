@@ -19,10 +19,7 @@ public interface ISystemStatusService : IDisposable
         InputMethodOption inputMethod,
         IntPtr preferredTargetWindow);
     BatteryStatusSnapshot GetBatteryStatus();
-    bool OpenQuickSettings();
     bool OpenNotifications();
-    bool OpenInputSwitcher();
-    bool OpenTaskView();
     bool SwitchVirtualDesktop(
         VirtualDesktopDirection direction);
     bool CreateVirtualDesktop();

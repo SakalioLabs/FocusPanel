@@ -727,9 +727,9 @@ public sealed class XamlResourceContractTests
                 "Views",
                 "MainWindow.xaml.cs"));
 
-        Assert.Contains("OpenQuickSettingsCommand", mainWindow);
+        Assert.DoesNotContain("OpenQuickSettingsCommand", mainWindow);
         Assert.Contains("OpenNotificationsCommand", mainWindow);
-        Assert.Contains("OpenInputSwitcherCommand", mainWindow);
+        Assert.DoesNotContain("OpenInputSwitcherCommand", mainWindow);
         Assert.Contains(
             "Content=\"输入法\"",
             mainWindow);
@@ -798,7 +798,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains("SleepComputerCommand", mainWindow);
         Assert.Contains("ShowDesktopCommand", mainWindow);
         Assert.Contains("Text=\"{Binding SystemActionMessage}\"", mainWindow);
-        Assert.Contains("Content=\"快捷设置\"", mainWindow);
+        Assert.DoesNotContain("Content=\"快捷设置\"", mainWindow);
         Assert.Contains("Visibility=\"{Binding IsCalendarOpen", mainWindow);
         Assert.Contains("Visibility=\"{Binding IsStatusCenterOpen", mainWindow);
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
@@ -960,6 +960,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Views",
                 "MainWindow.xaml"));
+        string mainWindowCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
 
         int commonStart = mainWindow.IndexOf(
             "AutomationProperties.Name=\"Panel 状态详情\"",
@@ -991,8 +996,7 @@ public sealed class XamlResourceContractTests
                      "Content=\"显示桌面\"",
                      "Content=\"锁定\"",
                      "Content=\"电源\"",
-                     "Content=\"快捷设置\"",
-                     "Content=\"通知中心\""
+                     "Content=\"Windows 通知中心\""
                  })
         {
             int position = mainWindow.IndexOf(
@@ -1016,9 +1020,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AutomationProperties.Name=\"设备与会话操作\"",
             mainWindow);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "Content=\"打开 Windows 输入法浮层\"",
             mainWindow);
+        Assert.Contains(
+            "PanelStatusDetailMenuItem_Click",
+            mainWindow);
+        Assert.Contains(
+            "StatusCenterDetailRequested +=",
+            mainWindowCode);
+        Assert.Contains(
+            "ViewModel_StatusCenterDetailRequested",
+            mainWindowCode);
     }
 
     [Fact]
@@ -1600,10 +1613,10 @@ public sealed class XamlResourceContractTests
             "OpenNotificationOverflow",
             compactDock);
         Assert.Contains(
-            "Header=\"通知中心\"",
+            "Header=\"Windows 通知中心\"",
             compactDock);
         Assert.Contains(
-            "Header=\"切换输入法\"",
+            "Header=\"输入法 · Panel\"",
             compactDock);
         Assert.DoesNotContain("ToggleSettingsCommand", compactDock);
         Assert.DoesNotContain("BatteryPercent", compactDock);
@@ -2932,13 +2945,16 @@ public sealed class XamlResourceContractTests
             "Header=\"播放 / 暂停\"",
             mainWindow);
         Assert.Contains(
-            "Header=\"快捷设置\"",
+            "Header=\"网络与无线 · Panel\"",
             mainWindow);
         Assert.Contains(
-            "Header=\"通知中心\"",
+            "Header=\"应用音量 · Panel\"",
             mainWindow);
         Assert.Contains(
-            "Header=\"切换输入法\"",
+            "Header=\"Windows 通知中心\"",
+            mainWindow);
+        Assert.Contains(
+            "Header=\"输入法 · Panel\"",
             mainWindow);
         Assert.Contains(
             "Header=\"电源…\"",

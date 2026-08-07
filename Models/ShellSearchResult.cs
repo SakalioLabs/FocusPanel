@@ -14,6 +14,7 @@ public enum ShellSearchResultKind
     BrightnessCommand,
     FocusCommand,
     RunCommand,
+    PanelStatus,
     TaskCapture,
     Task
 }
@@ -117,6 +118,12 @@ public sealed record ShellSearchResult
         init;
     }
 
+    internal StatusCenterDetail? StatusDetail
+    {
+        get;
+        init;
+    }
+
     internal TaskCaptureCommand? TaskCaptureCommand
     {
         get;
@@ -163,6 +170,10 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.RunCommand;
 
+    public bool IsPanelStatus =>
+        Kind
+        == ShellSearchResultKind.PanelStatus;
+
     public bool IsTaskCapture =>
         Kind
         == ShellSearchResultKind.TaskCapture;
@@ -178,6 +189,7 @@ public sealed record ShellSearchResult
         || IsBrightnessCommand
         || IsFocusCommand
         || IsRunCommand
+        || IsPanelStatus
         || IsTaskCapture
         || IsTask;
 
@@ -327,6 +339,22 @@ public sealed record ShellSearchResult
                 + "点击或按回车执行",
             Glyph = "\uE7B8",
             RunCommand = command
+        };
+
+    internal static ShellSearchResult
+        FromPanelStatus(
+            PanelStatusSearchEntry entry) =>
+        new()
+        {
+            Kind = ShellSearchResultKind.PanelStatus,
+            StableKey = "panel-status:" + entry.Detail,
+            DisplayName = entry.DisplayName,
+            SecondaryText =
+                "Panel 状态详情 · 不打开 Windows 任务栏浮层",
+            AccessibleName =
+                $"在 Panel 中打开 {entry.DisplayName}",
+            Glyph = entry.Glyph,
+            StatusDetail = entry.Detail
         };
 
     internal static ShellSearchResult

@@ -60,6 +60,9 @@ public sealed class UiSmokeTestProcessTests
                 "PASS 1000 项仅生成",
                 report);
             Assert.Contains(
+                "PASS 720px 收纳图标视图使用",
+                report);
+            Assert.Contains(
                 "PASS Fluent 菜单窗口标题、勾选、分隔线与子菜单",
                 report);
             Assert.Contains(

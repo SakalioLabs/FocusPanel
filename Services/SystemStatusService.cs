@@ -466,13 +466,7 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    public bool OpenQuickSettings() => TrySendWindowsShortcut(WindowsShellAction.QuickSettings);
-
     public bool OpenNotifications() => TrySendWindowsShortcut(WindowsShellAction.Notifications);
-
-    public bool OpenInputSwitcher() => TrySendWindowsShortcut(WindowsShellAction.InputSwitcher);
-
-    public bool OpenTaskView() => TrySendWindowsShortcut(WindowsShellAction.TaskView);
 
     public bool SwitchVirtualDesktop(
         VirtualDesktopDirection direction) =>

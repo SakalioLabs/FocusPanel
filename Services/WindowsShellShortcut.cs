@@ -5,10 +5,7 @@ namespace FocusPanel.Services;
 
 internal enum WindowsShellAction
 {
-    QuickSettings,
     Notifications,
-    InputSwitcher,
-    TaskView,
     VirtualDesktopPrevious,
     VirtualDesktopNext,
     VirtualDesktopCreate,
@@ -91,10 +88,7 @@ internal static class WindowsShellShortcutMap
 {
     internal static WindowsShellShortcut Get(WindowsShellAction action) => action switch
     {
-        WindowsShellAction.QuickSettings => new(0x41, true),
         WindowsShellAction.Notifications => new(0x4E, true),
-        WindowsShellAction.InputSwitcher => new(0x20, true),
-        WindowsShellAction.TaskView => new(0x09, true),
         WindowsShellAction.VirtualDesktopPrevious =>
             new(0x25, true, UsesControl: true),
         WindowsShellAction.VirtualDesktopNext =>

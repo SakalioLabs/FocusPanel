@@ -15,20 +15,10 @@ internal static class WindowsShellSearchCatalog
         new[]
         {
             new WindowsShellSearchEntry(
-                WindowsShellAction.QuickSettings,
-                "快捷设置",
-                "\uE713",
-                "音量 网络 WiFi 蓝牙 quick settings Win A"),
-            new WindowsShellSearchEntry(
                 WindowsShellAction.Notifications,
                 "通知中心",
                 "\uE7F4",
                 "通知 消息 notification center Win N"),
-            new WindowsShellSearchEntry(
-                WindowsShellAction.InputSwitcher,
-                "切换输入法",
-                "\uE765",
-                "语言 键盘 输入法 input language keyboard Win Space"),
             new WindowsShellSearchEntry(
                 WindowsShellAction.Widgets,
                 "小组件",

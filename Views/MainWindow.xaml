@@ -707,19 +707,15 @@
                                             Content="电源"
                                             Click="PowerMenuItem_Click"/>
                                 </UniformGrid>
-                                <TextBlock Text="Windows 辅助入口"
+                                <TextBlock Text="Windows 系统表面"
                                            Margin="4,0,0,7"
                                            Style="{StaticResource FocusCaptionText}"/>
-                                <UniformGrid Columns="2"
+                                <UniformGrid Columns="1"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="Windows 系统浮层入口">
                                     <Button Style="{StaticResource FocusSecondaryButton}"
                                             MinHeight="44"
-                                            Content="快捷设置"
-                                            Command="{Binding OpenQuickSettingsCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}"
-                                            MinHeight="44"
-                                            Content="通知中心"
+                                            Content="Windows 通知中心"
                                             Command="{Binding OpenNotificationsCommand}"/>
                                 </UniformGrid>
                                 <TextBlock Text="音量与亮度"
@@ -827,14 +823,14 @@
                                             Command="{Binding ToggleWiFiRadioCommand}"
                                             IsEnabled="{Binding CanToggleWiFiRadio}"
                                             AutomationProperties.Name="{Binding WiFiRadioActionText}"
-                                            ToolTip="直接切换 Wi‑Fi Radio；不可用时使用上方快捷设置"/>
+                                            ToolTip="由 Panel 直接切换 Wi‑Fi Radio"/>
                                     <Button Style="{StaticResource FocusSecondaryButton}"
                                             MinHeight="44"
                                             Content="{Binding BluetoothRadioActionText}"
                                             Command="{Binding ToggleBluetoothRadioCommand}"
                                             IsEnabled="{Binding CanToggleBluetoothRadio}"
                                             AutomationProperties.Name="{Binding BluetoothRadioActionText}"
-                                            ToolTip="直接切换蓝牙 Radio；不可用时使用上方快捷设置"/>
+                                            ToolTip="由 Panel 直接切换蓝牙 Radio"/>
                                 </UniformGrid>
                                 <TextBlock Margin="4,0,0,12"
                                            Text="{Binding RadioStatusText}"
@@ -1002,12 +998,6 @@
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
-                                        <Button MinHeight="44"
-                                                Margin="0,4,0,0"
-                                                Style="{StaticResource FocusSecondaryButton}"
-                                                Content="打开 Windows 输入法浮层"
-                                                Command="{Binding OpenInputSwitcherCommand}"
-                                                ToolTip="仅在目标应用拒绝直接切换时使用 Win+Space 系统入口"/>
                                     </StackPanel>
                                 </Expander>
                                 <Expander x:Name="ApplicationAudioDetailsExpander"
@@ -1929,17 +1919,20 @@
                                                   Command="{Binding PlacementTarget.DataContext.SendMediaCommandCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{x:Static services:MediaTransportAction.PlayPause}"/>
                                         <Separator/>
-                                        <MenuItem Header="快捷设置"
-                                                  InputGestureText="Win+A"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenQuickSettingsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="网络与无线 · Panel"
+                                                  Tag="{x:Static services:StatusCenterDetail.Network}"
+                                                  Click="PanelStatusDetailMenuItem_Click"/>
+                                        <MenuItem Header="应用音量 · Panel"
+                                                  Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
+                                                  Click="PanelStatusDetailMenuItem_Click"/>
                                         <MenuItem Header="窗口总览"
                                                   Click="StatusCenterWindowOverview_Click"/>
-                                        <MenuItem Header="通知中心"
+                                        <MenuItem Header="Windows 通知中心"
                                                   InputGestureText="Win+N"
                                                   Command="{Binding PlacementTarget.DataContext.OpenNotificationsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="切换输入法"
-                                                  InputGestureText="Win+Space"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenInputSwitcherCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="输入法 · Panel"
+                                                  Tag="{x:Static services:StatusCenterDetail.InputMethod}"
+                                                  Click="PanelStatusDetailMenuItem_Click"/>
                                         <Separator/>
                                         <MenuItem Header="电源…"
                                                   Click="PowerMenuItem_Click"/>

@@ -300,6 +300,27 @@ internal static class ShellSearchPolicy
                     originalIndex++));
         }
 
+        foreach (PanelStatusSearchEntry entry
+                 in includeSystem
+                     ? PanelStatusSearchCatalog.All
+                     : Array.Empty<PanelStatusSearchEntry>())
+        {
+            int? rank = AppSearchPolicy.GetTextRank(
+                entry.DisplayName,
+                entry.Aliases,
+                query);
+            if (!rank.HasValue)
+                continue;
+
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult.FromPanelStatus(entry),
+                    rank.Value,
+                    Category: 2,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         foreach (WindowsShellSearchEntry
                  command
                  in includeSystem
@@ -322,7 +343,7 @@ internal static class ShellSearchPolicy
                         .FromShellCommand(
                             command),
                     rank.Value,
-                    Category: 3,
+                    Category: 4,
                     IsActive: false,
                     originalIndex++));
         }
@@ -420,9 +441,13 @@ internal static class ShellSearchPolicy
 
     private static IReadOnlyList<ShellSearchResult>
         ComposeSystemOverview(int limit) =>
-        SystemManagementSearchCatalog.All
+        PanelStatusSearchCatalog.All
             .Select(
-                ShellSearchResult.FromSystemCommand)
+                ShellSearchResult.FromPanelStatus)
+            .Concat(
+                SystemManagementSearchCatalog.All
+            .Select(
+                ShellSearchResult.FromSystemCommand))
             .Concat(
                 WindowsShellSearchCatalog.All.Select(
                     ShellSearchResult.FromShellCommand))

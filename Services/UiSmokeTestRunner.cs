@@ -163,6 +163,9 @@ internal static class UiSmokeTestRunner
             CheckLargeOrganizerVirtualization(
                 results,
                 failures);
+            CheckOrganizerGridUsesFullWorkspaceWidth(
+                results,
+                failures);
             if (!string.IsNullOrWhiteSpace(
                     dashboardSnapshotPath))
             {
@@ -2012,6 +2015,86 @@ internal static class UiSmokeTestRunner
         return null;
     }
 
+    private static void CheckOrganizerGridUsesFullWorkspaceWidth(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        Window? window = null;
+        try
+        {
+            var partition = new PartitionViewModel(
+                "常用工具");
+            foreach (int index in Enumerable.Range(1, 12))
+            {
+                partition.Files.Add(
+                    new DesktopFile
+                    {
+                        Name = $"工具 {index:D2}.lnk",
+                        FullPath = $@"C:\Smoke\工具 {index:D2}.lnk",
+                        Extension = ".lnk",
+                        IsHidden = true
+                    });
+            }
+
+            var model = new OrganizerGridSmokeModel();
+            model.AllPartitions.Add(partition);
+            var organizer = new FileOrganizerView
+            {
+                DataContext = model
+            };
+            window = new Window
+            {
+                Content = organizer,
+                Width = 720,
+                Height = 700,
+                Left = -10000,
+                Top = -10000,
+                Opacity = 0,
+                ShowInTaskbar = false,
+                WindowStyle = WindowStyle.None
+            };
+            window.Show();
+            window.UpdateLayout();
+
+            ViewportVirtualizingPanel? panel =
+                FindVisualChild<ViewportVirtualizingPanel>(
+                    organizer);
+            if (panel == null)
+            {
+                failures.Add(
+                    "收纳图标视图未生成自适应网格面板");
+                return;
+            }
+            if (panel.ItemsPerRow < 5)
+            {
+                failures.Add(
+                    "720px 收纳工作区只排出 "
+                    + $"{panel.ItemsPerRow} 列，仍存在单列或异常空隙风险");
+                return;
+            }
+            if (panel.ActualWidth < 550)
+            {
+                failures.Add(
+                    "收纳图标网格没有拉伸到完整工作区："
+                    + $"{panel.ActualWidth:F1}px");
+                return;
+            }
+
+            results.Add(
+                "PASS 720px 收纳图标视图使用 "
+                + $"{panel.ItemsPerRow} 列和 {panel.ActualWidth:F1}px 可用宽度");
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                $"收纳图标真实布局验证失败：{ex}");
+        }
+        finally
+        {
+            window?.Close();
+        }
+    }
+
     private static IEnumerable<T> FindVisualChildren<T>(
         DependencyObject parent)
         where T : DependencyObject
@@ -2035,6 +2118,25 @@ internal static class UiSmokeTestRunner
                 yield return descendant;
             }
         }
+    }
+
+    private sealed class OrganizerGridSmokeModel
+    {
+        public ObservableCollection<PartitionViewModel>
+            AllPartitions { get; } = new();
+
+        public bool IsListView { get; set; }
+        public bool IsPersonalizedView { get; set; } = true;
+        public bool IsAutoOrganizeEnabled { get; set; }
+        public double IconScale { get; set; } = 1;
+        public string NewPartitionName { get; set; } = string.Empty;
+        public string RenamePartitionName { get; set; } = string.Empty;
+        public bool IsOrganizing => false;
+        public bool IsRenameDialogOpen => false;
+        public bool HasPendingCommonDesktopItems => false;
+        public double CardWidth => 100 * IconScale;
+        public double CardHeight => 120 * IconScale;
+        public double IconImageSize => 48 * IconScale;
     }
 
     private static void RenderCalendarSnapshot(

@@ -143,6 +143,8 @@ public partial class MainWindow :
             ViewModel_DisplayTargetChanged;
         _viewModel.WorkspacePinChanged +=
             ViewModel_WorkspacePinChanged;
+        _viewModel.StatusCenterDetailRequested +=
+            ViewModel_StatusCenterDetailRequested;
         _viewModel.PropertyChanged +=
             ViewModel_PropertyChanged;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
@@ -1431,6 +1433,31 @@ public partial class MainWindow :
             next,
             bringIntoView: next
                 != StatusCenterDetail.None);
+    }
+
+    private void PanelStatusDetailMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement
+            {
+                Tag: StatusCenterDetail detail
+            })
+        {
+            return;
+        }
+
+        ExpandSidebar();
+        _viewModel.ShowStatusCenterDetail(detail);
+    }
+
+    private void ViewModel_StatusCenterDetailRequested(
+        StatusCenterDetail detail)
+    {
+        ExpandSidebar();
+        SetOpenStatusCenterDetail(
+            detail,
+            bringIntoView: true);
     }
 
     private void StatusDetailsExpander_Expanded(
@@ -3803,6 +3830,8 @@ public partial class MainWindow :
             ViewModel_DisplayTargetChanged;
         _viewModel.WorkspacePinChanged -=
             ViewModel_WorkspacePinChanged;
+        _viewModel.StatusCenterDetailRequested -=
+            ViewModel_StatusCenterDetailRequested;
         _viewModel.PropertyChanged -=
             ViewModel_PropertyChanged;
         HideShell();

@@ -8,13 +8,11 @@ namespace FocusPanel.Tests;
 public sealed class WindowsShellSearchCatalogTests
 {
     [Fact]
-    public void Catalog_ContainsOnlyTwelveNonDestructiveShortcutActions()
+    public void Catalog_ContainsOnlyTenNonDestructiveShortcutActions()
     {
         WindowsShellAction[] expected =
         {
-            WindowsShellAction.QuickSettings,
             WindowsShellAction.Notifications,
-            WindowsShellAction.InputSwitcher,
             WindowsShellAction.Widgets,
             WindowsShellAction.SoundOutput,
             WindowsShellAction.ScreenSnipping,

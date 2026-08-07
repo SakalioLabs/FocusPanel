@@ -32,13 +32,12 @@ public sealed class ShellSearchPolicyTests
                             WindowTaskItem>(),
                         "win a")
                     .First(item =>
-                        item.ShellAction
-                            .HasValue);
+                        item.StatusDetail
+                        == StatusCenterDetail.Network);
 
             Assert.Equal(
-                "QuickSettings",
-                result.ShellAction
-                    ?.ToString());
+                ShellSearchResultKind.PanelStatus,
+                result.Kind);
         }
         finally
         {
@@ -238,9 +237,16 @@ public sealed class ShellSearchPolicyTests
         Assert.NotEmpty(results);
         Assert.All(
             results,
-            item => Assert.Equal(
-                ShellSearchResultKind.SystemCommand,
-                item.Kind));
+            item => Assert.Contains(
+                item.Kind,
+                new[]
+                {
+                    ShellSearchResultKind.PanelStatus,
+                    ShellSearchResultKind.SystemCommand
+                }));
+        Assert.Equal(
+            4,
+            results.Count(item => item.IsPanelStatus));
         Assert.Contains(
             results,
             item => item.ManagementTool
@@ -445,9 +451,7 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
-    [InlineData("win a", "QuickSettings")]
     [InlineData("消息", "Notifications")]
-    [InlineData("键盘", "InputSwitcher")]
     [InlineData("天气", "Widgets")]
     [InlineData("音量混合器", "SoundOutput")]
     [InlineData("截屏", "ScreenSnipping")]
@@ -488,6 +492,42 @@ public sealed class ShellSearchPolicyTests
             result.ManagementTool);
         Assert.False(
             result.CanTogglePin);
+    }
+
+    [Theory]
+    [InlineData("win a", "Network")]
+    [InlineData("快捷设置", "Network")]
+    [InlineData("音量混合器", "ApplicationAudio")]
+    [InlineData("电池", "MediaAndBattery")]
+    [InlineData("键盘", "InputMethod")]
+    [InlineData("win space", "InputMethod")]
+    public void Compose_RoutesStatusQueriesIntoPanel(
+        string query,
+        string expectedDetailName)
+    {
+        StatusCenterDetail expectedDetail =
+            Enum.Parse<StatusCenterDetail>(
+                expectedDetailName);
+        ShellSearchResult[] results =
+            ShellSearchPolicy.Compose(
+                    Array.Empty<AppLaunchItem>(),
+                    Array.Empty<WindowTaskItem>(),
+                    query)
+                .ToArray();
+        ShellSearchResult result = results[0];
+
+        Assert.Equal(
+            ShellSearchResultKind.PanelStatus,
+            result.Kind);
+        Assert.Equal(
+            expectedDetail,
+            result.StatusDetail);
+        Assert.StartsWith(
+            "panel-status:",
+            result.StableKey);
+        Assert.Contains("Panel 状态详情", result.SecondaryText);
+        Assert.Null(result.ShellAction);
+        Assert.True(result.UsesGlyph);
     }
 
     [Theory]
