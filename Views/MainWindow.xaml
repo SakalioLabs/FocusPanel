@@ -388,7 +388,11 @@
                                             <Grid Height="64"
                                                   Margin="10,0"
                                                   MouseEnter="SearchResult_MouseEnter"
-                                                  MouseLeave="SearchResult_MouseLeave">
+                                                  MouseLeave="SearchResult_MouseLeave"
+                                                  ContextMenuOpening="SearchWindow_ContextMenuOpening">
+                                                <Grid.ContextMenu>
+                                                    <ContextMenu Style="{StaticResource FocusContextMenu}"/>
+                                                </Grid.ContextMenu>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="40"/>
                                                     <ColumnDefinition Width="*"/>

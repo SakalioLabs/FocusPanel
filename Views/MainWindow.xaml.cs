@@ -1000,6 +1000,98 @@ public partial class MainWindow :
             result);
     }
 
+    private void SearchWindow_ContextMenuOpening(
+        object sender,
+        ContextMenuEventArgs e)
+    {
+        e.Handled = true;
+        if (sender
+                is not FrameworkElement
+                {
+                    DataContext:
+                        ShellSearchResult
+                        {
+                            Window: not null
+                        } result
+                } target)
+        {
+            return;
+        }
+
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                PopulateSearchWindowContextMenu(
+                    target,
+                    result);
+                OpenContextMenu(target);
+            }),
+            DispatcherPriority.Input);
+    }
+
+    private void PopulateSearchWindowContextMenu(
+        FrameworkElement target,
+        ShellSearchResult result)
+    {
+        if (result.Window
+            is not WindowReference window)
+        {
+            return;
+        }
+
+        string applicationName =
+            string.IsNullOrWhiteSpace(
+                result.WindowApplicationName)
+                ? result.DisplayName
+                : result.WindowApplicationName;
+        ContextMenu menu =
+            CreateTaskbarContextMenu();
+        menu.Items.Add(
+            new MenuItem
+            {
+                Header = CreateWindowTitle(
+                    window,
+                    applicationName),
+                IsEnabled = false
+            });
+        menu.Items.Add(
+            new Separator());
+        menu.Items.Add(
+            new MenuItem
+            {
+                Header = "切换到此窗口",
+                InputGestureText = "Enter",
+                Command =
+                    _viewModel
+                        .ExecuteSearchResultCommand,
+                CommandParameter = result
+            });
+        AddWindowStateMenuItems(
+            menu,
+            window);
+        menu.Items.Add(
+            new Separator());
+        menu.Items.Add(
+            new MenuItem
+            {
+                Header = "关闭窗口",
+                InputGestureText = "Delete",
+                Command =
+                    _viewModel
+                        .CloseWindowCommand,
+                CommandParameter = window
+            });
+        AutomationProperties.SetName(
+            menu,
+            "窗口操作 "
+            + GetWindowAccessibleName(
+                window,
+                applicationName));
+        target.ContextMenu = menu;
+    }
+
     private void OrganizerButton_Click(
         object sender,
         RoutedEventArgs e) =>
@@ -1820,7 +1912,7 @@ public partial class MainWindow :
     }
 
     private void AddWindowStateMenuItems(
-        MenuItem windowMenu,
+        ItemsControl windowMenu,
         WindowReference window)
     {
         foreach (WindowStateAction action
@@ -2675,7 +2767,8 @@ public partial class MainWindow :
             ? fallback
             : window.Title;
 
-    private void OpenContextMenu(Button button)
+    private void OpenContextMenu(
+        FrameworkElement button)
     {
         if (button.ContextMenu == null)
             return;

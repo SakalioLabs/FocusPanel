@@ -3697,6 +3697,63 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void WindowOverview_OffersSingleLevelStateContextMenu()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "ContextMenuOpening=\"SearchWindow_ContextMenuOpening\"",
+            mainWindow);
+        Assert.Contains(
+            "private void PopulateSearchWindowContextMenu(",
+            codeBehind);
+        Assert.Contains(
+            "ContextMenu menu =\n"
+            + "            CreateTaskbarContextMenu();",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "AddWindowStateMenuItems(\n"
+            + "            menu,\n"
+            + "            window);",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "private void AddWindowStateMenuItems(\n"
+            + "        ItemsControl windowMenu,",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "Header = \"切换到此窗口\"",
+            codeBehind);
+        Assert.Contains(
+            ".ExecuteSearchResultCommand,\n"
+            + "                CommandParameter = result",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "InputGestureText = \"Enter\"",
+            codeBehind);
+        Assert.Contains(
+            "Header = \"关闭窗口\"",
+            codeBehind);
+        Assert.Contains(
+            "InputGestureText = \"Delete\"",
+            codeBehind);
+        Assert.Contains(
+            "AutomationProperties.SetName(\n"
+            + "            menu,\n"
+            + "            \"窗口操作 \"",
+            codeBehind.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
     public void ContextMenus_UseOneFluentThemeForStaticAndDynamicItems()
     {
         string root = FindRepositoryRoot();
@@ -3779,7 +3836,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            6,
+            7,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);
