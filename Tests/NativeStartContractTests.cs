@@ -16,6 +16,11 @@ public sealed class NativeStartContractTests
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+        string systemStatus = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "SystemStatusService.cs"));
 
         Assert.Contains(
             "Click=\"StartButton_Click\"",
@@ -63,6 +68,18 @@ public sealed class NativeStartContractTests
         Assert.DoesNotContain(
             "ToggleCompactOverlay(",
             handler);
+        Assert.Contains(
+            "WindowsShellAction.StartMenu",
+            systemStatus);
+        Assert.DoesNotContain(
+            "OpenStartMenuNative",
+            systemStatus);
+        Assert.DoesNotContain(
+            "Shell_TrayWnd",
+            systemStatus);
+        Assert.DoesNotContain(
+            "ScTaskList",
+            systemStatus);
     }
 
     [Fact]

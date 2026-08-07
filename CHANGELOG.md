@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.11.29 - 2026-08-08
+
+- 修复 v0.11.28 图标视图可见性绑定的真实类型错误：复用的 `InverseBoolConverter` 原先只返回 `bool`，绑定到 WPF `Visibility` 时会产生转换失败，导致全宽图标收纳盒在部分环境不显示或保留旧布局。转换器现在按目标类型返回 `Visible/Collapsed`，用于 `IsChecked`、`IsEnabled` 时仍返回反向布尔值，并增加两种目标类型的直接单元测试。
+- 开始按钮不再先查找 `Shell_TrayWnd`、发送 `WM_SYSCOMMAND / SC_TASKLIST` 再回退；现在直接复用统一 `WindowsShellShortcut` 输入边界发送 Windows 键，即使原生任务栏窗口已被空区域与 DWM cloak 接管，开始菜单也不依赖该窗口句柄。普通点击语义和右键 Win+X 管理工具保持不变。
+- 清理 README 中已经被 0.11.28 推翻的“仍通过 UI Automation 打开第三方托盘抽屉”说明，并明确 Windows 原生开始菜单属于 Shell 表面但不再通过任务栏宿主唤起。补充图标模式真实可见性、开始入口无任务栏依赖及源码禁用旧入口回归测试。
+
 ## v0.11.28 - 2026-08-07
 
 - 删除“显示隐藏图标”对原生 `Shell_TrayWnd`、UI Automation 和任务栏溢出按钮的依赖，状态中心及右键快捷菜单统一改为 Panel 自有“后台与窗口”入口；点击后直接打开全窗口总览，可切换、关闭、调整窗口状态、置顶和跨屏移动。Windows 没有公开 API 允许第三方完整枚举其他程序的通知区图标，因此不再用临时呼出原生任务栏伪装成替代能力。

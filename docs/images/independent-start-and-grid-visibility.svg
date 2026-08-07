@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#263753"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".08"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="620" rx="28" fill="url(#bg)"/>
+  <circle cx="970" cy="80" r="210" fill="#268cff" opacity=".14"/>
+  <circle cx="170" cy="560" r="220" fill="#7c5cff" opacity=".13"/>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="62" width="298" height="496" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <text x="82" y="108" fill="#f5f8ff" font-family="Segoe UI, sans-serif" font-size="23" font-weight="600">Panel 开始入口</text>
+    <rect x="80" y="142" width="246" height="86" rx="18" fill="#268cff" opacity=".9"/>
+    <rect x="104" y="165" width="38" height="38" rx="8" fill="#fff" opacity=".96"/>
+    <path d="M110 171h12v12h-12zm15 0h12v12h-12zm-15 15h12v12h-12zm15 0h12v12h-12z" fill="#268cff"/>
+    <text x="160" y="181" fill="white" font-family="Segoe UI, sans-serif" font-size="16" font-weight="600">Windows 开始菜单</text>
+    <text x="160" y="204" fill="#e4f1ff" font-family="Segoe UI, sans-serif" font-size="13">直接发送 Windows 键</text>
+    <path d="M203 255v58" stroke="#86bfff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M195 305l8 10 8-10" fill="none" stroke="#86bfff" stroke-width="3" stroke-linecap="round"/>
+    <rect x="80" y="332" width="246" height="92" rx="18" fill="#0b1220" fill-opacity=".52" stroke="#fff" stroke-opacity=".12"/>
+    <text x="203" y="366" fill="#f1f6ff" font-family="Segoe UI, sans-serif" font-size="16" text-anchor="middle">不查找 Shell_TrayWnd</text>
+    <text x="203" y="394" fill="#aebed4" font-family="Segoe UI, sans-serif" font-size="14" text-anchor="middle">任务栏隐藏后仍保持同一入口</text>
+    <text x="203" y="480" fill="#9fb2cc" font-family="Segoe UI, sans-serif" font-size="14" text-anchor="middle">右键继续提供系统管理菜单</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="390" y="62" width="676" height="496" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <text x="422" y="108" fill="#f5f8ff" font-family="Segoe UI, sans-serif" font-size="23" font-weight="600">桌面收纳 · 图标模式</text>
+    <rect x="422" y="136" width="612" height="370" rx="20" fill="#09111f" fill-opacity=".5" stroke="#fff" stroke-opacity=".11"/>
+    <text x="450" y="174" fill="#dce8fa" font-family="Segoe UI, sans-serif" font-size="17" font-weight="600">常用项目</text>
+    <rect x="894" y="151" width="112" height="34" rx="17" fill="#2d8df5" fill-opacity=".2"/>
+    <text x="950" y="173" fill="#8fc7ff" font-family="Segoe UI, sans-serif" font-size="13" text-anchor="middle">真实 Visible</text>
+    <g font-family="Segoe UI, sans-serif" font-size="12" text-anchor="middle" fill="#dce8fa">
+      <g transform="translate(450 202)"><rect width="96" height="116" rx="15" fill="#fff" fill-opacity=".07"/><circle cx="48" cy="43" r="24" fill="#43a5ff"/><text x="48" y="91">项目</text></g>
+      <g transform="translate(566 202)"><rect width="96" height="116" rx="15" fill="#fff" fill-opacity=".07"/><rect x="25" y="20" width="46" height="46" rx="11" fill="#62d6b2"/><text x="48" y="91">文档</text></g>
+      <g transform="translate(682 202)"><rect width="96" height="116" rx="15" fill="#fff" fill-opacity=".07"/><path d="M25 64l23-44 23 44z" fill="#ffba55"/><text x="48" y="91">设计</text></g>
+      <g transform="translate(798 202)"><rect width="96" height="116" rx="15" fill="#fff" fill-opacity=".07"/><circle cx="48" cy="43" r="24" fill="#a788ff"/><text x="48" y="91">工具</text></g>
+      <g transform="translate(914 202)"><rect width="96" height="116" rx="15" fill="#fff" fill-opacity=".07"/><rect x="22" y="22" width="52" height="42" rx="9" fill="#ff718f"/><text x="48" y="91">资料</text></g>
+    </g>
+    <path d="M450 350h560" stroke="#fff" stroke-opacity=".1"/>
+    <text x="450" y="388" fill="#dce8fa" font-family="Segoe UI, sans-serif" font-size="16">可见性绑定</text>
+    <rect x="450" y="410" width="168" height="52" rx="13" fill="#fff" fill-opacity=".07"/>
+    <text x="534" y="442" fill="#aebed4" font-family="Consolas, monospace" font-size="14" text-anchor="middle">false → Visible</text>
+    <path d="M638 436h80" stroke="#86bfff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M708 428l11 8-11 8" fill="none" stroke="#86bfff" stroke-width="3" stroke-linecap="round"/>
+    <rect x="738" y="410" width="272" height="52" rx="13" fill="#268cff" fill-opacity=".18" stroke="#5ba9ff" stroke-opacity=".35"/>
+    <text x="874" y="442" fill="#ddecff" font-family="Segoe UI, sans-serif" font-size="14" text-anchor="middle">全宽分区稳定显示</text>
+  </g>
+</svg>

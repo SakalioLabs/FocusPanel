@@ -17,12 +17,9 @@ public sealed class SystemStatusService : ISystemStatusService
     private readonly Func<
         WindowsShellShortcut,
         bool> _shortcutSender;
-    private readonly Func<bool> _startMenuOpener;
 
     public SystemStatusService()
-        : this(
-            SendWindowsShortcut,
-            OpenStartMenuNative)
+        : this(SendWindowsShortcut)
     {
     }
 
@@ -30,26 +27,11 @@ public sealed class SystemStatusService : ISystemStatusService
         Func<
             WindowsShellShortcut,
             bool> shortcutSender)
-        : this(
-            shortcutSender,
-            OpenStartMenuNative)
-    {
-    }
-
-    internal SystemStatusService(
-        Func<
-            WindowsShellShortcut,
-            bool> shortcutSender,
-        Func<bool> startMenuOpener)
     {
         _shortcutSender =
             shortcutSender
             ?? throw new ArgumentNullException(
                 nameof(shortcutSender));
-        _startMenuOpener =
-            startMenuOpener
-            ?? throw new ArgumentNullException(
-                nameof(startMenuOpener));
     }
 
     public SystemStatusSnapshot GetStatusSnapshot()
@@ -362,8 +344,7 @@ public sealed class SystemStatusService : ISystemStatusService
     public bool OpenInputSwitcher() => TrySendWindowsShortcut(WindowsShellAction.InputSwitcher);
 
     public bool OpenStartMenu() =>
-        _startMenuOpener()
-        || TrySendWindowsShortcut(
+        TrySendWindowsShortcut(
             WindowsShellAction.StartMenu);
 
     public bool OpenTaskView() => TrySendWindowsShortcut(WindowsShellAction.TaskView);
@@ -576,20 +557,6 @@ public sealed class SystemStatusService : ISystemStatusService
             WindowsShellShortcutMap.Get(
                 action));
 
-    private static bool OpenStartMenuNative()
-    {
-        IntPtr taskbar = NativeMethods.FindWindow(
-            "Shell_TrayWnd",
-            null);
-        return taskbar != IntPtr.Zero
-            && NativeMethods.PostMessage(
-                taskbar,
-                NativeMethods.WmSysCommand,
-                new IntPtr(
-                    NativeMethods.ScTaskList),
-                IntPtr.Zero);
-    }
-
     private static bool SendWindowsShortcut(
         WindowsShellShortcut shortcut)
     {
@@ -746,11 +713,6 @@ public sealed class SystemStatusService : ISystemStatusService
 
     private static class NativeMethods
     {
-        internal const uint WmSysCommand =
-            0x0112;
-        internal const int ScTaskList =
-            0xF130;
-
         [DllImport("ole32.dll")]
         internal static extern int CoInitializeEx(
             IntPtr reserved,
@@ -758,17 +720,6 @@ public sealed class SystemStatusService : ISystemStatusService
 
         [DllImport("ole32.dll")]
         internal static extern void CoUninitialize();
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        internal static extern IntPtr FindWindow(string className, string? windowName);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool PostMessage(
-            IntPtr window,
-            uint message,
-            IntPtr wParam,
-            IntPtr lParam);
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetForegroundWindow();

@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 
 namespace FocusPanel.Converters;
@@ -10,7 +11,12 @@ public class InverseBoolConverter : IValueConverter
     {
         if (value is bool booleanValue)
         {
-            return !booleanValue;
+            bool inverted = !booleanValue;
+            return targetType == typeof(Visibility)
+                ? inverted
+                    ? Visibility.Visible
+                    : Visibility.Collapsed
+                : inverted;
         }
         return value;
     }
@@ -20,6 +26,11 @@ public class InverseBoolConverter : IValueConverter
         if (value is bool booleanValue)
         {
             return !booleanValue;
+        }
+        if (value is Visibility visibility)
+        {
+            return visibility
+                != Visibility.Visible;
         }
         return value;
     }

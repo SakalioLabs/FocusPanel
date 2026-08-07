@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 using FocusPanel.Converters;
 using FocusPanel.Models;
@@ -9,6 +10,44 @@ namespace FocusPanel.Tests;
 
 public sealed class ConverterSafetyTests
 {
+    [Theory]
+    [InlineData(true, Visibility.Collapsed)]
+    [InlineData(false, Visibility.Visible)]
+    public void InverseBool_ProducesVisibilityForVisibilityTargets(
+        bool value,
+        Visibility expected)
+    {
+        var converter =
+            new InverseBoolConverter();
+
+        object converted = converter.Convert(
+            value,
+            typeof(Visibility),
+            null!,
+            CultureInfo.InvariantCulture);
+
+        Assert.Equal(expected, converted);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void InverseBool_RemainsBooleanForBooleanTargets(
+        bool value,
+        bool expected)
+    {
+        var converter =
+            new InverseBoolConverter();
+
+        object converted = converter.Convert(
+            value,
+            typeof(bool),
+            null!,
+            CultureInfo.InvariantCulture);
+
+        Assert.Equal(expected, converted);
+    }
+
     [Fact]
     public void ReadOnlyConverters_DoNotAttemptToWriteBack()
     {
