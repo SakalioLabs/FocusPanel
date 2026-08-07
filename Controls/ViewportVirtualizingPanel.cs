@@ -104,9 +104,13 @@ public sealed class ViewportVirtualizingPanel :
     internal int FirstRealizedIndex =>
         _layout?.FirstRealizedIndex ?? -1;
 
+    internal int ItemsPerRow =>
+        _layout?.ItemsPerRow ?? 0;
+
     protected override Size MeasureOverride(
         Size availableSize)
     {
+        AttachScrollOwner();
         ItemsControl? owner =
             ItemsControl.GetItemsOwner(this);
         int itemCount =
@@ -156,6 +160,15 @@ public sealed class ViewportVirtualizingPanel :
                     _layout.ItemsPerRow,
                     _cellWidth,
                     IsWrapping);
+        double rowWidth = IsWrapping
+            ? arrangedCellWidth
+                * _layout.ItemsPerRow
+            : finalSize.Width;
+        double rowOffset = IsWrapping
+            ? Math.Max(
+                0,
+                (finalSize.Width - rowWidth) / 2)
+            : 0;
         IItemContainerGenerator generator =
             ItemContainerGenerator;
         for (int childIndex = 0;
@@ -179,7 +192,8 @@ public sealed class ViewportVirtualizingPanel :
                 itemIndex
                 % _layout.ItemsPerRow;
             double x = IsWrapping
-                ? column * arrangedCellWidth
+                ? rowOffset
+                    + column * arrangedCellWidth
                 : 0;
             double width = IsWrapping
                 ? arrangedCellWidth
@@ -411,24 +425,54 @@ public sealed class ViewportVirtualizingPanel :
     private double ResolvePanelWidth(
         double availableWidth)
     {
+        double resolved = 0;
         if (!double.IsNaN(availableWidth)
             && !double.IsInfinity(availableWidth)
             && availableWidth > 0)
         {
-            return availableWidth;
+            resolved = availableWidth;
+        }
+
+        if (_scrollOwner != null
+            && _scrollOwner.ViewportWidth > 0)
+        {
+            try
+            {
+                double left = TransformToAncestor(
+                        _scrollOwner)
+                    .Transform(new Point(0, 0))
+                    .X;
+                double viewportCandidate =
+                    _scrollOwner.ViewportWidth
+                    - Math.Max(0, left)
+                    - 2;
+                resolved = Math.Max(
+                    resolved,
+                    viewportCandidate);
+            }
+            catch (InvalidOperationException)
+            {
+                resolved = Math.Max(
+                    resolved,
+                    _scrollOwner.ViewportWidth);
+            }
         }
 
         if (ActualWidth > 0)
-            return ActualWidth;
+            resolved = Math.Max(resolved, ActualWidth);
         if (VisualTreeHelper.GetParent(this)
             is FrameworkElement parent
             && parent.ActualWidth > 0)
         {
-            return parent.ActualWidth;
+            resolved = Math.Max(
+                resolved,
+                parent.ActualWidth);
         }
-        return Math.Max(
-            1,
-            ItemWidth + ItemSpacing);
+        return resolved > 0
+            ? resolved
+            : Math.Max(
+                1,
+                ItemWidth + ItemSpacing);
     }
 
     private void Panel_Loaded(

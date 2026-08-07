@@ -6,7 +6,7 @@ namespace FocusPanel.Tests;
 public sealed class ViewportVirtualizationCalculatorTests
 {
     [Fact]
-    public void WrappedCells_DistributeRemainingWidthEvenly()
+    public void WrappedCells_KeepStableDesktopLikeSpacing()
     {
         double width =
             ViewportVirtualizationCalculator
@@ -16,7 +16,7 @@ public sealed class ViewportVirtualizationCalculatorTests
                     requestedCellWidth: 110,
                     wrap: true);
 
-        Assert.Equal(130, width);
+        Assert.Equal(110, width);
     }
 
     [Fact]

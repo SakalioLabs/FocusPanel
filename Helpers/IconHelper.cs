@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -44,6 +46,78 @@ public static class IconHelper
     private const int SHIL_JUMBO = 0x4;
     private const int ILD_TRANSPARENT = 0x1;
 
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SHDefExtractIcon(
+        string pszIconFile,
+        int iIndex,
+        uint uFlags,
+        out IntPtr phiconLarge,
+        out IntPtr phiconSmall,
+        uint nIconSize);
+
+    [ComImport]
+    [Guid("00021401-0000-0000-C000-000000000046")]
+    private class ShellLink
+    {
+    }
+
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("000214F9-0000-0000-C000-000000000046")]
+    private interface IShellLinkW
+    {
+        void GetPath(
+            [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder file,
+            int capacity,
+            IntPtr findData,
+            uint flags);
+        void GetIDList(out IntPtr itemIdList);
+        void SetIDList(IntPtr itemIdList);
+        void GetDescription(
+            [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder name,
+            int capacity);
+        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
+        void GetWorkingDirectory(
+            [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder directory,
+            int capacity);
+        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string directory);
+        void GetArguments(
+            [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder arguments,
+            int capacity);
+        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string arguments);
+        void GetHotkey(out short hotkey);
+        void SetHotkey(short hotkey);
+        void GetShowCmd(out int showCommand);
+        void SetShowCmd(int showCommand);
+        void GetIconLocation(
+            [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath,
+            int capacity,
+            out int iconIndex);
+        void SetIconLocation(
+            [MarshalAs(UnmanagedType.LPWStr)] string iconPath,
+            int iconIndex);
+    }
+
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("0000010b-0000-0000-C000-000000000046")]
+    private interface IPersistFile
+    {
+        void GetClassID(out Guid classId);
+        [PreserveSig]
+        int IsDirty();
+        void Load(
+            [MarshalAs(UnmanagedType.LPWStr)] string fileName,
+            uint mode);
+        void Save(
+            [MarshalAs(UnmanagedType.LPWStr)] string fileName,
+            [MarshalAs(UnmanagedType.Bool)] bool remember);
+        void SaveCompleted(
+            [MarshalAs(UnmanagedType.LPWStr)] string fileName);
+        void GetCurFile(
+            [MarshalAs(UnmanagedType.LPWStr)] out string fileName);
+    }
+
     [ComImport]
     [Guid("46EB5926-582E-4017-9FDF-E8998DAA0950")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -73,26 +147,20 @@ public static class IconHelper
             }
         }
 
+        ImageSource? explicitIcon =
+            TryGetExplicitCustomIcon(path, large);
+        if (explicitIcon != null)
+        {
+            CacheIcon(cacheKey, explicitIcon);
+            return explicitIcon;
+        }
+
         if (large)
         {
             var highResIcon = TryGetShellImageListIcon(path);
             if (highResIcon != null)
             {
-                lock (_cacheLock)
-                {
-                    if (_iconCache.Count >= MaxCacheSize)
-                    {
-                        var keysToRemove = new List<string>();
-                        int count = 0;
-                        foreach (var key in _iconCache.Keys)
-                        {
-                            if (count++ > MaxCacheSize / 2) break;
-                            keysToRemove.Add(key);
-                        }
-                        foreach (var key in keysToRemove) _iconCache.Remove(key);
-                    }
-                    _iconCache[cacheKey] = highResIcon;
-                }
+                CacheIcon(cacheKey, highResIcon);
                 return highResIcon;
             }
         }
@@ -119,32 +187,255 @@ public static class IconHelper
         icon.Freeze(); // Make it cross-thread accessible
 
         // 缓存图标
-        lock (_cacheLock)
-        {
-            // 防止缓存无限增长
-            if (_iconCache.Count >= MaxCacheSize)
-            {
-                // 清除一半缓存
-                var keysToRemove = new List<string>();
-                int count = 0;
-                foreach (var key in _iconCache.Keys)
-                {
-                    if (count++ > MaxCacheSize / 2)
-                        break;
-                    keysToRemove.Add(key);
-                }
-                foreach (var key in keysToRemove)
-                {
-                    _iconCache.Remove(key);
-                }
-            }
-            _iconCache[cacheKey] = icon;
-        }
+        CacheIcon(cacheKey, icon);
 
         // Cleanup
         DestroyIcon(shinfo.hIcon);
 
         return icon;
+    }
+
+    private static ImageSource? TryGetExplicitCustomIcon(
+        string itemPath,
+        bool large)
+    {
+        if (!TryResolveCustomIconLocation(
+                itemPath,
+                out string iconPath,
+                out int iconIndex))
+        {
+            return null;
+        }
+
+        IntPtr largeIcon = IntPtr.Zero;
+        IntPtr smallIcon = IntPtr.Zero;
+        try
+        {
+            uint size = large
+                ? 64u | (16u << 16)
+                : 16u | (16u << 16);
+            int result = SHDefExtractIcon(
+                iconPath,
+                iconIndex,
+                0,
+                out largeIcon,
+                out smallIcon,
+                size);
+            IntPtr handle = large
+                ? largeIcon
+                : smallIcon;
+            if (result != 0 || handle == IntPtr.Zero)
+                return null;
+
+            BitmapSource source =
+                Imaging.CreateBitmapSourceFromHIcon(
+                    handle,
+                    Int32Rect.Empty,
+                    BitmapSizeOptions.FromEmptyOptions());
+            source.Freeze();
+            return source;
+        }
+        catch
+        {
+            return null;
+        }
+        finally
+        {
+            if (largeIcon != IntPtr.Zero)
+                DestroyIcon(largeIcon);
+            if (smallIcon != IntPtr.Zero
+                && smallIcon != largeIcon)
+            {
+                DestroyIcon(smallIcon);
+            }
+        }
+    }
+
+    internal static bool TryResolveCustomIconLocation(
+        string itemPath,
+        out string iconPath,
+        out int iconIndex)
+    {
+        iconPath = string.Empty;
+        iconIndex = 0;
+        try
+        {
+            string extension = Path.GetExtension(itemPath);
+            if (extension.Equals(
+                    ".lnk",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return TryResolveShortcutIcon(
+                    itemPath,
+                    out iconPath,
+                    out iconIndex);
+            }
+            if (extension.Equals(
+                    ".url",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return TryResolveIniIcon(
+                    itemPath,
+                    itemPath,
+                    out iconPath,
+                    out iconIndex);
+            }
+            if (Directory.Exists(itemPath))
+            {
+                return TryResolveIniIcon(
+                    Path.Combine(itemPath, "desktop.ini"),
+                    itemPath,
+                    out iconPath,
+                    out iconIndex);
+            }
+        }
+        catch
+        {
+            // A malformed shortcut must fall back to the normal Shell icon.
+        }
+        return false;
+    }
+
+    private static bool TryResolveShortcutIcon(
+        string shortcutPath,
+        out string iconPath,
+        out int iconIndex)
+    {
+        iconPath = string.Empty;
+        iconIndex = 0;
+        object? shellLink = null;
+        try
+        {
+            shellLink = new ShellLink();
+            ((IPersistFile)shellLink).Load(
+                shortcutPath,
+                0);
+            var buffer = new StringBuilder(32768);
+            ((IShellLinkW)shellLink).GetIconLocation(
+                buffer,
+                buffer.Capacity,
+                out iconIndex);
+            iconPath = NormalizeIconPath(
+                buffer.ToString(),
+                shortcutPath);
+            return !string.IsNullOrWhiteSpace(iconPath);
+        }
+        finally
+        {
+            if (shellLink != null
+                && Marshal.IsComObject(shellLink))
+            {
+                Marshal.FinalReleaseComObject(shellLink);
+            }
+        }
+    }
+
+    private static bool TryResolveIniIcon(
+        string iniPath,
+        string itemPath,
+        out string iconPath,
+        out int iconIndex)
+    {
+        iconPath = string.Empty;
+        iconIndex = 0;
+        if (!File.Exists(iniPath))
+            return false;
+
+        string? iconFile = null;
+        foreach (string rawLine in File.ReadLines(iniPath))
+        {
+            string line = rawLine.Trim();
+            if (line.StartsWith(
+                    "IconResource=",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                string value = line["IconResource=".Length..];
+                int separator = value.LastIndexOf(',');
+                if (separator > 0
+                    && int.TryParse(
+                        value[(separator + 1)..].Trim(),
+                        out int parsedIndex))
+                {
+                    iconIndex = parsedIndex;
+                    value = value[..separator];
+                }
+                iconFile = value;
+                break;
+            }
+            if (line.StartsWith(
+                    "IconFile=",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                iconFile = line["IconFile=".Length..];
+            }
+            else if (line.StartsWith(
+                         "IconIndex=",
+                         StringComparison.OrdinalIgnoreCase))
+            {
+                _ = int.TryParse(
+                    line["IconIndex=".Length..].Trim(),
+                    out iconIndex);
+            }
+        }
+
+        iconPath = NormalizeIconPath(
+            iconFile,
+            itemPath);
+        return !string.IsNullOrWhiteSpace(iconPath);
+    }
+
+    internal static string NormalizeIconPath(
+        string? iconPath,
+        string itemPath)
+    {
+        if (string.IsNullOrWhiteSpace(iconPath))
+            return string.Empty;
+
+        string normalized = Environment
+            .ExpandEnvironmentVariables(iconPath.Trim().Trim('"'));
+        if (!Path.IsPathRooted(normalized))
+        {
+            string? baseDirectory = Directory.Exists(itemPath)
+                ? itemPath
+                : Path.GetDirectoryName(itemPath);
+            if (!string.IsNullOrWhiteSpace(baseDirectory))
+            {
+                normalized = Path.Combine(
+                    baseDirectory,
+                    normalized);
+            }
+        }
+        try
+        {
+            return Path.GetFullPath(normalized);
+        }
+        catch
+        {
+            return normalized;
+        }
+    }
+
+    private static void CacheIcon(
+        string cacheKey,
+        ImageSource icon)
+    {
+        lock (_cacheLock)
+        {
+            if (_iconCache.Count >= MaxCacheSize)
+            {
+                var keysToRemove = new List<string>();
+                int count = 0;
+                foreach (string key in _iconCache.Keys)
+                {
+                    if (count++ > MaxCacheSize / 2)
+                        break;
+                    keysToRemove.Add(key);
+                }
+                foreach (string key in keysToRemove)
+                    _iconCache.Remove(key);
+            }
+            _iconCache[cacheKey] = icon;
+        }
     }
 
     private static ImageSource? TryGetShellImageListIcon(string path)

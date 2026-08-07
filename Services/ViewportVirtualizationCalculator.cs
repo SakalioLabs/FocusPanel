@@ -29,7 +29,9 @@ internal static class ViewportVirtualizationCalculator
             panelWidth,
             requestedCellWidth);
         return wrap
-            ? panelWidth / Math.Max(1, itemsPerRow)
+            ? Math.Min(
+                requestedCellWidth,
+                panelWidth / Math.Max(1, itemsPerRow))
             : panelWidth;
     }
 

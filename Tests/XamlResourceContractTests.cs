@@ -812,6 +812,9 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain(
             "OpenNotificationOverflow",
             mainWindow);
+        Assert.DoesNotContain(
+            "显示隐藏图标",
+            mainWindow);
 
         string systemStatus = File.ReadAllText(
             Path.Combine(root, "Services", "SystemStatusService.cs"));
@@ -4280,11 +4283,17 @@ public sealed class XamlResourceContractTests
                 "Services",
                 "FileOrganizerService.cs"));
 
-        Assert.DoesNotContain(
-            "ResolveShortcut(path)",
+        Assert.Contains(
+            "TryResolveShortcutIcon(",
             iconHelper);
         Assert.DoesNotContain(
             "WScript.Shell",
+            iconHelper);
+        Assert.Contains(
+            "GetIconLocation(",
+            iconHelper);
+        Assert.Contains(
+            "SHDefExtractIcon(",
             iconHelper);
         Assert.Contains(
             "TryGetShellImageListIcon(path)",

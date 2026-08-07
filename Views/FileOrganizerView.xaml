@@ -369,6 +369,7 @@
                                         <DataTemplate>
                                             <ItemsControl ItemsSource="{Binding Files}"
                                                           Margin="6"
+                                                          HorizontalAlignment="Stretch"
                                                           VirtualizingPanel.IsVirtualizing="True"
                                                           VirtualizingPanel.VirtualizationMode="Recycling">
                                                 <ItemsControl.ItemsPanel>
@@ -664,6 +665,7 @@
                 <Grid>
                     <ItemsControl ItemsSource="{Binding AllPartitions}"
                                   ItemTemplate="{StaticResource PartitionTemplate}"
+                                  HorizontalAlignment="Stretch"
                                   Visibility="{Binding IsListView, Converter={StaticResource InverseBoolConverter}}"
                                   AutomationProperties.Name="全宽图标收纳盒">
                         <ItemsControl.ItemsPanel>

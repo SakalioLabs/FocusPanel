@@ -12,6 +12,60 @@ namespace FocusPanel.Tests;
 public sealed class ViewportVirtualizingPanelMutationTests
 {
     [Fact]
+    public void WrappedItems_UseTheScrollViewportInsteadOfLockingToOneColumn()
+    {
+        Exception? failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var items = new ObservableCollection<string>();
+                for (int index = 0; index < 12; index++)
+                    items.Add($"item-{index}");
+
+                ItemsControl control = CreateControl(items);
+                control.HorizontalAlignment = HorizontalAlignment.Stretch;
+                var viewer = new ScrollViewer
+                {
+                    Content = control,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    Padding = new Thickness(14)
+                };
+                var window = new Window
+                {
+                    Content = viewer,
+                    Width = 650,
+                    Height = 400,
+                    Left = -10000,
+                    Top = -10000,
+                    Opacity = 0,
+                    ShowInTaskbar = false,
+                    WindowStyle = WindowStyle.None
+                };
+                window.Show();
+                window.UpdateLayout();
+
+                ViewportVirtualizingPanel? panel =
+                    FindPanel(control);
+                Assert.NotNull(panel);
+                Assert.True(
+                    panel!.ItemsPerRow >= 5,
+                    $"Expected at least five columns, got {panel.ItemsPerRow}.");
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(10)));
+        Assert.Null(failure);
+    }
+
+    [Fact]
     public void MovingItemsBetweenRealizedPartitions_DoesNotCorruptGenerator()
     {
         Exception? failure = null;
