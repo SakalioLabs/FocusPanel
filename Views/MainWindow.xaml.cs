@@ -2790,6 +2790,8 @@ public partial class MainWindow :
             TaskbarWindowPreview_ActivateRequested;
         preview.CloseRequested +=
             TaskbarWindowPreview_CloseRequested;
+        preview.StateActionRequested +=
+            TaskbarWindowPreview_StateActionRequested;
         preview.MouseEnter +=
             TaskbarWindowPreview_MouseEnter;
         preview.MouseLeave +=
@@ -2875,6 +2877,27 @@ public partial class MainWindow :
     }
 
     private void
+        TaskbarWindowPreview_StateActionRequested(
+            WindowReference window,
+            WindowStateAction action)
+    {
+        ICommand command = action switch
+        {
+            WindowStateAction.Minimize =>
+                _viewModel.MinimizeWindowCommand,
+            WindowStateAction.Maximize =>
+                _viewModel.MaximizeWindowCommand,
+            WindowStateAction.Restore =>
+                _viewModel.RestoreWindowCommand,
+            _ => throw new
+                ArgumentOutOfRangeException(
+                    nameof(action))
+        };
+        if (command.CanExecute(window))
+            command.Execute(window);
+    }
+
+    private void
         TaskbarWindowPreview_MouseEnter(
             object sender,
             MouseEventArgs e) =>
@@ -2901,6 +2924,8 @@ public partial class MainWindow :
             TaskbarWindowPreview_ActivateRequested;
         preview.CloseRequested -=
             TaskbarWindowPreview_CloseRequested;
+        preview.StateActionRequested -=
+            TaskbarWindowPreview_StateActionRequested;
         preview.MouseEnter -=
             TaskbarWindowPreview_MouseEnter;
         preview.MouseLeave -=

@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.34 把实时缩略图从“只能看”升级为可直接操作的窗口卡：每个画面下方都有最小化、最大化/还原和关闭按钮，按钮会跟随窗口真实状态变化。选择好目标画面后即可原地处理，不必再退出预览、右键应用并钻进逐窗口菜单。
+
+![实时缩略卡直接控制窗口状态](docs/images/window-preview-direct-controls.svg)
+
 > 0.11.33 补齐了虚拟桌面上的任务栏连续性：切到另一个 Windows 桌面后，Panel 不再留在旧桌面。常驻紧凑栏会自动跟随；非常驻模式下，右缘、全局快捷键或托盘唤出会先把 Panel 移到当前桌面。窗口总览顶部同时新增“上一个 / 新建 / 下一个 / 关闭”四个直接入口，不必再依赖失效的任务视图按钮或藏在开始右键菜单里。实现只使用微软公开的 [`IVirtualDesktopManager`](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-ivirtualdesktopmanager)、[`GetWindowDesktopId`](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ivirtualdesktopmanager-getwindowdesktopid) 和 [`MoveWindowToDesktop`](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ivirtualdesktopmanager-movewindowtodesktop)，不接入版本易变的 Shell 私有接口。
 
 ![Panel 跟随当前虚拟桌面并提供直接切换入口](docs/images/panel-virtual-desktop-follow.svg)

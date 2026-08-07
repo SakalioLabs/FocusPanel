@@ -1,8 +1,9 @@
 <Window x:Class="FocusPanel.Views.TaskbarWindowPreviewWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:FocusPanel.Models"
         Title="FocusPanel 实时窗口预览"
-        Width="360"
+        Width="420"
         SizeToContent="Height"
         WindowStartupLocation="Manual"
         WindowStyle="None"
@@ -82,6 +83,8 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Border Width="4"
                                                 Height="22"
@@ -98,6 +101,52 @@
                                                 Width="36"
                                                 Height="36"
                                                 Margin="8,0,0,0"
+                                                Click="MinimizeWindowButton_Click"
+                                                AutomationProperties.Name="最小化此窗口">
+                                            <Button.Style>
+                                                <Style TargetType="Button"
+                                                       BasedOn="{StaticResource FocusIconButton}">
+                                                    <Setter Property="ToolTip" Value="最小化窗口"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding State}"
+                                                                     Value="{x:Static models:TrackedWindowState.Minimized}">
+                                                            <Setter Property="IsEnabled" Value="False"/>
+                                                            <Setter Property="ToolTip" Value="窗口已经最小化"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                            <TextBlock Text="&#xE921;"
+                                                       Style="{StaticResource FocusIconText}"
+                                                       FontSize="12"/>
+                                        </Button>
+                                        <Button Grid.Column="3"
+                                                Width="36"
+                                                Height="36"
+                                                Margin="4,0,0,0"
+                                                Style="{StaticResource FocusIconButton}"
+                                                Click="ResizeWindowButton_Click"
+                                                ToolTip="最大化或还原窗口"
+                                                AutomationProperties.Name="最大化或还原此窗口">
+                                            <TextBlock FontSize="12">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock"
+                                                           BasedOn="{StaticResource FocusIconText}">
+                                                        <Setter Property="Text" Value="&#xE922;"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding State}"
+                                                                         Value="{x:Static models:TrackedWindowState.Maximized}">
+                                                                <Setter Property="Text" Value="&#xE923;"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Button>
+                                        <Button Grid.Column="4"
+                                                Width="36"
+                                                Height="36"
+                                                Margin="4,0,0,0"
                                                 Style="{StaticResource FocusIconButton}"
                                                 Click="CloseWindowButton_Click"
                                                 ToolTip="关闭窗口"

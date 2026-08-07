@@ -51,6 +51,10 @@ public partial class TaskbarWindowPreviewWindow :
         ActivateRequested;
     public event Action<WindowReference>?
         CloseRequested;
+    internal event Action<
+        WindowReference,
+        WindowStateAction>?
+        StateActionRequested;
 
     internal void Configure(
         TaskbarAppItem task) =>
@@ -423,6 +427,61 @@ public partial class TaskbarWindowPreviewWindow :
         {
             CloseRequested?.Invoke(
                 window);
+            Close();
+            e.Handled = true;
+        }
+    }
+
+    private void MinimizeWindowButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        RequestStateAction(
+            sender,
+            WindowStateAction.Minimize,
+            e);
+    }
+
+    private void ResizeWindowButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender
+                is not FrameworkElement
+                {
+                    DataContext:
+                        WindowReference window
+                })
+        {
+            return;
+        }
+
+        WindowStateAction action =
+            WindowPreviewActionPolicy
+                .GetResizeAction(
+                    window.State);
+        StateActionRequested?.Invoke(
+            window,
+            action);
+        Close();
+        e.Handled = true;
+    }
+
+    private void RequestStateAction(
+        object sender,
+        WindowStateAction action,
+        RoutedEventArgs e)
+    {
+        if (sender
+                is FrameworkElement
+                {
+                    DataContext:
+                        WindowReference window
+                })
+        {
+            StateActionRequested?.Invoke(
+                window,
+                action);
             Close();
             e.Handled = true;
         }

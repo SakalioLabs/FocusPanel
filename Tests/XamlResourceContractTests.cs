@@ -3120,6 +3120,15 @@ public sealed class XamlResourceContractTests
             "CloseWindowButton_Click",
             previewXaml);
         Assert.Contains(
+            "MinimizeWindowButton_Click",
+            previewXaml);
+        Assert.Contains(
+            "ResizeWindowButton_Click",
+            previewXaml);
+        Assert.Contains(
+            "TrackedWindowState.Maximized",
+            previewXaml);
+        Assert.Contains(
             "MaximumPreviewCount = 4",
             previewCode);
         Assert.Contains(
@@ -3148,6 +3157,15 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains(
             "_taskbarWindowPreview.Close();",
+            mainWindow);
+        Assert.Contains(
+            "preview.StateActionRequested +=",
+            mainWindow);
+        Assert.Contains(
+            "preview.StateActionRequested -=",
+            mainWindow);
+        Assert.Contains(
+            "TaskbarWindowPreview_StateActionRequested",
             mainWindow);
     }
 
