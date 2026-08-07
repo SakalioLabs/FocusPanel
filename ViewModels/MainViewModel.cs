@@ -164,7 +164,36 @@ public partial class MainViewModel : ObservableObject, IDisposable
         nameof(SearchPanelTitle))]
     [NotifyPropertyChangedFor(
         nameof(SearchPanelInstruction))]
+    [NotifyPropertyChangedFor(
+        nameof(AreSearchSuggestionsVisible))]
     private string searchQuery = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsAllSearchScope))]
+    [NotifyPropertyChangedFor(
+        nameof(IsWindowSearchScope))]
+    [NotifyPropertyChangedFor(
+        nameof(IsApplicationSearchScope))]
+    [NotifyPropertyChangedFor(
+        nameof(IsSystemSearchScope))]
+    [NotifyPropertyChangedFor(
+        nameof(IsTaskQuickCaptureDraft))]
+    [NotifyPropertyChangedFor(
+        nameof(SearchPanelTitle))]
+    [NotifyPropertyChangedFor(
+        nameof(SearchPanelInstruction))]
+    [NotifyPropertyChangedFor(
+        nameof(AppSearchStatusText))]
+    [NotifyPropertyChangedFor(
+        nameof(AreSearchSuggestionsVisible))]
+    private ShellSearchScope searchScope =
+        ShellSearchScope.All;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(OpenWindowScopeLabel))]
+    private int openWindowCount;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(
@@ -753,11 +782,34 @@ public partial class MainViewModel : ObservableObject, IDisposable
                        + "应用、窗口与命令搜索仍可使用";
             }
 
-            return "没有找到匹配的应用、窗口、待办、命令或快捷结果";
+            return SearchScope switch
+            {
+                ShellSearchScope.Windows =>
+                    "当前没有可切换的窗口",
+                ShellSearchScope.Applications =>
+                    "没有找到匹配的应用",
+                ShellSearchScope.System =>
+                    "没有找到匹配的系统入口",
+                _ =>
+                    "没有找到匹配的应用、窗口、待办、命令或快捷结果"
+            };
         }
     }
     public bool IsAppSearchStatusVisible =>
         SearchResults.Count == 0;
+    public bool IsAllSearchScope =>
+        SearchScope == ShellSearchScope.All;
+    public bool IsWindowSearchScope =>
+        SearchScope == ShellSearchScope.Windows;
+    public bool IsApplicationSearchScope =>
+        SearchScope == ShellSearchScope.Applications;
+    public bool IsSystemSearchScope =>
+        SearchScope == ShellSearchScope.System;
+    public string OpenWindowScopeLabel =>
+        $"窗口 {OpenWindowCount}";
+    public bool AreSearchSuggestionsVisible =>
+        IsAllSearchScope
+        && string.IsNullOrEmpty(SearchQuery);
     public string AudioGlyph =>
         GetAudioPresentation().Glyph;
     public string AudioSummary =>
@@ -821,18 +873,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string OrganizerEntryAutomationName =>
         GetOrganizerEntryPresentation().AutomationName;
     public bool IsTaskQuickCaptureDraft =>
-        SearchQuery.StartsWith(
+        IsAllSearchScope
+        && SearchQuery.StartsWith(
             TaskCaptureCommandParser
                 .QuickCapturePrefix,
             StringComparison.Ordinal);
     public string SearchPanelTitle =>
         IsTaskQuickCaptureDraft
             ? "快速添加到 Inbox"
-            : "应用、窗口、待办、命令与计算";
+            : SearchScope switch
+            {
+                ShellSearchScope.Windows =>
+                    "当前窗口",
+                ShellSearchScope.Applications =>
+                    "全部应用",
+                ShellSearchScope.System =>
+                    "系统工具与快捷命令",
+                _ =>
+                    "应用、窗口、待办、命令与计算"
+            };
     public string SearchPanelInstruction =>
         IsTaskQuickCaptureDraft
             ? "输入标题后按 Enter，直接保存到 Inbox"
-            : "输入关键词后用 ↑↓ 选择，按 Enter 执行";
+            : SearchScope == ShellSearchScope.Windows
+                ? "点击窗口直接切换；输入标题可继续筛选"
+                : "输入关键词后用 ↑↓ 选择，按 Enter 执行";
     public bool IsOrganizerEntryActive =>
         string.Equals(
             LastWorkspace,
@@ -1076,6 +1141,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsSearchOpen = true;
         RefreshSearchResults();
     }
+
+    partial void OnSearchScopeChanged(
+        ShellSearchScope value) =>
+        RefreshSearchResults();
 
     partial void OnIsSearchOpenChanged(bool value)
     {
@@ -2253,6 +2322,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void SelectSearchScope(
+        string? scope)
+    {
+        if (Enum.TryParse(
+                scope,
+                ignoreCase: true,
+                out ShellSearchScope parsed))
+        {
+            SearchScope = parsed;
+        }
+    }
+
+    [RelayCommand]
     private void ToggleCalendar()
     {
         bool open = !IsCalendarOpen;
@@ -2927,13 +3009,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _appCatalog.Search(
                 SearchQuery,
                 ShellSearchPolicy.DefaultLimit);
+        IReadOnlyList<WindowTaskItem> windows =
+            _windowTracker.GetSnapshot();
+        OpenWindowCount = windows
+            .SelectMany(
+                item => item.Windows)
+            .Select(
+                window => window.Handle)
+            .Distinct()
+            .Count();
         IReadOnlyList<ShellSearchResult> results =
             ShellSearchPolicy.Compose(
                 applications,
-                _windowTracker.GetSnapshot(),
+                windows,
                 SearchQuery,
+                limit:
+                    SearchScope
+                        == ShellSearchScope.Windows
+                        ? int.MaxValue
+                        : ShellSearchPolicy.DefaultLimit,
                 taskItems:
-                    _taskSearchItems);
+                    _taskSearchItems,
+                scope: SearchScope);
         ReplaceCollection(
             SearchResults,
             results);

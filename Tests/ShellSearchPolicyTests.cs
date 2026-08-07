@@ -74,6 +74,117 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Fact]
+    public void Compose_WindowScopeShowsEveryWindowWithoutAQuery()
+    {
+        var running = new[]
+        {
+            new WindowTaskItem
+            {
+                DisplayName = "编辑器",
+                IdentityKey = "exe:c:\\editor.exe",
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(92),
+                        "第二份文档"),
+                    new WindowReference(
+                        new IntPtr(91),
+                        "当前文档",
+                        true)
+                }
+            },
+            Running("浏览器", "项目页面", 93)
+        };
+
+        ShellSearchResult[] results =
+            ShellSearchPolicy.Compose(
+                    new[]
+                    {
+                        App(
+                            "不应出现的应用",
+                            "exe:c:\\hidden.exe")
+                    },
+                    running,
+                    string.Empty,
+                    scope:
+                        ShellSearchScope.Windows)
+                .ToArray();
+
+        Assert.Equal(3, results.Length);
+        Assert.All(
+            results,
+            item => Assert.Equal(
+                ShellSearchResultKind.Window,
+                item.Kind));
+        Assert.Equal(
+            new IntPtr(91),
+            results[0].Window?.Handle);
+    }
+
+    [Fact]
+    public void Compose_WindowScopeFiltersOnlyWindows()
+    {
+        ShellSearchResult result = Assert.Single(
+            ShellSearchPolicy.Compose(
+                new[]
+                {
+                    App(
+                        "项目页面",
+                        "exe:c:\\project.exe")
+                },
+                new[]
+                {
+                    Running(
+                        "浏览器",
+                        "项目页面",
+                        94)
+                },
+                "项目",
+                scope:
+                    ShellSearchScope.Windows));
+
+        Assert.Equal(
+            ShellSearchResultKind.Window,
+            result.Kind);
+    }
+
+    [Fact]
+    public void Compose_SystemScopeOffersCommandsWithoutAQuery()
+    {
+        ShellSearchResult[] results =
+            ShellSearchPolicy.Compose(
+                    Array.Empty<AppLaunchItem>(),
+                    Array.Empty<WindowTaskItem>(),
+                    string.Empty,
+                    scope:
+                        ShellSearchScope.System)
+                .ToArray();
+
+        Assert.NotEmpty(results);
+        Assert.All(
+            results,
+            item => Assert.Equal(
+                ShellSearchResultKind.SystemCommand,
+                item.Kind));
+        Assert.Contains(
+            results,
+            item => item.ManagementTool
+                == SystemManagementTool.TaskManager);
+    }
+
+    [Fact]
+    public void Compose_ApplicationScopeDoesNotParseSystemCommands()
+    {
+        Assert.Empty(
+            ShellSearchPolicy.Compose(
+                Array.Empty<AppLaunchItem>(),
+                Array.Empty<WindowTaskItem>(),
+                "任务管理器",
+                scope:
+                    ShellSearchScope.Applications));
+    }
+
+    [Fact]
     public void Compose_ExactWindowTitleOutranksWeakApplicationSubstring()
     {
         var results = ShellSearchPolicy.Compose(

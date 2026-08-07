@@ -245,6 +245,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <StackPanel>
@@ -279,14 +280,51 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                             </Grid>
-                            <WrapPanel Grid.Row="2"
+                            <UniformGrid Grid.Row="2"
+                                         Columns="4"
+                                         Margin="0,0,0,10"
+                                         AutomationProperties.Name="搜索范围">
+                                <RadioButton Height="40"
+                                             Margin="2"
+                                             GroupName="ShellSearchScope"
+                                             Style="{StaticResource FocusSegmentRadioButton}"
+                                             Content="全部"
+                                             IsChecked="{Binding IsAllSearchScope, Mode=OneWay}"
+                                             Command="{Binding SelectSearchScopeCommand}"
+                                             CommandParameter="All"/>
+                                <RadioButton Height="40"
+                                             Margin="2"
+                                             GroupName="ShellSearchScope"
+                                             Style="{StaticResource FocusSegmentRadioButton}"
+                                             Content="{Binding OpenWindowScopeLabel}"
+                                             IsChecked="{Binding IsWindowSearchScope, Mode=OneWay}"
+                                             Command="{Binding SelectSearchScopeCommand}"
+                                             CommandParameter="Windows"/>
+                                <RadioButton Height="40"
+                                             Margin="2"
+                                             GroupName="ShellSearchScope"
+                                             Style="{StaticResource FocusSegmentRadioButton}"
+                                             Content="应用"
+                                             IsChecked="{Binding IsApplicationSearchScope, Mode=OneWay}"
+                                             Command="{Binding SelectSearchScopeCommand}"
+                                             CommandParameter="Applications"/>
+                                <RadioButton Height="40"
+                                             Margin="2"
+                                             GroupName="ShellSearchScope"
+                                             Style="{StaticResource FocusSegmentRadioButton}"
+                                             Content="系统"
+                                             IsChecked="{Binding IsSystemSearchScope, Mode=OneWay}"
+                                             Command="{Binding SelectSearchScopeCommand}"
+                                             CommandParameter="System"/>
+                            </UniformGrid>
+                            <WrapPanel Grid.Row="3"
                                        Margin="0,0,0,8"
                                        AutomationProperties.Name="搜索示例，点击后可编辑并按回车执行">
                                 <WrapPanel.Style>
                                     <Style TargetType="WrapPanel">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SearchQuery}" Value="">
+                                            <DataTrigger Binding="{Binding AreSearchSuggestionsVisible}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -329,7 +367,7 @@
                                         Click="SearchSuggestion_Click"
                                         ToolTip="填入任务前缀，继续输入标题后按 Enter"/>
                             </WrapPanel>
-                            <Grid Grid.Row="3">
+                            <Grid Grid.Row="4">
                                 <ListBox x:Name="SearchResultsList"
                                          ItemsSource="{Binding SearchResults}"
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"

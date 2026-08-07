@@ -3526,7 +3526,7 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"搜索示例，点击后可编辑并按回车执行\"",
             mainWindow);
         Assert.Contains(
-            "DataTrigger Binding=\"{Binding SearchQuery}\" Value=\"\"",
+            "DataTrigger Binding=\"{Binding AreSearchSuggestionsVisible}\" Value=\"True\"",
             mainWindow);
         Assert.True(
             Regex.Matches(
@@ -3558,6 +3558,47 @@ public sealed class XamlResourceContractTests
             "ExecuteSearchResult",
             handler);
         Assert.DoesNotContain(".Execute(", handler);
+    }
+
+    [Fact]
+    public void AppSearch_ExposesVisibleWindowOverviewScope()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+
+        Assert.Contains(
+            "AutomationProperties.Name=\"搜索范围\"",
+            mainWindow);
+        Assert.Contains(
+            "Content=\"{Binding OpenWindowScopeLabel}\"",
+            mainWindow);
+        Assert.Contains(
+            "CommandParameter=\"Windows\"",
+            mainWindow);
+        Assert.Contains(
+            "IsChecked=\"{Binding IsWindowSearchScope, Mode=OneWay}\"",
+            mainWindow);
+        Assert.Contains(
+            "private void SelectSearchScope(",
+            viewModel);
+        Assert.Contains(
+            "? int.MaxValue",
+            viewModel);
+        Assert.True(
+            Regex.Matches(
+                mainWindow,
+                "GroupName=\"ShellSearchScope\"")
+                .Count
+            == 4);
     }
 
     [Fact]

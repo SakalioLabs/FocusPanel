@@ -853,6 +853,8 @@ public partial class MainWindow :
     {
         ExpandSidebar();
         CloseOverlayPanels();
+        _viewModel.SearchScope =
+            ShellSearchScope.All;
         _viewModel.SearchQuery =
             TaskCaptureCommandParser
                 .QuickCapturePrefix;

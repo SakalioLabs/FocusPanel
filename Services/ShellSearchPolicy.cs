@@ -18,7 +18,9 @@ internal static class ShellSearchPolicy
             string? query,
             int limit = DefaultLimit,
             IEnumerable<TaskSearchItem>?
-                taskItems = null)
+                taskItems = null,
+            ShellSearchScope scope =
+                ShellSearchScope.All)
     {
         if (limit <= 0)
         {
@@ -37,6 +39,21 @@ internal static class ShellSearchPolicy
         if (string.IsNullOrWhiteSpace(
                 query))
         {
+            if (scope
+                == ShellSearchScope.Windows)
+            {
+                return ComposeWindowOverview(
+                    runningApplications,
+                    limit);
+            }
+
+            if (scope
+                == ShellSearchScope.System)
+            {
+                return ComposeSystemOverview(
+                    limit);
+            }
+
             return apps
                 .Take(limit)
                 .Select(
@@ -48,7 +65,20 @@ internal static class ShellSearchPolicy
         var ranked =
             new List<RankedResult>();
         int originalIndex = 0;
-        if (TaskCaptureCommandParser
+        bool includeApplications =
+            scope is ShellSearchScope.All
+                or ShellSearchScope.Applications;
+        bool includeWindows =
+            scope is ShellSearchScope.All
+                or ShellSearchScope.Windows;
+        bool includeSystem =
+            scope is ShellSearchScope.All
+                or ShellSearchScope.System;
+        bool includeTasks =
+            scope == ShellSearchScope.All;
+
+        if (includeTasks
+            && TaskCaptureCommandParser
             .TryParse(
                 query,
                 out TaskCaptureCommand
@@ -65,7 +95,8 @@ internal static class ShellSearchPolicy
                     originalIndex++));
         }
 
-        if (PomodoroSearchCommandParser
+        if (includeSystem
+            && PomodoroSearchCommandParser
             .TryParse(
                 query,
                 out PomodoroSearchCommand
@@ -82,7 +113,8 @@ internal static class ShellSearchPolicy
                     originalIndex++));
         }
 
-        if (AudioSearchCommandParser
+        if (includeSystem
+            && AudioSearchCommandParser
             .TryParse(
                 query,
                 out AudioSearchCommand
@@ -99,7 +131,8 @@ internal static class ShellSearchPolicy
                     originalIndex++));
         }
 
-        if (BrightnessSearchCommandParser
+        if (includeSystem
+            && BrightnessSearchCommandParser
             .TryParse(
                 query,
                 out BrightnessSearchCommand
@@ -116,7 +149,8 @@ internal static class ShellSearchPolicy
                     originalIndex++));
         }
 
-        if (SafeExpressionEvaluator
+        if (includeSystem
+            && SafeExpressionEvaluator
             .TryEvaluate(
                 query,
                 out string calculation))
@@ -134,7 +168,9 @@ internal static class ShellSearchPolicy
         }
 
         foreach (AppLaunchItem app
-                 in apps)
+                 in includeApplications
+                     ? apps
+                     : Array.Empty<AppLaunchItem>())
         {
             int? rank =
                 AppSearchPolicy.GetRank(
@@ -155,9 +191,11 @@ internal static class ShellSearchPolicy
         }
 
         foreach (TaskSearchItem task
-                 in TaskSearchPolicy.Search(
-                     taskItems,
-                     query))
+                 in includeTasks
+                     ? TaskSearchPolicy.Search(
+                         taskItems,
+                         query)
+                     : Array.Empty<TaskSearchItem>())
         {
             int? rank =
                 AppSearchPolicy
@@ -179,7 +217,9 @@ internal static class ShellSearchPolicy
         }
 
         foreach (WindowTaskItem running
-                 in runningApplications
+                 in (includeWindows
+                     ? runningApplications
+                     : null)
                      ?? Array.Empty<
                          WindowTaskItem>())
         {
@@ -210,8 +250,10 @@ internal static class ShellSearchPolicy
 
         foreach (SystemManagementSearchEntry
                  command
-                 in SystemManagementSearchCatalog
-                     .All)
+                 in includeSystem
+                     ? SystemManagementSearchCatalog
+                         .All
+                     : Array.Empty<SystemManagementSearchEntry>())
         {
             int? rank =
                 AppSearchPolicy
@@ -235,8 +277,10 @@ internal static class ShellSearchPolicy
 
         foreach (WindowsShellSearchEntry
                  command
-                 in WindowsShellSearchCatalog
-                     .All)
+                 in includeSystem
+                     ? WindowsShellSearchCatalog
+                         .All
+                     : Array.Empty<WindowsShellSearchEntry>())
         {
             int? rank =
                 AppSearchPolicy
@@ -289,6 +333,52 @@ internal static class ShellSearchPolicy
                     item.Result)
             .ToList();
     }
+
+    private static IReadOnlyList<ShellSearchResult>
+        ComposeWindowOverview(
+            IEnumerable<WindowTaskItem>?
+                runningApplications,
+            int limit) =>
+        (runningApplications
+             ?? Array.Empty<WindowTaskItem>())
+        .SelectMany(
+            application =>
+                application.Windows.Select(
+                    window => new
+                    {
+                        Application = application,
+                        Window = window
+                    }))
+        .GroupBy(
+            item => item.Window.Handle)
+        .Select(group => group.First())
+        .OrderByDescending(
+            item => item.Window.IsActive)
+        .ThenBy(
+            item => item.Application.DisplayName,
+            StringComparer.CurrentCultureIgnoreCase)
+        .ThenBy(
+            item => item.Window.Title,
+            StringComparer.CurrentCultureIgnoreCase)
+        .ThenBy(
+            item => item.Window.Handle.ToInt64())
+        .Take(limit)
+        .Select(
+            item => ShellSearchResult.FromWindow(
+                item.Application,
+                item.Window))
+        .ToList();
+
+    private static IReadOnlyList<ShellSearchResult>
+        ComposeSystemOverview(int limit) =>
+        SystemManagementSearchCatalog.All
+            .Select(
+                ShellSearchResult.FromSystemCommand)
+            .Concat(
+                WindowsShellSearchCatalog.All.Select(
+                    ShellSearchResult.FromShellCommand))
+            .Take(limit)
+            .ToList();
 
     private sealed record RankedResult(
         ShellSearchResult Result,
