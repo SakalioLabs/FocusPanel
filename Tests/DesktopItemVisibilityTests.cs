@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using FocusPanel.Models;
 using FocusPanel.Services;
@@ -78,8 +79,9 @@ public sealed class DesktopItemVisibilityTests
     [Fact]
     public async Task VisibilityIo_ReadsAttributesOffCallingThread()
     {
-        int callerThread =
-            Environment.CurrentManagedThreadId;
+        int callerThread = 0;
+        FileAttributes attributes =
+            FileAttributes.Normal;
         var visibility =
             new RecordingVisibilityService
             {
@@ -90,9 +92,16 @@ public sealed class DesktopItemVisibilityTests
             new DesktopVisibilityIo(
                 visibility);
 
-        FileAttributes attributes =
-            await io.ReadAttributesAsync(
-                @"C:\Desktop\item.txt");
+        await RunFromDedicatedThreadAsync(
+            async () =>
+            {
+                callerThread =
+                    Environment
+                        .CurrentManagedThreadId;
+                attributes =
+                    await io.ReadAttributesAsync(
+                        @"C:\Desktop\item.txt");
+            });
 
         Assert.Equal(
             FileAttributes.Archive,
@@ -111,19 +120,25 @@ public sealed class DesktopItemVisibilityTests
     [Fact]
     public async Task VisibilityIo_LocalWriteSetsAndNotifiesOffCallingThread()
     {
-        int callerThread =
-            Environment.CurrentManagedThreadId;
+        int callerThread = 0;
         var visibility =
             new RecordingVisibilityService();
         var io =
             new DesktopVisibilityIo(
                 visibility);
 
-        await io.ApplyAttributesAsync(
-            @"C:\Desktop\item.txt",
-            FileAttributes.Hidden
-            | FileAttributes.System,
-            false);
+        await RunFromDedicatedThreadAsync(
+            async () =>
+            {
+                callerThread =
+                    Environment
+                        .CurrentManagedThreadId;
+                await io.ApplyAttributesAsync(
+                    @"C:\Desktop\item.txt",
+                    FileAttributes.Hidden
+                    | FileAttributes.System,
+                    false);
+            });
 
         Assert.NotEqual(
             callerThread,
@@ -139,9 +154,8 @@ public sealed class DesktopItemVisibilityTests
     [Fact]
     public async Task VisibilityIo_ElevatedWriteUsesSameBackgroundBoundary()
     {
-        int callerThread =
-            Environment.CurrentManagedThreadId;
-        int elevatedThread = callerThread;
+        int callerThread = 0;
+        int elevatedThread = 0;
         int elevatedCalls = 0;
         var visibility =
             new RecordingVisibilityService();
@@ -156,10 +170,17 @@ public sealed class DesktopItemVisibilityTests
                     elevatedCalls++;
                 });
 
-        await io.ApplyAttributesAsync(
-            @"C:\Users\Public\Desktop\item.txt",
-            FileAttributes.Normal,
-            true);
+        await RunFromDedicatedThreadAsync(
+            async () =>
+            {
+                callerThread =
+                    Environment
+                        .CurrentManagedThreadId;
+                await io.ApplyAttributesAsync(
+                    @"C:\Users\Public\Desktop\item.txt",
+                    FileAttributes.Normal,
+                    true);
+            });
 
         Assert.Equal(
             1,
@@ -310,6 +331,39 @@ public sealed class DesktopItemVisibilityTests
         }
 
         throw new DirectoryNotFoundException("未找到 FocusPanel.csproj。");
+    }
+
+    private static async Task
+        RunFromDedicatedThreadAsync(
+            Func<Task> action)
+    {
+        var completion =
+            new TaskCompletionSource<object?>(
+                TaskCreationOptions
+                    .RunContinuationsAsynchronously);
+        var thread = new Thread(
+            () =>
+            {
+                try
+                {
+                    action()
+                        .GetAwaiter()
+                        .GetResult();
+                    completion.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    completion.TrySetException(ex);
+                }
+            });
+        thread.IsBackground = true;
+        thread.Start();
+
+        await completion.Task;
+        Assert.True(
+            thread.Join(
+                TimeSpan.FromSeconds(5)),
+            "专用测试线程未按预期结束。");
     }
 
     private sealed class RecordingVisibilityService
