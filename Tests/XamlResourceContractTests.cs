@@ -3800,6 +3800,22 @@ public sealed class XamlResourceContractTests
             + "            ScheduleSnapshotRefresh();",
             windowTracker.Replace("\r\n", "\n"));
         Assert.Contains(
+            "Header = \"把此应用的窗口移到 Panel 屏幕\"",
+            codeBehind);
+        Assert.Contains(
+            ".MoveTaskWindowsToPanelDisplayCommand,",
+            codeBehind);
+        Assert.Contains(
+            "task.WindowCount > 1",
+            codeBehind);
+        Assert.Contains(
+            "WindowBatchMoveCoordinator.Execute(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs")));
+        Assert.Contains(
             "AutomationProperties.SetName(\n"
             + "            menu,\n"
             + "            \"窗口操作 \"",

@@ -2307,6 +2307,42 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void MoveTaskWindowsToPanelDisplay(
+        TaskbarAppItem? task)
+    {
+        if (task == null)
+            return;
+
+        System.Drawing.Rectangle targetWorkArea =
+            ShellDisplayTarget.GetWorkingArea(
+                DisplayTargetMode);
+        WindowBatchMoveResult result =
+            WindowBatchMoveCoordinator.Execute(
+                task.Windows,
+                handle =>
+                    _windowTracker.CanMoveToDisplay(
+                        handle,
+                        targetWorkArea),
+                handle =>
+                    _windowTracker.MoveToDisplay(
+                        handle,
+                        targetWorkArea));
+        if (!result.HasWork
+            || result.Succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            return;
+        }
+
+        ReportTaskbarActionFailure(
+            $"“{task.DisplayName}”有 {result.FailedCount} 个窗口"
+            + "未能移到 Panel 所在屏幕。"
+            + (result.MovedCount > 0
+                ? $"另有 {result.MovedCount} 个窗口已经移动。"
+                : "窗口可能已经关闭，或应用拒绝了位置更改。"));
+    }
+
+    [RelayCommand]
     private void ToggleWindowTopmost(
         WindowReference? window)
     {

@@ -1896,6 +1896,32 @@ public partial class MainWindow :
             menu.Items.Add(windowMenu);
         }
 
+        Rectangle panelWorkArea =
+            ShellDisplayTarget.GetWorkingArea(
+                _viewModel.DisplayTargetMode);
+        bool canMoveTaskWindows =
+            task.WindowCount > 1
+            && task.Windows.Any(window =>
+                SystemActionExecution.Try(
+                    () => _coordinator.Windows
+                        .CanMoveToDisplay(
+                            window.Handle,
+                            panelWorkArea)));
+        if (canMoveTaskWindows)
+        {
+            menu.Items.Add(
+                new Separator());
+            menu.Items.Add(
+                new MenuItem
+                {
+                    Header = "把此应用的窗口移到 Panel 屏幕",
+                    Command =
+                        _viewModel
+                            .MoveTaskWindowsToPanelDisplayCommand,
+                    CommandParameter = task
+                });
+        }
+
         if (task.Windows.Count > 0)
         {
             menu.Items.Add(new Separator());
