@@ -3747,6 +3747,28 @@ public sealed class XamlResourceContractTests
             "InputGestureText = \"Delete\"",
             codeBehind);
         Assert.Contains(
+            "Header = \"移到 Panel 所在屏幕\"",
+            codeBehind);
+        Assert.Contains(
+            ".MoveWindowToPanelDisplayCommand,",
+            codeBehind);
+        Assert.Contains(
+            ".CanMoveToDisplay(",
+            codeBehind);
+        Assert.Contains(
+            "ShellDisplayTarget.GetWorkingArea(",
+            codeBehind);
+        Assert.Contains(
+            "MoveWindowToPanelDisplayCommand",
+            codeBehind);
+        Assert.Contains(
+            "_windowTracker.MoveToDisplay(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs")));
+        Assert.Contains(
             "AutomationProperties.SetName(\n"
             + "            menu,\n"
             + "            \"窗口操作 \"",

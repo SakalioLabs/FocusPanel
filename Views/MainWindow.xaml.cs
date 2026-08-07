@@ -1960,6 +1960,25 @@ public partial class MainWindow :
             windowMenu.Items.Add(
                 item);
         }
+
+        Rectangle targetWorkArea =
+            ShellDisplayTarget.GetWorkingArea(
+                _viewModel.DisplayTargetMode);
+        if (_coordinator.Windows
+                .CanMoveToDisplay(
+                    window.Handle,
+                    targetWorkArea))
+        {
+            windowMenu.Items.Add(
+                new MenuItem
+                {
+                    Header = "移到 Panel 所在屏幕",
+                    Command =
+                        _viewModel
+                            .MoveWindowToPanelDisplayCommand,
+                    CommandParameter = window
+                });
+        }
     }
 
     private bool TryAddJumpListSection(

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using FocusPanel.Models;
 using FocusPanel.Services;
 using Xunit;
@@ -203,6 +204,84 @@ public sealed class WindowCommandExecutorTests
         Assert.Equal(1, native.CloseCalls);
     }
 
+    [Fact]
+    public void DifferentDisplay_IsMovedWithoutActivation()
+    {
+        var native = new FakeBoundary
+        {
+            WorkingArea =
+                new Rectangle(
+                    0,
+                    0,
+                    1920,
+                    1040),
+            RestoredBounds =
+                new Rectangle(
+                    960,
+                    520,
+                    960,
+                    520),
+            SetBoundsResult = true
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+        var target = new Rectangle(
+            1920,
+            0,
+            1280,
+            680);
+
+        Assert.True(
+            executor.CanMoveToDisplay(
+                Handle,
+                target));
+        Assert.True(
+            executor.MoveToDisplay(
+                Handle,
+                target));
+        Assert.Equal(
+            new Rectangle(
+                2240,
+                160,
+                960,
+                520),
+            native.LastSetBounds);
+        Assert.Equal(0, native.ForegroundCalls);
+    }
+
+    [Fact]
+    public void SameDisplay_DoesNotWriteWindowPlacement()
+    {
+        var area = new Rectangle(
+            0,
+            0,
+            1920,
+            1040);
+        var native = new FakeBoundary
+        {
+            WorkingArea = area,
+            RestoredBounds =
+                new Rectangle(
+                    120,
+                    80,
+                    1000,
+                    700),
+            SetBoundsResult = true
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.False(
+            executor.CanMoveToDisplay(
+                Handle,
+                area));
+        Assert.False(
+            executor.MoveToDisplay(
+                Handle,
+                area));
+        Assert.Equal(0, native.SetBoundsCalls);
+    }
+
     private static WindowTaskItem Task(
         IntPtr handle) =>
         new()
@@ -234,6 +313,13 @@ public sealed class WindowCommandExecutorTests
             new();
         internal int ForegroundCalls { get; private set; }
         internal int CloseCalls { get; private set; }
+        internal Rectangle WorkingArea { get; set; } =
+            new(0, 0, 1920, 1040);
+        internal Rectangle RestoredBounds { get; set; } =
+            new(100, 100, 1200, 800);
+        internal bool SetBoundsResult { get; set; }
+        internal Rectangle LastSetBounds { get; private set; }
+        internal int SetBoundsCalls { get; private set; }
 
         public bool IsWindow(IntPtr handle) =>
             WindowExists;
@@ -287,6 +373,28 @@ public sealed class WindowCommandExecutorTests
         {
             CloseCalls++;
             return CloseResult;
+        }
+
+        public bool TryGetRestoredBounds(
+            IntPtr handle,
+            out Rectangle bounds)
+        {
+            bounds = RestoredBounds;
+            return bounds.Width > 0
+                && bounds.Height > 0;
+        }
+
+        public Rectangle GetWorkingArea(
+            IntPtr handle) =>
+            WorkingArea;
+
+        public bool SetRestoredBounds(
+            IntPtr handle,
+            Rectangle bounds)
+        {
+            SetBoundsCalls++;
+            LastSetBounds = bounds;
+            return SetBoundsResult;
         }
     }
 }

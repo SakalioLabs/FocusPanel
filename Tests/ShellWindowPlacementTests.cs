@@ -199,6 +199,49 @@ public sealed class ShellWindowPlacementTests
                     .Contains("已断开"));
     }
 
+    [Fact]
+    public void SelectedDisplay_UsesItsOwnWorkingArea()
+    {
+        var displays = new List<ShellDisplaySnapshot>
+        {
+            new(
+                new Rectangle(0, 0, 1920, 1080),
+                true,
+                @"\\.\DISPLAY1",
+                new Rectangle(0, 0, 1920, 1040)),
+            new(
+                new Rectangle(1920, -200, 2560, 1440),
+                false,
+                @"\\.\DISPLAY2",
+                new Rectangle(1920, -160, 2560, 1400))
+        };
+
+        Assert.Equal(
+            displays[1].WorkingArea,
+            ShellDisplayTarget.GetWorkingArea(
+                displays,
+                @"Device:\\.\DISPLAY2"));
+    }
+
+    [Fact]
+    public void MissingWorkingArea_FallsBackToDisplayBounds()
+    {
+        var display = new ShellDisplaySnapshot(
+            new Rectangle(
+                -1920,
+                0,
+                1920,
+                1080),
+            true,
+            @"\\.\DISPLAY1");
+
+        Assert.Equal(
+            display.Bounds,
+            ShellDisplayTarget.GetWorkingArea(
+                new[] { display },
+                ShellDisplayTarget.PrimaryValue));
+    }
+
     [Theory]
     [InlineData(
         @"Device:\\.\DISPLAY2",

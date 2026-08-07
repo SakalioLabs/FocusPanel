@@ -142,6 +142,26 @@ public sealed class WindowTracker : IWindowTracker
         return succeeded;
     }
 
+    public bool CanMoveToDisplay(
+        IntPtr handle,
+        Rectangle targetWorkArea) =>
+        _commands.CanMoveToDisplay(
+            handle,
+            targetWorkArea);
+
+    public bool MoveToDisplay(
+        IntPtr handle,
+        Rectangle targetWorkArea)
+    {
+        bool succeeded =
+            _commands.MoveToDisplay(
+                handle,
+                targetWorkArea);
+        if (succeeded)
+            RequestSnapshotRefresh();
+        return succeeded;
+    }
+
     public bool Close(IntPtr handle) =>
         _commands.Close(handle);
 

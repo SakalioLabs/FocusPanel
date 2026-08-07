@@ -2288,6 +2288,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void MoveWindowToPanelDisplay(
+        WindowReference? window)
+    {
+        if (window == null)
+            return;
+
+        System.Drawing.Rectangle targetWorkArea =
+            ShellDisplayTarget.GetWorkingArea(
+                DisplayTargetMode);
+        CompleteTaskbarWindowAction(
+            SystemActionExecution.Try(
+                () => _windowTracker.MoveToDisplay(
+                    window.Handle,
+                    targetWorkArea)),
+            $"无法把“{window.Title}”移到 Panel 所在屏幕。"
+            + "窗口可能已经关闭，或当前应用拒绝了位置更改。");
+    }
+
+    [RelayCommand]
     private void CloseTask(TaskbarAppItem? task)
     {
         if (task == null)

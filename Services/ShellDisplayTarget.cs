@@ -16,7 +16,8 @@ internal enum ShellDisplayTargetMode
 internal readonly record struct ShellDisplaySnapshot(
     Rectangle Bounds,
     bool IsPrimary,
-    string DeviceName = "");
+    string DeviceName = "",
+    Rectangle WorkingArea = default);
 
 public sealed record ShellDisplayTargetOption(
     string Value,
@@ -52,6 +53,30 @@ internal static class ShellDisplayTarget
             CaptureDisplays();
         return Select(displays, value)?.Bounds
             ?? Rectangle.Empty;
+    }
+
+    internal static Rectangle GetWorkingArea(
+        string? value) =>
+        GetWorkingArea(
+            CaptureDisplays(),
+            value);
+
+    internal static Rectangle GetWorkingArea(
+        IReadOnlyCollection<ShellDisplaySnapshot>
+            displays,
+        string? value)
+    {
+        ShellDisplaySnapshot? selected =
+            Select(
+                displays,
+                value);
+        if (selected == null)
+            return Rectangle.Empty;
+
+        return selected.Value.WorkingArea.Width > 0
+               && selected.Value.WorkingArea.Height > 0
+            ? selected.Value.WorkingArea
+            : selected.Value.Bounds;
     }
 
     internal static ShellDisplaySnapshot? Select(
@@ -229,7 +254,8 @@ internal static class ShellDisplayTarget
                 new ShellDisplaySnapshot(
                     screen.Bounds,
                     screen.Primary,
-                    screen.DeviceName))
+                    screen.DeviceName,
+                    screen.WorkingArea))
             .ToArray();
 
     private static bool TryGetDeviceName(

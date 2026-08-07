@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using FocusPanel.Models;
 
 namespace FocusPanel.Services;
@@ -12,6 +13,13 @@ internal interface IWindowCommandBoundary
     void ShowWindow(IntPtr handle, int command);
     bool SetForegroundWindow(IntPtr handle);
     bool PostClose(IntPtr handle);
+    bool TryGetRestoredBounds(
+        IntPtr handle,
+        out Rectangle bounds);
+    Rectangle GetWorkingArea(IntPtr handle);
+    bool SetRestoredBounds(
+        IntPtr handle,
+        Rectangle bounds);
 }
 
 internal sealed class WindowCommandExecutor
@@ -66,6 +74,44 @@ internal sealed class WindowCommandExecutor
     internal bool Close(IntPtr handle) =>
         IsUsable(handle)
         && _native.PostClose(handle);
+
+    internal bool CanMoveToDisplay(
+        IntPtr handle,
+        Rectangle targetWorkArea) =>
+        IsUsable(handle)
+        && WindowDisplayMovePolicy.CanMove(
+            _native.GetWorkingArea(handle),
+            targetWorkArea);
+
+    internal bool MoveToDisplay(
+        IntPtr handle,
+        Rectangle targetWorkArea)
+    {
+        if (!IsUsable(handle))
+            return false;
+
+        Rectangle sourceWorkArea =
+            _native.GetWorkingArea(handle);
+        if (!WindowDisplayMovePolicy.CanMove(
+                sourceWorkArea,
+                targetWorkArea)
+            || !_native.TryGetRestoredBounds(
+                handle,
+                out Rectangle currentBounds))
+        {
+            return false;
+        }
+
+        Rectangle targetBounds =
+            WindowDisplayMovePolicy.CalculateBounds(
+                currentBounds,
+                sourceWorkArea,
+                targetWorkArea);
+        return targetBounds != Rectangle.Empty
+            && _native.SetRestoredBounds(
+                handle,
+                targetBounds);
+    }
 
     internal bool Minimize(IntPtr handle)
     {
