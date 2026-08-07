@@ -23,7 +23,7 @@ public sealed class TaskbarAppPresentationTests
             "编辑器，正在使用 · 2 个窗口",
             item.AccessibleName);
         Assert.Equal(
-            "左键打开窗口列表，Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用；"
+            "左键打开此应用窗口总览，Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用；"
             + "Shift+左键或中键启动新实例；"
             + "Ctrl+Shift+左键以管理员身份启动；"
             + "可拖入文件用此应用打开",
@@ -138,6 +138,33 @@ public sealed class TaskbarAppPresentationTests
         Assert.True(item.HasWindowPreview);
         Assert.Equal(
             "• 文档 1",
+            item.WindowPreviewText);
+    }
+
+    [Fact]
+    public void WindowPreview_ShowsActiveAndTopmostTogether()
+    {
+        var item = new TaskbarAppItem
+        {
+            DisplayName = "播放器",
+            RunningTask = new WindowTaskItem
+            {
+                AppKey = "player",
+                IdentityKey = "exe:player",
+                DisplayName = "播放器",
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(1),
+                        "正在播放",
+                        IsActive: true,
+                        IsTopmost: true)
+                }
+            }
+        };
+
+        Assert.Equal(
+            "• 正在播放 · 当前窗口 · 已置顶",
             item.WindowPreviewText);
     }
 

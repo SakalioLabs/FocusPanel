@@ -169,7 +169,7 @@ public sealed class TaskbarAppItem : ObservableObject
         get
         {
             string primaryAction = WindowCount > 1
-                ? "左键打开窗口列表，Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用"
+                ? "左键打开此应用窗口总览，Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用"
                 : IsFullyMinimized
                     ? "左键还原并切换，右键管理应用"
                     : IsActive
@@ -253,17 +253,27 @@ public sealed class TaskbarAppItem : ObservableObject
     private static string GetWindowStateSuffix(
         WindowReference window)
     {
+        var states = new List<string>(2);
         if (window.IsActive)
-            return " · 当前窗口";
-
-        return window.State switch
         {
-            TrackedWindowState.Minimized =>
-                " · 已最小化",
-            TrackedWindowState.Maximized =>
-                " · 已最大化",
-            _ => string.Empty
-        };
+            states.Add("当前窗口");
+        }
+        else if (window.State
+                 == TrackedWindowState.Minimized)
+        {
+            states.Add("已最小化");
+        }
+        else if (window.State
+                 == TrackedWindowState.Maximized)
+        {
+            states.Add("已最大化");
+        }
+
+        if (window.IsTopmost)
+            states.Add("已置顶");
+        return states.Count == 0
+            ? string.Empty
+            : " · " + string.Join(" · ", states);
     }
 
     private string NormalizeWindowTitle(

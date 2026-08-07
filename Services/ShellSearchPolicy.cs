@@ -20,7 +20,8 @@ internal static class ShellSearchPolicy
             IEnumerable<TaskSearchItem>?
                 taskItems = null,
             ShellSearchScope scope =
-                ShellSearchScope.All)
+                ShellSearchScope.All,
+            string? windowIdentityFilter = null)
     {
         if (limit <= 0)
         {
@@ -44,7 +45,8 @@ internal static class ShellSearchPolicy
             {
                 return ComposeWindowOverview(
                     runningApplications,
-                    limit);
+                    limit,
+                    windowIdentityFilter);
             }
 
             if (scope
@@ -217,11 +219,11 @@ internal static class ShellSearchPolicy
         }
 
         foreach (WindowTaskItem running
-                 in (includeWindows
-                     ? runningApplications
-                     : null)
-                     ?? Array.Empty<
-                         WindowTaskItem>())
+                 in FilterWindowApplications(
+                     includeWindows
+                         ? runningApplications
+                         : null,
+                     windowIdentityFilter))
         {
             foreach (WindowReference window
                      in running.Windows)
@@ -338,9 +340,11 @@ internal static class ShellSearchPolicy
         ComposeWindowOverview(
             IEnumerable<WindowTaskItem>?
                 runningApplications,
-            int limit) =>
-        (runningApplications
-             ?? Array.Empty<WindowTaskItem>())
+            int limit,
+            string? windowIdentityFilter) =>
+        FilterWindowApplications(
+            runningApplications,
+            windowIdentityFilter)
         .SelectMany(
             application =>
                 application.Windows.Select(
@@ -368,6 +372,28 @@ internal static class ShellSearchPolicy
                 item.Application,
                 item.Window))
         .ToList();
+
+    private static IEnumerable<WindowTaskItem>
+        FilterWindowApplications(
+            IEnumerable<WindowTaskItem>?
+                runningApplications,
+            string? identityFilter)
+    {
+        IEnumerable<WindowTaskItem> source =
+            runningApplications
+            ?? Array.Empty<WindowTaskItem>();
+        if (string.IsNullOrWhiteSpace(
+                identityFilter))
+        {
+            return source;
+        }
+
+        return source.Where(application =>
+            string.Equals(
+                application.IdentityKey,
+                identityFilter,
+                StringComparison.OrdinalIgnoreCase));
+    }
 
     private static IReadOnlyList<ShellSearchResult>
         ComposeSystemOverview(int limit) =>

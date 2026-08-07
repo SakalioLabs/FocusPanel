@@ -2875,7 +2875,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void MultiWindowLeftClick_OpensDirectWindowList()
+    public void MultiWindowLeftClick_OpensFilteredWindowOverview()
     {
         string root = FindRepositoryRoot();
         string xaml = File.ReadAllText(
@@ -2888,6 +2888,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Views",
                 "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
         string tracker = File.ReadAllText(
             Path.Combine(
                 root,
@@ -2899,9 +2904,26 @@ public sealed class XamlResourceContractTests
                 "Services",
                 "TaskbarAppCollectionSynchronizer.cs"));
 
+        int clickStart = codeBehind.IndexOf(
+            "private void TaskbarApp_Click(",
+            StringComparison.Ordinal);
+        int clickEnd = codeBehind.IndexOf(
+            "private void TaskbarApp_PreviewMouseDown(",
+            clickStart,
+            StringComparison.Ordinal);
+        Assert.True(clickStart >= 0);
+        Assert.True(clickEnd > clickStart);
+        string clickHandler = codeBehind[
+            clickStart..clickEnd];
         Assert.Contains(
-            "PopulateTaskbarWindowList(button, task);",
-            codeBehind);
+            "OpenTaskbarWindowOverview(",
+            clickHandler);
+        Assert.Contains(
+            "PrepareTaskbarWindowOverview(",
+            clickHandler);
+        Assert.DoesNotContain(
+            "PopulateTaskbarWindowList(",
+            clickHandler);
         Assert.Contains(
             "PopulateTaskbarAppContextMenu(button, task);",
             codeBehind);
@@ -2960,6 +2982,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "NativeMethods.IsIconic(hwnd)",
             tracker);
+        Assert.Contains(
+            "windowIdentityFilter:",
+            viewModel);
+        Assert.Contains(
+            "IsWindowApplicationFilterActive",
+            viewModel);
+        Assert.Contains(
+            "Content=\"查看全部\"",
+            xaml);
+        Assert.Contains(
+            "Command=\"{Binding ClearWindowApplicationFilterCommand}\"",
+            xaml);
         Assert.Contains(
             "left.IsActive == right.IsActive",
             synchronizer);

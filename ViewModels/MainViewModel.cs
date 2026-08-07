@@ -190,6 +190,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private ShellSearchScope searchScope =
         ShellSearchScope.All;
 
+    private string? _windowOverviewIdentityFilter;
+    private string _windowOverviewApplicationName =
+        string.Empty;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(OpenWindowScopeLabel))]
@@ -785,7 +789,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return SearchScope switch
             {
                 ShellSearchScope.Windows =>
-                    "当前没有可切换的窗口",
+                    IsWindowApplicationFilterActive
+                        ? "该应用当前没有可切换的窗口"
+                        : "当前没有可切换的窗口",
                 ShellSearchScope.Applications =>
                     "没有找到匹配的应用",
                 ShellSearchScope.System =>
@@ -807,6 +813,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SearchScope == ShellSearchScope.System;
     public string OpenWindowScopeLabel =>
         $"窗口 {OpenWindowCount}";
+    public bool IsWindowApplicationFilterActive =>
+        SearchScope == ShellSearchScope.Windows
+        && !string.IsNullOrWhiteSpace(
+            _windowOverviewIdentityFilter);
+    public string WindowApplicationFilterText =>
+        IsWindowApplicationFilterActive
+            ? $"仅显示 {_windowOverviewApplicationName} 的窗口"
+            : string.Empty;
     public bool AreSearchSuggestionsVisible =>
         IsAllSearchScope
         && string.IsNullOrEmpty(SearchQuery);
@@ -884,7 +898,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             : SearchScope switch
             {
                 ShellSearchScope.Windows =>
-                    "当前窗口",
+                    IsWindowApplicationFilterActive
+                        ? $"{_windowOverviewApplicationName} 的窗口"
+                        : "当前窗口",
                 ShellSearchScope.Applications =>
                     "全部应用",
                 ShellSearchScope.System =>
@@ -896,7 +912,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsTaskQuickCaptureDraft
             ? "输入标题后按 Enter，直接保存到 Inbox"
             : SearchScope == ShellSearchScope.Windows
-                ? "点击窗口直接切换；输入标题可继续筛选"
+                ? IsWindowApplicationFilterActive
+                    ? "点击窗口直接切换；输入标题可筛选此应用窗口"
+                    : "点击窗口直接切换；输入标题可继续筛选"
                 : "输入关键词后用 ↑↓ 选择，按 Enter 执行";
     public bool IsOrganizerEntryActive =>
         string.Equals(
@@ -1142,8 +1160,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     partial void OnSearchScopeChanged(
-        ShellSearchScope value) =>
+        ShellSearchScope value)
+    {
+        if (value != ShellSearchScope.Windows)
+            ClearWindowOverviewFilterCore();
         RefreshSearchResults();
+    }
 
     partial void OnIsSearchOpenChanged(bool value)
     {
@@ -2393,6 +2415,65 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RefreshSearchResults();
     }
 
+    internal void PrepareTaskbarWindowOverview(
+        TaskbarAppItem task)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        _windowOverviewIdentityFilter =
+            task.IdentityKey;
+        _windowOverviewApplicationName =
+            task.DisplayName;
+        SearchScope = ShellSearchScope.Windows;
+        SearchQuery = string.Empty;
+        NotifyWindowOverviewFilterChanged();
+        RefreshSearchResults();
+    }
+
+    internal void ClearWindowOverviewFilter()
+    {
+        if (!ClearWindowOverviewFilterCore())
+            return;
+
+        RefreshSearchResults();
+    }
+
+    [RelayCommand]
+    private void ClearWindowApplicationFilter() =>
+        ClearWindowOverviewFilter();
+
+    private bool ClearWindowOverviewFilterCore()
+    {
+        if (string.IsNullOrWhiteSpace(
+                _windowOverviewIdentityFilter)
+            && string.IsNullOrWhiteSpace(
+                _windowOverviewApplicationName))
+        {
+            return false;
+        }
+
+        _windowOverviewIdentityFilter = null;
+        _windowOverviewApplicationName =
+            string.Empty;
+        NotifyWindowOverviewFilterChanged();
+        return true;
+    }
+
+    private void NotifyWindowOverviewFilterChanged()
+    {
+        OnPropertyChanged(
+            nameof(
+                IsWindowApplicationFilterActive));
+        OnPropertyChanged(
+            nameof(
+                WindowApplicationFilterText));
+        OnPropertyChanged(
+            nameof(SearchPanelTitle));
+        OnPropertyChanged(
+            nameof(SearchPanelInstruction));
+        OnPropertyChanged(
+            nameof(AppSearchStatusText));
+    }
+
     [RelayCommand]
     private void SelectSearchScope(
         string? scope)
@@ -3102,7 +3183,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         : ShellSearchPolicy.DefaultLimit,
                 taskItems:
                     _taskSearchItems,
-                scope: SearchScope);
+                scope: SearchScope,
+                windowIdentityFilter:
+                    IsWindowApplicationFilterActive
+                        ? _windowOverviewIdentityFilter
+                        : null);
         ReplaceCollection(
             SearchResults,
             results);

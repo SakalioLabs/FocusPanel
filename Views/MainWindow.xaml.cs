@@ -764,6 +764,7 @@ public partial class MainWindow :
     private void ApplySearchEntryState(
         ShellSearchEntryState entry)
     {
+        _viewModel.ClearWindowOverviewFilter();
         _viewModel.SearchScope = entry.Scope;
         _viewModel.SearchQuery = entry.Query;
     }
@@ -1108,6 +1109,7 @@ public partial class MainWindow :
     {
         ExpandSidebar();
         CloseOverlayPanels();
+        _viewModel.ClearWindowOverviewFilter();
         _viewModel.SearchScope =
             ShellSearchScope.All;
         _viewModel.SearchQuery =
@@ -1613,8 +1615,28 @@ public partial class MainWindow :
             return;
         }
 
-        PopulateTaskbarWindowList(button, task);
-        OpenContextMenu(button);
+        OpenTaskbarWindowOverview(
+            button,
+            task);
+    }
+
+    private void OpenTaskbarWindowOverview(
+        Button returnTarget,
+        TaskbarAppItem task)
+    {
+        ExpandSidebar();
+        _viewModel.PrepareTaskbarWindowOverview(
+            task);
+        if (!_viewModel.IsSearchOpen)
+        {
+            _viewModel.ToggleSearchCommand
+                .Execute(null);
+        }
+
+        QueueOverlayFocus(
+            returnTarget,
+            SearchBox,
+            () => _viewModel.IsSearchOpen);
     }
 
     private void TaskbarApp_PreviewMouseDown(

@@ -367,6 +367,42 @@
                                         Click="SearchSuggestion_Click"
                                         ToolTip="填入任务前缀，继续输入标题后按 Enter"/>
                             </WrapPanel>
+                            <Border Grid.Row="3"
+                                    Height="44"
+                                    Margin="0,0,0,8"
+                                    Padding="12,0,4,0"
+                                    CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                    Background="{DynamicResource FocusAccentSoftBrush}"
+                                    Visibility="{Binding IsWindowApplicationFilterActive, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    AutomationProperties.Name="按应用筛选窗口">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource FocusIconText}"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                                   Text="&#xE71D;"/>
+                                        <TextBlock Margin="8,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Text="{Binding WindowApplicationFilterText}"
+                                                   Foreground="{DynamicResource FocusTextBrush}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Height="36"
+                                            MinWidth="88"
+                                            Padding="12,0"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            Content="查看全部"
+                                            ToolTip="清除应用筛选，显示全部窗口"
+                                            AutomationProperties.Name="查看全部窗口"
+                                            Command="{Binding ClearWindowApplicationFilterCommand}"/>
+                                </Grid>
+                            </Border>
                             <Grid Grid.Row="4">
                                 <ListBox x:Name="SearchResultsList"
                                          ItemsSource="{Binding SearchResults}"

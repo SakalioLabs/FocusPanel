@@ -151,6 +151,54 @@ public sealed class ShellSearchPolicyTests
             result.Kind);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("文档")]
+    public void WindowIdentityFilter_DoesNotMergeSameNamedApplications(
+        string query)
+    {
+        var running = new[]
+        {
+            new WindowTaskItem
+            {
+                DisplayName = "编辑器",
+                IdentityKey = "exe:c:\\one.exe",
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(51),
+                        "文档一")
+                }
+            },
+            new WindowTaskItem
+            {
+                DisplayName = "编辑器",
+                IdentityKey = "exe:c:\\two.exe",
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(52),
+                        "文档二")
+                }
+            }
+        };
+
+        ShellSearchResult result =
+            Assert.Single(
+                ShellSearchPolicy.Compose(
+                    Array.Empty<AppLaunchItem>(),
+                    running,
+                    query,
+                    scope:
+                        ShellSearchScope.Windows,
+                    windowIdentityFilter:
+                        "EXE:C:\\TWO.EXE"));
+
+        Assert.Equal(
+            new IntPtr(52),
+            result.Window?.Handle);
+    }
+
     [Fact]
     public void WindowResult_ExposesTopmostState()
     {
