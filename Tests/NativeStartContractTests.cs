@@ -7,7 +7,7 @@ namespace FocusPanel.Tests;
 public sealed class NativeStartContractTests
 {
     [Fact]
-    public void StartButton_UsesPanelLauncherAndKeepsWindowsFallback()
+    public void StartButton_UsesOnlyPanelLauncherAndUnifiedSearch()
     {
         string root = FindRepositoryRoot();
         string xaml = File.ReadAllText(
@@ -16,11 +16,16 @@ public sealed class NativeStartContractTests
             Path.Combine(root, "Views", "MainWindow.xaml.cs"));
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
-        string systemStatus = File.ReadAllText(
+        string statusContract = File.ReadAllText(
             Path.Combine(
                 root,
                 "Services",
-                "SystemStatusService.cs"));
+                "ISystemStatusService.cs"));
+        string shortcutMap = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowsShellShortcut.cs"));
 
         Assert.Contains(
             "Click=\"StartButton_Click\"",
@@ -29,10 +34,16 @@ public sealed class NativeStartContractTests
             "按 Enter 打开 Panel 全部应用",
             xaml);
         Assert.Contains(
-            "Header=\"Windows 开始菜单\"",
+            "Header=\"Panel 统一搜索\"",
             xaml);
         Assert.Contains(
             "InputGestureText=\"Shift+单击\"",
+            xaml);
+        Assert.Contains(
+            "PreviewTextInput=\"Window_PreviewTextInput\"",
+            xaml);
+        Assert.Contains(
+            "x:Name=\"CompactDock\"",
             xaml);
         Assert.Contains(
             "IsApplicationLauncherOpen",
@@ -48,7 +59,7 @@ public sealed class NativeStartContractTests
             viewModel);
 
         int start = shell.IndexOf(
-            "private async void StartButton_Click(",
+            "private void StartButton_Click(",
             StringComparison.Ordinal);
         int end = shell.IndexOf(
             "private void CloseCurrentVirtualDesktop_Click(",
@@ -63,26 +74,41 @@ public sealed class NativeStartContractTests
             "PrepareApplicationLauncher()",
             handler);
         Assert.Contains(
+            "PrepareUnifiedSearch(",
+            handler);
+        Assert.Contains(
             "CloseOverlayPanels();",
             handler);
         Assert.Contains(
             "QueueOverlayFocus(",
             handler);
         Assert.Contains(
-            "_viewModel.OpenStartMenuCommand",
-            handler);
+            "OpenUnifiedSearchMenuItem_Click",
+            xaml);
+        Assert.DoesNotContain(
+            "OpenStartMenu",
+            xaml);
+        Assert.DoesNotContain(
+            "OpenStartMenu",
+            viewModel);
+        Assert.DoesNotContain(
+            "OpenStartMenu",
+            statusContract);
+        Assert.DoesNotContain(
+            "WindowsShellAction.StartMenu",
+            shortcutMap);
+        Assert.DoesNotContain(
+            "WindowsShellAction.Search",
+            shortcutMap);
+        Assert.Contains(
+            "CompactTypeToSearchPolicy",
+            shell);
         Assert.DoesNotContain(
             "ScheduleAutoHide",
             handler);
-        Assert.Contains(
-            "WindowsShellAction.StartMenu",
-            systemStatus);
         Assert.DoesNotContain(
-            "Shell_TrayWnd",
-            systemStatus);
-        Assert.DoesNotContain(
-            "ScTaskList",
-            systemStatus);
+            "OpenWindowsStartMenu",
+            handler);
     }
 
     [Fact]

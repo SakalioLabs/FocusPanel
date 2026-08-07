@@ -6,7 +6,8 @@ internal enum PanelStartEntryAction
 {
     OpenApplicationLauncher,
     CloseApplicationLauncher,
-    OpenWindowsStartMenu
+    OpenUnifiedSearch,
+    CloseUnifiedSearch
 }
 
 internal static class PanelStartEntryPolicy
@@ -19,8 +20,13 @@ internal static class PanelStartEntryPolicy
     {
         if (shiftPressed)
         {
-            return PanelStartEntryAction
-                .OpenWindowsStartMenu;
+            return isSearchOpen
+                   && searchScope
+                   == ShellSearchScope.All
+                ? PanelStartEntryAction
+                    .CloseUnifiedSearch
+                : PanelStartEntryAction
+                    .OpenUnifiedSearch;
         }
 
         return isSearchOpen

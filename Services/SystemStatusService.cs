@@ -472,10 +472,6 @@ public sealed class SystemStatusService : ISystemStatusService
 
     public bool OpenInputSwitcher() => TrySendWindowsShortcut(WindowsShellAction.InputSwitcher);
 
-    public bool OpenStartMenu() =>
-        TrySendWindowsShortcut(
-            WindowsShellAction.StartMenu);
-
     public bool OpenTaskView() => TrySendWindowsShortcut(WindowsShellAction.TaskView);
 
     public bool SwitchVirtualDesktop(
@@ -497,8 +493,6 @@ public sealed class SystemStatusService : ISystemStatusService
         TrySendWindowsShortcut(
             WindowsShellAction
                 .VirtualDesktopClose);
-
-    public bool OpenWindowsSearch() => TrySendWindowsShortcut(WindowsShellAction.Search);
 
     public bool OpenWidgets() => TrySendWindowsShortcut(WindowsShellAction.Widgets);
 

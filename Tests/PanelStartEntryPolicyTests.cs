@@ -7,11 +7,10 @@ namespace FocusPanel.Tests;
 public sealed class PanelStartEntryPolicyTests
 {
     [Theory]
-    [InlineData(false, false, ShellSearchScope.All)]
-    [InlineData(false, true, ShellSearchScope.Windows)]
-    [InlineData(false, true, ShellSearchScope.System)]
+    [InlineData(false, ShellSearchScope.All)]
+    [InlineData(true, ShellSearchScope.Windows)]
+    [InlineData(true, ShellSearchScope.System)]
     public void PlainClick_OpensPanelLauncher(
-        bool shiftPressed,
         bool isSearchOpen,
         ShellSearchScope scope)
     {
@@ -19,7 +18,7 @@ public sealed class PanelStartEntryPolicyTests
             PanelStartEntryAction
                 .OpenApplicationLauncher,
             PanelStartEntryPolicy.Decide(
-                shiftPressed,
+                shiftPressed: false,
                 isSearchOpen,
                 scope));
     }
@@ -37,14 +36,26 @@ public sealed class PanelStartEntryPolicyTests
     }
 
     [Fact]
-    public void ShiftClick_UsesWindowsCompatibilityEntry()
+    public void ShiftClick_OpensPanelUnifiedSearch()
     {
         Assert.Equal(
             PanelStartEntryAction
-                .OpenWindowsStartMenu,
+                .OpenUnifiedSearch,
             PanelStartEntryPolicy.Decide(
                 shiftPressed: true,
                 isSearchOpen: true,
                 ShellSearchScope.Applications));
+    }
+
+    [Fact]
+    public void RepeatedShiftClick_ClosesOnlyUnifiedSearch()
+    {
+        Assert.Equal(
+            PanelStartEntryAction
+                .CloseUnifiedSearch,
+            PanelStartEntryPolicy.Decide(
+                shiftPressed: true,
+                isSearchOpen: true,
+                ShellSearchScope.All));
     }
 }

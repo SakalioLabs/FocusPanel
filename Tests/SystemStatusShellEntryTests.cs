@@ -6,22 +6,6 @@ namespace FocusPanel.Tests;
 public sealed class SystemStatusShellEntryTests
 {
     [Fact]
-    public void StartMenu_UsesIndependentWindowsKeyBoundary()
-    {
-        WindowsShellShortcut? captured = null;
-        using var service = new SystemStatusService(
-            shortcut =>
-            {
-                captured = shortcut;
-                return true;
-            });
-
-        Assert.True(service.OpenStartMenu());
-        Assert.Equal((ushort)0x5B, captured?.Key);
-        Assert.False(captured?.UsesWindowsKey);
-    }
-
-    [Fact]
     public void TaskView_UsesWinTabShortcutBoundary()
     {
         WindowsShellShortcut? captured = null;

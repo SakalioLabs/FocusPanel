@@ -2836,13 +2836,13 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
 
         Assert.Contains("Click=\"StartButton_Click\"", mainWindow);
-        Assert.Contains("OpenWindowsSearchCommand", mainWindow);
+        Assert.DoesNotContain("OpenWindowsSearchCommand", mainWindow);
         Assert.DoesNotContain("TaskViewButton", mainWindow);
         Assert.Contains(
-            "InvokeShellEntryAfterClickAsync(",
+            "OpenUnifiedSearchMenuItem_Click",
             codeBehind);
-        Assert.Contains(
-            "ShellEntryClickDelayMilliseconds",
+        Assert.DoesNotContain(
+            "InvokeShellEntryAfterClickAsync(",
             codeBehind);
         Assert.Contains(
             "WorkspaceRequested?.Invoke(\"Status\")",
@@ -3757,7 +3757,7 @@ public sealed class XamlResourceContractTests
             "private void SearchSuggestion_Click(",
             StringComparison.Ordinal);
         int end = codeBehind.IndexOf(
-            "private async void StartButton_Click(",
+            "private void StartButton_Click(",
             start,
             StringComparison.Ordinal);
         Assert.True(start >= 0);

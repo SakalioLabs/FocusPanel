@@ -43,9 +43,7 @@ public sealed class WindowsShellSearchCatalogTests
             WindowsShellSearchCatalog.All,
             entry =>
                 entry.Action
-                is WindowsShellAction.StartMenu
-                or WindowsShellAction.Search
-                or WindowsShellAction.VirtualDesktopCreate
+                is WindowsShellAction.VirtualDesktopCreate
                 or WindowsShellAction.VirtualDesktopClose);
     }
 

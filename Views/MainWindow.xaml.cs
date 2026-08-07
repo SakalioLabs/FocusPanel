@@ -37,7 +37,6 @@ public partial class MainWindow :
     private const int TaskbarHoverCloseDelayMilliseconds = 260;
     private const int TaskbarWindowCycleThrottleMilliseconds = 90;
     private const int TaskbarWindowCycleMemoryMilliseconds = 2000;
-    private const int ShellEntryClickDelayMilliseconds = 80;
     private const int SwShowNoActivate = 4;
     private const int WmHotkey = 0x0312;
     private const int WmDpiChanged = 0x02E0;
@@ -843,7 +842,7 @@ public partial class MainWindow :
             0);
     }
 
-    private async void StartButton_Click(
+    private void StartButton_Click(
         object sender,
         RoutedEventArgs e)
     {
@@ -854,30 +853,44 @@ public partial class MainWindow :
                     ModifierKeys.Shift),
                 _viewModel.IsSearchOpen,
                 _viewModel.SearchScope);
-        if (action
-            == PanelStartEntryAction
-                .OpenWindowsStartMenu)
-        {
-            await InvokeShellEntryAfterClickAsync(
-                () => _viewModel.OpenStartMenuCommand
-                    .Execute(null));
-            return;
-        }
-
-        if (action
-            == PanelStartEntryAction
-                .CloseApplicationLauncher)
+        if (action is
+            PanelStartEntryAction
+                .CloseApplicationLauncher
+            or PanelStartEntryAction
+                .CloseUnifiedSearch)
         {
             CloseOverlayPanels();
             StartButton.Focus();
             return;
         }
 
+        OpenStartSearch(action);
+    }
+
+    private void OpenUnifiedSearchMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        e.Handled = true;
+        OpenStartSearch(
+            PanelStartEntryAction
+                .OpenUnifiedSearch);
+    }
+
+    private void OpenStartSearch(
+        PanelStartEntryAction action)
+    {
         ExpandSidebar();
         CloseOverlayPanels();
         ApplySearchEntryState(
-            ShellSearchEntryPolicy
-                .PrepareApplicationLauncher());
+            action
+                == PanelStartEntryAction
+                    .OpenUnifiedSearch
+                ? ShellSearchEntryPolicy
+                    .PrepareUnifiedSearch(
+                        string.Empty)
+                : ShellSearchEntryPolicy
+                    .PrepareApplicationLauncher());
         _viewModel.ToggleSearchCommand.Execute(null);
         QueueOverlayFocus(
             StartButton,
@@ -901,20 +914,6 @@ public partial class MainWindow :
 
         _viewModel.CloseCurrentVirtualDesktopCommand
             .Execute(null);
-    }
-
-    private async Task InvokeShellEntryAfterClickAsync(
-        Action action)
-    {
-        await Dispatcher.Yield(
-            DispatcherPriority.ApplicationIdle);
-        await Task.Delay(
-            ShellEntryClickDelayMilliseconds);
-        if (!_isExit
-            && IsVisible)
-        {
-            action();
-        }
     }
 
     private void SearchBox_PreviewKeyDown(
@@ -3444,6 +3443,47 @@ public partial class MainWindow :
             HideShell();
         }
 
+        e.Handled = true;
+    }
+
+    private void Window_PreviewTextInput(
+        object sender,
+        TextCompositionEventArgs e)
+    {
+        string? initialQuery =
+            CompactTypeToSearchPolicy
+                .GetInitialQuery(
+                    e.Text,
+                    GetKeyboardFocusKind(),
+                    CompactDock
+                        .IsKeyboardFocusWithin,
+                    (Keyboard.Modifiers
+                        & (ModifierKeys.Control
+                           | ModifierKeys.Alt
+                           | ModifierKeys.Windows))
+                    != ModifierKeys.None,
+                    _transientInteractionDepth > 0);
+        if (initialQuery == null)
+            return;
+
+        OpenStartSearch(
+            PanelStartEntryAction
+                .OpenUnifiedSearch);
+        _viewModel.SearchQuery = initialQuery;
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (_isExit
+                    || !_viewModel.IsSearchOpen)
+                {
+                    return;
+                }
+
+                SearchBox.Focus();
+                SearchBox.CaretIndex =
+                    SearchBox.Text.Length;
+            }),
+            DispatcherPriority.Input);
         e.Handled = true;
     }
 

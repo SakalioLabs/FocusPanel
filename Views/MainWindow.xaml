@@ -23,7 +23,8 @@
         FontFamily="Segoe UI Variable Text"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="ClearType"
-        PreviewKeyDown="Window_PreviewKeyDown">
+        PreviewKeyDown="Window_PreviewKeyDown"
+        PreviewTextInput="Window_PreviewTextInput">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -1411,7 +1412,8 @@
                 </Grid>
 
                 <!-- Compact app dock -->
-                <Border Grid.Column="1"
+                <Border x:Name="CompactDock"
+                        Grid.Column="1"
                         Margin="10,12,10,12"
                         CornerRadius="0"
                         Background="Transparent"
@@ -1432,15 +1434,15 @@
                                     Tag="CompactFixedEntry"
                                     Click="StartButton_Click"
                                     AutomationProperties.Name="开始"
-                                    AutomationProperties.HelpText="按 Enter 打开 Panel 全部应用，按 Shift+Enter 打开 Windows 开始菜单，按 Shift+F10 打开系统管理菜单"
-                                    ToolTip="开始 · 左键打开 Panel 全部应用 · Shift+左键打开 Windows 开始菜单 · 右键打开系统管理菜单">
+                                    AutomationProperties.HelpText="按 Enter 打开 Panel 全部应用，按 Shift+Enter 打开 Panel 统一搜索，按 Shift+F10 打开系统管理菜单"
+                                    ToolTip="开始 · 左键打开 Panel 全部应用 · Shift+左键打开 Panel 统一搜索 · 右键打开系统管理菜单">
                                 <Button.ContextMenu>
                                     <ContextMenu Style="{StaticResource FocusContextMenu}"
                                                  Opened="TransientContextMenu_Opened"
                                                  Closed="TransientContextMenu_Closed">
-                                        <MenuItem Header="Windows 开始菜单"
+                                        <MenuItem Header="Panel 统一搜索"
                                                   InputGestureText="Shift+单击"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenStartMenuCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                  Click="OpenUnifiedSearchMenuItem_Click"/>
                                         <Separator/>
                                         <MenuItem Header="安装的应用"
                                                   Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
@@ -1482,8 +1484,6 @@
                                         <MenuItem Header="文件资源管理器"
                                                   Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{x:Static services:SystemManagementTool.FileExplorer}"/>
-                                        <MenuItem Header="搜索"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenWindowsSearchCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                         <MenuItem Header="小组件"
                                                   Command="{Binding PlacementTarget.DataContext.OpenWidgetsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                         <MenuItem Header="运行…"

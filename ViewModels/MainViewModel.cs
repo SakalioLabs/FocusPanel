@@ -2890,12 +2890,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task OpenStartMenu()
-        => await RunSystemActionAsync(
-            _systemStatus.OpenStartMenu,
-            "无法唤起开始菜单，请按 Windows 键。");
-
-    [RelayCommand]
     private async Task OpenTaskView()
         => await RunSystemActionAsync(
             _systemStatus.OpenTaskView,
@@ -2926,12 +2920,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _systemStatus
                 .CloseCurrentVirtualDesktop,
             "无法关闭当前虚拟桌面，请使用 Win+Ctrl+F4。");
-
-    [RelayCommand]
-    private async Task OpenWindowsSearch()
-        => await RunSystemActionAsync(
-            _systemStatus.OpenWindowsSearch,
-            "无法唤起 Windows 搜索，请使用 Win+S。");
 
     [RelayCommand]
     private async Task OpenWidgets()

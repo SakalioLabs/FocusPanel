@@ -15,7 +15,6 @@ public sealed class WindowsShellShortcutTests
             (WindowsShellAction.Notifications, 0x4E),
             (WindowsShellAction.InputSwitcher, 0x20),
             (WindowsShellAction.TaskView, 0x09),
-            (WindowsShellAction.Search, 0x53),
             (WindowsShellAction.Widgets, 0x57),
             (WindowsShellAction.RunDialog, 0x52),
             (WindowsShellAction.ProjectDisplay, 0x50),
@@ -82,16 +81,6 @@ public sealed class WindowsShellShortcutTests
                 false
             },
             transitions.Select(item => item.IsDown));
-    }
-
-    [Fact]
-    public void StartMenu_UsesWindowsKeyAlone()
-    {
-        WindowsShellShortcut shortcut = WindowsShellShortcutMap.Get(
-            WindowsShellAction.StartMenu);
-
-        Assert.False(shortcut.UsesWindowsKey);
-        Assert.Equal(0x5B, shortcut.Key);
     }
 
     [Fact]

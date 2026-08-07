@@ -22,13 +22,11 @@ public interface ISystemStatusService : IDisposable
     bool OpenQuickSettings();
     bool OpenNotifications();
     bool OpenInputSwitcher();
-    bool OpenStartMenu();
     bool OpenTaskView();
     bool SwitchVirtualDesktop(
         VirtualDesktopDirection direction);
     bool CreateVirtualDesktop();
     bool CloseCurrentVirtualDesktop();
-    bool OpenWindowsSearch();
     bool OpenWidgets();
     bool OpenRunDialog();
     bool OpenSoundOutput();

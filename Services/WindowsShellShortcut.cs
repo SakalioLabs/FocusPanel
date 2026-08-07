@@ -5,7 +5,6 @@ namespace FocusPanel.Services;
 
 internal enum WindowsShellAction
 {
-    StartMenu,
     QuickSettings,
     Notifications,
     InputSwitcher,
@@ -14,7 +13,6 @@ internal enum WindowsShellAction
     VirtualDesktopNext,
     VirtualDesktopCreate,
     VirtualDesktopClose,
-    Search,
     Widgets,
     RunDialog,
     SoundOutput,
@@ -94,7 +92,6 @@ internal static class WindowsShellShortcutMap
 {
     internal static WindowsShellShortcut Get(WindowsShellAction action) => action switch
     {
-        WindowsShellAction.StartMenu => new(0x5B, false),
         WindowsShellAction.QuickSettings => new(0x41, true),
         WindowsShellAction.Notifications => new(0x4E, true),
         WindowsShellAction.InputSwitcher => new(0x20, true),
@@ -107,7 +104,6 @@ internal static class WindowsShellShortcutMap
             new(0x44, true, UsesControl: true),
         WindowsShellAction.VirtualDesktopClose =>
             new(0x73, true, UsesControl: true),
-        WindowsShellAction.Search => new(0x53, true),
         WindowsShellAction.Widgets => new(0x57, true),
         WindowsShellAction.RunDialog => new(0x52, true),
         WindowsShellAction.SoundOutput =>
