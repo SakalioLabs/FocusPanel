@@ -96,6 +96,11 @@ internal static class UiSmokeTestRunner
             CheckSurface("AIAssistantView", () => new AIAssistantView(), results, failures);
             CheckSurface("TaskDetailWindow", () => new TaskDetailWindow(), results, failures);
             CheckSurface("FocusDialogWindow", () => new FocusDialogWindow(), results, failures);
+            CheckSurface(
+                "WifiCredentialWindow",
+                () => new WifiCredentialWindow("FocusLab"),
+                results,
+                failures);
             CheckSurface("FocusToastWindow", () => new FocusToastWindow(), results, failures);
             CheckSurface("TaskbarWindowPreviewWindow", () => new TaskbarWindowPreviewWindow(), results, failures);
             CheckSurface("PomodoroFloatingWindow", () => new PomodoroFloatingWindow(), results, failures);

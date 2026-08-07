@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using FocusPanel.Services;
@@ -161,6 +162,118 @@ public sealed class WifiNetworkServiceTests
         Assert.Empty(native.ConnectRequests);
     }
 
+    [Fact]
+    public async Task ConnectWithCredentials_CreatesProfileAndConfirms()
+    {
+        WifiNetworkSnapshot target =
+            Network("home", "Home");
+        var native = new FakeWifiNetworkNativeApi();
+        native.ListResults.Enqueue(
+            Success(
+                target with
+                {
+                    IsConnected = true,
+                    HasProfile = true,
+                    ProfileName = "Home"
+                }));
+        using var service = CreateService(native);
+        using SecureString password =
+            Secure("correct-horse");
+
+        WifiNetworkConnectResult result =
+            await service
+                .ConnectWithCredentialsAsync(
+                    target,
+                    password,
+                    CancellationToken.None);
+
+        Assert.True(result.Succeeded);
+        Assert.Single(native.ProfileConnectRequests);
+        Assert.Equal("Home",
+            native.ProfileConnectRequests[0]
+                .ProfileName);
+        Assert.NotNull(native.LastProfileXmlReference);
+        Assert.All(
+            native.LastProfileXmlReference!,
+            character => Assert.Equal('\0', character));
+    }
+
+    [Fact]
+    public async Task ConnectWithCredentials_RejectsShortPasswordBeforeNativeCall()
+    {
+        var native = new FakeWifiNetworkNativeApi();
+        using var service = CreateService(native);
+        using SecureString password = Secure("short");
+
+        WifiNetworkConnectResult result =
+            await service
+                .ConnectWithCredentialsAsync(
+                    Network("home", "Home"),
+                    password,
+                    CancellationToken.None);
+
+        Assert.Equal(
+            WifiNetworkConnectStatus
+                .InvalidCredentials,
+            result.Status);
+        Assert.Empty(native.ProfileConnectRequests);
+    }
+
+    [Fact]
+    public async Task ConnectWithCredentials_RemovesFailedFirstProfile()
+    {
+        var native = new FakeWifiNetworkNativeApi
+        {
+            Networks =
+            {
+                Network("home", "Home")
+            }
+        };
+        using var service = CreateService(native);
+        using SecureString password =
+            Secure("wrong-pass");
+
+        WifiNetworkConnectResult result =
+            await service
+                .ConnectWithCredentialsAsync(
+                    Network("home", "Home"),
+                    password,
+                    CancellationToken.None);
+
+        Assert.Equal(
+            WifiNetworkConnectStatus.NotConfirmed,
+            result.Status);
+        Assert.Equal(1, native.RemoveProfileRequests);
+    }
+
+    [Fact]
+    public void ProfileXml_EscapesNamesAndCredential()
+    {
+        WifiNetworkSnapshot network =
+            Network("home", "Home & Lab") with
+            {
+                SsidHex = "486F6D652026204C6162"
+            };
+        using SecureString password =
+            Secure("eight<&chars");
+
+        char[] xml = WifiProfileXmlBuilder.Build(
+            network,
+            password);
+        try
+        {
+            string text = new string(xml).TrimEnd('\0');
+            Assert.Contains("Home &amp; Lab", text);
+            Assert.Contains("eight&lt;&amp;chars", text);
+            Assert.DoesNotContain("eight<&chars", text);
+            Assert.Contains("<authentication>WPA2PSK</authentication>", text);
+        }
+        finally
+        {
+            Array.Clear(xml, 0, xml.Length);
+        }
+    }
+
     [Theory]
     [InlineData(
         (int)WifiNativeConnectRequestStatus
@@ -313,6 +426,15 @@ public sealed class WifiNetworkServiceTests
             hasProfile,
             connectable);
 
+    private static SecureString Secure(string value)
+    {
+        var result = new SecureString();
+        foreach (char character in value)
+            result.AppendChar(character);
+        result.MakeReadOnly();
+        return result;
+    }
+
     private sealed class FakeWifiNetworkNativeApi :
         IWifiNetworkNativeApi
     {
@@ -326,6 +448,17 @@ public sealed class WifiNetworkServiceTests
             string ProfileName)>
             ConnectRequests { get; } = new();
 
+        internal List<(string InterfaceId,
+            string ProfileName,
+            int XmlLength)>
+            ProfileConnectRequests { get; } = new();
+
+        internal char[]? LastProfileXmlReference
+        {
+            get;
+            private set;
+        }
+
         internal WifiNetworkListStatus
             ListStatus { get; init; } =
                 WifiNetworkListStatus.Succeeded;
@@ -338,6 +471,12 @@ public sealed class WifiNetworkServiceTests
         internal int ScanRequests { get; private set; }
 
         internal int ListRequests { get; private set; }
+
+        internal int RemoveProfileRequests
+        {
+            get;
+            private set;
+        }
 
         public Task<WifiNetworkListResult>
             GetNetworksAsync(
@@ -371,6 +510,35 @@ public sealed class WifiNetworkServiceTests
                 (interfaceId, profileName));
             return Task.FromResult(
                 ConnectStatus);
+        }
+
+        public Task<
+            WifiNativeConnectRequestStatus>
+            RequestProfileConnectAsync(
+                string interfaceId,
+                string profileName,
+                char[] profileXml,
+                CancellationToken cancellationToken)
+        {
+            cancellationToken
+                .ThrowIfCancellationRequested();
+            ProfileConnectRequests.Add(
+                (interfaceId,
+                    profileName,
+                    profileXml.Length));
+            LastProfileXmlReference = profileXml;
+            return Task.FromResult(ConnectStatus);
+        }
+
+        public Task RemoveProfileAsync(
+            string interfaceId,
+            string profileName,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken
+                .ThrowIfCancellationRequested();
+            RemoveProfileRequests++;
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#17233b"/>
+      <stop offset="0.55" stop-color="#40304f"/>
+      <stop offset="1" stop-color="#163d44"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef5ff" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#cbd8f4" stop-opacity=".11"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="28" flood-color="#000" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <circle cx="245" cy="155" r="195" fill="#2778ff" opacity=".14"/>
+  <circle cx="925" cy="570" r="250" fill="#3be5b5" opacity=".1"/>
+
+  <g filter="url(#shadow)">
+    <rect x="655" y="26" width="510" height="668" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <text x="694" y="78" fill="#f7f9ff" font-family="Segoe UI, sans-serif" font-size="26" font-weight="650">网络与无线</text>
+    <text x="694" y="108" fill="#c8d2e5" font-family="Segoe UI, sans-serif" font-size="15">所有高频网络操作都留在 Panel</text>
+    <rect x="690" y="136" width="438" height="74" rx="16" fill="#0c1425" fill-opacity=".45"/>
+    <text x="714" y="169" fill="#fff" font-family="Segoe UI, sans-serif" font-size="17" font-weight="600">Wi-Fi</text>
+    <text x="714" y="192" fill="#b9c6da" font-family="Segoe UI, sans-serif" font-size="14">已开启 · 找到 6 个网络</text>
+    <rect x="1019" y="151" width="86" height="44" rx="12" fill="#378bff"/>
+    <text x="1041" y="179" fill="#fff" font-family="Segoe UI, sans-serif" font-size="14">刷新</text>
+
+    <g font-family="Segoe UI, sans-serif">
+      <rect x="690" y="224" width="438" height="68" rx="14" fill="#fff" fill-opacity=".09"/>
+      <text x="714" y="254" fill="#fff" font-size="16" font-weight="600">Studio-5G</text>
+      <text x="714" y="277" fill="#adbad0" font-size="13">已连接 · 安全网络</text>
+      <text x="1048" y="265" fill="#79e3ba" font-size="14">当前</text>
+      <rect x="690" y="300" width="438" height="68" rx="14" fill="#fff" fill-opacity=".06"/>
+      <text x="714" y="330" fill="#fff" font-size="16" font-weight="600">FocusLab</text>
+      <text x="714" y="353" fill="#adbad0" font-size="13">需要密码 · 82%</text>
+      <rect x="1018" y="312" width="88" height="44" rx="12" fill="#fff" fill-opacity=".11"/>
+      <text x="1031" y="340" fill="#f2f6ff" font-size="14">输入密码</text>
+      <rect x="690" y="376" width="438" height="68" rx="14" fill="#fff" fill-opacity=".06"/>
+      <text x="714" y="406" fill="#fff" font-size="16" font-weight="600">Guest</text>
+      <text x="714" y="429" fill="#adbad0" font-size="13">开放网络 · 61%</text>
+      <text x="1052" y="416" fill="#8ab9ff" font-size="14">连接</text>
+    </g>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="72" y="132" width="520" height="455" rx="26" fill="#202a3b" fill-opacity=".94" stroke="#fff" stroke-opacity=".17"/>
+    <rect x="102" y="165" width="44" height="44" rx="12" fill="#3d8fff" fill-opacity=".24"/>
+    <path d="M113 190c11-10 22-10 33 0M118 196c7-6 14-6 21 0M126 203h4" fill="none" stroke="#71b1ff" stroke-width="3" stroke-linecap="round"/>
+    <text x="165" y="184" fill="#fff" font-family="Segoe UI, sans-serif" font-size="22" font-weight="650">连接 Wi-Fi</text>
+    <text x="165" y="206" fill="#aebbd0" font-family="Segoe UI, sans-serif" font-size="14">FocusLab</text>
+    <text x="104" y="259" fill="#f5f7fb" font-family="Segoe UI, sans-serif" font-size="15" font-weight="600">网络密码</text>
+    <rect x="102" y="276" width="460" height="50" rx="12" fill="#0d1524" stroke="#65a7ff" stroke-opacity=".85"/>
+    <text x="122" y="307" fill="#dce6f8" font-family="Segoe UI, sans-serif" font-size="22" letter-spacing="5">••••••••••••</text>
+    <text x="104" y="351" fill="#aebbd0" font-family="Segoe UI, sans-serif" font-size="14">密码长度有效；按 Enter 连接</text>
+    <rect x="102" y="378" width="460" height="76" rx="14" fill="#378bff" fill-opacity=".14"/>
+    <text x="122" y="407" fill="#c9d8ee" font-family="Segoe UI, sans-serif" font-size="14">密码只交给 Windows，FocusPanel 不写入数据库、</text>
+    <text x="122" y="431" fill="#c9d8ee" font-family="Segoe UI, sans-serif" font-size="14">设置或日志；失败配置会自动清理。</text>
+    <rect x="347" y="493" width="96" height="44" rx="12" fill="#fff" fill-opacity=".09"/>
+    <text x="378" y="521" fill="#e7edf8" font-family="Segoe UI, sans-serif" font-size="14">取消</text>
+    <rect x="455" y="493" width="107" height="44" rx="12" fill="#378bff"/>
+    <text x="492" y="521" fill="#fff" font-family="Segoe UI, sans-serif" font-size="14" font-weight="600">连接</text>
+  </g>
+
+  <text x="74" y="636" fill="#fff" font-family="Segoe UI, sans-serif" font-size="22" font-weight="650">首次连接，也不必回到原生任务栏</text>
+  <text x="74" y="668" fill="#b9c6da" font-family="Segoe UI, sans-serif" font-size="15">Panel 收集一次凭据 → Windows 加密保存 → 连接结果确认 → 失败配置自动清理</text>
+</svg>

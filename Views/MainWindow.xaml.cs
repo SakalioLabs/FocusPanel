@@ -145,6 +145,8 @@ public partial class MainWindow :
             ViewModel_WorkspacePinChanged;
         _viewModel.StatusCenterDetailRequested +=
             ViewModel_StatusCenterDetailRequested;
+        _viewModel.WifiCredentialsRequested +=
+            ViewModel_WifiCredentialsRequested;
         _viewModel.PropertyChanged +=
             ViewModel_PropertyChanged;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
@@ -1458,6 +1460,47 @@ public partial class MainWindow :
         SetOpenStatusCenterDetail(
             detail,
             bringIntoView: true);
+    }
+
+    private async void ViewModel_WifiCredentialsRequested(
+        WifiNetworkSnapshot network)
+    {
+        BeginTransientInteraction();
+        try
+        {
+            var dialog =
+                new WifiCredentialWindow(
+                    network.DisplayName)
+                {
+                    Owner = this
+                };
+            bool accepted =
+                dialog.ShowDialog() == true
+                && dialog.Accepted;
+            if (!accepted)
+                return;
+
+            using System.Security.SecureString password =
+                dialog.TakePassword();
+            await _viewModel
+                .ConnectWifiNetworkWithCredentialsAsync(
+                    network,
+                    password);
+        }
+        catch (Exception ex)
+        {
+            _toastManager.Enqueue(
+                new FocusToastNotification(
+                    "wifi-credential-error",
+                    "Wi-Fi 连接没有完成",
+                    ex.Message,
+                    "\uE701",
+                    FocusToastKind.Warning));
+        }
+        finally
+        {
+            EndTransientInteraction();
+        }
     }
 
     private void StatusDetailsExpander_Expanded(
@@ -3832,6 +3875,8 @@ public partial class MainWindow :
             ViewModel_WorkspacePinChanged;
         _viewModel.StatusCenterDetailRequested -=
             ViewModel_StatusCenterDetailRequested;
+        _viewModel.WifiCredentialsRequested -=
+            ViewModel_WifiCredentialsRequested;
         _viewModel.PropertyChanged -=
             ViewModel_PropertyChanged;
         HideShell();

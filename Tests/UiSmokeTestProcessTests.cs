@@ -55,6 +55,9 @@ public sealed class UiSmokeTestProcessTests
             Assert.True(process.ExitCode == 0, report);
             Assert.Contains("PASS 界面 TaskDetailWindow", report);
             Assert.Contains("PASS 界面 FocusDialogWindow", report);
+            Assert.Contains(
+                "PASS 界面 WifiCredentialWindow",
+                report);
             Assert.Contains("PASS 界面 FileOrganizerView", report);
             Assert.Contains(
                 "PASS 1000 项仅生成",

@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.44 补齐 Panel 原生网络面板最明显的断点：附近 Wi‑Fi 第一次连接时可直接在 Panel 输入密码，不再离开侧栏去 Windows 网络设置。开放网络可直接连接，WPA/WPA2/WPA3 Personal 使用 Windows 公开的 WLAN 配置接口；密码不进入 FocusPanel 数据库、配置或日志，提交后的临时内存立即清零，由 Windows 在系统网络配置库中加密保存。密码错误或网络超时会清理本次失败配置，下一次仍可直接重新输入；企业网络明确标注组织登录边界，不用普通密码框误导用户。
+
+![Panel 内首次连接 Wi-Fi 并安全交给 Windows 保存](docs/images/panel-native-wifi-connect.svg)
+
 > 0.11.43 继续把高频状态操作收回 Panel：统一搜索中的“快捷设置 / Win+A”现在直接打开“网络与无线”，“键盘 / Win+Space”直接打开输入法详情，“音量混合器”和“电池”也进入对应 Panel 详情；状态按钮右键提供相同的 Panel 原生入口，不再发送 Win+A、Win+Space 或已移除的 Win+Tab。Windows 通知中心仍作为明确标注的系统表面保留。收纳图标布局新增完整 WPF 运行时验收，720px 工作区实测使用 6 列和 664px 可用宽度，防止再次退化成一行一个。
 
 ![搜索和状态按钮直接进入 Panel 原生详情](docs/images/panel-native-status-search.svg)

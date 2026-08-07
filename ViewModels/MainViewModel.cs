@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -1115,6 +1116,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action<int, string>? TaskCompleted;
     public event Action? DisplayTargetChanged;
     public event Action<bool>? WorkspacePinChanged;
+    public event Action<WifiNetworkSnapshot>?
+        WifiCredentialsRequested;
     internal event Action<StatusCenterDetail>?
         StatusCenterDetailRequested;
 
@@ -4171,15 +4174,41 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (!network.HasProfile)
+        if (network.NeedsCredentials)
         {
-            SystemActionMessage =
-                $"“{network.DisplayName}”尚未保存密码，"
-                + "Panel 当前不会擅自打开任务栏浮层；"
-                + "请先在 Windows 网络设置中保存一次凭据。";
             IsStatusCenterOpen = true;
+            WifiCredentialsRequested?.Invoke(network);
             return;
         }
+
+        if (!network.HasProfile)
+        {
+            using var emptyPassword =
+                new SecureString();
+            await ConnectWifiNetworkCoreAsync(
+                network,
+                emptyPassword);
+            return;
+        }
+
+        await ConnectWifiNetworkCoreAsync(
+            network,
+            null);
+    }
+
+    public Task ConnectWifiNetworkWithCredentialsAsync(
+        WifiNetworkSnapshot network,
+        SecureString password) =>
+        ConnectWifiNetworkCoreAsync(
+            network,
+            password);
+
+    private async Task ConnectWifiNetworkCoreAsync(
+        WifiNetworkSnapshot network,
+        SecureString? password)
+    {
+        if (IsWifiNetworkBusy)
+            return;
 
         long revision =
             Interlocked.Increment(
@@ -4191,9 +4220,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
             operation =
                 _wifiNetworkOperations.TryStart(
                     () =>
-                        _wifiNetworks.ConnectAsync(
-                            network,
-                            CancellationToken.None));
+                        password == null
+                            ? _wifiNetworks.ConnectAsync(
+                                network,
+                                CancellationToken.None)
+                            : _wifiNetworks
+                                .ConnectWithCredentialsAsync(
+                                    network,
+                                    password,
+                                    CancellationToken.None));
         if (operation == null)
         {
             IsWifiNetworkBusy = false;
@@ -4221,7 +4256,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         SystemActionMessage =
-            ComposeWifiConnectFailure(result);
+            password != null
+            && result.Status
+                == WifiNetworkConnectStatus.NotConfirmed
+                ? $"无法连接“{result.DisplayName}”：密码不正确或网络未响应。"
+                  + "Panel 已移除这次失败的配置，可直接重新输入。"
+                : ComposeWifiConnectFailure(result);
         WifiNetworkStatusText =
             "连接没有完成；Panel 已保留网络列表，可直接重试";
         IsStatusCenterOpen = true;
@@ -4284,7 +4324,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             WifiNetworkListStatus.Succeeded
                 when result.Networks.Count > 0 =>
                 $"找到 {result.Networks.Count} 个网络；"
-                + "已保存网络可直接连接",
+                + "首次密码也可直接在 Panel 输入",
             WifiNetworkListStatus.Succeeded =>
                 "附近暂时没有可显示的 Wi‑Fi",
             WifiNetworkListStatus.AccessDenied =>
@@ -4309,7 +4349,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             WifiNetworkConnectStatus
                 .NeedsCredentials =>
                 $"“{result.DisplayName}”需要首次输入密码，"
-                + "请先在 Windows 网络设置中保存凭据。",
+                + "请直接在 Panel 中输入。",
+            WifiNetworkConnectStatus
+                .InvalidCredentials =>
+                "密码长度应为 8–63 个字符，请重新输入。",
             WifiNetworkConnectStatus.AccessDenied =>
                 "Windows 拒绝读取 Wi‑Fi 连接状态。"
                 + "请检查精确位置权限。",

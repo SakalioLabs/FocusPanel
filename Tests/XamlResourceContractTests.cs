@@ -705,12 +705,12 @@ public sealed class XamlResourceContractTests
             "Property=\"IsEnabled\"",
             theme);
         Assert.Equal(
-            2,
+            3,
             Regex.Matches(
                 views,
                 "<PasswordBox").Count);
         Assert.Equal(
-            2,
+            3,
             Regex.Matches(
                 views,
                 "Style=\"\\{StaticResource FocusPasswordBox\\}\"").Count);

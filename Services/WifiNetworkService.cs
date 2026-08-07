@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,16 @@ public enum WifiNetworkListStatus
     Failed
 }
 
+public enum WifiNetworkSecurityKind
+{
+    Open,
+    WpaPersonal,
+    Wpa2Personal,
+    Wpa3Personal,
+    Enterprise,
+    Unsupported
+}
+
 public sealed record WifiNetworkSnapshot(
     string Key,
     string InterfaceId,
@@ -27,7 +38,12 @@ public sealed record WifiNetworkSnapshot(
     bool IsConnected,
     bool IsSecure,
     bool HasProfile,
-    bool IsConnectable)
+    bool IsConnectable,
+    WifiNetworkSecurityKind SecurityKind =
+        WifiNetworkSecurityKind.Wpa2Personal,
+    string SsidHex = "",
+    uint AuthenticationAlgorithm = 7,
+    uint CipherAlgorithm = 4)
 {
     public bool CanConnect =>
         !IsConnected
@@ -48,6 +64,12 @@ public sealed record WifiNetworkSnapshot(
                 ? IsSecure
                     ? "已保存 · 安全网络"
                     : "已保存 · 开放网络"
+                : SecurityKind ==
+                    WifiNetworkSecurityKind.Enterprise
+                    ? "组织网络 · 需要企业凭据"
+                : SecurityKind ==
+                    WifiNetworkSecurityKind.Unsupported
+                    ? "安全模式暂不支持"
                 : IsSecure
                     ? "需要密码"
                     : "未保存";
@@ -57,15 +79,40 @@ public sealed record WifiNetworkSnapshot(
             ? "当前"
             : CanConnect
                 ? "连接"
+                : !HasProfile
+                    && SecurityKind ==
+                        WifiNetworkSecurityKind.Open
+                    ? "连接"
+                : !HasProfile
+                    && SecurityKind is
+                        WifiNetworkSecurityKind.WpaPersonal
+                        or WifiNetworkSecurityKind.Wpa2Personal
+                        or WifiNetworkSecurityKind.Wpa3Personal
+                    ? "输入密码"
+                : SecurityKind ==
+                    WifiNetworkSecurityKind.Enterprise
+                    ? "组织登录"
                 : IsConnectable
-                    ? "打开系统面板"
+                    ? "暂不支持"
                     : "不可连接";
 
     public bool CanInvokeAction =>
         !IsConnected
+        && IsConnectable
         && (CanConnect
-            || (IsConnectable
-                && !HasProfile));
+            || (!HasProfile
+                && SecurityKind is
+                    WifiNetworkSecurityKind.Open
+                    or WifiNetworkSecurityKind.WpaPersonal
+                    or WifiNetworkSecurityKind.Wpa2Personal
+                    or WifiNetworkSecurityKind.Wpa3Personal));
+
+    public bool NeedsCredentials =>
+        !HasProfile
+        && SecurityKind is
+            WifiNetworkSecurityKind.WpaPersonal
+            or WifiNetworkSecurityKind.Wpa2Personal
+            or WifiNetworkSecurityKind.Wpa3Personal;
 }
 
 public sealed record WifiNetworkListResult(
@@ -80,6 +127,7 @@ public enum WifiNetworkConnectStatus
 {
     Succeeded,
     NeedsCredentials,
+    InvalidCredentials,
     NotFound,
     AccessDenied,
     RadioOff,
@@ -105,6 +153,12 @@ public interface IWifiNetworkService : IDisposable
     Task<WifiNetworkConnectResult> ConnectAsync(
         WifiNetworkSnapshot network,
         CancellationToken cancellationToken);
+
+    Task<WifiNetworkConnectResult>
+        ConnectWithCredentialsAsync(
+            WifiNetworkSnapshot network,
+            SecureString password,
+            CancellationToken cancellationToken);
 }
 
 internal enum WifiNativeConnectRequestStatus
@@ -128,6 +182,18 @@ internal interface IWifiNetworkNativeApi
             string interfaceId,
             string profileName,
             CancellationToken cancellationToken);
+
+    Task<WifiNativeConnectRequestStatus>
+        RequestProfileConnectAsync(
+            string interfaceId,
+            string profileName,
+            char[] profileXml,
+            CancellationToken cancellationToken);
+
+    Task RemoveProfileAsync(
+        string interfaceId,
+        string profileName,
+        CancellationToken cancellationToken);
 }
 
 public sealed class WifiNetworkService :
@@ -349,6 +415,198 @@ public sealed class WifiNetworkService :
         }
     }
 
+    public async Task<WifiNetworkConnectResult>
+        ConnectWithCredentialsAsync(
+            WifiNetworkSnapshot network,
+            SecureString password,
+            CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(network);
+        ArgumentNullException.ThrowIfNull(password);
+        if (network.HasProfile)
+        {
+            return await ConnectAsync(
+                    network,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (_isDisposed
+            || !network.IsConnectable
+            || network.SecurityKind is
+                WifiNetworkSecurityKind.Enterprise
+                or WifiNetworkSecurityKind.Unsupported)
+        {
+            return new WifiNetworkConnectResult(
+                WifiNetworkConnectStatus.Failed,
+                network.DisplayName);
+        }
+
+        if (!WifiProfileXmlBuilder
+                .IsCredentialValid(
+                    network.SecurityKind,
+                    password))
+        {
+            return new WifiNetworkConnectResult(
+                WifiNetworkConnectStatus
+                    .InvalidCredentials,
+                network.DisplayName);
+        }
+
+        char[] profileXml =
+            WifiProfileXmlBuilder.Build(
+                network,
+                password);
+        try
+        {
+            return await ConnectProfileAndConfirmAsync(
+                    network,
+                    profileXml,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            Array.Clear(
+                profileXml,
+                0,
+                profileXml.Length);
+        }
+    }
+
+    private async Task<WifiNetworkConnectResult>
+        ConnectProfileAndConfirmAsync(
+            WifiNetworkSnapshot network,
+            char[] profileXml,
+            CancellationToken cancellationToken)
+    {
+        await _connectGate
+            .WaitAsync(cancellationToken)
+            .ConfigureAwait(false);
+        try
+        {
+            WifiNativeConnectRequestStatus request =
+                await _nativeApi
+                    .RequestProfileConnectAsync(
+                        network.InterfaceId,
+                        network.DisplayName,
+                        profileXml,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            WifiNetworkConnectStatus? failure =
+                MapRequestFailure(request);
+            if (failure.HasValue)
+            {
+                return new WifiNetworkConnectResult(
+                    failure.Value,
+                    network.DisplayName);
+            }
+
+            WifiNetworkConnectResult result =
+                await ConfirmConnectionAsync(
+                    network,
+                    network.DisplayName,
+                    cancellationToken)
+                .ConfigureAwait(false);
+            if (result.Status
+                == WifiNetworkConnectStatus.NotConfirmed)
+            {
+                try
+                {
+                    await _nativeApi
+                        .RemoveProfileAsync(
+                            network.InterfaceId,
+                            network.DisplayName,
+                            CancellationToken.None)
+                        .ConfigureAwait(false);
+                }
+                catch
+                {
+                    // The connection result remains authoritative. Cleanup is
+                    // best-effort so a wrong first password can be retried.
+                }
+            }
+
+            return result;
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken
+                .IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return new WifiNetworkConnectResult(
+                WifiNetworkConnectStatus.Failed,
+                network.DisplayName);
+        }
+        finally
+        {
+            _connectGate.Release();
+        }
+    }
+
+    private async Task<WifiNetworkConnectResult>
+        ConfirmConnectionAsync(
+            WifiNetworkSnapshot network,
+            string expectedProfileName,
+            CancellationToken cancellationToken)
+    {
+        for (int attempt = 0;
+             attempt < _confirmationAttempts;
+             attempt++)
+        {
+            WifiNetworkListResult current =
+                await _nativeApi
+                    .GetNetworksAsync(
+                        false,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            if (current.Succeeded
+                && current.Networks.Any(item =>
+                    item.IsConnected
+                    && string.Equals(
+                        item.InterfaceId,
+                        network.InterfaceId,
+                        StringComparison.Ordinal)
+                    && (string.Equals(
+                            item.Key,
+                            network.Key,
+                            StringComparison.Ordinal)
+                        || string.Equals(
+                            item.ProfileName,
+                            expectedProfileName,
+                            StringComparison.Ordinal))))
+            {
+                return new WifiNetworkConnectResult(
+                    WifiNetworkConnectStatus.Succeeded,
+                    network.DisplayName);
+            }
+
+            WifiNetworkConnectStatus? listFailure =
+                MapListFailure(current.Status);
+            if (listFailure.HasValue)
+            {
+                return new WifiNetworkConnectResult(
+                    listFailure.Value,
+                    network.DisplayName);
+            }
+
+            if (attempt < _confirmationAttempts - 1)
+            {
+                await Task.Delay(
+                        _confirmationDelay,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        return new WifiNetworkConnectResult(
+            WifiNetworkConnectStatus.NotConfirmed,
+            network.DisplayName);
+    }
+
     private static WifiNetworkConnectStatus?
         MapRequestFailure(
             WifiNativeConnectRequestStatus status) =>
@@ -400,6 +658,175 @@ public sealed class WifiNetworkService :
     }
 }
 
+internal static class WifiProfileXmlBuilder
+{
+    internal static bool IsCredentialValid(
+        WifiNetworkSecurityKind securityKind,
+        SecureString password) =>
+        securityKind == WifiNetworkSecurityKind.Open
+            ? password.Length == 0
+            : securityKind is
+                WifiNetworkSecurityKind.WpaPersonal
+                or WifiNetworkSecurityKind.Wpa2Personal
+                or WifiNetworkSecurityKind.Wpa3Personal
+                && password.Length is >= 8 and <= 63;
+
+    internal static char[] Build(
+        WifiNetworkSnapshot network,
+        SecureString password)
+    {
+        ArgumentNullException.ThrowIfNull(network);
+        ArgumentNullException.ThrowIfNull(password);
+        if (!IsCredentialValid(
+                network.SecurityKind,
+                password))
+        {
+            throw new ArgumentException(
+                "Wi-Fi password does not match the selected security mode.",
+                nameof(password));
+        }
+
+        (string authentication, string encryption) =
+            ResolveSecurity(network);
+        var xml = new List<char>(1024);
+        Append(
+            xml,
+            "<?xml version=\"1.0\"?><WLANProfile xmlns=\"http://www.microsoft.com/networking/WLAN/profile/v1\"><name>");
+        AppendEscaped(xml, network.DisplayName);
+        Append(xml, "</name><SSIDConfig><SSID><hex>");
+        Append(
+            xml,
+            string.IsNullOrWhiteSpace(network.SsidHex)
+                ? Convert.ToHexString(
+                    Encoding.UTF8.GetBytes(
+                        network.DisplayName))
+                : network.SsidHex);
+        Append(xml, "</hex><name>");
+        AppendEscaped(xml, network.DisplayName);
+        Append(
+            xml,
+            "</name></SSID></SSIDConfig><connectionType>ESS</connectionType><connectionMode>auto</connectionMode><MSM><security><authEncryption><authentication>");
+        Append(xml, authentication);
+        Append(xml, "</authentication><encryption>");
+        Append(xml, encryption);
+        Append(
+            xml,
+            "</encryption><useOneX>false</useOneX></authEncryption>");
+
+        if (network.SecurityKind
+            != WifiNetworkSecurityKind.Open)
+        {
+            Append(
+                xml,
+                "<sharedKey><keyType>passPhrase</keyType><protected>false</protected><keyMaterial>");
+            AppendSecureEscaped(xml, password);
+            Append(xml, "</keyMaterial></sharedKey>");
+        }
+
+        Append(xml, "</security></MSM></WLANProfile>");
+        xml.Add('\0');
+        return xml.ToArray();
+    }
+
+    private static (string Authentication,
+        string Encryption) ResolveSecurity(
+            WifiNetworkSnapshot network) =>
+        network.SecurityKind switch
+        {
+            WifiNetworkSecurityKind.Open =>
+                ("open", "none"),
+            WifiNetworkSecurityKind.WpaPersonal =>
+                ("WPAPSK", ResolveCipher(network)),
+            WifiNetworkSecurityKind.Wpa2Personal =>
+                ("WPA2PSK", ResolveCipher(network)),
+            WifiNetworkSecurityKind.Wpa3Personal =>
+                ("WPA3SAE", "AES"),
+            _ => throw new NotSupportedException(
+                "This Wi-Fi authentication mode cannot be configured by FocusPanel.")
+        };
+
+    private static string ResolveCipher(
+        WifiNetworkSnapshot network) =>
+        network.CipherAlgorithm switch
+        {
+            2 => "TKIP",
+            4 => "AES",
+            _ => throw new NotSupportedException(
+                "This Wi-Fi cipher cannot be configured by FocusPanel.")
+        };
+
+    private static void Append(
+        ICollection<char> destination,
+        string value)
+    {
+        foreach (char character in value)
+            destination.Add(character);
+    }
+
+    private static void AppendEscaped(
+        ICollection<char> destination,
+        string value)
+    {
+        foreach (char character in value)
+            AppendEscapedCharacter(
+                destination,
+                character);
+    }
+
+    private static void AppendSecureEscaped(
+        ICollection<char> destination,
+        SecureString value)
+    {
+        IntPtr pointer = IntPtr.Zero;
+        try
+        {
+            pointer = Marshal
+                .SecureStringToGlobalAllocUnicode(
+                    value);
+            for (int index = 0;
+                 index < value.Length;
+                 index++)
+            {
+                AppendEscapedCharacter(
+                    destination,
+                    unchecked((char)Marshal.ReadInt16(
+                        pointer,
+                        index * sizeof(char))));
+            }
+        }
+        finally
+        {
+            if (pointer != IntPtr.Zero)
+            {
+                Marshal.ZeroFreeGlobalAllocUnicode(
+                    pointer);
+            }
+        }
+    }
+
+    private static void AppendEscapedCharacter(
+        ICollection<char> destination,
+        char character)
+    {
+        string? replacement = character switch
+        {
+            '&' => "&amp;",
+            '<' => "&lt;",
+            '>' => "&gt;",
+            '\"' => "&quot;",
+            '\'' => "&apos;",
+            _ => null
+        };
+        if (replacement == null)
+        {
+            destination.Add(character);
+            return;
+        }
+
+        Append(destination, replacement);
+    }
+}
+
 internal sealed class NativeWifiNetworkApi :
     IWifiNetworkNativeApi
 {
@@ -422,6 +849,33 @@ internal sealed class NativeWifiNetworkApi :
         Task.Run(
             () =>
                 RequestConnect(
+                    interfaceId,
+                    profileName,
+                    cancellationToken),
+            cancellationToken);
+
+    public Task<WifiNativeConnectRequestStatus>
+        RequestProfileConnectAsync(
+            string interfaceId,
+            string profileName,
+            char[] profileXml,
+            CancellationToken cancellationToken) =>
+        Task.Run(
+            () =>
+                RequestProfileConnect(
+                    interfaceId,
+                    profileName,
+                    profileXml,
+                    cancellationToken),
+            cancellationToken);
+
+    public Task RemoveProfileAsync(
+        string interfaceId,
+        string profileName,
+        CancellationToken cancellationToken) =>
+        Task.Run(
+            () =>
+                RemoveProfile(
                     interfaceId,
                     profileName,
                     cancellationToken),
@@ -591,6 +1045,147 @@ internal sealed class NativeWifiNetworkApi :
                 clientHandle,
                 IntPtr.Zero);
         }
+    }
+
+    private static WifiNativeConnectRequestStatus
+        RequestProfileConnect(
+            string interfaceId,
+            string profileName,
+            char[] profileXml,
+            CancellationToken cancellationToken)
+    {
+        cancellationToken
+            .ThrowIfCancellationRequested();
+        if (!Guid.TryParse(
+                interfaceId,
+                out Guid interfaceGuid)
+            || string.IsNullOrWhiteSpace(profileName)
+            || profileXml.Length == 0)
+        {
+            return WifiNativeConnectRequestStatus
+                .NotFound;
+        }
+
+        uint openStatus =
+            NativeMethods.WlanOpenHandle(
+                2,
+                IntPtr.Zero,
+                out _,
+                out IntPtr clientHandle);
+        if (openStatus != NativeMethods.ErrorSuccess)
+            return MapConnectStatus(openStatus);
+
+        GCHandle xmlHandle = default;
+        try
+        {
+            xmlHandle = GCHandle.Alloc(
+                profileXml,
+                GCHandleType.Pinned);
+            uint setStatus =
+                NativeMethods.WlanSetProfile(
+                    clientHandle,
+                    ref interfaceGuid,
+                    0,
+                    xmlHandle.AddrOfPinnedObject(),
+                    IntPtr.Zero,
+                    true,
+                    IntPtr.Zero,
+                    out _);
+            if (setStatus != NativeMethods.ErrorSuccess)
+                return MapConnectStatus(setStatus);
+
+            WifiNativeConnectRequestStatus result =
+                RequestConnectWithHandle(
+                clientHandle,
+                interfaceGuid,
+                profileName);
+            if (result
+                != WifiNativeConnectRequestStatus.Accepted)
+            {
+                NativeMethods.WlanDeleteProfile(
+                    clientHandle,
+                    ref interfaceGuid,
+                    profileName,
+                    IntPtr.Zero);
+            }
+
+            return result;
+        }
+        finally
+        {
+            if (xmlHandle.IsAllocated)
+                xmlHandle.Free();
+            NativeMethods.WlanCloseHandle(
+                clientHandle,
+                IntPtr.Zero);
+        }
+    }
+
+    private static void RemoveProfile(
+        string interfaceId,
+        string profileName,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken
+            .ThrowIfCancellationRequested();
+        if (!Guid.TryParse(
+                interfaceId,
+                out Guid interfaceGuid)
+            || string.IsNullOrWhiteSpace(profileName))
+        {
+            return;
+        }
+
+        uint openStatus =
+            NativeMethods.WlanOpenHandle(
+                2,
+                IntPtr.Zero,
+                out _,
+                out IntPtr clientHandle);
+        if (openStatus != NativeMethods.ErrorSuccess)
+            return;
+
+        try
+        {
+            NativeMethods.WlanDeleteProfile(
+                clientHandle,
+                ref interfaceGuid,
+                profileName,
+                IntPtr.Zero);
+        }
+        finally
+        {
+            NativeMethods.WlanCloseHandle(
+                clientHandle,
+                IntPtr.Zero);
+        }
+    }
+
+    private static WifiNativeConnectRequestStatus
+        RequestConnectWithHandle(
+            IntPtr clientHandle,
+            Guid interfaceGuid,
+            string profileName)
+    {
+        var parameters =
+            new WlanConnectionParameters
+            {
+                ConnectionMode =
+                    WlanConnectionMode.Profile,
+                Profile = profileName,
+                Dot11Ssid = IntPtr.Zero,
+                DesiredBssidList = IntPtr.Zero,
+                Dot11BssType = Dot11BssType.Any,
+                Flags = 0
+            };
+        uint status = NativeMethods.WlanConnect(
+            clientHandle,
+            ref interfaceGuid,
+            ref parameters,
+            IntPtr.Zero);
+        return status == NativeMethods.ErrorSuccess
+            ? WifiNativeConnectRequestStatus.Accepted
+            : MapConnectStatus(status);
     }
 
     private static uint ScanAndWait(
@@ -869,6 +1464,13 @@ internal sealed class NativeWifiNetworkApi :
                         "|",
                         interfaceId,
                         identity);
+                WifiNetworkSecurityKind
+                    securityKind =
+                        ssidBytes.Length == 0
+                        && !hasProfile
+                            ? WifiNetworkSecurityKind
+                                .Unsupported
+                            : ResolveSecurityKind(item);
                 destination.Add(
                     new WifiNetworkSnapshot(
                         key,
@@ -881,7 +1483,11 @@ internal sealed class NativeWifiNetworkApi :
                         connected,
                         item.SecurityEnabled,
                         hasProfile,
-                        item.NetworkConnectable));
+                        item.NetworkConnectable,
+                        securityKind,
+                        Convert.ToHexString(ssidBytes),
+                        item.DefaultAuthAlgorithm,
+                        item.DefaultCipherAlgorithm));
             }
 
             return NativeMethods.ErrorSuccess;
@@ -891,6 +1497,30 @@ internal sealed class NativeWifiNetworkApi :
             NativeMethods.WlanFreeMemory(
                 listPointer);
         }
+    }
+
+    private static WifiNetworkSecurityKind
+        ResolveSecurityKind(
+            WlanAvailableNetwork network)
+    {
+        if (!network.SecurityEnabled)
+            return WifiNetworkSecurityKind.Open;
+
+        return network.DefaultAuthAlgorithm switch
+        {
+            4 when network.DefaultCipherAlgorithm
+                is 2 or 4 =>
+                WifiNetworkSecurityKind.WpaPersonal,
+            7 when network.DefaultCipherAlgorithm
+                is 2 or 4 =>
+                WifiNetworkSecurityKind.Wpa2Personal,
+            9 when network.DefaultCipherAlgorithm
+                == 4 =>
+                WifiNetworkSecurityKind.Wpa3Personal,
+            3 or 6 or 8 or 11 =>
+                WifiNetworkSecurityKind.Enterprise,
+            _ => WifiNetworkSecurityKind.Unsupported
+        };
     }
 
     private static string DecodeSsid(
@@ -1158,6 +1788,29 @@ internal static class NativeMethods
         ref Guid interfaceGuid,
         ref WlanConnectionParameters
             connectionParameters,
+        IntPtr reserved);
+
+    [DllImport(
+        "wlanapi.dll",
+        CharSet = CharSet.Unicode)]
+    internal static extern uint WlanSetProfile(
+        IntPtr clientHandle,
+        ref Guid interfaceGuid,
+        uint flags,
+        IntPtr profileXml,
+        IntPtr allUserProfileSecurity,
+        [MarshalAs(UnmanagedType.Bool)]
+        bool overwrite,
+        IntPtr reserved,
+        out uint reasonCode);
+
+    [DllImport(
+        "wlanapi.dll",
+        CharSet = CharSet.Unicode)]
+    internal static extern uint WlanDeleteProfile(
+        IntPtr clientHandle,
+        ref Guid interfaceGuid,
+        string profileName,
         IntPtr reserved);
 
     [DllImport("wlanapi.dll")]

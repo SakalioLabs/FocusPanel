@@ -35,6 +35,21 @@ public sealed class WifiNetworkUiContractTests
         Assert.Contains(
             "Command=\"{Binding OpenWifiLocationSettingsCommand}\"",
             xaml);
+        Assert.Contains(
+            "WifiCredentialWindow",
+            ReadRepositoryFile(
+                "Views",
+                "MainWindow.xaml.cs"));
+        Assert.Contains(
+            "PasswordBox x:Name=\"PasswordInput\"",
+            ReadRepositoryFile(
+                "Views",
+                "WifiCredentialWindow.xaml"));
+        Assert.Contains(
+            "ConnectWithCredentialsAsync",
+            ReadRepositoryFile(
+                "Services",
+                "WifiNetworkService.cs"));
     }
 
     [Fact]
