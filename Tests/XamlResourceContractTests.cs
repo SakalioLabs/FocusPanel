@@ -803,7 +803,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains("Visibility=\"{Binding IsStatusCenterOpen", mainWindow);
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
-        Assert.DoesNotContain("OpenNotificationOverflow", mainWindow);
+        Assert.Contains(
+            "Command=\"{Binding OpenNotificationOverflowCommand}\"",
+            mainWindow);
+        Assert.Contains(
+            "Content=\"托盘应用 · 显示隐藏图标\"",
+            mainWindow);
 
         string systemStatus = File.ReadAllText(
             Path.Combine(root, "Services", "SystemStatusService.cs"));
@@ -1513,7 +1518,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "x:Name=\"StatusCenterButton\"",
             compactDock);
-        Assert.DoesNotContain("OpenNotificationOverflow", compactDock);
+        Assert.Contains(
+            "OpenNotificationOverflowCommand",
+            compactDock);
+        Assert.Contains(
+            "Header=\"托盘应用（隐藏图标）\"",
+            compactDock);
         Assert.Contains(
             "Header=\"通知中心\"",
             compactDock);
@@ -1527,9 +1537,15 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Services", "SystemStatusService.cs"));
         string statusContract = File.ReadAllText(
             Path.Combine(root, "Services", "ISystemStatusService.cs"));
-        Assert.DoesNotContain("OpenNotificationOverflow", systemStatus);
-        Assert.DoesNotContain("OpenNotificationOverflow", statusContract);
-        Assert.DoesNotContain("System.Windows.Automation", systemStatus);
+        Assert.Contains("OpenNotificationOverflow", systemStatus);
+        Assert.Contains("OpenNotificationOverflow", statusContract);
+        Assert.Contains("System.Windows.Automation", systemStatus);
+        Assert.Contains(
+            "DesktopWindowContentBridge",
+            systemStatus);
+        Assert.Contains(
+            "EnumChildWindows",
+            systemStatus);
 
         string onboarding = mainWindow[onboardingStart..];
         Assert.Contains("<Border Grid.Column=\"0\"", onboarding);

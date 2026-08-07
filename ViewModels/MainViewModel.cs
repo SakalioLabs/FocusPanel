@@ -2454,6 +2454,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             "无法唤起 Windows 快捷设置，请使用 Win+A。");
 
     [RelayCommand]
+    private async Task OpenNotificationOverflow()
+        => await RunSystemActionAsync(
+            _systemStatus.OpenNotificationOverflow,
+            "没有找到 Windows 的“显示隐藏图标”按钮。"
+            + "请确认至少有一个后台应用图标被折叠，"
+            + "或在任务栏设置中开启托盘图标折叠。");
+
+    [RelayCommand]
     private async Task OpenWifiLocationSettings()
         => await RunSystemActionAsync(
             _systemStatus

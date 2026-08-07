@@ -34,6 +34,8 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 ![应用任务栏准确表达窗口状态和下一步动作](docs/images/taskbar-window-state.svg)
 
+> 0.11.18 恢复由 Windows 原生承载的托盘应用抽屉：状态中心首屏和紧凑栏状态按钮右键菜单均可打开“显示隐藏图标”，不必恢复整条原生任务栏。FocusPanel 不复制第三方图标、不读取 Explorer 进程内存，也不改变图标原有菜单和状态。
+>
 > 0.11.8 让应用任务栏的溢出滚动真正覆盖整条区域：鼠标位于应用图标、图标间空白或上下导航按钮上都可以直接滚动；`Ctrl+滚轮` 位于多窗口应用上时仍切换该应用窗口。上下导航的点击区由 28px 扩大到 44px，并同步扩大可见内容保护区，不再用难点的小箭头遮住应用。
 
 ![应用任务栏整区滚动与大点击区](docs/images/taskbar-overflow-scroll.svg)
@@ -271,7 +273,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - Velopack 安装定位和更新管理器在共享工作线程准备，主窗口构造与 XAML 首帧不再等待安装目录扫描；首次自动检查和设置页手动检查都会等待同一个初始化结果，安装版不会因为准备尚未结束而漏掉开机后的更新。
 - 更新包下载完成后，SQLite 完整性检查、在线备份和历史备份清理也在专用工作线程执行；设置页会保持忙碌与 Panel 交互锁，备份完成后才恢复原任务栏、桌面图标并启动 Velopack。准备失败会恢复右缘监测并显示原因，不会让界面停在“正在安全重启”或允许重复提交。
 - 开始按钮左键优先向 Explorer 宿主发送 Windows 公开的 `WM_SYSCOMMAND / SC_TASKLIST`，失败才回退模拟 Windows 键；右键提供 Win+X 风格系统管理菜单，包括安装的应用、电源选项、事件查看器、系统、设备管理器、网络连接、磁盘管理、计算机管理、终端、管理员终端、任务管理器、设置和文件资源管理器。虚拟桌面的上一个、新建、下一个和关闭也位于该菜单内，关闭仍明确确认应用不会退出。公开命令语义见微软的 [WM_SYSCOMMAND 文档](https://learn.microsoft.com/en-us/windows/win32/menurc/wm-syscommand)。
-- 第三方托盘溢出内容不再提供入口：FocusPanel 不读取 Explorer 私有 UI 数据，也不会为打开托盘而临时显示原生任务栏。
+- 第三方托盘图标由 Explorer 原生托盘抽屉继续承载。FocusPanel 只通过 Windows UI Automation 调用“显示隐藏图标”按钮，不读取 Explorer 进程内存，也不会为打开托盘而临时显示原生任务栏。
 
 ![六入口紧凑任务栏与滚动应用区](docs/images/primary-workspace-entries.svg)
 
@@ -466,7 +468,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - Explorer 重启或任务栏状态改变：停止本次替代并恢复原设置，避免可见性循环
 - 恢复会话：`%LOCALAPPDATA%\FocusPanel\taskbar-session.json`
 
-遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。完整替代后，Win+A、Win+N、Win+Space 等公开系统快捷入口继续可用；Explorer 的第三方托盘溢出内容属于私有壳层，FocusPanel 不读取其进程内存，也不能保证在原任务栏隐藏时完整复制。
+遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。完整替代后，Win+A、Win+N、Win+Space 等公开系统快捷入口继续可用；第三方托盘图标不会被复制，而是通过状态中心的“托盘应用”入口直接唤出 Explorer 原生抽屉。
 
 ![任务栏安全状态机](docs/images/taskbar-safety-flow.svg)
 
@@ -585,7 +587,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - 使用 DWM Desktop Acrylic、圆角和自定义 Fluent 资源，不再依赖 MaterialDesignInXamlToolkit。
 - 跟随系统浅色/深色主题；高对比度、关闭透明效果、远程桌面或 DWM 不可用时降级为不透明主题。
 - 启用 Per-Monitor V2 DPI，支持多显示器与不同缩放比例。
-- 不镜像第三方托盘图标、不读取 Explorer 私有数据，也不重做完整开始菜单或通知中心；窗口预览由公开 DWM 缩略图接口提供。
+- 不镜像第三方托盘图标、不读取 Explorer 进程内存，也不重做完整开始菜单或通知中心；托盘应用入口调用 Explorer 的可访问性按钮，窗口预览由公开 DWM 缩略图接口提供。
 
 ## 技术栈
 
