@@ -1882,6 +1882,29 @@ public partial class MainWindow :
             () => _viewModel.IsSearchOpen);
     }
 
+    private MenuItem CreateOpenAllWindowsMenuItem(
+        Button returnTarget,
+        TaskbarAppItem task,
+        int totalCount)
+    {
+        var item = new MenuItem
+        {
+            Header =
+                $"查看全部 {totalCount} 个窗口…"
+        };
+        AutomationProperties.SetName(
+            item,
+            $"在完整窗口总览中查看 {task.DisplayName} 的全部 {totalCount} 个窗口");
+        item.Click += (_, _) =>
+            Dispatcher.BeginInvoke(
+                new Action(() =>
+                    OpenTaskbarWindowOverview(
+                        returnTarget,
+                        task)),
+                DispatcherPriority.Input);
+        return item;
+    }
+
     private void TaskbarApp_PreviewMouseDown(
         object sender,
         MouseButtonEventArgs e)
@@ -2124,7 +2147,21 @@ public partial class MainWindow :
         if (task.Windows.Count > 0)
             menu.Items.Add(new Separator());
 
-        foreach (WindowReference window in task.Windows)
+        TaskbarContextWindowSlice windowSlice =
+            TaskbarContextWindowPolicy.Select(
+                task.Windows);
+        if (windowSlice.HasHiddenWindows)
+        {
+            menu.Items.Add(
+                CreateOpenAllWindowsMenuItem(
+                    button,
+                    task,
+                    windowSlice.TotalCount));
+            menu.Items.Add(new Separator());
+        }
+
+        foreach (WindowReference window
+                 in windowSlice.Windows)
         {
             var windowMenu = new MenuItem
             {
@@ -2568,7 +2605,11 @@ public partial class MainWindow :
     {
         ContextMenu menu = CreateTaskbarContextMenu();
 
-        foreach (WindowReference window in task.Windows)
+        TaskbarContextWindowSlice windowSlice =
+            TaskbarContextWindowPolicy.Select(
+                task.Windows);
+        foreach (WindowReference window
+                 in windowSlice.Windows)
         {
             var windowItem = new MenuItem
             {
@@ -2597,6 +2638,15 @@ public partial class MainWindow :
             windowItem.PreviewKeyDown +=
                 TaskbarWindowItem_PreviewKeyDown;
             menu.Items.Add(windowItem);
+        }
+        if (windowSlice.HasHiddenWindows)
+        {
+            menu.Items.Add(new Separator());
+            menu.Items.Add(
+                CreateOpenAllWindowsMenuItem(
+                    button,
+                    task,
+                    windowSlice.TotalCount));
         }
 
         FocusMenuTheme.Apply(menu);

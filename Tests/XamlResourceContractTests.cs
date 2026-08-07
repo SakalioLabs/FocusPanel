@@ -3207,6 +3207,32 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TaskbarWindowMenus_UseBoundedQuickListAndFullOverview()
+    {
+        string root = FindRepositoryRoot();
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.True(
+            Regex.Matches(
+                codeBehind,
+                "TaskbarContextWindowPolicy.Select\\(")
+                .Count >= 2);
+        Assert.Contains(
+            "CreateOpenAllWindowsMenuItem(",
+            codeBehind);
+        Assert.Contains(
+            "$\"查看全部 {totalCount} 个窗口…\"",
+            codeBehind);
+        Assert.Contains(
+            "OpenTaskbarWindowOverview(",
+            codeBehind);
+    }
+
+    [Fact]
     public void SearchAndTaskbar_UseTheSameNonBlankIconPresenter()
     {
         string root = FindRepositoryRoot();

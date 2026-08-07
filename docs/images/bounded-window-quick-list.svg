@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">大量窗口使用短快选列表并进入完整总览</title>
+  <desc id="desc">FocusPanel 将应用右键窗口快选限制为四项，当前活动窗口优先，其余窗口通过查看全部入口进入完整总览。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#18273d"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#354a66" stop-opacity=".92"/>
+      <stop offset="1" stop-color="#1d2b41" stop-opacity=".84"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#02060d" flood-opacity=".52"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="620" rx="34" fill="url(#bg)"/>
+  <circle cx="145" cy="85" r="190" fill="#1989ff" opacity=".16"/>
+  <circle cx="1090" cy="560" r="250" fill="#5bd4c7" opacity=".1"/>
+
+  <g filter="url(#shadow)">
+    <rect x="108" y="66" width="460" height="488" rx="24" fill="url(#glass)" stroke="#7895ba" stroke-opacity=".38"/>
+    <text x="144" y="112" fill="#f4f7fb" font-family="Segoe UI, sans-serif" font-size="23" font-weight="650">浏览器 · 17 个窗口</text>
+    <rect x="132" y="136" width="412" height="52" rx="13" fill="#177fd2"/>
+    <text x="156" y="169" fill="#fff" font-family="Segoe UI, sans-serif" font-size="17" font-weight="600">查看全部 17 个窗口…</text>
+    <line x1="132" y1="205" x2="544" y2="205" stroke="#92a6c0" stroke-opacity=".26"/>
+
+    <g font-family="Segoe UI, sans-serif">
+      <g transform="translate(132 224)">
+        <rect width="412" height="62" rx="14" fill="#2c405a" stroke="#58aaff" stroke-opacity=".55"/>
+        <rect x="14" y="19" width="5" height="24" rx="2" fill="#58aaff"/>
+        <text x="36" y="29" fill="#f4f7fb" font-size="16" font-weight="600">项目主页</text>
+        <text x="36" y="49" fill="#83bdff" font-size="12">当前窗口 · 保证可见</text>
+      </g>
+      <g transform="translate(132 296)">
+        <rect width="412" height="54" rx="14" fill="#293a51"/>
+        <text x="22" y="34" fill="#dce6f3" font-size="16">资料检索</text>
+      </g>
+      <g transform="translate(132 360)">
+        <rect width="412" height="54" rx="14" fill="#293a51"/>
+        <text x="22" y="34" fill="#dce6f3" font-size="16">文档预览</text>
+      </g>
+      <g transform="translate(132 424)">
+        <rect width="412" height="54" rx="14" fill="#293a51"/>
+        <text x="22" y="34" fill="#dce6f3" font-size="16">开发工具</text>
+      </g>
+    </g>
+    <text x="144" y="518" fill="#95a8c0" font-family="Segoe UI, sans-serif" font-size="14">快选固定 4 项 · 菜单高度保持稳定</text>
+  </g>
+
+  <path d="M604 310h118" stroke="#59aaff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M707 297l18 13-18 13" fill="none" stroke="#59aaff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="760" y="86" width="334" height="448" rx="24" fill="#213047" stroke="#7895ba" stroke-opacity=".38"/>
+    <text x="790" y="130" fill="#f4f7fb" font-family="Segoe UI, sans-serif" font-size="22" font-weight="650">完整窗口总览</text>
+    <rect x="788" y="152" width="278" height="44" rx="12" fill="#111c2d" stroke="#5caaff" stroke-opacity=".5"/>
+    <text x="808" y="180" fill="#8fa3bd" font-family="Segoe UI, sans-serif" font-size="14">按窗口标题筛选</text>
+    <g font-family="Segoe UI, sans-serif">
+      <g transform="translate(788 218)">
+        <rect width="278" height="78" rx="15" fill="#2a3c55"/>
+        <rect x="12" y="12" width="76" height="54" rx="9" fill="#286597"/>
+        <text x="104" y="34" fill="#f4f7fb" font-size="15">项目主页</text>
+        <text x="104" y="55" fill="#82bdff" font-size="12">当前窗口</text>
+      </g>
+      <g transform="translate(788 308)">
+        <rect width="278" height="78" rx="15" fill="#293a51"/>
+        <rect x="12" y="12" width="76" height="54" rx="9" fill="#59418a"/>
+        <text x="104" y="45" fill="#f4f7fb" font-size="15">其余 16 个窗口</text>
+      </g>
+    </g>
+    <text x="790" y="430" fill="#72b8ff" font-family="Segoe UI, sans-serif" font-size="14">实时预览 · 切换 · 状态控制</text>
+    <text x="790" y="458" fill="#9aacc3" font-family="Segoe UI, sans-serif" font-size="13">完整能力不因快选截断而丢失</text>
+  </g>
+</svg>
