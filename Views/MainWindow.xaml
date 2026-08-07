@@ -578,7 +578,8 @@
                                 <TextBlock Text="常用"
                                            Margin="4,14,0,7"
                                            Style="{StaticResource FocusCaptionText}"/>
-                                <Button Style="{StaticResource FocusSecondaryButton}"
+                                <Button x:Name="StatusCenterWindowOverviewButton"
+                                        Style="{StaticResource FocusSecondaryButton}"
                                         MinHeight="44"
                                         Margin="0,0,0,8"
                                         Content="后台与窗口 · Panel 管理"
@@ -587,9 +588,48 @@
                                         ToolTip="在 Panel 内查看、切换和管理当前应用窗口，不唤起原生任务栏"/>
                                 <UniformGrid Columns="3"
                                              Margin="0,0,0,12"
-                                             AutomationProperties.Name="常用系统操作">
-                                    <Button x:Name="StatusCenterQuickSettingsButton"
-                                            Style="{StaticResource FocusSecondaryButton}"
+                                             AutomationProperties.Name="Panel 状态详情">
+                                    <ToggleButton Style="{StaticResource FocusToggleButton}"
+                                                  MinHeight="44"
+                                                  Content="网络"
+                                                  Tag="{x:Static services:StatusCenterDetail.Network}"
+                                                  IsChecked="{Binding IsExpanded, ElementName=NetworkDetailsExpander, Mode=OneWay}"
+                                                  Click="StatusCenterDetailButton_Click"
+                                                  AutomationProperties.Name="展开网络与无线详情"/>
+                                    <ToggleButton Style="{StaticResource FocusToggleButton}"
+                                                  MinHeight="44"
+                                                  Content="应用音量"
+                                                  Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
+                                                  IsChecked="{Binding IsExpanded, ElementName=ApplicationAudioDetailsExpander, Mode=OneWay}"
+                                                  Click="StatusCenterDetailButton_Click"
+                                                  AutomationProperties.Name="展开应用音量详情"/>
+                                    <ToggleButton Style="{StaticResource FocusToggleButton}"
+                                                  MinHeight="44"
+                                                  Content="媒体"
+                                                  Tag="{x:Static services:StatusCenterDetail.MediaAndBattery}"
+                                                  IsChecked="{Binding IsExpanded, ElementName=MediaBatteryDetailsExpander, Mode=OneWay}"
+                                                  Click="StatusCenterDetailButton_Click"
+                                                  AutomationProperties.Name="展开媒体与电池详情"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="显示桌面"
+                                            Command="{Binding ShowDesktopCommand}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="锁定"
+                                            Command="{Binding LockComputerCommand}"/>
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="电源"
+                                            Click="PowerMenuItem_Click"/>
+                                </UniformGrid>
+                                <TextBlock Text="Windows 辅助入口"
+                                           Margin="4,0,0,7"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                                <UniformGrid Columns="3"
+                                             Margin="0,0,0,12"
+                                             AutomationProperties.Name="Windows 系统浮层入口">
+                                    <Button Style="{StaticResource FocusSecondaryButton}"
                                             MinHeight="44"
                                             Content="快捷设置"
                                             Command="{Binding OpenQuickSettingsCommand}"/>
@@ -603,18 +643,6 @@
                                             Command="{Binding OpenInputSwitcherCommand}"
                                             ToolTip="{Binding InputSwitcherSummary}"
                                             AutomationProperties.Name="{Binding InputSwitcherSummary}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}"
-                                            MinHeight="44"
-                                            Content="显示桌面"
-                                            Command="{Binding ShowDesktopCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}"
-                                            MinHeight="44"
-                                            Content="锁定"
-                                            Command="{Binding LockComputerCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}"
-                                            MinHeight="44"
-                                            Content="电源"
-                                            Click="PowerMenuItem_Click"/>
                                 </UniformGrid>
                                 <TextBlock Text="音量与亮度"
                                            Margin="4,2,0,7"
@@ -677,7 +705,11 @@
                                                Foreground="{DynamicResource FocusMutedTextBrush}"
                                                TextWrapping="Wrap"/>
                                 </Grid>
-                                <Expander Style="{StaticResource FocusDetailsExpander}"
+                                <Expander x:Name="NetworkDetailsExpander"
+                                          Style="{StaticResource FocusDetailsExpander}"
+                                          Tag="{x:Static services:StatusCenterDetail.Network}"
+                                          Expanded="StatusDetailsExpander_Expanded"
+                                          Collapsed="StatusDetailsExpander_Collapsed"
                                           AutomationProperties.Name="网络与无线详情">
                                     <Expander.Header>
                                         <Grid>
@@ -810,7 +842,11 @@
                                         Visibility="{Binding HasWifiLocationAccessWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                     </StackPanel>
                                 </Expander>
-                                <Expander Style="{StaticResource FocusDetailsExpander}"
+                                <Expander x:Name="ApplicationAudioDetailsExpander"
+                                          Style="{StaticResource FocusDetailsExpander}"
+                                          Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
+                                          Expanded="StatusDetailsExpander_Expanded"
+                                          Collapsed="StatusDetailsExpander_Collapsed"
                                           AutomationProperties.Name="应用音量详情">
                                     <Expander.Header>
                                         <Grid>
@@ -898,7 +934,11 @@
                                 </ItemsControl>
                                     </StackPanel>
                                 </Expander>
-                                <Expander Style="{StaticResource FocusDetailsExpander}"
+                                <Expander x:Name="MediaBatteryDetailsExpander"
+                                          Style="{StaticResource FocusDetailsExpander}"
+                                          Tag="{x:Static services:StatusCenterDetail.MediaAndBattery}"
+                                          Expanded="StatusDetailsExpander_Expanded"
+                                          Collapsed="StatusDetailsExpander_Collapsed"
                                           AutomationProperties.Name="媒体与电池详情">
                                     <Expander.Header>
                                         <TextBlock Text="媒体与电池"

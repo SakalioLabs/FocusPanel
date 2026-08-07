@@ -68,6 +68,10 @@ public partial class MainWindow :
     private bool _shellStartupReady;
     private bool _autoHideIgnoresInputFocus;
     private FrameworkElement? _overlayReturnFocusTarget;
+    private StatusCenterDetail
+        _openStatusCenterDetail;
+    private bool
+        _synchronizingStatusCenterDetails;
     private int _transientInteractionDepth;
     private System.Windows.Point _pinnedDragStart;
     private long _lastTaskbarDragScrollTick = -1;
@@ -1150,7 +1154,7 @@ public partial class MainWindow :
             () => _viewModel.ToggleStatusCenterCommand
                 .Execute(null),
             StatusCenterButton,
-            StatusCenterQuickSettingsButton,
+            StatusCenterWindowOverviewButton,
             isOpenAfterToggle:
                 () => _viewModel.IsStatusCenterOpen);
     }
@@ -1175,6 +1179,109 @@ public partial class MainWindow :
             StatusCenterButton,
             SearchBox,
             () => _viewModel.IsSearchOpen);
+    }
+
+    private void StatusCenterDetailButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement
+            {
+                Tag: StatusCenterDetail requested
+            })
+        {
+            return;
+        }
+
+        StatusCenterDetail next =
+            StatusCenterDetailPolicy.Toggle(
+                _openStatusCenterDetail,
+                requested);
+        SetOpenStatusCenterDetail(
+            next,
+            bringIntoView: next
+                != StatusCenterDetail.None);
+    }
+
+    private void StatusDetailsExpander_Expanded(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (_synchronizingStatusCenterDetails
+            || sender is not FrameworkElement
+            {
+                Tag: StatusCenterDetail detail
+            })
+        {
+            return;
+        }
+
+        SetOpenStatusCenterDetail(
+            detail,
+            bringIntoView: false);
+    }
+
+    private void StatusDetailsExpander_Collapsed(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (_synchronizingStatusCenterDetails
+            || sender is not FrameworkElement
+            {
+                Tag: StatusCenterDetail detail
+            }
+            || _openStatusCenterDetail != detail)
+        {
+            return;
+        }
+
+        _openStatusCenterDetail =
+            StatusCenterDetail.None;
+    }
+
+    private void SetOpenStatusCenterDetail(
+        StatusCenterDetail detail,
+        bool bringIntoView)
+    {
+        _openStatusCenterDetail = detail;
+        _synchronizingStatusCenterDetails = true;
+        try
+        {
+            NetworkDetailsExpander.IsExpanded =
+                detail == StatusCenterDetail.Network;
+            ApplicationAudioDetailsExpander
+                .IsExpanded =
+                detail
+                == StatusCenterDetail
+                    .ApplicationAudio;
+            MediaBatteryDetailsExpander
+                .IsExpanded =
+                detail
+                == StatusCenterDetail
+                    .MediaAndBattery;
+        }
+        finally
+        {
+            _synchronizingStatusCenterDetails =
+                false;
+        }
+
+        Expander? target = detail switch
+        {
+            StatusCenterDetail.Network =>
+                NetworkDetailsExpander,
+            StatusCenterDetail.ApplicationAudio =>
+                ApplicationAudioDetailsExpander,
+            StatusCenterDetail.MediaAndBattery =>
+                MediaBatteryDetailsExpander,
+            _ => null
+        };
+        if (!bringIntoView || target == null)
+            return;
+
+        Dispatcher.BeginInvoke(
+            new Action(target.BringIntoView),
+            DispatcherPriority.Background);
     }
 
     private void StatusCenterButton_MouseEnter(

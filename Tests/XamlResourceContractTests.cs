@@ -944,7 +944,7 @@ public sealed class XamlResourceContractTests
                 "MainWindow.xaml"));
 
         int commonStart = mainWindow.IndexOf(
-            "AutomationProperties.Name=\"常用系统操作\"",
+            "AutomationProperties.Name=\"Panel 状态详情\"",
             StringComparison.Ordinal);
         int masterVolume = mainWindow.IndexOf(
             "Value=\"{Binding MasterVolume, Mode=TwoWay",
@@ -966,12 +966,15 @@ public sealed class XamlResourceContractTests
         Assert.True(audioDetails > networkStart);
         foreach (string entry in new[]
                  {
-                     "Content=\"快捷设置\"",
-                     "Content=\"通知中心\"",
-                     "Content=\"{Binding InputSwitcherLabel}\"",
+                     "Content=\"网络\"",
+                     "Content=\"应用音量\"",
+                     "Content=\"媒体\"",
                      "Content=\"显示桌面\"",
                      "Content=\"锁定\"",
-                     "Content=\"电源\""
+                     "Content=\"电源\"",
+                     "Content=\"快捷设置\"",
+                     "Content=\"通知中心\"",
+                     "Content=\"{Binding InputSwitcherLabel}\""
                  })
         {
             int position = mainWindow.IndexOf(
@@ -987,8 +990,11 @@ public sealed class XamlResourceContractTests
         Assert.Single(
             Regex.Matches(
                     mainWindow,
-                    "x:Name=\"StatusCenterQuickSettingsButton\"")
+                    "x:Name=\"StatusCenterWindowOverviewButton\"")
                 .Cast<Match>());
+        Assert.Contains(
+            "AutomationProperties.Name=\"Windows 系统浮层入口\"",
+            mainWindow);
     }
 
     [Fact]
@@ -1402,6 +1408,11 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "MainWindow.xaml"));
         string theme = File.ReadAllText(
             Path.Combine(root, "Themes", "FocusTheme.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
         int statusStart = mainWindow.IndexOf(
             "<!-- Status center -->",
             StringComparison.Ordinal);
@@ -1429,6 +1440,25 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AutomationProperties.Name=\"媒体与电池详情\"",
             statusCenter);
+        Assert.Contains(
+            "x:Name=\"NetworkDetailsExpander\"",
+            statusCenter);
+        Assert.Contains(
+            "x:Name=\"ApplicationAudioDetailsExpander\"",
+            statusCenter);
+        Assert.Contains(
+            "x:Name=\"MediaBatteryDetailsExpander\"",
+            statusCenter);
+        Assert.Equal(
+            3,
+            statusCenter.Split(
+                "Expanded=\"StatusDetailsExpander_Expanded\"",
+                StringSplitOptions.None).Length - 1);
+        Assert.Equal(
+            3,
+            statusCenter.Split(
+                "Collapsed=\"StatusDetailsExpander_Collapsed\"",
+                StringSplitOptions.None).Length - 1);
         Assert.DoesNotContain(
             "IsExpanded=\"True\"",
             statusCenter);
@@ -1455,6 +1485,15 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "MinHeight=\"44\"",
             theme);
+        Assert.Contains(
+            "StatusCenterDetailPolicy.Toggle(",
+            codeBehind);
+        Assert.Contains(
+            "SetOpenStatusCenterDetail(",
+            codeBehind);
+        Assert.Contains(
+            "target.BringIntoView",
+            codeBehind);
     }
 
     [Fact]
@@ -2308,7 +2347,7 @@ public sealed class XamlResourceContractTests
             "x:Name=\"FocusCenterLastWorkspaceButton\"",
             mainWindow);
         Assert.Contains(
-            "x:Name=\"StatusCenterQuickSettingsButton\"",
+            "x:Name=\"StatusCenterWindowOverviewButton\"",
             mainWindow);
         Assert.Contains(
             "x:Name=\"SettingsEnableReplacementButton\"",
@@ -2329,7 +2368,7 @@ public sealed class XamlResourceContractTests
             "FocusCenterLastWorkspaceButton",
             codeBehind);
         Assert.Contains(
-            "StatusCenterQuickSettingsButton",
+            "StatusCenterWindowOverviewButton",
             codeBehind);
         Assert.Contains(
             "SettingsEnableReplacementButton",
