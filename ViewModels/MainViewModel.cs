@@ -1138,7 +1138,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSearchQueryChanged(string value)
     {
-        IsSearchOpen = true;
         RefreshSearchResults();
     }
 

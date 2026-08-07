@@ -451,14 +451,19 @@
                                                         </StackPanel>
                                                     </Grid>
                                                 </Button>
-                                                <TextBlock Grid.Column="2"
-                                                           Style="{StaticResource FocusIconText}"
-                                                           FontSize="16"
-                                                           Text="&#xE72A;"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"
-                                                           IsHitTestVisible="False"
-                                                           Visibility="{Binding IsWindow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                <Button Grid.Column="2"
+                                                        Style="{StaticResource FocusIconButton}"
+                                                        Width="40"
+                                                        Height="40"
+                                                        ToolTip="{Binding DisplayName, StringFormat=关闭窗口：{0}}"
+                                                        AutomationProperties.Name="{Binding DisplayName, StringFormat=关闭窗口 {0}}"
+                                                        Command="{Binding DataContext.CloseWindowCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding Window}"
+                                                        Visibility="{Binding IsWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                                               FontSize="12"
+                                                               Text="&#xE711;"/>
+                                                </Button>
                                                 <Button Grid.Column="2"
                                                         Style="{StaticResource FocusIconButton}"
                                                         Width="40"
@@ -1283,9 +1288,9 @@
                                     Tag="CompactFixedEntry"
                                     Style="{StaticResource CompactLabeledEntryButton}"
                                     Click="SearchButton_Click"
-                                    AutomationProperties.Name="统一搜索"
-                                    AutomationProperties.HelpText="搜索应用、窗口、任务、系统命令和计算式"
-                                    ToolTip="搜索应用、窗口、任务和命令">
+                                    AutomationProperties.Name="窗口总览与统一搜索"
+                                    AutomationProperties.HelpText="点击查看全部窗口；顶部可切换应用、任务、系统命令和计算搜索"
+                                    ToolTip="窗口总览与统一搜索">
                                 <Grid Width="48" Height="48">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"
@@ -1294,7 +1299,7 @@
                                         <TextBlock Margin="0,-2,0,0"
                                                    HorizontalAlignment="Center"
                                                    Style="{StaticResource FocusMetaText}"
-                                                   Text="搜索"/>
+                                                   Text="窗口"/>
                                     </StackPanel>
                                     <Border Width="3"
                                             Height="22"

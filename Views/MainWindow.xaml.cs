@@ -730,6 +730,13 @@ public partial class MainWindow :
 
     private void SearchButton_Click(object sender, RoutedEventArgs e)
     {
+        ShellSearchEntryState entry =
+            ShellSearchEntryPolicy
+                .PrepareWindowOverview(
+                    _viewModel.IsSearchOpen,
+                    _viewModel.SearchScope,
+                    _viewModel.SearchQuery);
+        ApplySearchEntryState(entry);
         ToggleCompactOverlay(
             () => _viewModel.IsSearchOpen,
             () => _viewModel.ToggleSearchCommand
@@ -737,6 +744,13 @@ public partial class MainWindow :
             SearchButton,
             SearchBox,
             selectAllText: true);
+    }
+
+    private void ApplySearchEntryState(
+        ShellSearchEntryState entry)
+    {
+        _viewModel.SearchScope = entry.Scope;
+        _viewModel.SearchQuery = entry.Query;
     }
 
     private void SearchSuggestion_Click(
@@ -3046,6 +3060,10 @@ public partial class MainWindow :
         _hiddenToTray = false;
         ExpandSidebar();
         Activate();
+        ApplySearchEntryState(
+            ShellSearchEntryPolicy
+                .PrepareUnifiedSearch(
+                    _viewModel.SearchQuery));
         if (!_viewModel.IsSearchOpen)
         {
             _viewModel.ToggleSearchCommand

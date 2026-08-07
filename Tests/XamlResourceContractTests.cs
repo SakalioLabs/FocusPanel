@@ -1633,7 +1633,7 @@ public sealed class XamlResourceContractTests
                 "Style=\"{StaticResource CompactLabeledEntryButton}\"",
                 StringSplitOptions.None).Length - 1);
         Assert.Contains("Text=\"开始\"", compactDock);
-        Assert.Contains("Text=\"搜索\"", compactDock);
+        Assert.Contains("Text=\"窗口\"", compactDock);
         Assert.Contains("Text=\"收纳\"", compactDock);
         Assert.Contains("Text=\"任务\"", compactDock);
         Assert.Contains(
@@ -2075,10 +2075,10 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"开始\"",
             mainWindow);
         Assert.Contains(
-            "AutomationProperties.Name=\"统一搜索\"",
+            "AutomationProperties.Name=\"窗口总览与统一搜索\"",
             mainWindow);
         Assert.Contains(
-            "AutomationProperties.HelpText=\"搜索应用、窗口、任务、系统命令和计算式\"",
+            "AutomationProperties.HelpText=\"点击查看全部窗口；顶部可切换应用、任务、系统命令和计算搜索\"",
             mainWindow);
         Assert.Contains("private void FocusCompactDock()", codeBehind);
         Assert.Equal(
@@ -3599,6 +3599,40 @@ public sealed class XamlResourceContractTests
                 "GroupName=\"ShellSearchScope\"")
                 .Count
             == 4);
+        Assert.Contains(
+            "Text=\"窗口\"",
+            mainWindow);
+        Assert.Contains(
+            "ShellSearchEntryPolicy",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "MainWindow.xaml.cs")));
+    }
+
+    [Fact]
+    public void WindowOverview_OffersDirectSwitchAndCloseActions()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+
+        Assert.Contains(
+            "Command=\"{Binding DataContext.ExecuteSearchResultCommand",
+            mainWindow);
+        Assert.Contains(
+            "Command=\"{Binding DataContext.CloseWindowCommand",
+            mainWindow);
+        Assert.Contains(
+            "CommandParameter=\"{Binding Window}\"",
+            mainWindow);
+        Assert.Contains(
+            "StringFormat=关闭窗口：{0}",
+            mainWindow);
     }
 
     [Fact]
