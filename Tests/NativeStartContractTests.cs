@@ -7,7 +7,7 @@ namespace FocusPanel.Tests;
 public sealed class NativeStartContractTests
 {
     [Fact]
-    public void StartButton_UsesWindowsStartAsThePlainClickAction()
+    public void StartButton_UsesPanelLauncherAndKeepsWindowsFallback()
     {
         string root = FindRepositoryRoot();
         string xaml = File.ReadAllText(
@@ -26,26 +26,26 @@ public sealed class NativeStartContractTests
             "Click=\"StartButton_Click\"",
             xaml);
         Assert.Contains(
-            "按 Enter 打开 Windows 开始菜单",
+            "按 Enter 打开 Panel 全部应用",
             xaml);
         Assert.Contains(
-            "左键打开 Windows 开始菜单",
+            "Header=\"Windows 开始菜单\"",
             xaml);
-        Assert.DoesNotContain(
-            "FocusPanel start hub",
+        Assert.Contains(
+            "InputGestureText=\"Shift+单击\"",
             xaml);
-        Assert.DoesNotContain(
-            "IsStartHubOpen",
+        Assert.Contains(
+            "IsApplicationLauncherOpen",
             xaml);
-        Assert.DoesNotContain(
-            "StartHubApps",
+        Assert.Contains(
+            "IsUnifiedSearchEntryActive",
+            xaml);
+        Assert.Contains(
+            "开始 · 全部应用",
             viewModel);
-        Assert.DoesNotContain(
-            "ToggleStartHub",
+        Assert.Contains(
+            "SearchPlaceholder",
             viewModel);
-        Assert.DoesNotContain(
-            "StartEntryPolicy",
-            shell);
 
         int start = shell.IndexOf(
             "private async void StartButton_Click(",
@@ -57,22 +57,25 @@ public sealed class NativeStartContractTests
         Assert.True(start >= 0 && end > start);
         string handler = shell[start..end];
         Assert.Contains(
-            "_viewModel.OpenStartMenuCommand",
+            "PanelStartEntryPolicy.Decide(",
             handler);
         Assert.Contains(
-            "InvokeShellEntryAfterClickAsync(",
+            "PrepareApplicationLauncher()",
+            handler);
+        Assert.Contains(
+            "CloseOverlayPanels();",
+            handler);
+        Assert.Contains(
+            "QueueOverlayFocus(",
+            handler);
+        Assert.Contains(
+            "_viewModel.OpenStartMenuCommand",
             handler);
         Assert.DoesNotContain(
-            "Keyboard.Modifiers",
-            handler);
-        Assert.DoesNotContain(
-            "ToggleCompactOverlay(",
+            "ScheduleAutoHide",
             handler);
         Assert.Contains(
             "WindowsShellAction.StartMenu",
-            systemStatus);
-        Assert.DoesNotContain(
-            "OpenStartMenuNative",
             systemStatus);
         Assert.DoesNotContain(
             "Shell_TrayWnd",

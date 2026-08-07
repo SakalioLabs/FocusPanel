@@ -263,7 +263,7 @@
                                          AutomationProperties.Name="搜索应用、窗口、待办、系统命令与计算"
                                          AutomationProperties.HelpText="输入应用名、窗口标题、已有待办、系统工具、音量、媒体、专注或任务命令、算式，使用上下方向键选择，按回车执行"
                                          ToolTip="搜索应用、窗口和已有待办，直接控制媒体、完成待办、收集任务、调音量、开始专注或计算"/>
-                                <TextBlock Text="输入应用、窗口、待办、音量、媒体或系统命令"
+                                <TextBlock Text="{Binding SearchPlaceholder}"
                                            Margin="16,0"
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False">
@@ -432,6 +432,7 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="40"/>
                                                     <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="44"/>
                                                     <ColumnDefinition Width="48"/>
                                                 </Grid.ColumnDefinitions>
                                                 <Button Grid.ColumnSpan="2"
@@ -499,6 +500,18 @@
                                                         Style="{StaticResource FocusIconButton}"
                                                         Width="40"
                                                         Height="40"
+                                                        Click="SearchWindowPreviewButton_Click"
+                                                        ToolTip="打开实时窗口缩略图"
+                                                        AutomationProperties.Name="打开此窗口的实时缩略图"
+                                                        Visibility="{Binding IsWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                                               FontSize="14"
+                                                               Text="&#xE7B3;"/>
+                                                </Button>
+                                                <Button Grid.Column="3"
+                                                        Style="{StaticResource FocusIconButton}"
+                                                        Width="40"
+                                                        Height="40"
                                                         ToolTip="{Binding DisplayName, StringFormat=关闭窗口：{0}}"
                                                         AutomationProperties.Name="{Binding DisplayName, StringFormat=关闭窗口 {0}}"
                                                         Command="{Binding DataContext.CloseWindowCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -508,7 +521,7 @@
                                                                FontSize="12"
                                                                Text="&#xE711;"/>
                                                 </Button>
-                                                <Button Grid.Column="2"
+                                                <Button Grid.Column="3"
                                                         Style="{StaticResource FocusIconButton}"
                                                         Width="40"
                                                         Height="40"
@@ -519,7 +532,7 @@
                                                         Visibility="{Binding CanTogglePin, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <TextBlock Style="{StaticResource FocusIconText}" FontSize="16" Text="&#xE840;"/>
                                                 </Button>
-                                                <Button Grid.Column="2"
+                                                <Button Grid.Column="3"
                                                         Style="{StaticResource FocusIconButton}"
                                                         Width="40"
                                                         Height="40"
@@ -1372,12 +1385,16 @@
                                     Tag="CompactFixedEntry"
                                     Click="StartButton_Click"
                                     AutomationProperties.Name="开始"
-                                    AutomationProperties.HelpText="按 Enter 打开 Windows 开始菜单，按 Shift+F10 打开系统管理菜单"
-                                    ToolTip="开始 · 左键打开 Windows 开始菜单 · 右键打开系统管理菜单">
+                                    AutomationProperties.HelpText="按 Enter 打开 Panel 全部应用，按 Shift+Enter 打开 Windows 开始菜单，按 Shift+F10 打开系统管理菜单"
+                                    ToolTip="开始 · 左键打开 Panel 全部应用 · Shift+左键打开 Windows 开始菜单 · 右键打开系统管理菜单">
                                 <Button.ContextMenu>
                                     <ContextMenu Style="{StaticResource FocusContextMenu}"
                                                  Opened="TransientContextMenu_Opened"
                                                  Closed="TransientContextMenu_Closed">
+                                        <MenuItem Header="Windows 开始菜单"
+                                                  InputGestureText="Shift+单击"
+                                                  Command="{Binding PlacementTarget.DataContext.OpenStartMenuCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <Separator/>
                                         <MenuItem Header="安装的应用"
                                                   Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{x:Static services:SystemManagementTool.InstalledApps}"/>
@@ -1465,6 +1482,14 @@
                                                    Style="{StaticResource FocusMetaText}"
                                                    Text="开始"/>
                                     </StackPanel>
+                                    <Border Width="3"
+                                            Height="22"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusAccentBrightBrush}"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding IsApplicationLauncherOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 </Grid>
                             </Button>
                             <Button x:Name="SearchButton"
@@ -1484,6 +1509,24 @@
                                                    Style="{StaticResource FocusMetaText}"
                                                    Text="窗口"/>
                                     </StackPanel>
+                                    <Border MinWidth="18"
+                                            Height="18"
+                                            Padding="4,0"
+                                            Margin="0,-4,-4,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                            BorderBrush="{DynamicResource FocusAccentBrightBrush}"
+                                            BorderThickness="1"
+                                            IsHitTestVisible="False">
+                                        <TextBlock Text="{Binding OpenWindowCount}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"/>
+                                    </Border>
                                     <Border Width="3"
                                             Height="22"
                                             HorizontalAlignment="Left"
@@ -1491,7 +1534,7 @@
                                             CornerRadius="{StaticResource FocusControlCornerRadius}"
                                             Background="{DynamicResource FocusAccentBrightBrush}"
                                             IsHitTestVisible="False"
-                                            Visibility="{Binding IsSearchOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            Visibility="{Binding IsUnifiedSearchEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 </Grid>
                             </Button>
                             <Border Height="1"

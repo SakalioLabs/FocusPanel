@@ -27,4 +27,28 @@ internal static class ShellSearchEntryPolicy
         new(
             ShellSearchScope.All,
             currentQuery ?? string.Empty);
+
+    internal static ShellSearchEntryState
+        PrepareApplicationLauncher() =>
+        new(
+            ShellSearchScope.Applications,
+            string.Empty);
+
+    internal static int GetApplicationLimit(
+        ShellSearchScope scope,
+        string? query) =>
+        scope == ShellSearchScope.Applications
+        && string.IsNullOrWhiteSpace(query)
+            ? int.MaxValue
+            : ShellSearchPolicy.DefaultLimit;
+
+    internal static int GetResultLimit(
+        ShellSearchScope scope,
+        string? query) =>
+        scope == ShellSearchScope.Windows
+        || (scope
+                == ShellSearchScope.Applications
+            && string.IsNullOrWhiteSpace(query))
+            ? int.MaxValue
+            : ShellSearchPolicy.DefaultLimit;
 }

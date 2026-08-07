@@ -799,9 +799,41 @@ public partial class MainWindow :
         RoutedEventArgs e)
     {
         e.Handled = true;
-        await InvokeShellEntryAfterClickAsync(
-            () => _viewModel.OpenStartMenuCommand
-                .Execute(null));
+        PanelStartEntryAction action =
+            PanelStartEntryPolicy.Decide(
+                Keyboard.Modifiers.HasFlag(
+                    ModifierKeys.Shift),
+                _viewModel.IsSearchOpen,
+                _viewModel.SearchScope);
+        if (action
+            == PanelStartEntryAction
+                .OpenWindowsStartMenu)
+        {
+            await InvokeShellEntryAfterClickAsync(
+                () => _viewModel.OpenStartMenuCommand
+                    .Execute(null));
+            return;
+        }
+
+        if (action
+            == PanelStartEntryAction
+                .CloseApplicationLauncher)
+        {
+            CloseOverlayPanels();
+            StartButton.Focus();
+            return;
+        }
+
+        ExpandSidebar();
+        CloseOverlayPanels();
+        ApplySearchEntryState(
+            ShellSearchEntryPolicy
+                .PrepareApplicationLauncher());
+        _viewModel.ToggleSearchCommand.Execute(null);
+        QueueOverlayFocus(
+            StartButton,
+            SearchBox,
+            () => _viewModel.IsSearchOpen);
     }
 
     private void CloseCurrentVirtualDesktop_Click(
@@ -967,6 +999,33 @@ public partial class MainWindow :
     {
         _searchWindowHoverOpenTimer.Stop();
         ScheduleTaskbarHoverPreviewClose();
+    }
+
+    private void SearchWindowPreviewButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender
+                is not FrameworkElement
+                {
+                    DataContext:
+                        ShellSearchResult
+                        {
+                            Window: not null
+                        } result
+                } target)
+        {
+            return;
+        }
+
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
+        _searchWindowHoverTarget = target;
+        _searchWindowHoverResult = result;
+        TryOpenSearchWindowPreview(
+            target,
+            result);
+        e.Handled = true;
     }
 
     private void SearchWindowHoverOpenTimer_Tick(

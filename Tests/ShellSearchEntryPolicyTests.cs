@@ -51,4 +51,46 @@ public sealed class ShellSearchEntryPolicyTests
             state.Scope);
         Assert.Equal("季度方案", state.Query);
     }
+
+    [Fact]
+    public void ApplicationLauncherAlwaysStartsFromAllApplications()
+    {
+        ShellSearchEntryState state =
+            ShellSearchEntryPolicy
+                .PrepareApplicationLauncher();
+
+        Assert.Equal(
+            ShellSearchScope.Applications,
+            state.Scope);
+        Assert.Equal(string.Empty, state.Query);
+        Assert.Equal(
+            int.MaxValue,
+            ShellSearchEntryPolicy
+                .GetApplicationLimit(
+                    state.Scope,
+                    state.Query));
+        Assert.Equal(
+            int.MaxValue,
+            ShellSearchEntryPolicy
+                .GetResultLimit(
+                    state.Scope,
+                    state.Query));
+    }
+
+    [Fact]
+    public void TypedApplicationSearchKeepsBoundedResultSet()
+    {
+        Assert.Equal(
+            ShellSearchPolicy.DefaultLimit,
+            ShellSearchEntryPolicy
+                .GetApplicationLimit(
+                    ShellSearchScope.Applications,
+                    "画图"));
+        Assert.Equal(
+            ShellSearchPolicy.DefaultLimit,
+            ShellSearchEntryPolicy
+                .GetResultLimit(
+                    ShellSearchScope.Applications,
+                    "画图"));
+    }
 }

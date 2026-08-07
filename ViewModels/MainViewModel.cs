@@ -189,6 +189,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         nameof(AppSearchStatusText))]
     [NotifyPropertyChangedFor(
         nameof(AreSearchSuggestionsVisible))]
+    [NotifyPropertyChangedFor(
+        nameof(IsApplicationLauncherOpen))]
+    [NotifyPropertyChangedFor(
+        nameof(IsUnifiedSearchEntryActive))]
+    [NotifyPropertyChangedFor(
+        nameof(SearchPlaceholder))]
     private ShellSearchScope searchScope =
         ShellSearchScope.All;
 
@@ -209,6 +215,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isAppCatalogLoading;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsApplicationLauncherOpen))]
+    [NotifyPropertyChangedFor(
+        nameof(IsUnifiedSearchEntryActive))]
     private bool isSearchOpen;
 
     [ObservableProperty]
@@ -908,6 +918,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             TaskCaptureCommandParser
                 .QuickCapturePrefix,
             StringComparison.Ordinal);
+    public bool IsApplicationLauncherOpen =>
+        IsSearchOpen
+        && IsApplicationSearchScope;
+    public bool IsUnifiedSearchEntryActive =>
+        IsSearchOpen
+        && !IsApplicationSearchScope;
     public string SearchPanelTitle =>
         IsTaskQuickCaptureDraft
             ? "快速添加到 Inbox"
@@ -918,7 +934,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         ? $"{_windowOverviewApplicationName} 的窗口"
                         : "当前窗口",
                 ShellSearchScope.Applications =>
-                    "全部应用",
+                    "开始 · 全部应用",
                 ShellSearchScope.System =>
                     "系统工具与快捷命令",
                 _ =>
@@ -927,11 +943,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string SearchPanelInstruction =>
         IsTaskQuickCaptureDraft
             ? "输入标题后按 Enter，直接保存到 Inbox"
-            : SearchScope == ShellSearchScope.Windows
-                ? IsWindowApplicationFilterActive
-                    ? "点击窗口直接切换；输入标题可筛选此应用窗口"
-                    : "点击窗口直接切换；输入标题可继续筛选"
-                : "输入关键词后用 ↑↓ 选择，按 Enter 执行";
+            : SearchScope switch
+            {
+                ShellSearchScope.Windows =>
+                    IsWindowApplicationFilterActive
+                        ? "点击窗口直接切换；输入标题可筛选此应用窗口"
+                        : "点击窗口直接切换；输入标题可继续筛选",
+                ShellSearchScope.Applications =>
+                    "固定应用优先；输入名称筛选，点击启动，右侧图钉固定到任务栏",
+                _ =>
+                    "输入关键词后用 ↑↓ 选择，按 Enter 执行"
+            };
+    public string SearchPlaceholder =>
+        SearchScope switch
+        {
+            ShellSearchScope.Applications =>
+                "搜索已安装应用",
+            ShellSearchScope.Windows =>
+                "按窗口标题筛选",
+            ShellSearchScope.System =>
+                "搜索系统工具与快捷命令",
+            _ =>
+                "输入应用、窗口、待办、音量、媒体或系统命令"
+        };
     public bool IsOrganizerEntryActive =>
         string.Equals(
             LastWorkspace,
@@ -3228,10 +3262,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         string? selectedKey =
             SelectedSearchResult?.StableKey;
+        int applicationLimit =
+            ShellSearchEntryPolicy.GetApplicationLimit(
+                SearchScope,
+                SearchQuery);
+        int resultLimit =
+            ShellSearchEntryPolicy.GetResultLimit(
+                SearchScope,
+                SearchQuery);
         IReadOnlyList<AppLaunchItem> applications =
             _appCatalog.Search(
                 SearchQuery,
-                ShellSearchPolicy.DefaultLimit);
+                applicationLimit);
         IReadOnlyList<WindowTaskItem> windows =
             _windowTracker.GetSnapshot();
         OpenWindowCount = windows
@@ -3246,11 +3288,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 applications,
                 windows,
                 SearchQuery,
-                limit:
-                    SearchScope
-                        == ShellSearchScope.Windows
-                        ? int.MaxValue
-                        : ShellSearchPolicy.DefaultLimit,
+                limit: resultLimit,
                 taskItems:
                     _taskSearchItems,
                 scope: SearchScope,

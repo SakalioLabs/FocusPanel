@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Panel 原生开始启动器与显式窗口缩略图入口</title>
+  <desc id="desc">右侧紧凑栏的开始入口打开完整应用目录，窗口入口带数量徽标，窗口列表每行可直接打开实时缩略图。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#18263c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#33445f" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#1c293d" stop-opacity=".8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#02060d" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="620" rx="34" fill="url(#bg)"/>
+  <circle cx="140" cy="90" r="170" fill="#1989ff" opacity=".16"/>
+  <circle cx="1050" cy="560" r="230" fill="#66d9ef" opacity=".1"/>
+
+  <g filter="url(#shadow)">
+    <rect x="110" y="70" width="670" height="480" rx="26" fill="url(#glass)" stroke="#7693b8" stroke-opacity=".36"/>
+    <text x="148" y="122" fill="#f4f7fb" font-family="Segoe UI, sans-serif" font-size="28" font-weight="650">开始 · 全部应用</text>
+    <text x="148" y="151" fill="#aebbd0" font-family="Segoe UI, sans-serif" font-size="15">固定应用优先 · 搜索、启动或固定到任务栏</text>
+    <rect x="146" y="176" width="598" height="52" rx="12" fill="#101a2a" stroke="#6aaeff" stroke-opacity=".55"/>
+    <text x="170" y="208" fill="#8fa1ba" font-family="Segoe UI, sans-serif" font-size="16">搜索已安装应用</text>
+    <g font-family="Segoe UI, sans-serif">
+      <g transform="translate(146 254)">
+        <rect width="286" height="76" rx="16" fill="#2b3b53"/>
+        <rect x="18" y="18" width="40" height="40" rx="10" fill="#1689e8"/>
+        <text x="78" y="34" fill="#f4f7fb" font-size="17">文件资源管理器</text>
+        <text x="78" y="56" fill="#9fb0c7" font-size="13">应用 · 已固定</text>
+        <text x="252" y="46" fill="#79b8ff" font-size="20">●</text>
+      </g>
+      <g transform="translate(458 254)">
+        <rect width="286" height="76" rx="16" fill="#26364c"/>
+        <rect x="18" y="18" width="40" height="40" rx="10" fill="#20a464"/>
+        <text x="78" y="34" fill="#f4f7fb" font-size="17">浏览器</text>
+        <text x="78" y="56" fill="#9fb0c7" font-size="13">应用 · 3 个窗口</text>
+      </g>
+    </g>
+    <text x="148" y="382" fill="#f4f7fb" font-family="Segoe UI, sans-serif" font-size="22" font-weight="600">窗口总览</text>
+    <g transform="translate(146 402)">
+      <rect width="598" height="94" rx="16" fill="#25354b"/>
+      <rect x="16" y="14" width="110" height="66" rx="10" fill="#0d1726" stroke="#5faaff" stroke-opacity=".6"/>
+      <rect x="27" y="25" width="88" height="44" rx="5" fill="#2c6ca6" opacity=".85"/>
+      <text x="148" y="39" fill="#f4f7fb" font-family="Segoe UI, sans-serif" font-size="17">项目主页 — 浏览器</text>
+      <text x="148" y="64" fill="#9fb0c7" font-family="Segoe UI, sans-serif" font-size="13">点击切换 · 右侧按钮打开实时缩略图</text>
+      <rect x="502" y="24" width="44" height="44" rx="12" fill="#177fd2"/>
+      <path d="M513 35h22v17h-22zM518 56h12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <rect x="550" y="24" width="44" height="44" rx="12" fill="#33455e"/>
+      <path d="M563 37l18 18m0-18l-18 18" stroke="#e9f0fa" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="835" y="70" width="110" height="480" rx="28" fill="#202e43" stroke="#7592b8" stroke-opacity=".4"/>
+    <g font-family="Segoe UI, sans-serif" text-anchor="middle">
+      <rect x="852" y="94" width="76" height="72" rx="16" fill="#176fc0"/>
+      <text x="890" y="126" fill="#fff" font-size="24">⊞</text>
+      <text x="890" y="151" fill="#fff" font-size="13">开始</text>
+      <rect x="852" y="180" width="76" height="72" rx="16" fill="#2b3c55"/>
+      <text x="890" y="211" fill="#dce7f5" font-size="23">▣</text>
+      <text x="890" y="237" fill="#dce7f5" font-size="13">窗口</text>
+      <circle cx="919" cy="189" r="12" fill="#4ca5ff"/>
+      <text x="919" y="194" fill="#fff" font-size="11" font-weight="700">7</text>
+      <rect x="852" y="266" width="76" height="72" rx="16" fill="#26364c"/>
+      <text x="890" y="309" fill="#dce7f5" font-size="24">◎</text>
+      <text x="890" y="329" fill="#aebbd0" font-size="12">应用</text>
+    </g>
+  </g>
+
+  <g font-family="Segoe UI, sans-serif">
+    <text x="985" y="128" fill="#f4f7fb" font-size="19" font-weight="600">不再绕回原任务栏</text>
+    <text x="985" y="164" fill="#aebbd0" font-size="15">① 开始：完整应用目录</text>
+    <text x="985" y="194" fill="#aebbd0" font-size="15">② 窗口：数量一眼可见</text>
+    <text x="985" y="224" fill="#aebbd0" font-size="15">③ 缩略图：按钮直接打开</text>
+    <text x="985" y="270" fill="#72b8ff" font-size="14">Shift + 点击</text>
+    <text x="985" y="294" fill="#9fb0c7" font-size="14">Windows 开始菜单兼容入口</text>
+  </g>
+</svg>

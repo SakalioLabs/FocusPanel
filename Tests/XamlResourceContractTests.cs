@@ -1718,7 +1718,10 @@ public sealed class XamlResourceContractTests
             "IsStartHubOpen",
             compactDock);
         Assert.Contains(
-            "Visibility=\"{Binding IsSearchOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            "Visibility=\"{Binding IsApplicationLauncherOpen, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding IsUnifiedSearchEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
             compactDock);
         Assert.Contains(
             "Visibility=\"{Binding IsOrganizerEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}\"",
@@ -3701,7 +3704,7 @@ public sealed class XamlResourceContractTests
             "private void SelectSearchScope(",
             viewModel);
         Assert.Contains(
-            "? int.MaxValue",
+            "ShellSearchEntryPolicy.GetResultLimit(",
             viewModel);
         Assert.True(
             Regex.Matches(
@@ -3772,8 +3775,20 @@ public sealed class XamlResourceContractTests
             "MouseLeave=\"SearchResult_MouseLeave\"",
             mainWindow);
         Assert.Contains(
+            "Click=\"SearchWindowPreviewButton_Click\"",
+            mainWindow);
+        Assert.Contains(
+            "ToolTip=\"打开实时窗口缩略图\"",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding OpenWindowCount}\"",
+            mainWindow);
+        Assert.Contains(
             "PreviewKeyDown=\"SearchResultsList_PreviewKeyDown\"",
             mainWindow);
+        Assert.Contains(
+            "private void SearchWindowPreviewButton_Click(",
+            codeBehind);
         Assert.Contains(
             "private void SearchWindowHoverOpenTimer_Tick(",
             codeBehind);
