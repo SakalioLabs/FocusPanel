@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FocusPanel.Controls;
@@ -100,6 +101,9 @@ internal static class UiSmokeTestRunner
             CheckSurface("PomodoroFloatingWindow", () => new PomodoroFloatingWindow(), results, failures);
             CheckSurface("EdgeIndicatorWindow", () => new EdgeIndicatorWindow(), results, failures);
             CheckSurface("CalendarPanelView", () => new CalendarPanelView(), results, failures);
+            CheckVirtualDesktopPlacement(
+                results,
+                failures);
             CheckSurface(
                 "AppIconPresenter",
                 () => new AppIconPresenter
@@ -193,6 +197,57 @@ internal static class UiSmokeTestRunner
 
         WriteReport(reportPath, results, failures);
         return failures.Count == 0 ? 0 : 1;
+    }
+
+    private static void CheckVirtualDesktopPlacement(
+        ICollection<string> results,
+        ICollection<string> failures)
+    {
+        Window? probe = null;
+        try
+        {
+            probe = new Window
+            {
+                Width = 1,
+                Height = 1,
+                Left = -32000,
+                Top = -32000,
+                Opacity = 0,
+                ShowActivated = false,
+                ShowInTaskbar = false,
+                WindowStyle = WindowStyle.ToolWindow
+            };
+            probe.Show();
+            IntPtr handle =
+                new WindowInteropHelper(probe)
+                    .Handle;
+            var service =
+                new VirtualDesktopPlacementService();
+            VirtualDesktopPresence presence =
+                service.GetPresence(handle);
+            if (presence
+                == VirtualDesktopPresence.Current)
+            {
+                results.Add(
+                    "PASS 公开虚拟桌面接口识别当前 WPF 窗口");
+            }
+            else
+            {
+                failures.Add(
+                    "公开虚拟桌面接口未能识别当前 WPF 窗口："
+                    + presence);
+            }
+        }
+        catch (Exception ex)
+        {
+            failures.Add(
+                "公开虚拟桌面接口探针失败："
+                + ex.Message);
+        }
+        finally
+        {
+            probe?.Close();
+        }
     }
 
     private static void RenderDashboardSnapshot(

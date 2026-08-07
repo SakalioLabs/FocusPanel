@@ -947,8 +947,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 ShellSearchScope.Windows =>
                     IsWindowApplicationFilterActive
-                        ? "点击窗口直接切换；输入标题可筛选此应用窗口"
-                        : "点击窗口直接切换；输入标题可继续筛选",
+                        ? "点击窗口切换；右侧画面按钮预览；输入标题筛选此应用窗口"
+                        : "点击窗口切换；右侧画面按钮预览；上方可管理虚拟桌面",
                 ShellSearchScope.Applications =>
                     "固定应用优先；输入名称筛选，点击启动，右侧图钉固定到任务栏",
                 _ =>

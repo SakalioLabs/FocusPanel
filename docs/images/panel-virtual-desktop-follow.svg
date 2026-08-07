@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Panel 跟随当前虚拟桌面并提供直接切换入口</title>
+  <desc id="desc">三个虚拟桌面并排展示，FocusPanel 从旧桌面迁移到当前桌面，窗口总览提供上一个、新建、下一个和关闭操作。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#09111f"/>
+      <stop offset="1" stop-color="#172944"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#334b6b" stop-opacity=".94"/>
+      <stop offset="1" stop-color="#1c2a40" stop-opacity=".88"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#020711" flood-opacity=".52"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0 0L9 3L0 6Z" fill="#69b5ff"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="620" rx="34" fill="url(#background)"/>
+  <circle cx="1080" cy="90" r="210" fill="#1989ff" opacity=".13"/>
+  <circle cx="120" cy="590" r="220" fill="#4bd7ce" opacity=".08"/>
+  <text x="70" y="70" fill="#f4f7fb" font-family="Segoe UI, sans-serif" font-size="30" font-weight="650">虚拟桌面切换后，Panel 仍在手边</text>
+  <text x="70" y="103" fill="#9fb0c7" font-family="Segoe UI, sans-serif" font-size="16">公开 Windows 接口 · 不注入 Explorer · 不依赖任务视图浮层</text>
+
+  <g font-family="Segoe UI, sans-serif" filter="url(#shadow)">
+    <g transform="translate(70 145)">
+      <rect width="290" height="238" rx="22" fill="#1a2638" stroke="#607998" stroke-opacity=".45"/>
+      <text x="22" y="38" fill="#9fb0c7" font-size="15">桌面 1 · 已离开</text>
+      <rect x="22" y="58" width="246" height="144" rx="14" fill="#101927"/>
+      <rect x="42" y="82" width="136" height="88" rx="10" fill="#283a52"/>
+      <text x="110" y="130" text-anchor="middle" fill="#778aa5" font-size="15">旧工作区</text>
+      <path d="M250 64v132" stroke="#70839e" stroke-width="7" stroke-linecap="round" opacity=".28"/>
+    </g>
+
+    <g transform="translate(455 125)">
+      <rect width="390" height="278" rx="24" fill="#21334c" stroke="#69b5ff" stroke-width="2"/>
+      <text x="24" y="42" fill="#f4f7fb" font-size="17" font-weight="600">桌面 2 · 当前</text>
+      <rect x="24" y="62" width="342" height="176" rx="16" fill="#111c2b"/>
+      <rect x="52" y="88" width="205" height="118" rx="12" fill="#2a3e59"/>
+      <text x="154" y="142" text-anchor="middle" fill="#dce8f7" font-size="16">当前应用窗口</text>
+      <text x="154" y="166" text-anchor="middle" fill="#91a6c0" font-size="13">Panel 自动迁移至此</text>
+      <rect x="282" y="76" width="68" height="148" rx="20" fill="url(#glass)" stroke="#7ebdff" stroke-opacity=".65"/>
+      <rect x="294" y="91" width="44" height="44" rx="12" fill="#1679ca"/>
+      <text x="316" y="120" text-anchor="middle" fill="#fff" font-size="22">▣</text>
+      <rect x="294" y="145" width="44" height="44" rx="12" fill="#2d405a"/>
+      <text x="316" y="174" text-anchor="middle" fill="#dce8f7" font-size="20">◎</text>
+      <circle cx="339" cy="84" r="7" fill="#57adff"/>
+    </g>
+
+    <g transform="translate(940 145)">
+      <rect width="190" height="238" rx="22" fill="#1a2638" stroke="#607998" stroke-opacity=".45"/>
+      <text x="20" y="38" fill="#9fb0c7" font-size="15">桌面 3</text>
+      <rect x="20" y="58" width="150" height="144" rx="14" fill="#101927"/>
+      <text x="95" y="132" text-anchor="middle" fill="#778aa5" font-size="15">备用空间</text>
+    </g>
+  </g>
+
+  <path d="M338 270C392 270 405 250 448 250" fill="none" stroke="#69b5ff" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 9" marker-end="url(#arrow)"/>
+  <text x="386" y="233" fill="#69b5ff" font-family="Segoe UI, sans-serif" font-size="14" text-anchor="middle">自动跟随</text>
+
+  <g transform="translate(188 458)" font-family="Segoe UI, sans-serif" filter="url(#shadow)">
+    <rect width="824" height="104" rx="22" fill="url(#glass)" stroke="#7190b7" stroke-opacity=".5"/>
+    <text x="24" y="34" fill="#c7d5e7" font-size="14">窗口总览 · 虚拟桌面</text>
+    <g transform="translate(24 48)" text-anchor="middle">
+      <g><rect width="180" height="42" rx="12" fill="#2c405a"/><text x="90" y="27" fill="#eef5fd" font-size="15">← 上一个</text></g>
+      <g transform="translate(196 0)"><rect width="180" height="42" rx="12" fill="#1679ca"/><text x="90" y="27" fill="#fff" font-size="15">＋ 新建</text></g>
+      <g transform="translate(392 0)"><rect width="180" height="42" rx="12" fill="#2c405a"/><text x="90" y="27" fill="#eef5fd" font-size="15">下一个 →</text></g>
+      <g transform="translate(588 0)"><rect width="188" height="42" rx="12" fill="#3a3446"/><text x="94" y="27" fill="#f2d8e1" font-size="15">关闭当前…</text></g>
+    </g>
+  </g>
+</svg>

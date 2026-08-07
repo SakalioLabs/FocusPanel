@@ -246,6 +246,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <StackPanel>
@@ -317,7 +318,53 @@
                                              Command="{Binding SelectSearchScopeCommand}"
                                              CommandParameter="System"/>
                             </UniformGrid>
-                            <WrapPanel Grid.Row="3"
+                            <Grid Grid.Row="3"
+                                  Margin="2,0,2,10"
+                                  Visibility="{Binding IsWindowSearchScope, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                  AutomationProperties.Name="虚拟桌面快捷操作">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Margin="4,0,12,0"
+                                           VerticalAlignment="Center"
+                                           Text="虚拟桌面"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                                <UniformGrid Grid.Column="1"
+                                             Columns="4">
+                                    <Button MinHeight="44"
+                                            Margin="2,0"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            Content="上一个"
+                                            ToolTip="切换到上一个虚拟桌面 · Win+Ctrl+←"
+                                            AutomationProperties.Name="切换到上一个虚拟桌面"
+                                            Command="{Binding SwitchVirtualDesktopCommand}"
+                                            CommandParameter="{x:Static services:VirtualDesktopDirection.Previous}"/>
+                                    <Button MinHeight="44"
+                                            Margin="2,0"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            Content="新建"
+                                            ToolTip="新建虚拟桌面 · Win+Ctrl+D"
+                                            AutomationProperties.Name="新建虚拟桌面"
+                                            Command="{Binding CreateVirtualDesktopCommand}"/>
+                                    <Button MinHeight="44"
+                                            Margin="2,0"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            Content="下一个"
+                                            ToolTip="切换到下一个虚拟桌面 · Win+Ctrl+→"
+                                            AutomationProperties.Name="切换到下一个虚拟桌面"
+                                            Command="{Binding SwitchVirtualDesktopCommand}"
+                                            CommandParameter="{x:Static services:VirtualDesktopDirection.Next}"/>
+                                    <Button MinHeight="44"
+                                            Margin="2,0"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            Content="关闭…"
+                                            ToolTip="关闭当前虚拟桌面 · 应用不会被关闭"
+                                            AutomationProperties.Name="关闭当前虚拟桌面"
+                                            Click="CloseCurrentVirtualDesktop_Click"/>
+                                </UniformGrid>
+                            </Grid>
+                            <WrapPanel Grid.Row="4"
                                        Margin="0,0,0,8"
                                        AutomationProperties.Name="搜索示例，点击后可编辑并按回车执行">
                                 <WrapPanel.Style>
@@ -367,7 +414,7 @@
                                         Click="SearchSuggestion_Click"
                                         ToolTip="填入任务前缀，继续输入标题后按 Enter"/>
                             </WrapPanel>
-                            <Border Grid.Row="3"
+                            <Border Grid.Row="4"
                                     Height="44"
                                     Margin="0,0,0,8"
                                     Padding="12,0,4,0"
@@ -403,7 +450,7 @@
                                             Command="{Binding ClearWindowApplicationFilterCommand}"/>
                                 </Grid>
                             </Border>
-                            <Grid Grid.Row="4">
+                            <Grid Grid.Row="5">
                                 <ListBox x:Name="SearchResultsList"
                                          ItemsSource="{Binding SearchResults}"
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"

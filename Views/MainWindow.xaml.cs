@@ -147,6 +147,8 @@ public partial class MainWindow :
             ViewModel_PropertyChanged;
         _viewModel.WorkspaceRequested += _ => ExpandSidebar();
         _coordinator.Taskbar.ReplacementStopped += Taskbar_ReplacementStopped;
+        _coordinator.Windows.SnapshotChanged +=
+            WindowTracker_SnapshotChanged;
 
         _autoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
         _autoHideTimer.Tick += (_, _) =>
@@ -523,7 +525,9 @@ public partial class MainWindow :
     {
         if (!_shellStartupReady
             || _hiddenToTray
-            || IsVisible)
+            || (IsVisible
+                && GetVirtualDesktopPresence()
+                != VirtualDesktopPresence.Other))
             return;
 
         _autoHideTimer.Stop();
@@ -648,6 +652,7 @@ public partial class MainWindow :
         _edgeIndicator?.HideIndicator();
         if (!IsVisible)
             Show();
+        EnsureShellOnCurrentVirtualDesktop();
         Visibility = Visibility.Visible;
         _viewModel.SetShellVisible(true);
         Topmost = true;
@@ -658,6 +663,49 @@ public partial class MainWindow :
             ApplyDwmBackdrop();
             NativeMethods.ShowWindow(hwnd, SwShowNoActivate);
         }
+    }
+
+    private VirtualDesktopPresence
+        GetVirtualDesktopPresence()
+    {
+        IntPtr hwnd =
+            new WindowInteropHelper(this)
+                .Handle;
+        return _coordinator.VirtualDesktops
+            .GetPresence(hwnd);
+    }
+
+    private void EnsureShellOnCurrentVirtualDesktop()
+    {
+        IntPtr hwnd =
+            new WindowInteropHelper(this)
+                .Handle;
+        VirtualDesktopPlacementResult result =
+            _coordinator.VirtualDesktops
+                .EnsureOnCurrentDesktop(hwnd);
+        if (result
+            == VirtualDesktopPlacementResult.Moved)
+        {
+            PositionAtTargetRightEdge();
+        }
+    }
+
+    private void WindowTracker_SnapshotChanged(
+        object? sender,
+        EventArgs e)
+    {
+        if (_isExit
+            || !_shellStartupReady
+            || _hiddenToTray
+            || _hiddenForFullscreen
+            || !IsVisible
+            || GetVirtualDesktopPresence()
+            != VirtualDesktopPresence.Other)
+        {
+            return;
+        }
+
+        ShowWithoutActivating();
     }
 
     private void ScheduleAutoHide(
@@ -3338,6 +3386,8 @@ public partial class MainWindow :
         _edgeIndicator = null;
         _toastManager.Dispose();
         _coordinator.Taskbar.ReplacementStopped -= Taskbar_ReplacementStopped;
+        _coordinator.Windows.SnapshotChanged -=
+            WindowTracker_SnapshotChanged;
         _viewModel.RequestClose -= ForceClose;
         _viewModel.RequestEnableReplacement -= EnableTaskbarReplacement;
         _viewModel.RequestDisableReplacement -= DisableTaskbarReplacement;

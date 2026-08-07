@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.33 补齐了虚拟桌面上的任务栏连续性：切到另一个 Windows 桌面后，Panel 不再留在旧桌面。常驻紧凑栏会自动跟随；非常驻模式下，右缘、全局快捷键或托盘唤出会先把 Panel 移到当前桌面。窗口总览顶部同时新增“上一个 / 新建 / 下一个 / 关闭”四个直接入口，不必再依赖失效的任务视图按钮或藏在开始右键菜单里。实现只使用微软公开的 [`IVirtualDesktopManager`](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-ivirtualdesktopmanager)、[`GetWindowDesktopId`](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ivirtualdesktopmanager-getwindowdesktopid) 和 [`MoveWindowToDesktop`](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ivirtualdesktopmanager-movewindowtodesktop)，不接入版本易变的 Shell 私有接口。
+
+![Panel 跟随当前虚拟桌面并提供直接切换入口](docs/images/panel-virtual-desktop-follow.svg)
+
 > 0.11.32 把“开始”变成 Panel 自己的完整应用启动器：普通点击直接浏览全部应用，固定项优先，可搜索、启动和固定；再点一次只关闭应用目录。`Shift+点击` 才打开 Windows 开始菜单。紧凑栏“窗口”现在显示实时数量，窗口总览每一行都有明确的缩略图按钮，点击即可查看 DWM 实时画面并切换或关闭，不必回到底部原生任务栏找窗口缩略项。
 
 ![Panel 原生开始启动器与显式窗口缩略图入口](docs/images/panel-start-and-window-previews.svg)

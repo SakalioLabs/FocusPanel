@@ -18,6 +18,8 @@ public sealed class ShellCoordinator : IDisposable
         Radios = new SystemRadioService();
         WifiNetworks =
             new WifiNetworkService();
+        VirtualDesktops =
+            new VirtualDesktopPlacementService();
         Updates = new VelopackUpdateService();
         JumpLists =
             new AppJumpListService();
@@ -37,6 +39,11 @@ public sealed class ShellCoordinator : IDisposable
     }
     public ISystemRadioService Radios { get; }
     public IWifiNetworkService WifiNetworks { get; }
+    internal IVirtualDesktopPlacementService
+        VirtualDesktops
+    {
+        get;
+    }
     public IAppUpdateService Updates { get; }
     internal IAppJumpListService
         JumpLists

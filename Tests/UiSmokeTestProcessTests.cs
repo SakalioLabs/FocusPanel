@@ -98,6 +98,9 @@ public sealed class UiSmokeTestProcessTests
             Assert.Contains(
                 "PASS 右缘指示、遮罩与警告状态动态主题",
                 report);
+            Assert.Contains(
+                "PASS 公开虚拟桌面接口识别当前 WPF 窗口",
+                report);
             Assert.Contains("RESULT PASS", report);
         }
         finally
