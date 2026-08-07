@@ -5,7 +5,8 @@ internal enum StatusCenterDetail
     None,
     Network,
     ApplicationAudio,
-    MediaAndBattery
+    MediaAndBattery,
+    InputMethod
 }
 
 internal static class StatusCenterDetailPolicy

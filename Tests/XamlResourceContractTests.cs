@@ -731,7 +731,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains("OpenNotificationsCommand", mainWindow);
         Assert.Contains("OpenInputSwitcherCommand", mainWindow);
         Assert.Contains(
-            "Content=\"{Binding InputSwitcherLabel}\"",
+            "Content=\"输入法\"",
             mainWindow);
         Assert.Contains(
             "ToolTip=\"{Binding InputSwitcherSummary}\"",
@@ -845,6 +845,12 @@ public sealed class XamlResourceContractTests
             "InputMethodStatusSnapshot GetInputMethodStatus()",
             statusContract);
         Assert.Contains(
+            "GetInputMethods()",
+            statusContract);
+        Assert.Contains(
+            "bool TryActivateInputMethod(",
+            statusContract);
+        Assert.Contains(
             "NativeMethods.CoInitializeEx(",
             systemStatus);
         Assert.Contains(
@@ -913,6 +919,15 @@ public sealed class XamlResourceContractTests
             "AudioControlCompletionPolicy.Apply(",
             viewModel);
         Assert.Contains(
+            "ObservableCollection<\n        InputMethodOption> InputMethods",
+            viewModel);
+        Assert.Contains(
+            ".TryActivateInputMethod(",
+            viewModel);
+        Assert.Contains(
+            "_lastActiveExternalWindowHandle",
+            viewModel);
+        Assert.Contains(
             "audioWritePendingBeforeCapture",
             viewModel);
         Assert.Contains(
@@ -969,12 +984,12 @@ public sealed class XamlResourceContractTests
                      "Content=\"网络\"",
                      "Content=\"应用音量\"",
                      "Content=\"媒体\"",
+                     "Content=\"输入法\"",
                      "Content=\"显示桌面\"",
                      "Content=\"锁定\"",
                      "Content=\"电源\"",
                      "Content=\"快捷设置\"",
-                     "Content=\"通知中心\"",
-                     "Content=\"{Binding InputSwitcherLabel}\""
+                     "Content=\"通知中心\""
                  })
         {
             int position = mainWindow.IndexOf(
@@ -994,6 +1009,12 @@ public sealed class XamlResourceContractTests
                 .Cast<Match>());
         Assert.Contains(
             "AutomationProperties.Name=\"Windows 系统浮层入口\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"设备与会话操作\"",
+            mainWindow);
+        Assert.Contains(
+            "Content=\"打开 Windows 输入法浮层\"",
             mainWindow);
     }
 
@@ -1427,7 +1448,7 @@ public sealed class XamlResourceContractTests
         string statusCenter = mainWindow[
             statusStart..calendarStart];
         Assert.Equal(
-            3,
+            4,
             statusCenter.Split(
                 "Style=\"{StaticResource FocusDetailsExpander}\"",
                 StringSplitOptions.None).Length - 1);
@@ -1441,6 +1462,9 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"媒体与电池详情\"",
             statusCenter);
         Assert.Contains(
+            "AutomationProperties.Name=\"Panel 输入法详情\"",
+            statusCenter);
+        Assert.Contains(
             "x:Name=\"NetworkDetailsExpander\"",
             statusCenter);
         Assert.Contains(
@@ -1449,13 +1473,16 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "x:Name=\"MediaBatteryDetailsExpander\"",
             statusCenter);
+        Assert.Contains(
+            "x:Name=\"InputMethodDetailsExpander\"",
+            statusCenter);
         Assert.Equal(
-            3,
+            4,
             statusCenter.Split(
                 "Expanded=\"StatusDetailsExpander_Expanded\"",
                 StringSplitOptions.None).Length - 1);
         Assert.Equal(
-            3,
+            4,
             statusCenter.Split(
                 "Collapsed=\"StatusDetailsExpander_Collapsed\"",
                 StringSplitOptions.None).Length - 1);

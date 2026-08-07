@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
-using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace FocusPanel.Services;
@@ -17,21 +17,29 @@ public sealed class SystemStatusService : ISystemStatusService
     private readonly Func<
         WindowsShellShortcut,
         bool> _shortcutSender;
+    private readonly IInputMethodNative
+        _inputMethods;
 
     public SystemStatusService()
-        : this(SendWindowsShortcut)
+        : this(
+            SendWindowsShortcut,
+            new WindowsInputMethodNative())
     {
     }
 
     internal SystemStatusService(
         Func<
             WindowsShellShortcut,
-            bool> shortcutSender)
+            bool> shortcutSender,
+        IInputMethodNative? inputMethods = null)
     {
         _shortcutSender =
             shortcutSender
             ?? throw new ArgumentNullException(
                 nameof(shortcutSender));
+        _inputMethods =
+            inputMethods
+            ?? new WindowsInputMethodNative();
     }
 
     public SystemStatusSnapshot GetStatusSnapshot()
@@ -289,18 +297,16 @@ public sealed class SystemStatusService : ISystemStatusService
     {
         try
         {
-            IntPtr layout = GetForegroundKeyboardLayout();
+            IntPtr foreground =
+                _inputMethods
+                    .GetForegroundWindow();
+            IntPtr layout = _inputMethods
+                .GetKeyboardLayoutForWindow(
+                    foreground);
             CultureInfo? culture = GetInputCulture(layout);
-            string? description = null;
-            if (culture?.TwoLetterISOLanguageName == "zh")
-            {
-                var buffer = new StringBuilder(128);
-                _ = NativeMethods.ImmGetDescription(
-                    layout,
-                    buffer,
-                    (uint)buffer.Capacity);
-                description = buffer.ToString();
-            }
+            string description =
+                _inputMethods.GetDescription(
+                    layout);
             return InputMethodStatusSnapshot.FromObservation(
                 culture?.TwoLetterISOLanguageName,
                 description);
@@ -308,6 +314,129 @@ public sealed class SystemStatusService : ISystemStatusService
         catch
         {
             return InputMethodStatusSnapshot.Unavailable;
+        }
+    }
+
+    public IReadOnlyList<InputMethodOption>
+        GetInputMethods()
+    {
+        try
+        {
+            IntPtr foreground =
+                _inputMethods
+                    .GetForegroundWindow();
+            IntPtr activeLayout =
+                _inputMethods
+                    .GetKeyboardLayoutForWindow(
+                        foreground);
+            InputMethodObservation[]
+                observations = _inputMethods
+                    .GetKeyboardLayouts()
+                    .Select(layout =>
+                    {
+                        CultureInfo? culture =
+                            GetInputCulture(layout);
+                        return new
+                            InputMethodObservation(
+                                layout.ToInt64(),
+                                culture
+                                    ?.TwoLetterISOLanguageName,
+                                culture?.NativeName,
+                                _inputMethods
+                                    .GetDescription(
+                                        layout));
+                    })
+                    .ToArray();
+            return InputMethodOptionComposer
+                .Compose(
+                    observations,
+                    activeLayout.ToInt64());
+        }
+        catch
+        {
+            return Array.Empty<
+                InputMethodOption>();
+        }
+    }
+
+    public bool TryActivateInputMethod(
+        InputMethodOption inputMethod,
+        IntPtr preferredTargetWindow)
+    {
+        try
+        {
+            IntPtr layout = new(
+                inputMethod.LayoutHandle);
+            bool isInstalled = _inputMethods
+                .GetKeyboardLayouts()
+                .Any(installed =>
+                    installed == layout);
+            if (!isInstalled)
+                return false;
+
+            IntPtr foreground =
+                _inputMethods
+                    .GetForegroundWindow();
+            IntPtr target =
+                preferredTargetWindow
+                    != IntPtr.Zero
+                    ? preferredTargetWindow
+                    : foreground;
+            if (target == IntPtr.Zero)
+                return false;
+
+            if (_inputMethods
+                    .GetKeyboardLayoutForWindow(
+                        target)
+                == layout)
+            {
+                if (foreground != IntPtr.Zero
+                    && foreground != target)
+                {
+                    _ = _inputMethods
+                        .TryRequestInputLanguage(
+                            foreground,
+                            layout);
+                }
+                return true;
+            }
+
+            bool requestPosted =
+                _inputMethods
+                    .TryRequestInputLanguage(
+                        target,
+                        layout);
+            if (!requestPosted)
+                return false;
+            if (foreground != IntPtr.Zero
+                && foreground != target)
+            {
+                _ = _inputMethods
+                    .TryRequestInputLanguage(
+                        foreground,
+                        layout);
+            }
+
+            for (int attempt = 0;
+                 attempt < 5;
+                 attempt++)
+            {
+                if (_inputMethods
+                        .GetKeyboardLayoutForWindow(
+                            target)
+                    == layout)
+                {
+                    return true;
+                }
+
+                Thread.Sleep(30);
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -518,15 +647,6 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    private static IntPtr GetForegroundKeyboardLayout()
-    {
-        IntPtr foreground = NativeMethods.GetForegroundWindow();
-        uint threadId = foreground == IntPtr.Zero
-            ? 0
-            : NativeMethods.GetWindowThreadProcessId(foreground, out _);
-        return NativeMethods.GetKeyboardLayout(threadId);
-    }
-
     private static CultureInfo? GetInputCulture(IntPtr layout)
     {
         try
@@ -720,21 +840,6 @@ public sealed class SystemStatusService : ISystemStatusService
 
         [DllImport("ole32.dll")]
         internal static extern void CoUninitialize();
-
-        [DllImport("user32.dll")]
-        internal static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll")]
-        internal static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
-
-        [DllImport("user32.dll")]
-        internal static extern IntPtr GetKeyboardLayout(uint threadId);
-
-        [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
-        internal static extern uint ImmGetDescription(
-            IntPtr keyboardLayout,
-            StringBuilder description,
-            uint bufferLength);
 
         [DllImport("user32.dll")]
         internal static extern uint SendInput(uint inputCount, Input[] inputs, int inputSize);

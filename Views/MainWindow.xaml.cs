@@ -1259,6 +1259,11 @@ public partial class MainWindow :
                 detail
                 == StatusCenterDetail
                     .MediaAndBattery;
+            InputMethodDetailsExpander
+                .IsExpanded =
+                detail
+                == StatusCenterDetail
+                    .InputMethod;
         }
         finally
         {
@@ -1274,6 +1279,8 @@ public partial class MainWindow :
                 ApplicationAudioDetailsExpander,
             StatusCenterDetail.MediaAndBattery =>
                 MediaBatteryDetailsExpander,
+            StatusCenterDetail.InputMethod =>
+                InputMethodDetailsExpander,
             _ => null
         };
         if (!bringIntoView || target == null)

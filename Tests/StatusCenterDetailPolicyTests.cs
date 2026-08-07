@@ -22,6 +22,14 @@ public sealed class StatusCenterDetailPolicyTests
         (int)StatusCenterDetail.MediaAndBattery,
         (int)StatusCenterDetail.MediaAndBattery,
         (int)StatusCenterDetail.None)]
+    [InlineData(
+        (int)StatusCenterDetail.InputMethod,
+        (int)StatusCenterDetail.Network,
+        (int)StatusCenterDetail.Network)]
+    [InlineData(
+        (int)StatusCenterDetail.InputMethod,
+        (int)StatusCenterDetail.InputMethod,
+        (int)StatusCenterDetail.None)]
     public void Toggle_SelectsOneDetailOrClosesTheCurrentOne(
         int currentValue,
         int requestedValue,

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace FocusPanel.Services;
 
@@ -12,6 +13,11 @@ public interface ISystemStatusService : IDisposable
         MediaTransportAction action);
     NetworkStatusSnapshot GetNetworkStatus();
     InputMethodStatusSnapshot GetInputMethodStatus();
+    IReadOnlyList<InputMethodOption>
+        GetInputMethods();
+    bool TryActivateInputMethod(
+        InputMethodOption inputMethod,
+        IntPtr preferredTargetWindow);
     BatteryStatusSnapshot GetBatteryStatus();
     bool OpenQuickSettings();
     bool OpenNotifications();

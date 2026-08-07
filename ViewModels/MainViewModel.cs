@@ -117,6 +117,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _confirmedMuted;
     private bool _updatingStartupState;
     private string? _lastNotifiedUpdateVersion;
+    private IntPtr
+        _lastActiveExternalWindowHandle;
     private bool _isShellVisible;
     private bool _isDisposed;
     private Task? _disposeTask;
@@ -751,6 +753,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     } = new();
     public bool HasWifiNetworks =>
         WifiNetworks.Count > 0;
+    public ObservableCollection<
+        InputMethodOption> InputMethods
+    {
+        get;
+    } = new();
+    public bool HasInputMethods =>
+        InputMethods.Count > 0;
+    public string InputMethodListStatusText =>
+        InputMethods.Count switch
+        {
+            0 => "Windows 未返回可用输入法，可使用下方系统浮层",
+            1 => "当前只安装了一个输入法",
+            _ => $"已安装 {InputMethods.Count} 个输入法；选择后直接应用到刚才使用的窗口"
+        };
     public IReadOnlyList<
         ShellAutoHideDelayOption>
         AutoHideDelayOptions =>
@@ -2709,6 +2725,55 @@ public partial class MainViewModel : ObservableObject, IDisposable
             "无法唤起输入法切换器，请使用 Win+Space。");
 
     [RelayCommand]
+    private async Task ActivateInputMethod(
+        InputMethodOption inputMethod)
+    {
+        IntPtr target =
+            _lastActiveExternalWindowHandle;
+        SystemActionCompletion completion =
+            await _systemActions.ExecuteAsync(
+                () => _systemStatus
+                    .TryActivateInputMethod(
+                        inputMethod,
+                        target));
+        if (_isDisposed
+            || !_systemActions.IsCurrent(
+                completion.Revision))
+        {
+            return;
+        }
+
+        if (!completion.Succeeded)
+        {
+            SystemActionMessage =
+                $"未能确认“{inputMethod.DisplayName}”已应用到刚才使用的窗口。"
+                + "目标应用可能已关闭、以更高权限运行、尚未处理或拒绝切换；"
+                + "可使用下方 Windows 输入法浮层继续。";
+            IsStatusCenterOpen = true;
+            return;
+        }
+
+        SystemActionMessage = string.Empty;
+        ReplaceCollection(
+            InputMethods,
+            InputMethods.Select(item =>
+                item with
+                {
+                    IsActive =
+                        item.LayoutHandle
+                        == inputMethod
+                            .LayoutHandle
+                }).ToArray());
+        OnPropertyChanged(
+            nameof(HasInputMethods));
+        OnPropertyChanged(
+            nameof(
+                InputMethodListStatusText));
+        await Task.Delay(120);
+        RequestSystemStatusRefresh();
+    }
+
+    [RelayCommand]
     private async Task OpenStartMenu()
         => await RunSystemActionAsync(
             _systemStatus.OpenStartMenu,
@@ -3119,6 +3184,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
             TaskbarApps.FirstOrDefault(
                 item => item.IsActive)
             ?.IdentityKey;
+        WindowReference? activeWindow =
+            TaskbarApps
+                .SelectMany(item =>
+                    item.Windows)
+                .FirstOrDefault(window =>
+                    window.IsActive);
+        if (activeWindow != null
+            && activeWindow.Handle
+                != IntPtr.Zero)
+        {
+            _lastActiveExternalWindowHandle =
+                activeWindow.Handle;
+        }
     }
 
     private void ApplyTaskbarShortcutStates()
@@ -3307,6 +3385,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         CancellationToken.None)
                     .GetAwaiter()
                     .GetResult();
+        IReadOnlyList<InputMethodOption>
+            inputMethods =
+                _systemStatus
+                    .GetInputMethods();
         bool brightnessWritePendingAfterCapture =
             _brightnessWritePending;
         return new PendingSystemStatusSnapshot(
@@ -3319,7 +3401,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             brightnessWritePendingBeforeCapture
                 || brightnessWritePendingAfterCapture,
             applicationAudioSessions,
-            radioSnapshots);
+            radioSnapshots,
+            inputMethods);
     }
 
     private async Task ApplySystemStatusAsync(
@@ -3399,6 +3482,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         NetworkDetail = network.Detail;
         InputMethodStatus =
             snapshot.InputMethod;
+        ReplaceCollection(
+            InputMethods,
+            pending.InputMethods);
+        OnPropertyChanged(
+            nameof(HasInputMethods));
+        OnPropertyChanged(
+            nameof(
+                InputMethodListStatusText));
         BatteryStatusSnapshot battery =
             snapshot.Battery;
         HasBattery = battery.HasBattery;
@@ -4788,5 +4879,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ApplicationAudioSessionSnapshot>
                 ApplicationAudioSessions,
             IReadOnlyList<SystemRadioSnapshot>
-                RadioSnapshots);
+                RadioSnapshots,
+            IReadOnlyList<InputMethodOption>
+                InputMethods);
 }

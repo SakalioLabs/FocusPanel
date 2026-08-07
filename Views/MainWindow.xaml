@@ -586,7 +586,7 @@
                                         Click="StatusCenterWindowOverview_Click"
                                         AutomationProperties.Name="打开 Panel 窗口总览"
                                         ToolTip="在 Panel 内查看、切换和管理当前应用窗口，不唤起原生任务栏"/>
-                                <UniformGrid Columns="3"
+                                <UniformGrid Columns="4"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="Panel 状态详情">
                                     <ToggleButton Style="{StaticResource FocusToggleButton}"
@@ -610,6 +610,21 @@
                                                   IsChecked="{Binding IsExpanded, ElementName=MediaBatteryDetailsExpander, Mode=OneWay}"
                                                   Click="StatusCenterDetailButton_Click"
                                                   AutomationProperties.Name="展开媒体与电池详情"/>
+                                    <ToggleButton Style="{StaticResource FocusToggleButton}"
+                                                  MinHeight="44"
+                                                  Content="输入法"
+                                                  Tag="{x:Static services:StatusCenterDetail.InputMethod}"
+                                                  IsChecked="{Binding IsExpanded, ElementName=InputMethodDetailsExpander, Mode=OneWay}"
+                                                  Click="StatusCenterDetailButton_Click"
+                                                  ToolTip="{Binding InputSwitcherSummary}"
+                                                  AutomationProperties.Name="展开 Panel 输入法列表"/>
+                                </UniformGrid>
+                                <TextBlock Text="设备与会话"
+                                           Margin="4,0,0,7"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                                <UniformGrid Columns="3"
+                                             Margin="0,0,0,12"
+                                             AutomationProperties.Name="设备与会话操作">
                                     <Button Style="{StaticResource FocusSecondaryButton}"
                                             MinHeight="44"
                                             Content="显示桌面"
@@ -626,7 +641,7 @@
                                 <TextBlock Text="Windows 辅助入口"
                                            Margin="4,0,0,7"
                                            Style="{StaticResource FocusCaptionText}"/>
-                                <UniformGrid Columns="3"
+                                <UniformGrid Columns="2"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="Windows 系统浮层入口">
                                     <Button Style="{StaticResource FocusSecondaryButton}"
@@ -637,12 +652,6 @@
                                             MinHeight="44"
                                             Content="通知中心"
                                             Command="{Binding OpenNotificationsCommand}"/>
-                                    <Button Style="{StaticResource FocusSecondaryButton}"
-                                            MinHeight="44"
-                                            Content="{Binding InputSwitcherLabel}"
-                                            Command="{Binding OpenInputSwitcherCommand}"
-                                            ToolTip="{Binding InputSwitcherSummary}"
-                                            AutomationProperties.Name="{Binding InputSwitcherSummary}"/>
                                 </UniformGrid>
                                 <TextBlock Text="音量与亮度"
                                            Margin="4,2,0,7"
@@ -840,6 +849,96 @@
                                         Content="打开位置权限"
                                         Command="{Binding OpenWifiLocationSettingsCommand}"
                                         Visibility="{Binding HasWifiLocationAccessWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander x:Name="InputMethodDetailsExpander"
+                                          Style="{StaticResource FocusDetailsExpander}"
+                                          Tag="{x:Static services:StatusCenterDetail.InputMethod}"
+                                          Expanded="StatusDetailsExpander_Expanded"
+                                          Collapsed="StatusDetailsExpander_Collapsed"
+                                          AutomationProperties.Name="Panel 输入法详情">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="输入法"
+                                                       Style="{StaticResource FocusCardTitleText}"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="12,0,0,0"
+                                                       Text="{Binding InputMethodStatus.Display}"
+                                                       Style="{StaticResource FocusCaptionText}"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel Margin="0,10,0,0">
+                                        <TextBlock Margin="4,0,4,8"
+                                                   Text="{Binding InputMethodListStatusText}"
+                                                   Style="{StaticResource FocusCaptionText}"
+                                                   TextWrapping="Wrap"/>
+                                        <ItemsControl ItemsSource="{Binding InputMethods}"
+                                                      AutomationProperties.Name="已安装输入法">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button MinHeight="52"
+                                                            Margin="0,0,0,6"
+                                                            HorizontalContentAlignment="Stretch"
+                                                            Command="{Binding DataContext.ActivateInputMethodCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            AutomationProperties.Name="{Binding DisplayName, StringFormat=切换输入法 {0}}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button"
+                                                                   BasedOn="{StaticResource FocusSecondaryButton}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsActive}"
+                                                                                 Value="True">
+                                                                        <Setter Property="Background"
+                                                                                Value="{DynamicResource FocusAccentSoftBrush}"/>
+                                                                        <Setter Property="BorderBrush"
+                                                                                Value="{DynamicResource FocusAccentBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="44"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding ShortLabel}"
+                                                                       VerticalAlignment="Center"
+                                                                       HorizontalAlignment="Center"
+                                                                       Foreground="{DynamicResource FocusAccentBrush}"
+                                                                       Style="{StaticResource FocusMetaText}"/>
+                                                            <StackPanel Grid.Column="1"
+                                                                        Margin="8,0"
+                                                                        VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding DisplayName}"
+                                                                           Style="{StaticResource FocusCardTitleText}"
+                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Text="{Binding Detail}"
+                                                                           Style="{StaticResource FocusCaptionText}"
+                                                                           TextTrimming="CharacterEllipsis"/>
+                                                            </StackPanel>
+                                                            <TextBlock Grid.Column="2"
+                                                                       Margin="8,0,4,0"
+                                                                       VerticalAlignment="Center"
+                                                                       Text="当前"
+                                                                       Foreground="{DynamicResource FocusAccentBrush}"
+                                                                       Style="{StaticResource FocusMetaText}"
+                                                                       Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <Button MinHeight="44"
+                                                Margin="0,4,0,0"
+                                                Style="{StaticResource FocusSecondaryButton}"
+                                                Content="打开 Windows 输入法浮层"
+                                                Command="{Binding OpenInputSwitcherCommand}"
+                                                ToolTip="仅在目标应用拒绝直接切换时使用 Win+Space 系统入口"/>
                                     </StackPanel>
                                 </Expander>
                                 <Expander x:Name="ApplicationAudioDetailsExpander"

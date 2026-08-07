@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="600" viewBox="0 0 1120 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102239"/>
+      <stop offset="1" stop-color="#07111f"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#78bfff" stop-opacity=".08"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="22" flood-color="#000" flood-opacity=".38"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="600" fill="url(#bg)"/>
+  <circle cx="158" cy="116" r="170" fill="#2d8cff" opacity=".16"/>
+  <circle cx="934" cy="512" r="235" fill="#8a5cff" opacity=".12"/>
+  <text x="70" y="82" fill="#f6f9ff" font-family="Segoe UI, sans-serif" font-size="34" font-weight="700">输入法不再跳出 Panel</text>
+  <text x="70" y="120" fill="#aebed3" font-family="Segoe UI, sans-serif" font-size="19">枚举真实布局 · 切换刚才使用的窗口 · 拒绝时明确回退</text>
+  <g transform="translate(70 158)" filter="url(#shadow)">
+    <rect width="980" height="372" rx="28" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".18"/>
+    <text x="34" y="49" fill="#f6f9ff" font-family="Segoe UI, sans-serif" font-size="22" font-weight="650">状态中心</text>
+    <g transform="translate(34 72)" font-family="Segoe UI, sans-serif" font-size="16" text-anchor="middle">
+      <rect width="216" height="54" rx="14" fill="#ffffff" fill-opacity=".08"/><text x="108" y="34" fill="#dce8f8">网络</text>
+      <rect x="230" width="216" height="54" rx="14" fill="#ffffff" fill-opacity=".08"/><text x="338" y="34" fill="#dce8f8">应用音量</text>
+      <rect x="460" width="216" height="54" rx="14" fill="#ffffff" fill-opacity=".08"/><text x="568" y="34" fill="#dce8f8">媒体</text>
+      <rect x="690" width="216" height="54" rx="14" fill="#188be5" fill-opacity=".72" stroke="#72c2ff"/><text x="798" y="34" fill="#fff" font-weight="650">输入法</text>
+    </g>
+    <g transform="translate(34 148)" font-family="Segoe UI, sans-serif">
+      <rect width="906" height="76" rx="16" fill="#188be5" fill-opacity=".16" stroke="#47aeff"/>
+      <text x="28" y="46" fill="#5fbdff" font-size="18" font-weight="700">中 / 拼</text>
+      <text x="142" y="34" fill="#f6f9ff" font-size="18" font-weight="650">微软拼音</text>
+      <text x="142" y="57" fill="#9eb0c6" font-size="14">中文（简体，中国）</text>
+      <text x="836" y="46" fill="#5fbdff" font-size="15" font-weight="650">当前</text>
+      <rect y="88" width="906" height="76" rx="16" fill="#ffffff" fill-opacity=".07"/>
+      <text x="28" y="134" fill="#5fbdff" font-size="18" font-weight="700">EN</text>
+      <text x="142" y="122" fill="#f6f9ff" font-size="18" font-weight="650">English (United States)</text>
+      <text x="142" y="145" fill="#9eb0c6" font-size="14">输入语言 · EN · 布局 00000409</text>
+    </g>
+    <rect x="34" y="330" width="906" height="1" fill="#ffffff" opacity=".12"/>
+    <text x="34" y="354" fill="#8fa3bd" font-family="Segoe UI, sans-serif" font-size="14">Windows 输入法浮层只在目标应用拒绝直接切换时使用</text>
+  </g>
+</svg>
