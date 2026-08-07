@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.45 把蓝牙设备管理收进 Panel：“网络与无线”现在可以直接发现已配对和附近设备，准确区分已连接、已配对、在附近与可配对状态，并在当前侧栏完成配对或移除。Classic 与低功耗端点按 Windows 设备身份去重，已连接和已配对设备优先，不会重复堆出同一副耳机。首次配对仍会由 Windows 显示一次安全确认，这是桌面应用不能绕过的系统安全边界，但不会打开任务栏蓝牙浮层。
+
+![Panel 内发现、配对和移除蓝牙设备](docs/images/panel-native-bluetooth-devices.svg)
+
 > 0.11.44 补齐 Panel 原生网络面板最明显的断点：附近 Wi‑Fi 第一次连接时可直接在 Panel 输入密码，不再离开侧栏去 Windows 网络设置。开放网络可直接连接，WPA/WPA2/WPA3 Personal 使用 Windows 公开的 WLAN 配置接口；密码不进入 FocusPanel 数据库、配置或日志，提交后的临时内存立即清零，由 Windows 在系统网络配置库中加密保存。密码错误或网络超时会清理本次失败配置，下一次仍可直接重新输入；企业网络明确标注组织登录边界，不用普通密码框误导用户。
 
 ![Panel 内首次连接 Wi-Fi 并安全交给 Windows 保存](docs/images/panel-native-wifi-connect.svg)

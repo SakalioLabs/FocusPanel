@@ -842,6 +842,78 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="蓝牙设备"
+                                                   Style="{StaticResource FocusCardTitleText}"/>
+                                        <TextBlock Text="{Binding BluetoothDeviceStatusText}"
+                                                   Style="{StaticResource FocusCaptionText}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Style="{StaticResource FocusSecondaryButton}"
+                                            MinHeight="44"
+                                            Content="{Binding BluetoothDeviceToggleText}"
+                                            Command="{Binding RefreshBluetoothDevicesCommand}"
+                                            IsEnabled="{Binding IsBluetoothDeviceBusy, Converter={StaticResource InverseBoolConverter}}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding BluetoothDevices}"
+                                              Margin="0,0,0,8"
+                                              Visibility="{Binding IsBluetoothDeviceListVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                              AutomationProperties.Name="Panel 蓝牙设备">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="4,7"
+                                                    BorderBrush="{DynamicResource FocusStrokeBrush}"
+                                                    BorderThickness="0,0,0,1">
+                                                <Grid MinHeight="44">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding DisplayName}"
+                                                                   Style="{StaticResource FocusCardTitleText}"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding DetailText}"
+                                                                   Style="{StaticResource FocusCaptionText}"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1"
+                                                            MinWidth="72"
+                                                            MinHeight="44"
+                                                            Content="{Binding ActionText}"
+                                                            Command="{Binding DataContext.ManageBluetoothDeviceCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            AutomationProperties.Name="{Binding DisplayName, StringFormat=管理蓝牙设备 {0}}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button"
+                                                                   BasedOn="{StaticResource FocusSecondaryButton}">
+                                                                <Setter Property="IsEnabled"
+                                                                        Value="{Binding CanInvokeAction}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.IsBluetoothDeviceBusy, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                                 Value="True">
+                                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Margin="4,0,4,14"
+                                           Text="首次配对时 Windows 会显示安全确认；设备管理全程留在 Panel，不打开任务栏蓝牙浮层。"
+                                           Style="{StaticResource FocusCaptionText}"
+                                           TextWrapping="Wrap"
+                                           Visibility="{Binding IsBluetoothDeviceListVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <Grid Margin="4,0,4,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="附近 Wi‑Fi"
                                                    Style="{StaticResource FocusCardTitleText}"/>
                                         <TextBlock Text="{Binding WifiNetworkStatusText}"

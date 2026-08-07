@@ -118,7 +118,8 @@ public partial class MainWindow :
             _coordinator.Brightness,
             _coordinator.ApplicationAudio,
             _coordinator.Radios,
-            _coordinator.WifiNetworks);
+            _coordinator.WifiNetworks,
+            _coordinator.BluetoothDevices);
 
         InitializeComponent();
         DataContext = _viewModel;

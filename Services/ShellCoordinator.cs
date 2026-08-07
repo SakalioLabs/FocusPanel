@@ -18,6 +18,8 @@ public sealed class ShellCoordinator : IDisposable
         Radios = new SystemRadioService();
         WifiNetworks =
             new WifiNetworkService();
+        BluetoothDevices =
+            new BluetoothDeviceService();
         VirtualDesktops =
             new VirtualDesktopPlacementService();
         Updates = new VelopackUpdateService();
@@ -39,6 +41,7 @@ public sealed class ShellCoordinator : IDisposable
     }
     public ISystemRadioService Radios { get; }
     public IWifiNetworkService WifiNetworks { get; }
+    public IBluetoothDeviceService BluetoothDevices { get; }
     internal IVirtualDesktopPlacementService
         VirtualDesktops
     {
@@ -70,6 +73,7 @@ public sealed class ShellCoordinator : IDisposable
         ApplicationAudio.Dispose();
         Radios.Dispose();
         WifiNetworks.Dispose();
+        BluetoothDevices.Dispose();
         Updates.Dispose();
         JumpLists.Dispose();
         await AppFiles

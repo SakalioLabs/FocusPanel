@@ -33,6 +33,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ISystemRadioService _radios;
     private readonly IWifiNetworkService
         _wifiNetworks;
+    private readonly IBluetoothDeviceService
+        _bluetoothDevices;
     private readonly IAppUpdateService _updateService;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly IShellPreferenceRepository
@@ -48,6 +50,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _radioOperations = new();
     private readonly InFlightTaskTracker
         _wifiNetworkOperations = new();
+    private readonly InFlightTaskTracker
+        _bluetoothDeviceOperations = new();
     private readonly AppLaunchCoordinator
         _appLaunch;
     private readonly ElevatedAppLaunchCoordinator
@@ -109,6 +113,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private int _confirmedBrightnessPercent;
     private long _applicationAudioRevision;
     private long _wifiNetworkRevision;
+    private long _bluetoothDeviceRevision;
     private readonly ConcurrentDictionary<
         string,
         long> _applicationAudioRevisions =
@@ -474,6 +479,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "按“查找网络”后由 Windows 请求位置权限并显示附近 Wi‑Fi";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(BluetoothDeviceToggleText))]
+    private bool isBluetoothDeviceListVisible;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(BluetoothDeviceToggleText))]
+    private bool isBluetoothDeviceBusy;
+
+    [ObservableProperty]
+    private string bluetoothDeviceStatusText =
+        "按“查找设备”后直接在 Panel 管理蓝牙设备";
+
+    [ObservableProperty]
     private bool hasWifiLocationAccessWarning;
 
     [ObservableProperty]
@@ -563,7 +582,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IApplicationAudioSessionService
             applicationAudio,
         ISystemRadioService radios,
-        IWifiNetworkService wifiNetworks)
+        IWifiNetworkService wifiNetworks,
+        IBluetoothDeviceService bluetoothDevices)
         : this(
             appCatalog,
             windowTracker,
@@ -574,7 +594,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             applicationAudio:
                 applicationAudio,
             radios: radios,
-            wifiNetworks: wifiNetworks)
+            wifiNetworks: wifiNetworks,
+            bluetoothDevices: bluetoothDevices)
     {
     }
 
@@ -600,6 +621,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ISystemRadioService? radios = null,
         IWifiNetworkService?
             wifiNetworks = null,
+        IBluetoothDeviceService?
+            bluetoothDevices = null,
         ElevatedAppLaunchCoordinator?
             elevatedAppLaunch = null,
         IAppLocationService?
@@ -622,6 +645,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _wifiNetworks =
             wifiNetworks
             ?? new WifiNetworkService();
+        _bluetoothDevices =
+            bluetoothDevices
+            ?? new BluetoothDeviceService();
         _updateService = updateService;
         _appLaunch =
             new AppLaunchCoordinator(
@@ -787,6 +813,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public bool HasWifiNetworks =>
         WifiNetworks.Count > 0;
     public ObservableCollection<
+        BluetoothDeviceSnapshot> BluetoothDevices
+    {
+        get;
+    } = new();
+    public bool HasBluetoothDevices =>
+        BluetoothDevices.Count > 0;
+    public ObservableCollection<
         InputMethodOption> InputMethods
     {
         get;
@@ -815,6 +848,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             : IsWifiNetworkListVisible
                 ? "刷新网络"
                 : "查找网络";
+    public string BluetoothDeviceToggleText =>
+        IsBluetoothDeviceBusy
+            ? "正在查找…"
+            : IsBluetoothDeviceListVisible
+                ? "刷新设备"
+                : "查找设备";
     public ObservableCollection<
         ShellDisplayTargetOption> DisplayTargetOptions
     {
@@ -1287,6 +1326,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             if (IsWifiNetworkListVisible
                 && !IsWifiNetworkBusy)
                 _ = RefreshWifiNetworksCoreAsync(false);
+            if (IsBluetoothDeviceListVisible
+                && !IsBluetoothDeviceBusy)
+                _ = RefreshBluetoothDevicesCoreAsync();
         }
         UpdateRefreshActivity();
     }
@@ -2904,6 +2946,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CloseTransientPanels();
         IsStatusCenterOpen = true;
         StatusCenterDetailRequested?.Invoke(detail);
+        if (detail == StatusCenterDetail.Network
+            && IsBluetoothDeviceListVisible
+            && !IsBluetoothDeviceBusy)
+        {
+            _ = RefreshBluetoothDevicesCoreAsync();
+        }
     }
 
     [RelayCommand]
@@ -4165,6 +4213,88 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private Task RefreshBluetoothDevices()
+    {
+        IsBluetoothDeviceListVisible = true;
+        return RefreshBluetoothDevicesCoreAsync();
+    }
+
+    [RelayCommand]
+    private async Task ManageBluetoothDevice(
+        BluetoothDeviceSnapshot? device)
+    {
+        if (device == null
+            || IsBluetoothDeviceBusy
+            || !device.CanInvokeAction)
+        {
+            return;
+        }
+
+        if (device.IsPaired)
+        {
+            MessageBoxResult confirmation =
+                FocusDialogService.Show(
+                    $"要从这台电脑移除“{device.DisplayName}”吗？",
+                    "移除蓝牙设备",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+            if (confirmation != MessageBoxResult.Yes)
+                return;
+        }
+
+        long revision =
+            Interlocked.Increment(
+                ref _bluetoothDeviceRevision);
+        IsBluetoothDeviceBusy = true;
+        BluetoothDeviceStatusText =
+            device.IsPaired
+                ? $"正在移除 {device.DisplayName}…"
+                : $"正在配对 {device.DisplayName}；请确认 Windows 安全提示…";
+        Task<BluetoothDeviceOperationResult>?
+            operation =
+                _bluetoothDeviceOperations.TryStart(
+                    () =>
+                        device.IsPaired
+                            ? _bluetoothDevices.UnpairAsync(
+                                device,
+                                CancellationToken.None)
+                            : _bluetoothDevices.PairAsync(
+                                device,
+                                CancellationToken.None));
+        if (operation == null)
+        {
+            IsBluetoothDeviceBusy = false;
+            return;
+        }
+
+        BluetoothDeviceOperationResult result =
+            await operation;
+        if (_isDisposed
+            || revision
+                != Volatile.Read(
+                    ref _bluetoothDeviceRevision))
+        {
+            return;
+        }
+
+        IsBluetoothDeviceBusy = false;
+        BluetoothDeviceStatusText =
+            ComposeBluetoothOperationStatus(result);
+        if (result.Succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            await RefreshBluetoothDevicesCoreAsync();
+        }
+        else if (result.Status
+                 != BluetoothDeviceOperationStatus.Canceled)
+        {
+            SystemActionMessage =
+                BluetoothDeviceStatusText;
+            IsStatusCenterOpen = true;
+        }
+    }
+
+    [RelayCommand]
     private async Task ConnectWifiNetwork(
         WifiNetworkSnapshot? network)
     {
@@ -4340,6 +4470,111 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _ =>
                 "无法读取附近 Wi‑Fi，请检查无线服务后重试"
         };
+
+    private async Task
+        RefreshBluetoothDevicesCoreAsync()
+    {
+        if (_isDisposed
+            || IsBluetoothDeviceBusy)
+        {
+            return;
+        }
+
+        long revision =
+            Interlocked.Increment(
+                ref _bluetoothDeviceRevision);
+        IsBluetoothDeviceBusy = true;
+        BluetoothDeviceStatusText =
+            BluetoothRadioState == SystemRadioState.Off
+                ? "蓝牙已关闭；开启后才能发现附近设备"
+                : "正在读取已配对和附近蓝牙设备…";
+        Task<BluetoothDeviceListResult>? operation =
+            _bluetoothDeviceOperations.TryStart(
+                () =>
+                    _bluetoothDevices.GetDevicesAsync(
+                        CancellationToken.None));
+        if (operation == null)
+        {
+            IsBluetoothDeviceBusy = false;
+            return;
+        }
+
+        BluetoothDeviceListResult result =
+            await operation;
+        if (_isDisposed
+            || revision
+                != Volatile.Read(
+                    ref _bluetoothDeviceRevision))
+        {
+            return;
+        }
+
+        IsBluetoothDeviceBusy = false;
+        ReplaceCollection(
+            BluetoothDevices,
+            result.Devices);
+        OnPropertyChanged(
+            nameof(HasBluetoothDevices));
+        BluetoothDeviceStatusText =
+            ComposeBluetoothListStatus(result);
+    }
+
+    private string ComposeBluetoothListStatus(
+        BluetoothDeviceListResult result) =>
+        result.Status switch
+        {
+            BluetoothDeviceListStatus.Succeeded
+                when result.Devices.Count > 0 =>
+                $"找到 {result.Devices.Count} 个设备；已连接和已配对设备优先显示",
+            BluetoothDeviceListStatus.Succeeded
+                when BluetoothRadioState
+                    == SystemRadioState.Off =>
+                "蓝牙已关闭；请先在 Panel 中开启蓝牙",
+            BluetoothDeviceListStatus.Succeeded =>
+                "暂未发现可显示的蓝牙设备",
+            BluetoothDeviceListStatus.AccessDenied =>
+                "Windows 未授予蓝牙设备访问权限",
+            BluetoothDeviceListStatus.Unavailable =>
+                "当前系统不支持 Panel 蓝牙设备管理",
+            _ =>
+                "无法读取蓝牙设备，请检查蓝牙驱动后重试"
+        };
+
+    private static string
+        ComposeBluetoothOperationStatus(
+            BluetoothDeviceOperationResult result)
+    {
+        string action =
+            result.RequestedPaired
+                ? "配对"
+                : "移除";
+        return result.Status switch
+        {
+            BluetoothDeviceOperationStatus.Succeeded
+                or BluetoothDeviceOperationStatus
+                    .AlreadyInDesiredState =>
+                result.RequestedPaired
+                    ? $"已配对 {result.DisplayName}"
+                    : $"已移除 {result.DisplayName}",
+            BluetoothDeviceOperationStatus.Canceled =>
+                $"已取消{action} {result.DisplayName}",
+            BluetoothDeviceOperationStatus.NotFound =>
+                $"{result.DisplayName} 已离开范围，请刷新后重试",
+            BluetoothDeviceOperationStatus.AccessDenied =>
+                $"Windows 拒绝{action} {result.DisplayName}；请检查蓝牙权限",
+            BluetoothDeviceOperationStatus.NotReady =>
+                $"{result.DisplayName} 暂未准备好{action}",
+            BluetoothDeviceOperationStatus
+                .AuthenticationFailed =>
+                $"{result.DisplayName} 的安全验证未通过",
+            BluetoothDeviceOperationStatus.Rejected =>
+                $"{result.DisplayName} 拒绝了{action}请求",
+            BluetoothDeviceOperationStatus.NotConfirmed =>
+                $"已请求{action} {result.DisplayName}，但 Windows 未确认完成",
+            _ =>
+                $"无法{action} {result.DisplayName}，请刷新后重试"
+        };
+    }
 
     private static string
         ComposeWifiConnectFailure(
@@ -5139,6 +5374,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     .CompleteAsync(),
                 _radioOperations.CompleteAsync(),
                 _wifiNetworkOperations
+                    .CompleteAsync(),
+                _bluetoothDeviceOperations
                     .CompleteAsync(),
                 _autoStartup.CompleteAsync(),
                 _taskCapture.CompleteAsync(),

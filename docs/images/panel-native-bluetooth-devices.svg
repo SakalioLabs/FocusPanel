@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#13223b"/><stop offset=".52" stop-color="#392d50"/><stop offset="1" stop-color="#123b46"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4f7ff" stop-opacity=".2"/><stop offset="1" stop-color="#bfcff2" stop-opacity=".1"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="28" flood-color="#000" flood-opacity=".34"/></filter>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <circle cx="220" cy="120" r="210" fill="#347cff" opacity=".14"/><circle cx="980" cy="600" r="260" fill="#3ae0b8" opacity=".1"/>
+  <g font-family="Segoe UI, sans-serif" filter="url(#shadow)">
+    <rect x="590" y="28" width="560" height="664" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <text x="630" y="80" fill="#f8faff" font-size="26" font-weight="650">网络与无线</text>
+    <text x="630" y="111" fill="#c6d1e5" font-size="15">蓝牙设备直接留在 Panel 管理</text>
+    <rect x="625" y="138" width="490" height="76" rx="16" fill="#0b1425" fill-opacity=".43"/>
+    <text x="651" y="171" fill="#fff" font-size="18" font-weight="600">蓝牙设备</text>
+    <text x="651" y="196" fill="#aebcd3" font-size="14">找到 3 个设备 · 已连接优先</text>
+    <rect x="1008" y="154" width="82" height="44" rx="12" fill="#378bff"/><text x="1034" y="182" fill="#fff" font-size="14">刷新</text>
+    <g>
+      <rect x="625" y="230" width="490" height="84" rx="15" fill="#fff" fill-opacity=".1"/>
+      <circle cx="665" cy="272" r="22" fill="#348cff" fill-opacity=".24"/><text x="655" y="281" fill="#76b3ff" font-size="25">ᛒ</text>
+      <text x="704" y="262" fill="#fff" font-size="17" font-weight="600">Studio Headphones</text><text x="704" y="288" fill="#77e2b7" font-size="14">已连接 · 在附近</text>
+      <rect x="1014" y="250" width="76" height="44" rx="12" fill="#fff" fill-opacity=".1"/><text x="1038" y="278" fill="#f2f6ff" font-size="14">移除</text>
+      <rect x="625" y="326" width="490" height="84" rx="15" fill="#fff" fill-opacity=".065"/>
+      <circle cx="665" cy="368" r="22" fill="#8d73ff" fill-opacity=".2"/><text x="655" y="377" fill="#bba9ff" font-size="25">ᛒ</text>
+      <text x="704" y="358" fill="#fff" font-size="17" font-weight="600">Surface Mouse</text><text x="704" y="384" fill="#adbad0" font-size="14">已配对 · 未连接</text>
+      <rect x="1014" y="346" width="76" height="44" rx="12" fill="#fff" fill-opacity=".1"/><text x="1038" y="374" fill="#f2f6ff" font-size="14">移除</text>
+      <rect x="625" y="422" width="490" height="84" rx="15" fill="#fff" fill-opacity=".065"/>
+      <circle cx="665" cy="464" r="22" fill="#4bd6bd" fill-opacity=".18"/><text x="655" y="473" fill="#7ce9d4" font-size="25">ᛒ</text>
+      <text x="704" y="454" fill="#fff" font-size="17" font-weight="600">Living Room Speaker</text><text x="704" y="480" fill="#adbad0" font-size="14">可配对 · Audio device</text>
+      <rect x="1002" y="442" width="88" height="44" rx="12" fill="#378bff"/><text x="1032" y="470" fill="#fff" font-size="14">配对</text>
+    </g>
+    <rect x="625" y="526" width="490" height="94" rx="15" fill="#378bff" fill-opacity=".12"/>
+    <text x="651" y="558" fill="#dce8fa" font-size="14">首次配对时，Windows 只显示一次安全确认；</text>
+    <text x="651" y="584" fill="#dce8fa" font-size="14">设备发现、状态和移除都不经过任务栏蓝牙浮层。</text>
+  </g>
+  <g font-family="Segoe UI, sans-serif">
+    <text x="72" y="252" fill="#fff" font-size="38" font-weight="680">蓝牙，也留在 Panel</text>
+    <text x="74" y="302" fill="#bac7dc" font-size="18">发现 · 状态 · 配对 · 移除</text>
+    <rect x="74" y="345" width="420" height="148" rx="22" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".12"/>
+    <text x="104" y="385" fill="#80b9ff" font-size="16" font-weight="600">公开 Windows 设备接口</text>
+    <text x="104" y="420" fill="#d5deee" font-size="15">Classic + Low Energy 设备身份去重</text>
+    <text x="104" y="450" fill="#d5deee" font-size="15">连接状态优先，不堆重复端点</text>
+    <text x="104" y="480" fill="#d5deee" font-size="15">操作结果确认，不显示虚假成功</text>
+  </g>
+</svg>
