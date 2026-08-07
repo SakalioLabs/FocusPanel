@@ -152,6 +152,30 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Fact]
+    public void WindowResult_ExposesTopmostState()
+    {
+        var application = new WindowTaskItem
+        {
+            DisplayName = "播放器",
+            IdentityKey = "exe:c:\\player.exe"
+        };
+        ShellSearchResult result =
+            ShellSearchResult.FromWindow(
+                application,
+                new WindowReference(
+                    new IntPtr(44),
+                    "正在播放",
+                    IsTopmost: true));
+
+        Assert.Contains(
+            "已置顶",
+            result.SecondaryText);
+        Assert.Contains(
+            "已置顶",
+            result.AccessibleName);
+    }
+
+    [Fact]
     public void Compose_SystemScopeOffersCommandsWithoutAQuery()
     {
         ShellSearchResult[] results =

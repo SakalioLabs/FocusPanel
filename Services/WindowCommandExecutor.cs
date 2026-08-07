@@ -20,6 +20,9 @@ internal interface IWindowCommandBoundary
     bool SetRestoredBounds(
         IntPtr handle,
         Rectangle bounds);
+    bool SetTopmost(
+        IntPtr handle,
+        bool isTopmost);
 }
 
 internal sealed class WindowCommandExecutor
@@ -112,6 +115,14 @@ internal sealed class WindowCommandExecutor
                 handle,
                 targetBounds);
     }
+
+    internal bool SetTopmost(
+        IntPtr handle,
+        bool isTopmost) =>
+        IsUsable(handle)
+        && _native.SetTopmost(
+            handle,
+            isTopmost);
 
     internal bool Minimize(IntPtr handle)
     {

@@ -9,6 +9,10 @@ internal sealed class WindowsWindowCommandBoundary :
     IWindowCommandBoundary
 {
     private const uint WmClose = 0x0010;
+    private static readonly IntPtr HwndTopmost =
+        new(-1);
+    private static readonly IntPtr HwndNotTopmost =
+        new(-2);
 
     public bool IsWindow(IntPtr handle) =>
         NativeMethods.IsWindow(handle);
@@ -100,8 +104,32 @@ internal sealed class WindowsWindowCommandBoundary :
             ref placement);
     }
 
+    public bool SetTopmost(
+        IntPtr handle,
+        bool isTopmost) =>
+        NativeMethods.SetWindowPos(
+            handle,
+            isTopmost
+                ? HwndTopmost
+                : HwndNotTopmost,
+            0,
+            0,
+            0,
+            0,
+            NativeMethods.SwpNoSize
+            | NativeMethods.SwpNoMove
+            | NativeMethods.SwpNoActivate
+            | NativeMethods.SwpNoOwnerZOrder
+            | NativeMethods.SwpAsyncWindowPos);
+
     private static class NativeMethods
     {
+        internal const uint SwpNoSize = 0x0001;
+        internal const uint SwpNoMove = 0x0002;
+        internal const uint SwpNoActivate = 0x0010;
+        internal const uint SwpNoOwnerZOrder = 0x0200;
+        internal const uint SwpAsyncWindowPos = 0x4000;
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Point
         {
@@ -189,5 +217,16 @@ internal sealed class WindowsWindowCommandBoundary :
         internal static extern bool SetWindowPlacement(
             IntPtr hwnd,
             ref WindowPlacement placement);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetWindowPos(
+            IntPtr hwnd,
+            IntPtr insertAfter,
+            int x,
+            int y,
+            int width,
+            int height,
+            uint flags);
     }
 }

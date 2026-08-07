@@ -21,6 +21,9 @@ public interface IWindowTracker : IDisposable
     bool MoveToDisplay(
         IntPtr handle,
         Rectangle targetWorkArea);
+    bool SetTopmost(
+        IntPtr handle,
+        bool isTopmost);
     bool Close(IntPtr handle);
     bool IsForegroundFullscreen();
 }

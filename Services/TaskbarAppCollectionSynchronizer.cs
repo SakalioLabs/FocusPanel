@@ -103,6 +103,7 @@ internal static class TaskbarAppCollectionSynchronizer
                     left.Handle == right.Handle
                     && left.IsActive == right.IsActive
                     && left.State == right.State
+                    && left.IsTopmost == right.IsTopmost
                     && string.Equals(left.Title, right.Title, StringComparison.Ordinal))
                 .All(equal => equal);
 }

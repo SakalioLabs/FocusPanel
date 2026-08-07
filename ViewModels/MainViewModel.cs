@@ -2307,6 +2307,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void ToggleWindowTopmost(
+        WindowReference? window)
+    {
+        if (window == null)
+            return;
+
+        bool target = !window.IsTopmost;
+        CompleteTaskbarWindowAction(
+            SystemActionExecution.Try(
+                () => _windowTracker.SetTopmost(
+                    window.Handle,
+                    target)),
+            $"无法{(target ? "置顶" : "取消置顶")}"
+            + $"“{window.Title}”。窗口可能已经关闭，"
+            + "或当前应用拒绝了层级更改。");
+    }
+
+    [RelayCommand]
     private void CloseTask(TaskbarAppItem? task)
     {
         if (task == null)

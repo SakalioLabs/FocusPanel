@@ -83,6 +83,12 @@ public sealed class WindowTrackerBackgroundRefreshContractTests
             "_refreshDebounce.Stop();\n"
             + "            _refreshDebounce.Start();",
             NormalizeNewLines(tracker));
+        Assert.Contains(
+            "private void ScheduleSnapshotRefresh()",
+            tracker);
+        Assert.Contains(
+            "ScheduleSnapshotRefresh();",
+            tracker);
     }
 
     [Fact]

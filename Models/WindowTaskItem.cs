@@ -33,4 +33,5 @@ public sealed record WindowReference(
     string Title,
     bool IsActive = false,
     TrackedWindowState State =
-        TrackedWindowState.Normal);
+        TrackedWindowState.Normal,
+    bool IsTopmost = false);

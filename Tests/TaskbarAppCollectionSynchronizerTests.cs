@@ -232,6 +232,41 @@ public sealed class TaskbarAppCollectionSynchronizerTests
     }
 
     [Fact]
+    public void TopmostStateChange_UpdatesExistingApplicationInPlace()
+    {
+        TaskbarAppItem current =
+            RunningApp(
+                "exe:c:\\one.exe",
+                "一",
+                1,
+                false,
+                isTopmost: false);
+        var items =
+            new ObservableCollection<
+                TaskbarAppItem>
+            {
+                current
+            };
+
+        TaskbarAppCollectionSynchronizer
+            .Synchronize(
+                items,
+                new[]
+                {
+                    RunningApp(
+                        "exe:c:\\one.exe",
+                        "一",
+                        1,
+                        false,
+                        isTopmost: true)
+                });
+
+        Assert.Same(current, items[0]);
+        Assert.True(
+            items[0].Windows[0].IsTopmost);
+    }
+
+    [Fact]
     public void DifferentIdentity_IsStillInsertedInsteadOfMerged()
     {
         TaskbarAppItem current =
@@ -267,7 +302,8 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         int handle,
         bool active,
         TrackedWindowState state =
-            TrackedWindowState.Normal) => new()
+            TrackedWindowState.Normal,
+        bool isTopmost = false) => new()
     {
         IdentityKey = identity,
         DisplayName = name,
@@ -283,7 +319,8 @@ public sealed class TaskbarAppCollectionSynchronizerTests
                     new IntPtr(handle),
                     name,
                     false,
-                    state)
+                    state,
+                    isTopmost)
             }
         }
     };

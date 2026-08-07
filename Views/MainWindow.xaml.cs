@@ -1961,6 +1961,20 @@ public partial class MainWindow :
                 item);
         }
 
+        windowMenu.Items.Add(
+            new MenuItem
+            {
+                Header = window.IsTopmost
+                    ? "取消置顶窗口"
+                    : "置顶窗口",
+                IsCheckable = true,
+                IsChecked = window.IsTopmost,
+                Command =
+                    _viewModel
+                        .ToggleWindowTopmostCommand,
+                CommandParameter = window
+            });
+
         Rectangle targetWorkArea =
             ShellDisplayTarget.GetWorkingArea(
                 _viewModel.DisplayTargetMode);
@@ -2764,6 +2778,13 @@ public partial class MainWindow :
                 prefix.Length > 0
                     ? prefix + "，" + state
                     : state;
+        }
+        if (window.IsTopmost)
+        {
+            prefix =
+                prefix.Length > 0
+                    ? prefix + "，已置顶"
+                    : "已置顶";
         }
         return prefix.Length > 0
             ? prefix + "，" + title

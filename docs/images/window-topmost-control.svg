@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#1d2b44"/>
+    </linearGradient>
+    <linearGradient id="active" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#234f73"/>
+      <stop offset="1" stop-color="#293b59"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity=".36"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="620" rx="32" fill="url(#bg)"/>
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <text x="56" y="66" fill="#f5f8ff" font-size="29" font-weight="600">常用窗口，一步保持在最前</text>
+    <text x="56" y="103" fill="#9fb1ca" font-size="17">窗口总览显示真实置顶状态，右键即可切换，无需先进入目标应用</text>
+
+    <g filter="url(#shadow)">
+      <rect x="56" y="140" width="512" height="402" rx="24" fill="#17243a" stroke="#3e5473"/>
+      <text x="86" y="183" fill="#f3f7fd" font-size="22" font-weight="600">窗口</text>
+      <text x="482" y="182" text-anchor="end" fill="#8fa5c0" font-size="15">3 个</text>
+
+      <rect x="82" y="216" width="460" height="96" rx="16" fill="url(#active)" stroke="#6bb7ff" stroke-width="2"/>
+      <rect x="102" y="238" width="52" height="52" rx="14" fill="#4b8bd4"/>
+      <text x="128" y="272" text-anchor="middle" fill="#fff" font-size="21" font-weight="700">N</text>
+      <text x="174" y="257" fill="#fff" font-size="19" font-weight="600">会议笔记</text>
+      <text x="174" y="286" fill="#c4d9ed" font-size="15">记事本 · 当前窗口 · 已置顶</text>
+      <g transform="translate(486 242)">
+        <circle cx="18" cy="18" r="18" fill="#2f78ad"/>
+        <path d="M18 7 L24 15 L21 18 L21 27 L15 27 L15 18 L12 15 Z" fill="#fff"/>
+      </g>
+
+      <rect x="82" y="328" width="460" height="82" rx="16" fill="#1c2c43" stroke="#344963"/>
+      <circle cx="128" cy="369" r="22" fill="#d98b45"/>
+      <text x="174" y="364" fill="#e9f1fb" font-size="18">设计稿.png</text>
+      <text x="174" y="389" fill="#8fa5c0" font-size="14">Paint.NET · 已打开窗口</text>
+
+      <rect x="82" y="426" width="460" height="82" rx="16" fill="#1c2c43" stroke="#344963"/>
+      <circle cx="128" cy="467" r="22" fill="#4f9d73"/>
+      <text x="174" y="462" fill="#e9f1fb" font-size="18">项目资料</text>
+      <text x="174" y="487" fill="#8fa5c0" font-size="14">文件资源管理器 · 已打开窗口</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="604" y="176" width="396" height="330" rx="18" fill="#202936" stroke="#516077"/>
+      <text x="630" y="215" fill="#f3f7fd" font-size="17" font-weight="600">会议笔记</text>
+      <line x1="622" y1="236" x2="982" y2="236" stroke="#405065"/>
+      <text x="646" y="275" fill="#e6eef8" font-size="17">切换到此窗口</text>
+      <text x="646" y="321" fill="#e6eef8" font-size="17">最小化窗口</text>
+      <text x="646" y="367" fill="#e6eef8" font-size="17">最大化窗口</text>
+      <rect x="622" y="386" width="360" height="48" rx="10" fill="#326fa7"/>
+      <path d="M642 407 L650 415 L665 398" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="682" y="417" fill="#fff" font-size="17" font-weight="600">取消置顶窗口</text>
+      <line x1="622" y1="451" x2="982" y2="451" stroke="#405065"/>
+      <text x="646" y="484" fill="#ffb5b5" font-size="17">关闭窗口</text>
+    </g>
+
+    <rect x="618" y="532" width="368" height="48" rx="14" fill="#17243a" stroke="#344963"/>
+    <text x="802" y="563" text-anchor="middle" fill="#aebed3" font-size="15">只改变 Z 序 · 不移动 · 不激活</text>
+  </g>
+</svg>

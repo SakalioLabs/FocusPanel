@@ -27,11 +27,16 @@ public sealed class WindowCommandExecutorTests
         Assert.False(executor.Maximize(Handle));
         Assert.False(executor.Restore(Handle));
         Assert.False(
+            executor.SetTopmost(
+                Handle,
+                true));
+        Assert.False(
             executor.ActivateOrMinimize(
                 Task(Handle)));
         Assert.Empty(native.ShowCommands);
         Assert.Equal(0, native.ForegroundCalls);
         Assert.Equal(0, native.CloseCalls);
+        Assert.Empty(native.TopmostRequests);
     }
 
     [Fact]
@@ -282,6 +287,50 @@ public sealed class WindowCommandExecutorTests
         Assert.Equal(0, native.SetBoundsCalls);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TopmostToggle_IsForwardedWithoutActivation(
+        bool target)
+    {
+        var native = new FakeBoundary
+        {
+            SetTopmostResult = true
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.True(
+            executor.SetTopmost(
+                Handle,
+                target));
+        Assert.Equal(
+            target,
+            Assert.Single(
+                native.TopmostRequests));
+        Assert.Equal(0, native.ForegroundCalls);
+        Assert.Empty(native.ShowCommands);
+    }
+
+    [Fact]
+    public void RejectedTopmostToggle_IsReportedAsFailure()
+    {
+        var native = new FakeBoundary
+        {
+            SetTopmostResult = false
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.False(
+            executor.SetTopmost(
+                Handle,
+                true));
+        Assert.True(
+            Assert.Single(
+                native.TopmostRequests));
+    }
+
     private static WindowTaskItem Task(
         IntPtr handle) =>
         new()
@@ -320,6 +369,9 @@ public sealed class WindowCommandExecutorTests
         internal bool SetBoundsResult { get; set; }
         internal Rectangle LastSetBounds { get; private set; }
         internal int SetBoundsCalls { get; private set; }
+        internal bool SetTopmostResult { get; set; }
+        internal List<bool> TopmostRequests { get; } =
+            new();
 
         public bool IsWindow(IntPtr handle) =>
             WindowExists;
@@ -395,6 +447,14 @@ public sealed class WindowCommandExecutorTests
             SetBoundsCalls++;
             LastSetBounds = bounds;
             return SetBoundsResult;
+        }
+
+        public bool SetTopmost(
+            IntPtr handle,
+            bool isTopmost)
+        {
+            TopmostRequests.Add(isTopmost);
+            return SetTopmostResult;
         }
     }
 }

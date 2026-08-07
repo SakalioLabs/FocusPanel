@@ -24,6 +24,7 @@ public sealed class WindowTracker : IWindowTracker
     private const int GwlExStyle = -20;
     private const long WsCaption = 0x00C00000L;
     private const long WsThickFrame = 0x00040000L;
+    private const long WsExTopmost = 0x00000008L;
     private const long WsExToolWindow = 0x00000080L;
     private const long WsExNoActivate = 0x08000000L;
     private const int DwmwaCloaked = 14;
@@ -159,6 +160,22 @@ public sealed class WindowTracker : IWindowTracker
                 targetWorkArea);
         if (succeeded)
             RequestSnapshotRefresh();
+        return succeeded;
+    }
+
+    public bool SetTopmost(
+        IntPtr handle,
+        bool isTopmost)
+    {
+        bool succeeded =
+            _commands.SetTopmost(
+                handle,
+                isTopmost);
+        if (succeeded)
+        {
+            RequestSnapshotRefresh();
+            ScheduleSnapshotRefresh();
+        }
         return succeeded;
     }
 
@@ -328,7 +345,8 @@ public sealed class WindowTracker : IWindowTracker
                                 item.Handle,
                                 item.Title,
                                 item.IsActive,
-                                item.State))
+                                item.State,
+                                item.IsTopmost))
                         .ToList(),
                     IsActive = group.Any(item => item.IsActive)
                 };
@@ -411,7 +429,12 @@ public sealed class WindowTracker : IWindowTracker
                         .Maximized
                     : TrackedWindowState
                         .Normal,
-            hwnd == foreground));
+            hwnd == foreground,
+            (NativeMethods.GetWindowLongPtr(
+                    hwnd,
+                    GwlExStyle)
+                .ToInt64()
+             & WsExTopmost) != 0));
     }
 
     private void PublishSnapshotChangedSafely()
@@ -494,6 +517,11 @@ public sealed class WindowTracker : IWindowTracker
             return;
         }
 
+        ScheduleSnapshotRefresh();
+    }
+
+    private void ScheduleSnapshotRefresh()
+    {
         void RestartDebounce()
         {
             if (!_trackingActive
@@ -555,7 +583,8 @@ public sealed class WindowTracker : IWindowTracker
         string IdentityKey,
         string? ApplicationUserModelId,
         TrackedWindowState State,
-        bool IsActive);
+        bool IsActive,
+        bool IsTopmost);
 
     private sealed record PendingWindowSnapshot(
         long Revision,

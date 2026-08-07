@@ -219,6 +219,10 @@ public sealed record ShellSearchResult
             window.IsActive
                 ? "当前窗口"
                 : "已打开窗口";
+        string topmost =
+            window.IsTopmost
+                ? " · 已置顶"
+                : string.Empty;
         return new ShellSearchResult
         {
             Kind =
@@ -228,10 +232,14 @@ public sealed record ShellSearchResult
                 $"window:{window.Handle.ToInt64():X}",
             DisplayName = title,
             SecondaryText =
-                $"{application.DisplayName} · {state}",
+                $"{application.DisplayName} · {state}"
+                + topmost,
             AccessibleName =
                 $"切换到{state} {title}，"
-                + application.DisplayName,
+                + application.DisplayName
+                + (window.IsTopmost
+                    ? "，已置顶"
+                    : string.Empty),
             Icon =
                 application.Icon,
             Window =

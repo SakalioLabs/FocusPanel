@@ -2946,12 +2946,16 @@ public sealed class XamlResourceContractTests
             codeBehind);
         Assert.Contains(
             "item.IsActive,\n"
-            + "                                item.State))",
+            + "                                item.State,\n"
+            + "                                item.IsTopmost))",
             tracker.Replace(
                 "\r\n",
                 "\n"));
         Assert.Contains(
             "left.State == right.State",
+            synchronizer);
+        Assert.Contains(
+            "left.IsTopmost == right.IsTopmost",
             synchronizer);
         Assert.Contains(
             "NativeMethods.IsIconic(hwnd)",
@@ -3768,6 +3772,33 @@ public sealed class XamlResourceContractTests
                     root,
                     "ViewModels",
                     "MainViewModel.cs")));
+        Assert.Contains(
+            "Header = window.IsTopmost\n"
+            + "                    ? \"取消置顶窗口\"\n"
+            + "                    : \"置顶窗口\"",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            ".ToggleWindowTopmostCommand,",
+            codeBehind);
+        Assert.Contains(
+            "IsChecked = window.IsTopmost",
+            codeBehind);
+        Assert.Contains(
+            "_windowTracker.SetTopmost(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs")));
+        string windowTracker = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowTracker.cs"));
+        Assert.Contains(
+            "RequestSnapshotRefresh();\n"
+            + "            ScheduleSnapshotRefresh();",
+            windowTracker.Replace("\r\n", "\n"));
         Assert.Contains(
             "AutomationProperties.SetName(\n"
             + "            menu,\n"
