@@ -16,6 +16,23 @@ internal sealed record ViewportVirtualizationLayout(
 
 internal static class ViewportVirtualizationCalculator
 {
+    internal static double GetArrangedCellWidth(
+        double panelWidth,
+        int itemsPerRow,
+        double requestedCellWidth,
+        bool wrap)
+    {
+        requestedCellWidth = NormalizeLength(
+            requestedCellWidth,
+            1);
+        panelWidth = NormalizeLength(
+            panelWidth,
+            requestedCellWidth);
+        return wrap
+            ? panelWidth / Math.Max(1, itemsPerRow)
+            : panelWidth;
+    }
+
     internal static ViewportVirtualizationLayout
         Calculate(
             int itemCount,

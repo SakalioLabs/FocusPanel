@@ -804,10 +804,13 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.Contains(
-            "Command=\"{Binding OpenNotificationOverflowCommand}\"",
+            "Content=\"后台与窗口 · Panel 管理\"",
             mainWindow);
         Assert.Contains(
-            "Content=\"托盘应用 · 显示隐藏图标\"",
+            "Click=\"StatusCenterWindowOverview_Click\"",
+            mainWindow);
+        Assert.DoesNotContain(
+            "OpenNotificationOverflow",
             mainWindow);
 
         string systemStatus = File.ReadAllText(
@@ -1519,10 +1522,13 @@ public sealed class XamlResourceContractTests
             "x:Name=\"StatusCenterButton\"",
             compactDock);
         Assert.Contains(
-            "OpenNotificationOverflowCommand",
+            "Header=\"窗口总览\"",
             compactDock);
         Assert.Contains(
-            "Header=\"托盘应用（隐藏图标）\"",
+            "StatusCenterWindowOverview_Click",
+            compactDock);
+        Assert.DoesNotContain(
+            "OpenNotificationOverflow",
             compactDock);
         Assert.Contains(
             "Header=\"通知中心\"",
@@ -1537,13 +1543,13 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Services", "SystemStatusService.cs"));
         string statusContract = File.ReadAllText(
             Path.Combine(root, "Services", "ISystemStatusService.cs"));
-        Assert.Contains("OpenNotificationOverflow", systemStatus);
-        Assert.Contains("OpenNotificationOverflow", statusContract);
-        Assert.Contains("System.Windows.Automation", systemStatus);
-        Assert.Contains(
+        Assert.DoesNotContain("OpenNotificationOverflow", systemStatus);
+        Assert.DoesNotContain("OpenNotificationOverflow", statusContract);
+        Assert.DoesNotContain("System.Windows.Automation", systemStatus);
+        Assert.DoesNotContain(
             "DesktopWindowContentBridge",
             systemStatus);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "EnumChildWindows",
             systemStatus);
 
@@ -4068,6 +4074,65 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "BeginTransientSurface();",
             codeBehind);
+    }
+
+    [Fact]
+    public void OrganizerIconView_UsesFullWidthAdaptivePartitions()
+    {
+        string root = FindRepositoryRoot();
+        string organizer = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "FileOrganizerView.xaml"));
+
+        Assert.Contains(
+            "ItemsSource=\"{Binding AllPartitions}\"",
+            organizer);
+        Assert.Contains(
+            "AutomationProperties.Name=\"全宽图标收纳盒\"",
+            organizer);
+        Assert.Contains(
+            "Visibility=\"{Binding IsListView, Converter={StaticResource InverseBoolConverter}}\"",
+            organizer);
+        Assert.Contains(
+            "HorizontalScrollBarVisibility=\"Disabled\"",
+            organizer);
+        Assert.Contains(
+            "Property=\"HorizontalAlignment\" Value=\"Center\"",
+            organizer);
+    }
+
+    [Fact]
+    public void DesktopIconLookup_PreservesShortcutCustomIcon()
+    {
+        string root = FindRepositoryRoot();
+        string iconHelper = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Helpers",
+                "IconHelper.cs"));
+        string organizerService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FileOrganizerService.cs"));
+
+        Assert.DoesNotContain(
+            "ResolveShortcut(path)",
+            iconHelper);
+        Assert.DoesNotContain(
+            "WScript.Shell",
+            iconHelper);
+        Assert.Contains(
+            "TryGetShellImageListIcon(path)",
+            iconHelper);
+        Assert.Contains(
+            "IconHelper.ClearCache(e.FullPath);",
+            organizerService);
+        Assert.Contains(
+            "IconHelper.ClearCache(fullPath);",
+            organizerService);
     }
 
     [Fact]

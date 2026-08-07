@@ -149,6 +149,13 @@ public sealed class ViewportVirtualizingPanel :
         if (_layout == null)
             return finalSize;
 
+        double arrangedCellWidth =
+            ViewportVirtualizationCalculator
+                .GetArrangedCellWidth(
+                    finalSize.Width,
+                    _layout.ItemsPerRow,
+                    _cellWidth,
+                    IsWrapping);
         IItemContainerGenerator generator =
             ItemContainerGenerator;
         for (int childIndex = 0;
@@ -172,10 +179,10 @@ public sealed class ViewportVirtualizingPanel :
                 itemIndex
                 % _layout.ItemsPerRow;
             double x = IsWrapping
-                ? column * _cellWidth
+                ? column * arrangedCellWidth
                 : 0;
             double width = IsWrapping
-                ? _cellWidth
+                ? arrangedCellWidth
                 : finalSize.Width;
             child.Arrange(
                 new Rect(

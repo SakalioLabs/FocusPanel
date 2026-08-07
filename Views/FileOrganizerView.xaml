@@ -74,6 +74,7 @@
             <EventSetter Event="MouseMove" Handler="FileCard_MouseMove"/>
             <Setter Property="Width" Value="{Binding DataContext.CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="Height" Value="{Binding DataContext.CardHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="5"/>
             <Setter Property="Padding" Value="6"/>
             <Setter Property="CornerRadius" Value="{StaticResource FocusControlCornerRadius}"/>
@@ -657,45 +658,59 @@
         <Grid Grid.Row="2">
             <ScrollViewer x:Name="OrganizerScrollViewer"
                           VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
                           Padding="14"
                           PreviewMouseLeftButtonDown="ContentArea_PreviewMouseLeftButtonDown">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                    <ItemsControl ItemsSource="{Binding AllPartitions}"
+                                  ItemTemplate="{StaticResource PartitionTemplate}"
+                                  Visibility="{Binding IsListView, Converter={StaticResource InverseBoolConverter}}"
+                                  AutomationProperties.Name="全宽图标收纳盒">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Vertical"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
 
-                    <Border Grid.Column="0"
-                            Background="Transparent"
-                            AllowDrop="True"
-                            Drop="Column_Drop"
-                            Tag="0"
-                            Margin="0,0,7,0">
-                        <ItemsControl ItemsSource="{Binding PartitionsCol1}"
-                                      ItemTemplate="{StaticResource PartitionTemplate}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Vertical"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </Border>
+                    <Grid Visibility="{Binding IsListView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="1"
-                            Background="Transparent"
-                            AllowDrop="True"
-                            Drop="Column_Drop"
-                            Tag="1"
-                            Margin="7,0,0,0">
-                        <ItemsControl ItemsSource="{Binding PartitionsCol2}"
-                                      ItemTemplate="{StaticResource PartitionTemplate}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Vertical"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </Border>
+                        <Border Grid.Column="0"
+                                Background="Transparent"
+                                AllowDrop="True"
+                                Drop="Column_Drop"
+                                Tag="0"
+                                Margin="0,0,7,0">
+                            <ItemsControl ItemsSource="{Binding PartitionsCol1}"
+                                          ItemTemplate="{StaticResource PartitionTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </Border>
+
+                        <Border Grid.Column="1"
+                                Background="Transparent"
+                                AllowDrop="True"
+                                Drop="Column_Drop"
+                                Tag="1"
+                                Margin="7,0,0,0">
+                            <ItemsControl ItemsSource="{Binding PartitionsCol2}"
+                                          ItemTemplate="{StaticResource PartitionTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </Border>
+                    </Grid>
                 </Grid>
             </ScrollViewer>
 

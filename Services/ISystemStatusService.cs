@@ -14,7 +14,6 @@ public interface ISystemStatusService : IDisposable
     InputMethodStatusSnapshot GetInputMethodStatus();
     BatteryStatusSnapshot GetBatteryStatus();
     bool OpenQuickSettings();
-    bool OpenNotificationOverflow();
     bool OpenNotifications();
     bool OpenInputSwitcher();
     bool OpenStartMenu();

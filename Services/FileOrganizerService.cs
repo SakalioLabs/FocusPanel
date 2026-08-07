@@ -172,6 +172,7 @@ public class FileOrganizerService : IDisposable
     {
         // Ignore changes inside the storage folder from the desktop watcher
         if (e.FullPath.StartsWith(_storageRoot, StringComparison.OrdinalIgnoreCase)) return;
+        IconHelper.ClearCache(e.FullPath);
         bool isCreated =
             e.ChangeType == WatcherChangeTypes.Created
             && !_createdPathSuppression.TryConsume(
@@ -185,6 +186,8 @@ public class FileOrganizerService : IDisposable
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
         if (e.FullPath.StartsWith(_storageRoot, StringComparison.OrdinalIgnoreCase)) return;
+        IconHelper.ClearCache(e.OldFullPath);
+        IconHelper.ClearCache(e.FullPath);
         try
         {
             using var context = new AppDbContext();
@@ -1325,7 +1328,7 @@ public class FileOrganizerService : IDisposable
             }).ConfigureAwait(false);
         }
 
-        IconHelper.ClearCache(fileName);
+        IconHelper.ClearCache(fullPath);
     }
 
     // ============================================================

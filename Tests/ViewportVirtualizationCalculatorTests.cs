@@ -6,6 +6,34 @@ namespace FocusPanel.Tests;
 public sealed class ViewportVirtualizationCalculatorTests
 {
     [Fact]
+    public void WrappedCells_DistributeRemainingWidthEvenly()
+    {
+        double width =
+            ViewportVirtualizationCalculator
+                .GetArrangedCellWidth(
+                    panelWidth: 650,
+                    itemsPerRow: 5,
+                    requestedCellWidth: 110,
+                    wrap: true);
+
+        Assert.Equal(130, width);
+    }
+
+    [Fact]
+    public void ListCell_UsesTheFullAvailableWidth()
+    {
+        double width =
+            ViewportVirtualizationCalculator
+                .GetArrangedCellWidth(
+                    panelWidth: 650,
+                    itemsPerRow: 1,
+                    requestedCellWidth: 110,
+                    wrap: false);
+
+        Assert.Equal(650, width);
+    }
+
+    [Fact]
     public void WrapLayout_ComputesRowsAndExtent()
     {
         ViewportVirtualizationLayout layout =

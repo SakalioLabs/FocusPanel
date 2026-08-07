@@ -581,10 +581,10 @@
                                 <Button Style="{StaticResource FocusSecondaryButton}"
                                         MinHeight="44"
                                         Margin="0,0,0,8"
-                                        Content="托盘应用 · 显示隐藏图标"
-                                        Command="{Binding OpenNotificationOverflowCommand}"
-                                        AutomationProperties.Name="打开 Windows 托盘应用抽屉"
-                                        ToolTip="直接打开由 Windows 管理的后台应用图标，不显示整条原生任务栏"/>
+                                        Content="后台与窗口 · Panel 管理"
+                                        Click="StatusCenterWindowOverview_Click"
+                                        AutomationProperties.Name="打开 Panel 窗口总览"
+                                        ToolTip="在 Panel 内查看、切换和管理当前应用窗口，不唤起原生任务栏"/>
                                 <UniformGrid Columns="3"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="常用系统操作">
@@ -1693,8 +1693,8 @@
                                         <MenuItem Header="快捷设置"
                                                   InputGestureText="Win+A"
                                                   Command="{Binding PlacementTarget.DataContext.OpenQuickSettingsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="托盘应用（隐藏图标）"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenNotificationOverflowCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="窗口总览"
+                                                  Click="StatusCenterWindowOverview_Click"/>
                                         <MenuItem Header="通知中心"
                                                   InputGestureText="Win+N"
                                                   Command="{Binding PlacementTarget.DataContext.OpenNotificationsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>

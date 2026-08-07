@@ -1155,6 +1155,28 @@ public partial class MainWindow :
                 () => _viewModel.IsStatusCenterOpen);
     }
 
+    private void StatusCenterWindowOverview_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        _viewModel.IsStatusCenterOpen = false;
+        ApplySearchEntryState(
+            new ShellSearchEntryState(
+                ShellSearchScope.Windows,
+                string.Empty));
+        if (!_viewModel.IsSearchOpen)
+        {
+            _viewModel.ToggleSearchCommand
+                .Execute(null);
+        }
+
+        QueueOverlayFocus(
+            StatusCenterButton,
+            SearchBox,
+            () => _viewModel.IsSearchOpen);
+    }
+
     private void StatusCenterButton_MouseEnter(
         object sender,
         MouseEventArgs e) =>

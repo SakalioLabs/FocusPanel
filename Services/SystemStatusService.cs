@@ -8,7 +8,6 @@ using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Automation;
 using System.Windows.Forms;
 
 namespace FocusPanel.Services;
@@ -357,132 +356,6 @@ public sealed class SystemStatusService : ISystemStatusService
     }
 
     public bool OpenQuickSettings() => TrySendWindowsShortcut(WindowsShellAction.QuickSettings);
-
-    public bool OpenNotificationOverflow()
-    {
-        try
-        {
-            IntPtr taskbar = NativeMethods.FindWindow(
-                "Shell_TrayWnd",
-                null);
-            if (taskbar == IntPtr.Zero)
-                return false;
-
-            foreach (IntPtr automationHost
-                     in GetTaskbarAutomationHosts(
-                         taskbar))
-            {
-                if (TryInvokeNotificationOverflow(
-                        automationHost))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-        catch (ElementNotAvailableException)
-        {
-            return false;
-        }
-        catch (ElementNotEnabledException)
-        {
-            return false;
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
-        catch (COMException)
-        {
-            return false;
-        }
-    }
-
-    private static bool
-        TryInvokeNotificationOverflow(
-            IntPtr automationHost)
-    {
-        AutomationElement root =
-            AutomationElement.FromHandle(
-                automationHost);
-        AutomationElementCollection elements =
-            root.FindAll(
-                TreeScope.Descendants,
-                Condition.TrueCondition);
-        if (elements.Count == 0)
-            return false;
-
-        var nodes =
-            new TrayAutomationNode[elements.Count];
-        for (int index = 0;
-             index < elements.Count;
-             index++)
-        {
-            AutomationElement element =
-                elements[index];
-            nodes[index] = new TrayAutomationNode(
-                element.Current.Name
-                ?? string.Empty,
-                element.Current.AutomationId
-                ?? string.Empty,
-                element.Current.ClassName
-                ?? string.Empty,
-                element.TryGetCurrentPattern(
-                    InvokePattern.Pattern,
-                    out _));
-        }
-
-        int targetIndex =
-            TrayOverflowTargetSelector
-                .FindBestCandidate(nodes);
-        if (targetIndex < 0
-            || !elements[targetIndex]
-                .TryGetCurrentPattern(
-                    InvokePattern.Pattern,
-                    out object? pattern)
-            || pattern is not
-                InvokePattern invokePattern)
-        {
-            return false;
-        }
-
-        invokePattern.Invoke();
-        return true;
-    }
-
-    private static IReadOnlyList<IntPtr>
-        GetTaskbarAutomationHosts(
-            IntPtr taskbar)
-    {
-        var hosts = new List<IntPtr>
-        {
-            taskbar
-        };
-        NativeMethods.EnumChildWindows(
-            taskbar,
-            (window, _) =>
-            {
-                var className =
-                    new StringBuilder(128);
-                NativeMethods.GetClassName(
-                    window,
-                    className,
-                    className.Capacity);
-                if (string.Equals(
-                        className.ToString(),
-                        "Windows.UI.Composition."
-                        + "DesktopWindowContentBridge",
-                        StringComparison.Ordinal))
-                {
-                    hosts.Add(window);
-                }
-
-                return true;
-            },
-            IntPtr.Zero);
-        return hosts;
-    }
 
     public bool OpenNotifications() => TrySendWindowsShortcut(WindowsShellAction.Notifications);
 
@@ -873,11 +746,6 @@ public sealed class SystemStatusService : ISystemStatusService
 
     private static class NativeMethods
     {
-        internal delegate bool
-            EnumChildWindowsDelegate(
-                IntPtr window,
-                IntPtr parameter);
-
         internal const uint WmSysCommand =
             0x0112;
         internal const int ScTaskList =
@@ -893,19 +761,6 @@ public sealed class SystemStatusService : ISystemStatusService
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern IntPtr FindWindow(string className, string? windowName);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool EnumChildWindows(
-            IntPtr parent,
-            EnumChildWindowsDelegate callback,
-            IntPtr parameter);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        internal static extern int GetClassName(
-            IntPtr window,
-            StringBuilder className,
-            int maximumCount);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

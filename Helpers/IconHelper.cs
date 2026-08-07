@@ -73,16 +73,6 @@ public static class IconHelper
             }
         }
 
-        // Try to resolve shortcut target to get clean icon without overlay
-        if (System.IO.Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase))
-        {
-            string? target = ResolveShortcut(path);
-            if (!string.IsNullOrEmpty(target) && (System.IO.File.Exists(target) || System.IO.Directory.Exists(target)))
-            {
-                path = target;
-            }
-        }
-
         if (large)
         {
             var highResIcon = TryGetShellImageListIcon(path);
@@ -224,29 +214,6 @@ public static class IconHelper
         lock (_cacheLock)
         {
             _iconCache.Clear();
-        }
-    }
-
-    private static string? ResolveShortcut(string shortcutPath)
-    {
-        // Simple WScript resolution using dynamic to avoid reference
-        try
-        {
-            Type? shellType =
-                Type.GetTypeFromProgID("WScript.Shell");
-            if (shellType == null)
-                return null;
-            object? shellInstance =
-                Activator.CreateInstance(shellType);
-            if (shellInstance == null)
-                return null;
-            dynamic shell = shellInstance;
-            dynamic shortcut = shell.CreateShortcut(shortcutPath);
-            return shortcut.TargetPath as string;
-        }
-        catch
-        {
-            return null;
         }
     }
 
