@@ -193,6 +193,8 @@ public sealed class TaskbarAppItem : ObservableObject
                 : hint;
         }
     }
+    public string AccessibleInteractionHint =>
+        $"{InteractionHint}；↑/↓浏览应用，Home/End 到首尾，PageUp/PageDown 翻页";
     public bool ShowsDropBefore =>
         _dropPlacement
         == TaskbarDropPlacement.Before;
@@ -223,6 +225,8 @@ public sealed class TaskbarAppItem : ObservableObject
             nameof(AccessibleName));
         OnPropertyChanged(
             nameof(InteractionHint));
+        OnPropertyChanged(
+            nameof(AccessibleInteractionHint));
     }
 
     private string ComposeWindowPreview()
@@ -400,6 +404,8 @@ public sealed class TaskbarAppItem : ObservableObject
         OnPropertyChanged(nameof(StatusSummary));
         OnPropertyChanged(nameof(AccessibleName));
         OnPropertyChanged(nameof(InteractionHint));
+        OnPropertyChanged(
+            nameof(AccessibleInteractionHint));
     }
 
     public AppLaunchItem? CreateLaunchItem()

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="470" viewBox="0 0 1180 470">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/><stop offset="1" stop-color="#263b58"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".17"/><stop offset="1" stop-color="#83b9ff" stop-opacity=".07"/>
+    </linearGradient>
+  </defs>
+  <rect width="1180" height="470" rx="28" fill="url(#bg)"/>
+  <text x="52" y="60" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">0.11.38 · 统一应用任务栏键盘路径</text>
+  <text x="52" y="94" fill="#afbdd1" font-family="Segoe UI, Microsoft YaHei" font-size="16">逐项、首尾、翻页都落在真实应用上，焦点不会藏到悬浮箭头后面</text>
+
+  <rect x="52" y="126" width="250" height="292" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".18"/>
+  <rect x="137" y="150" width="80" height="34" rx="12" fill="#223149"/><path d="M170 171l7-8 7 8" fill="none" stroke="#8bc1ff" stroke-width="3" stroke-linecap="round"/>
+  <g transform="translate(141 198)">
+    <rect x="0" y="0" width="72" height="54" rx="15" fill="#24354d"/><circle cx="36" cy="27" r="13" fill="#83b9ff"/>
+    <rect x="0" y="64" width="72" height="54" rx="15" fill="#197fd0" stroke="#d7ebff" stroke-width="2"/><circle cx="36" cy="91" r="13" fill="#fff"/><rect x="-6" y="68" width="4" height="46" rx="2" fill="#57b4ff"/>
+    <rect x="0" y="128" width="72" height="54" rx="15" fill="#24354d"/><circle cx="36" cy="155" r="13" fill="#f5b95f"/>
+  </g>
+  <text x="177" y="388" text-anchor="middle" fill="#aebdd1" font-family="Segoe UI, Microsoft YaHei" font-size="14">↑ / ↓</text>
+
+  <rect x="330" y="126" width="360" height="292" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".18"/>
+  <text x="366" y="176" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">直接定位</text>
+  <g font-family="Segoe UI, Microsoft YaHei" font-size="17">
+    <rect x="366" y="202" width="104" height="48" rx="12" fill="#24354d"/><text x="418" y="232" text-anchor="middle" fill="#e9f3ff">Home</text>
+    <text x="494" y="232" fill="#b9c7d9">第一个应用</text>
+    <rect x="366" y="268" width="104" height="48" rx="12" fill="#24354d"/><text x="418" y="298" text-anchor="middle" fill="#e9f3ff">End</text>
+    <text x="494" y="298" fill="#b9c7d9">最后一个应用</text>
+    <rect x="366" y="334" width="104" height="48" rx="12" fill="#197fd0"/><text x="418" y="364" text-anchor="middle" fill="#fff">Enter</text>
+    <text x="494" y="364" fill="#b9c7d9">启动或切换</text>
+  </g>
+
+  <rect x="718" y="126" width="410" height="292" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".18"/>
+  <text x="754" y="176" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">按真实可见数量翻页</text>
+  <rect x="754" y="204" width="154" height="48" rx="12" fill="#24354d"/><text x="831" y="234" text-anchor="middle" fill="#e9f3ff" font-family="Segoe UI" font-size="17">PageUp</text>
+  <rect x="926" y="204" width="164" height="48" rx="12" fill="#24354d"/><text x="1008" y="234" text-anchor="middle" fill="#e9f3ff" font-family="Segoe UI" font-size="17">PageDown</text>
+  <path d="M775 292h294" stroke="#50627a" stroke-width="2"/>
+  <rect x="796" y="275" width="44" height="44" rx="12" fill="#26364d"/><rect x="852" y="275" width="44" height="44" rx="12" fill="#26364d"/><rect x="908" y="275" width="44" height="44" rx="12" fill="#197fd0" stroke="#d7ebff"/><rect x="964" y="275" width="44" height="44" rx="12" fill="#26364d"/><rect x="1020" y="275" width="44" height="44" rx="12" fill="#26364d"/>
+  <path d="M783 341h272" stroke="#57b4ff" stroke-width="4" stroke-linecap="round"/><text x="923" y="378" text-anchor="middle" fill="#b9c7d9" font-family="Segoe UI, Microsoft YaHei" font-size="15">扣除上下箭头后计算 · 最小滚动揭示</text>
+</svg>

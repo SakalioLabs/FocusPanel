@@ -1600,6 +1600,7 @@
                             <Button x:Name="TaskbarScrollUpButton"
                                     Panel.ZIndex="2"
                                     Style="{StaticResource FocusIconButton}"
+                                    IsTabStop="False"
                                     Height="44"
                                     VerticalAlignment="Top"
                                     Margin="0"
@@ -1639,7 +1640,7 @@
                                                         Drop="TaskbarApp_Drop"
                                                         Click="TaskbarApp_Click"
                                                         AutomationProperties.Name="{Binding AccessibleName}"
-                                                        AutomationProperties.HelpText="{Binding InteractionHint}"
+                                                        AutomationProperties.HelpText="{Binding AccessibleInteractionHint}"
                                                         ContextMenuOpening="TaskbarApp_ContextMenuOpening">
                                                     <Button.Style>
                                                         <Style TargetType="Button"
@@ -1774,6 +1775,7 @@
                             <Button x:Name="TaskbarScrollDownButton"
                                     Panel.ZIndex="2"
                                     Style="{StaticResource FocusIconButton}"
+                                    IsTabStop="False"
                                     Height="44"
                                     VerticalAlignment="Bottom"
                                     Margin="0"

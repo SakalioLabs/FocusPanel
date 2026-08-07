@@ -2141,7 +2141,7 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"{Binding AccessibleName}\"",
             mainWindow);
         Assert.Contains(
-            "AutomationProperties.HelpText=\"{Binding InteractionHint}\"",
+            "AutomationProperties.HelpText=\"{Binding AccessibleInteractionHint}\"",
             mainWindow);
         Assert.Contains(
             "PreviewMouseDown=\"TaskbarApp_PreviewMouseDown\"",
@@ -2863,6 +2863,14 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "PreviewKeyDown=\"TaskbarApp_PreviewKeyDown\"",
             mainWindow);
+        Assert.Contains(
+            "AutomationProperties.HelpText=\"{Binding AccessibleInteractionHint}\"",
+            mainWindow);
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                mainWindow,
+                "x:Name=\"TaskbarScroll(?:Up|Down)Button\"[\\s\\S]*?IsTabStop=\"False\"").Count);
         Assert.Contains("MouseButton.Middle", codeBehind);
         Assert.Contains("Keyboard.Modifiers", codeBehind);
         Assert.Contains(
@@ -2870,6 +2878,15 @@ public sealed class XamlResourceContractTests
             codeBehind);
         Assert.Contains(
             "MoveTaskbarAppDownCommand",
+            codeBehind);
+        Assert.Contains(
+            "TaskbarKeyboardNavigationPolicy",
+            codeBehind);
+        Assert.Contains(
+            "FocusTaskbarAppAtIndex(",
+            codeBehind);
+        Assert.Contains(
+            "RevealTaskbarAppAtIndex(",
             codeBehind);
         Assert.Contains(
             "InputGestureText = \"Alt+↑\"",

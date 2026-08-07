@@ -13,6 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using FocusPanel.Helpers;
@@ -1714,11 +1715,22 @@ public partial class MainWindow :
                 break;
             }
         }
-        if (activeIndex < 0
+        if (activeIndex < 0)
+            return;
+
+        RevealTaskbarAppAtIndex(activeIndex);
+    }
+
+    private void RevealTaskbarAppAtIndex(
+        int itemIndex)
+    {
+        if (itemIndex < 0
+            || itemIndex
+                >= _viewModel.TaskbarApps.Count
             || TaskbarAppsItemsControl
                 .ItemContainerGenerator
                 .ContainerFromIndex(
-                    activeIndex)
+                    itemIndex)
                 is not FrameworkElement
                     container)
         {
@@ -2033,32 +2045,140 @@ public partial class MainWindow :
         object sender,
         KeyEventArgs e)
     {
-        if (!Keyboard.Modifiers.HasFlag(
-                ModifierKeys.Alt)
-            || e.Key
-                is not (
-                    Key.Up
-                    or Key.Down)
-            || sender
-                is not FrameworkElement
+        if (sender
+                is not Button
                 {
                     DataContext:
                         TaskbarAppItem task
-                }
-            || !task.IsPinned)
+                } button)
         {
             return;
         }
 
-        ICommand command =
-            e.Key == Key.Up
-                ? _viewModel
-                    .MoveTaskbarAppUpCommand
-                : _viewModel
-                    .MoveTaskbarAppDownCommand;
-        if (command.CanExecute(task))
-            command.Execute(task);
+        ModifierKeys modifiers =
+            Keyboard.Modifiers;
+        if (modifiers.HasFlag(
+                ModifierKeys.Alt)
+            && e.Key
+                is Key.Up or Key.Down
+            && task.IsPinned)
+        {
+            ICommand command =
+                e.Key == Key.Up
+                    ? _viewModel
+                        .MoveTaskbarAppUpCommand
+                    : _viewModel
+                        .MoveTaskbarAppDownCommand;
+            if (command.CanExecute(task))
+                command.Execute(task);
+            e.Handled = true;
+            return;
+        }
+
+        if (modifiers != ModifierKeys.None)
+            return;
+
+        TaskbarKeyboardNavigationAction action =
+            TaskbarKeyboardNavigationPolicy
+                .GetAction(
+                    e.Key,
+                    modifiers);
+        if (action
+            == TaskbarKeyboardNavigationAction.None)
+        {
+            return;
+        }
+
+        int currentIndex =
+            _viewModel.TaskbarApps.IndexOf(task);
+        CompactTaskbarScrollState scrollState =
+            CompactTaskbarScrollPolicy.GetState(
+                TaskbarAppsScrollViewer.VerticalOffset,
+                TaskbarAppsScrollViewer.ScrollableHeight);
+        double inset = scrollState.ShowsOverflowControls
+            ? CompactTaskbarOverflowInset
+            : 0;
+        int pageSize =
+            TaskbarKeyboardNavigationPolicy
+                .GetPageSize(
+                    TaskbarAppsScrollViewer
+                        .ViewportHeight,
+                    CompactTaskbarScrollStep,
+                    inset,
+                    inset);
+        int targetIndex =
+            TaskbarKeyboardNavigationPolicy
+                .GetTargetIndex(
+                    currentIndex,
+                    _viewModel.TaskbarApps.Count,
+                    action,
+                    pageSize);
+        if (targetIndex >= 0)
+        {
+            FocusTaskbarAppAtIndex(
+                targetIndex,
+                button);
+        }
         e.Handled = true;
+    }
+
+    private void FocusTaskbarAppAtIndex(
+        int itemIndex,
+        Button currentButton)
+    {
+        if (itemIndex < 0
+            || itemIndex
+                >= _viewModel.TaskbarApps.Count
+            || TaskbarAppsItemsControl
+                .ItemContainerGenerator
+                .ContainerFromIndex(itemIndex)
+                is not DependencyObject container)
+        {
+            return;
+        }
+
+        Button? targetButton =
+            FindVisualDescendant<Button>(container);
+        if (targetButton == null)
+            return;
+
+        if (!ReferenceEquals(
+                targetButton,
+                currentButton))
+        {
+            targetButton.Focus();
+        }
+        RevealTaskbarAppAtIndex(itemIndex);
+        _ = Dispatcher.BeginInvoke(
+            new Action(() =>
+                RevealTaskbarAppAtIndex(
+                    itemIndex)),
+            DispatcherPriority.Loaded);
+    }
+
+    private static T? FindVisualDescendant<T>(
+        DependencyObject parent)
+        where T : DependencyObject
+    {
+        int childCount =
+            VisualTreeHelper.GetChildrenCount(
+                parent);
+        for (int index = 0;
+             index < childCount;
+             index++)
+        {
+            DependencyObject child =
+                VisualTreeHelper.GetChild(
+                    parent,
+                    index);
+            if (child is T match)
+                return match;
+            T? nested =
+                FindVisualDescendant<T>(child);
+            if (nested != null)
+                return nested;
+        }
+        return null;
     }
 
     private void TaskbarApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)

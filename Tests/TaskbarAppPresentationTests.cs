@@ -291,6 +291,9 @@ public sealed class TaskbarAppPresentationTests
             + "可拖入文件用此应用打开；"
             + "Alt+↑/↓调整固定顺序",
             item.InteractionHint);
+        Assert.Contains(
+            "↑/↓浏览应用，Home/End 到首尾，PageUp/PageDown 翻页",
+            item.AccessibleInteractionHint);
         Assert.True(item.CanLaunchElevated);
     }
 
@@ -434,6 +437,11 @@ public sealed class TaskbarAppPresentationTests
             nameof(
                 TaskbarAppItem
                     .InteractionHint),
+            changed);
+        Assert.Contains(
+            nameof(
+                TaskbarAppItem
+                    .AccessibleInteractionHint),
             changed);
 
         item.SetShortcutState(
