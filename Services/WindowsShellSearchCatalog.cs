@@ -15,11 +15,6 @@ internal static class WindowsShellSearchCatalog
         new[]
         {
             new WindowsShellSearchEntry(
-                WindowsShellAction.RunDialog,
-                "运行",
-                "\uE7B8",
-                "运行命令 打开程序 run dialog Win R"),
-            new WindowsShellSearchEntry(
                 WindowsShellAction.QuickSettings,
                 "快捷设置",
                 "\uE713",

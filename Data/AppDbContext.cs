@@ -97,6 +97,8 @@ public class AppDbContext : DbContext
                     ManagedPath TEXT,
                     OriginalAttributes INTEGER,
                     FileIdentity TEXT,
+                    CustomIconPath TEXT,
+                    CustomIconIndex INTEGER,
                     CollectionMode INTEGER NOT NULL DEFAULT 0,
                     OperationState INTEGER NOT NULL DEFAULT 0
                 );
@@ -203,6 +205,18 @@ public class AppDbContext : DbContext
             try
             {
                 Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN FileIdentity TEXT;");
+            }
+            catch { }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN CustomIconPath TEXT;");
+            }
+            catch { }
+
+            try
+            {
+                Database.ExecuteSqlRaw("ALTER TABLE DesktopFilePreferences ADD COLUMN CustomIconIndex INTEGER;");
             }
             catch { }
 

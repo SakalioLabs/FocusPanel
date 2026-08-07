@@ -86,6 +86,22 @@ internal static class ShellSearchPolicy
         bool includeTasks =
             scope == ShellSearchScope.All;
 
+        if (includeSystem
+            && PanelRunCommandParser.TryParse(
+                query,
+                out PanelRunCommand runCommand))
+        {
+            ranked.Add(
+                new RankedResult(
+                    ShellSearchResult
+                        .FromRunCommand(
+                            runCommand),
+                    Rank: -5,
+                    Category: -1,
+                    IsActive: false,
+                    originalIndex++));
+        }
+
         if (includeTasks
             && TaskCaptureCommandParser
             .TryParse(

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FocusPanel.Models;
 using FocusPanel.Services;
+using FocusPanel.Helpers;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using System.Windows.Data;
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using System.IO;
 using System.Threading;
 using System.Windows.Threading;
 
@@ -1378,6 +1380,34 @@ public partial class FileOrganizerViewModel :
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Error);
         }
+    }
+
+    public async Task SetCustomIcon(
+        DesktopFile file,
+        string? iconPath)
+    {
+        if (file == null)
+            return;
+
+        var icon = string.IsNullOrWhiteSpace(iconPath)
+            ? IconHelper.GetIcon(
+                file.FullPath,
+                true)
+            : IconHelper.GetIconFromLocation(
+                iconPath,
+                0,
+                true);
+        if (!string.IsNullOrWhiteSpace(iconPath)
+            && icon == null)
+        {
+            throw new InvalidDataException(
+                "选择的文件不是可读取的 ICO 图标。");
+        }
+
+        await _fileService.SetCustomIcon(
+            file,
+            iconPath);
+        file.Icon = icon;
     }
 
     public async Task<DesktopImportResult> ImportFiles(

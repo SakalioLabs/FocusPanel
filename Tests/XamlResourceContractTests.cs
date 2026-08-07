@@ -804,7 +804,7 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.Contains(
-            "Content=\"后台与窗口 · Panel 管理\"",
+            "Content=\"后台应用与窗口 · Panel 原生\"",
             mainWindow);
         Assert.Contains(
             "Click=\"StatusCenterWindowOverview_Click\"",
@@ -2848,7 +2848,12 @@ public sealed class XamlResourceContractTests
             "WorkspaceRequested?.Invoke(\"Status\")",
             viewModel);
         Assert.Contains("OpenWidgetsCommand", mainWindow);
-        Assert.Contains("OpenRunDialogCommand", mainWindow);
+        Assert.Contains(
+            "Click=\"OpenPanelRunMenuItem_Click\"",
+            mainWindow);
+        Assert.DoesNotContain(
+            "OpenRunDialogCommand",
+            mainWindow);
         Assert.Contains("SystemManagementTool.InstalledApps", mainWindow);
         Assert.Contains("SystemManagementTool.PowerOptions", mainWindow);
         Assert.Contains("SystemManagementTool.EventViewer", mainWindow);
@@ -3422,7 +3427,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "WindowsShellSearchCatalog",
             shellSearchPolicy);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "WindowsShellAction.RunDialog",
             shellSearchCatalog);
         Assert.Contains(
@@ -3453,6 +3458,12 @@ public sealed class XamlResourceContractTests
             "ExecuteShellSearchActionAsync(",
             viewModel);
         Assert.Contains(
+            "result?.RunCommand",
+            viewModel);
+        Assert.Contains(
+            "ExecutePanelRunCommandAsync(",
+            viewModel);
+        Assert.DoesNotContain(
             "_systemStatus.OpenRunDialog",
             viewModel);
         Assert.Contains(
@@ -3686,7 +3697,7 @@ public sealed class XamlResourceContractTests
             "SelectedSearchResult?.StableKey",
             viewModel);
         Assert.Contains(
-            "AutomationProperties.Name=\"应用、窗口、待办、系统命令与计算结果\"",
+            "AutomationProperties.Name=\"应用、窗口、待办、Panel 运行、系统命令与计算结果\"",
             mainWindow);
         Assert.Contains(
             "Binding=\"{Binding UsesGlyph}\"",
@@ -3747,8 +3758,9 @@ public sealed class XamlResourceContractTests
                 mainWindow,
                 "Click=\"SearchSuggestion_Click\"")
                 .Count
-            == 4);
+            == 5);
         Assert.Contains("Tag=\"任务管理器\"", mainWindow);
+        Assert.Contains("Tag=\">\"", mainWindow);
         Assert.Contains("Tag=\"音量 50\"", mainWindow);
         Assert.Contains("Tag=\"专注 25\"", mainWindow);
         Assert.Contains("Tag=\"任务：\"", mainWindow);
@@ -4321,6 +4333,39 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "IconHelper.ClearCache(fullPath);",
             organizerService);
+        Assert.Contains(
+            "CustomIconPath",
+            organizerService);
+        Assert.Contains(
+            "preference?.CustomIconPath",
+            organizerService);
+    }
+
+    [Fact]
+    public void DesktopOrganizer_OffersPersistentPanelIcoAndStretchesGrid()
+    {
+        string root = FindRepositoryRoot();
+        string organizer = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "FileOrganizerView.xaml.cs"));
+        string preference = File.ReadAllText(
+            Path.Combine(root, "Models", "DesktopFilePreference.cs"));
+        string schema = File.ReadAllText(
+            Path.Combine(root, "Data", "AppDbContext.cs"));
+
+        Assert.Contains("Header=\"更换 Panel 图标…\"", organizer);
+        Assert.Contains("Header=\"恢复文件默认图标\"", organizer);
+        Assert.Contains(
+            "HorizontalContentAlignment=\"Stretch\"",
+            organizer);
+        Assert.Contains("OpenFileDialog", codeBehind);
+        Assert.Contains("*.ico", codeBehind);
+        Assert.Contains("CustomIconPath", preference);
+        Assert.Contains("CustomIconIndex", preference);
+        Assert.Contains(
+            "ADD COLUMN CustomIconPath TEXT",
+            schema);
     }
 
     [Fact]

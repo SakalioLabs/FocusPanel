@@ -877,6 +877,38 @@ public partial class MainWindow :
                 .OpenUnifiedSearch);
     }
 
+    private void OpenPanelRunMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        e.Handled = true;
+        ExpandSidebar();
+        CloseOverlayPanels();
+        _viewModel.ClearWindowOverviewFilter();
+        _viewModel.SearchScope =
+            ShellSearchScope.System;
+        _viewModel.SearchQuery =
+            PanelRunCommandParser.Prefix;
+        _viewModel.ToggleSearchCommand
+            .Execute(null);
+        QueueOverlayFocus(
+            StartButton,
+            SearchBox,
+            () => _viewModel.IsSearchOpen);
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                if (_viewModel.IsSearchOpen
+                    && SearchBox
+                        .IsKeyboardFocusWithin)
+                {
+                    SearchBox.CaretIndex =
+                        SearchBox.Text.Length;
+                }
+            }),
+            DispatcherPriority.Input);
+    }
+
     private void OpenStartSearch(
         PanelStartEntryAction action)
     {

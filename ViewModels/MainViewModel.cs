@@ -53,6 +53,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _elevatedAppLaunch;
     private readonly IAppLocationService
         _appLocation;
+    private readonly IPanelRunService
+        _panelRun;
     private readonly SystemActionCoordinator
         _systemActions;
     private readonly ClipboardTextService
@@ -169,6 +171,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(
         nameof(IsTaskQuickCaptureDraft))]
     [NotifyPropertyChangedFor(
+        nameof(IsPanelRunDraft))]
+    [NotifyPropertyChangedFor(
         nameof(SearchPanelTitle))]
     [NotifyPropertyChangedFor(
         nameof(SearchPanelInstruction))]
@@ -187,6 +191,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         nameof(IsSystemSearchScope))]
     [NotifyPropertyChangedFor(
         nameof(IsTaskQuickCaptureDraft))]
+    [NotifyPropertyChangedFor(
+        nameof(IsPanelRunDraft))]
     [NotifyPropertyChangedFor(
         nameof(SearchPanelTitle))]
     [NotifyPropertyChangedFor(
@@ -596,7 +602,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ElevatedAppLaunchCoordinator?
             elevatedAppLaunch = null,
         IAppLocationService?
-            appLocation = null)
+            appLocation = null,
+        IPanelRunService?
+            panelRun = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -625,6 +633,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _appLocation =
             appLocation
             ?? new AppLocationService();
+        _panelRun =
+            panelRun
+            ?? new PanelRunService();
         _systemActions =
             systemActions
             ?? new SystemActionCoordinator();
@@ -929,6 +940,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             TaskCaptureCommandParser
                 .QuickCapturePrefix,
             StringComparison.Ordinal);
+    public bool IsPanelRunDraft =>
+        (SearchScope is ShellSearchScope.All
+            or ShellSearchScope.System)
+        && PanelRunCommandParser.IsDraft(
+            SearchQuery);
     public bool IsApplicationLauncherOpen =>
         IsSearchOpen
         && IsApplicationSearchScope;
@@ -936,7 +952,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsSearchOpen
         && !IsApplicationSearchScope;
     public string SearchPanelTitle =>
-        IsTaskQuickCaptureDraft
+        IsPanelRunDraft
+            ? "Panel 运行"
+            : IsTaskQuickCaptureDraft
             ? "快速添加到 Inbox"
             : SearchScope switch
             {
@@ -952,7 +970,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     "应用、窗口、待办、命令与计算"
             };
     public string SearchPanelInstruction =>
-        IsTaskQuickCaptureDraft
+        IsPanelRunDraft
+            ? "在 > 后输入程序、文件夹、文件或网址；含空格的目标请使用双引号"
+            : IsTaskQuickCaptureDraft
             ? "输入标题后按 Enter，直接保存到 Inbox"
             : SearchScope switch
             {
@@ -1657,6 +1677,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ExecuteSearchResult(
         ShellSearchResult? result)
     {
+        if (result?.RunCommand
+            is PanelRunCommand runCommand)
+        {
+            await ExecutePanelRunCommandAsync(
+                runCommand);
+            return;
+        }
+
         if (result?.TaskCaptureCommand
             is TaskCaptureCommand taskCapture)
         {
@@ -1762,6 +1790,35 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         if (await TryLaunchAppAsync(app))
             IsSearchOpen = false;
+    }
+
+    private async Task ExecutePanelRunCommandAsync(
+        PanelRunCommand command)
+    {
+        PanelRunResult result =
+            await _panelRun.RunAsync(
+                command);
+        if (_isDisposed)
+            return;
+
+        if (result.Status
+            == PanelRunStatus.Started)
+        {
+            SystemActionMessage =
+                string.Empty;
+            IsSearchOpen = false;
+            return;
+        }
+
+        string reason =
+            string.IsNullOrWhiteSpace(
+                result.Error)
+                ? "Windows 无法打开该目标；请检查名称、路径或文件关联。"
+                : result.Error!;
+        SystemActionMessage =
+            $"无法运行“{command.FileName}”。{reason}";
+        CloseTransientPanels();
+        IsStatusCenterOpen = true;
     }
 
     private TasksViewModel
@@ -2003,8 +2060,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         Func<bool> operation =
             action switch
             {
-                WindowsShellAction.RunDialog =>
-                    _systemStatus.OpenRunDialog,
                 WindowsShellAction.QuickSettings =>
                     _systemStatus.OpenQuickSettings,
                 WindowsShellAction.Notifications =>
@@ -3036,12 +3091,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         => await RunSystemActionAsync(
             _systemStatus.OpenWidgets,
             "无法唤起 Windows 小组件，请使用 Win+W。");
-
-    [RelayCommand]
-    private async Task OpenRunDialog()
-        => await RunSystemActionAsync(
-            _systemStatus.OpenRunDialog,
-            "无法唤起运行对话框，请使用 Win+R。");
 
     [RelayCommand]
     private async Task OpenManagementTool(

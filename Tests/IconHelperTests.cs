@@ -92,6 +92,29 @@ public sealed class IconHelperTests
         }
     }
 
+    [Fact]
+    public void ExplicitPanelIcon_InvalidFileFallsBackToItemIcon()
+    {
+        string root = CreateTemporaryDirectory();
+        try
+        {
+            string item = Path.Combine(root, "note.txt");
+            File.WriteAllText(item, "test");
+
+            var fallback = IconHelper.GetIcon(
+                item,
+                Path.Combine(root, "missing.ico"),
+                0,
+                true);
+
+            Assert.NotNull(fallback);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
     private static string CreateTemporaryDirectory()
     {
         string path = Path.Combine(

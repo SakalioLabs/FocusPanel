@@ -14,6 +14,8 @@ public class DesktopFilePreference
     public string? ManagedPath { get; set; }
     public long? OriginalAttributes { get; set; }
     public string? FileIdentity { get; set; }
+    public string? CustomIconPath { get; set; }
+    public int? CustomIconIndex { get; set; }
     public DesktopCollectionMode CollectionMode { get; set; }
     public DesktopVisibilityOperation OperationState { get; set; }
 }

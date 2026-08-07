@@ -445,7 +445,6 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
-    [InlineData("运行", "RunDialog")]
     [InlineData("win a", "QuickSettings")]
     [InlineData("消息", "Notifications")]
     [InlineData("键盘", "InputSwitcher")]
@@ -489,6 +488,55 @@ public sealed class ShellSearchPolicyTests
             result.ManagementTool);
         Assert.False(
             result.CanTogglePin);
+    }
+
+    [Theory]
+    [InlineData(ShellSearchScope.All)]
+    [InlineData(ShellSearchScope.System)]
+    public void Compose_ExplicitRunCommandIsFirst(
+        ShellSearchScope scope)
+    {
+        ShellSearchResult result =
+            ShellSearchPolicy.Compose(
+                    new[]
+                    {
+                        App(
+                            "Notepad",
+                            "exe:c:\\notepad.exe")
+                    },
+                    Array.Empty<WindowTaskItem>(),
+                    ">notepad.exe readme.txt",
+                    scope: scope)
+                .First();
+
+        Assert.Equal(
+            ShellSearchResultKind.RunCommand,
+            result.Kind);
+        Assert.Equal(
+            "notepad.exe",
+            result.RunCommand?.FileName);
+        Assert.Equal(
+            "readme.txt",
+            result.RunCommand?.Arguments);
+        Assert.Equal(
+            "Panel 运行命令 · 点击或按 Enter 执行",
+            result.SecondaryText);
+        Assert.True(result.UsesGlyph);
+        Assert.Null(result.ShellAction);
+    }
+
+    [Fact]
+    public void Compose_RunCommandIsNotAvailableInApplicationScope()
+    {
+        Assert.DoesNotContain(
+            ShellSearchPolicy.Compose(
+                Array.Empty<AppLaunchItem>(),
+                Array.Empty<WindowTaskItem>(),
+                ">notepad.exe",
+                scope:
+                    ShellSearchScope
+                        .Applications),
+            item => item.RunCommand.HasValue);
     }
 
     [Fact]

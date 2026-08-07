@@ -496,8 +496,6 @@ public sealed class SystemStatusService : ISystemStatusService
 
     public bool OpenWidgets() => TrySendWindowsShortcut(WindowsShellAction.Widgets);
 
-    public bool OpenRunDialog() => TrySendWindowsShortcut(WindowsShellAction.RunDialog);
-
     public bool OpenSoundOutput() =>
         TrySendWindowsShortcut(
             WindowsShellAction.SoundOutput);

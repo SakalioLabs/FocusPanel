@@ -262,9 +262,9 @@
                                          Style="{StaticResource FocusSearchBox}"
                                          Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                          PreviewKeyDown="SearchBox_PreviewKeyDown"
-                                         AutomationProperties.Name="搜索应用、窗口、待办、系统命令与计算"
-                                         AutomationProperties.HelpText="输入应用名、窗口标题、已有待办、系统工具、音量、媒体、专注或任务命令、算式，使用上下方向键选择，按回车执行"
-                                         ToolTip="搜索应用、窗口和已有待办，直接控制媒体、完成待办、收集任务、调音量、开始专注或计算"/>
+                                         AutomationProperties.Name="搜索应用、窗口、待办、Panel 运行、系统命令与计算"
+                                         AutomationProperties.HelpText="输入应用名、窗口标题、已有待办、系统工具、音量、媒体、专注或任务命令、算式；输入大于号运行程序、文件或网址；使用上下方向键选择，按回车执行"
+                                         ToolTip="搜索应用、窗口和已有待办；输入 > 可在 Panel 内运行程序、文件、文件夹或网址"/>
                                 <TextBlock Text="{Binding SearchPlaceholder}"
                                            Margin="16,0"
                                            VerticalAlignment="Center"
@@ -394,6 +394,14 @@
                                         Margin="3,0"
                                         Padding="12,0"
                                         Style="{StaticResource FocusSecondaryButton}"
+                                        Content="运行"
+                                        Tag=">"
+                                        Click="SearchSuggestion_Click"
+                                        ToolTip="在 > 后输入程序、文件夹、文件或网址"/>
+                                <Button Height="36"
+                                        Margin="3,0"
+                                        Padding="12,0"
+                                        Style="{StaticResource FocusSecondaryButton}"
                                         Content="音量 50"
                                         Tag="音量 50"
                                         Click="SearchSuggestion_Click"
@@ -457,7 +465,7 @@
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"
                                          Style="{StaticResource FocusListBox}"
                                          Foreground="{DynamicResource FocusTextBrush}"
-                                         AutomationProperties.Name="应用、窗口、待办、系统命令与计算结果"
+                                         AutomationProperties.Name="应用、窗口、待办、Panel 运行、系统命令与计算结果"
                                          PreviewKeyDown="SearchResultsList_PreviewKeyDown"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.ItemContainerStyle>
@@ -643,10 +651,10 @@
                                         Style="{StaticResource FocusSecondaryButton}"
                                         MinHeight="44"
                                         Margin="0,0,0,8"
-                                        Content="后台与窗口 · Panel 管理"
+                                        Content="后台应用与窗口 · Panel 原生"
                                         Click="StatusCenterWindowOverview_Click"
                                         AutomationProperties.Name="打开 Panel 窗口总览"
-                                        ToolTip="在 Panel 内查看、切换和管理当前应用窗口，不唤起原生任务栏"/>
+                                        ToolTip="在 Panel 内查看、切换和管理应用，不弹出原生任务栏或隐藏图标窗口"/>
                                 <UniformGrid Columns="4"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="Panel 状态详情">
@@ -1486,8 +1494,8 @@
                                                   CommandParameter="{x:Static services:SystemManagementTool.FileExplorer}"/>
                                         <MenuItem Header="小组件"
                                                   Command="{Binding PlacementTarget.DataContext.OpenWidgetsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="运行…"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenRunDialogCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="Panel 运行…"
+                                                  Click="OpenPanelRunMenuItem_Click"/>
                                         <Separator/>
                                         <MenuItem Header="虚拟桌面">
                                             <MenuItem Header="上一个桌面"

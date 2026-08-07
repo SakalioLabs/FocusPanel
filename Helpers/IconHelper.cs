@@ -195,6 +195,53 @@ public static class IconHelper
         return icon;
     }
 
+    public static ImageSource? GetIcon(
+        string path,
+        string? customIconPath,
+        int customIconIndex,
+        bool large = true)
+    {
+        if (!string.IsNullOrWhiteSpace(customIconPath))
+        {
+            ImageSource? custom = GetIconFromLocation(
+                customIconPath,
+                customIconIndex,
+                large);
+            if (custom != null)
+                return custom;
+        }
+        return GetIcon(path, large);
+    }
+
+    public static ImageSource? GetIconFromLocation(
+        string iconPath,
+        int iconIndex = 0,
+        bool large = true)
+    {
+        string normalized = Environment
+            .ExpandEnvironmentVariables(
+                iconPath.Trim().Trim('"'));
+        string cacheKey =
+            $"custom:{normalized}|{iconIndex}|{large}";
+        lock (_cacheLock)
+        {
+            if (_iconCache.TryGetValue(
+                    cacheKey,
+                    out ImageSource? cached))
+            {
+                return cached;
+            }
+        }
+
+        ImageSource? icon = ExtractIcon(
+            normalized,
+            iconIndex,
+            large);
+        if (icon != null)
+            CacheIcon(cacheKey, icon);
+        return icon;
+    }
+
     private static ImageSource? TryGetExplicitCustomIcon(
         string itemPath,
         bool large)
@@ -207,6 +254,17 @@ public static class IconHelper
             return null;
         }
 
+        return ExtractIcon(
+            iconPath,
+            iconIndex,
+            large);
+    }
+
+    private static ImageSource? ExtractIcon(
+        string iconPath,
+        int iconIndex,
+        bool large)
+    {
         IntPtr largeIcon = IntPtr.Zero;
         IntPtr smallIcon = IntPtr.Zero;
         try

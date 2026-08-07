@@ -13,6 +13,7 @@ public enum ShellSearchResultKind
     AudioCommand,
     BrightnessCommand,
     FocusCommand,
+    RunCommand,
     TaskCapture,
     Task
 }
@@ -110,6 +111,12 @@ public sealed record ShellSearchResult
         init;
     }
 
+    internal PanelRunCommand? RunCommand
+    {
+        get;
+        init;
+    }
+
     internal TaskCaptureCommand? TaskCaptureCommand
     {
         get;
@@ -152,6 +159,10 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.FocusCommand;
 
+    public bool IsRunCommand =>
+        Kind
+        == ShellSearchResultKind.RunCommand;
+
     public bool IsTaskCapture =>
         Kind
         == ShellSearchResultKind.TaskCapture;
@@ -166,6 +177,7 @@ public sealed record ShellSearchResult
         || IsAudioCommand
         || IsBrightnessCommand
         || IsFocusCommand
+        || IsRunCommand
         || IsTaskCapture
         || IsTask;
 
@@ -296,6 +308,25 @@ public sealed record ShellSearchResult
                 entry.Glyph,
             ShellAction =
                 entry.Action
+        };
+
+    internal static ShellSearchResult
+        FromRunCommand(
+            PanelRunCommand command) =>
+        new()
+        {
+            Kind =
+                ShellSearchResultKind
+                    .RunCommand,
+            StableKey = command.StableKey,
+            DisplayName = command.DisplayName,
+            SecondaryText =
+                "Panel 运行命令 · 点击或按 Enter 执行",
+            AccessibleName =
+                $"运行 {command.FileName}，"
+                + "点击或按回车执行",
+            Glyph = "\uE7B8",
+            RunCommand = command
         };
 
     internal static ShellSearchResult

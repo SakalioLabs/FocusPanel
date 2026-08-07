@@ -28,7 +28,6 @@ public interface ISystemStatusService : IDisposable
     bool CreateVirtualDesktop();
     bool CloseCurrentVirtualDesktop();
     bool OpenWidgets();
-    bool OpenRunDialog();
     bool OpenSoundOutput();
     bool OpenScreenSnipping();
     bool OpenProjectDisplay();

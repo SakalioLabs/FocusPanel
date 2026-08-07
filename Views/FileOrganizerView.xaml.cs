@@ -12,6 +12,7 @@ using FocusPanel.Helpers;
 using FocusPanel.Models;
 using FocusPanel.Services;
 using FocusPanel.ViewModels;
+using Microsoft.Win32;
 
 namespace FocusPanel.Views;
 
@@ -130,6 +131,86 @@ public partial class FileOrganizerView : UserControl
                     StopAutoScroll();
                     shell?.EndDesktopFileDrag();
                 });
+        }
+    }
+
+    private async void ChooseCustomIconMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement
+            {
+                DataContext: DesktopFile file
+            }
+            || DataContext is not FileOrganizerViewModel vm)
+        {
+            return;
+        }
+
+        BeginTransientSurface();
+        try
+        {
+            var picker = new OpenFileDialog
+            {
+                Title = $"为“{file.DisplayName}”选择 Panel 图标",
+                Filter = "ICO 图标 (*.ico)|*.ico",
+                CheckFileExists = true,
+                Multiselect = false
+            };
+            bool? selected = picker.ShowDialog(
+                Window.GetWindow(this));
+            if (selected != true)
+                return;
+
+            await vm.SetCustomIcon(
+                file,
+                picker.FileName);
+        }
+        catch (Exception ex)
+        {
+            FocusDialogService.Show(
+                $"更换图标失败：{ex.Message}",
+                "FocusPanel",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        finally
+        {
+            EndTransientSurface();
+        }
+    }
+
+    private async void ResetCustomIconMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement
+            {
+                DataContext: DesktopFile file
+            }
+            || DataContext is not FileOrganizerViewModel vm)
+        {
+            return;
+        }
+
+        BeginTransientSurface();
+        try
+        {
+            await vm.SetCustomIcon(
+                file,
+                null);
+        }
+        catch (Exception ex)
+        {
+            FocusDialogService.Show(
+                $"恢复默认图标失败：{ex.Message}",
+                "FocusPanel",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        finally
+        {
+            EndTransientSurface();
         }
     }
 

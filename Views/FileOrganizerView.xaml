@@ -127,6 +127,11 @@
             <MenuItem Header="&#x6253;&#x5F00;"
                       Command="{Binding Data.OpenFileCommand, Source={StaticResource VmProxy}}"
                       CommandParameter="{Binding}"/>
+            <MenuItem Header="更换 Panel 图标…"
+                      Click="ChooseCustomIconMenuItem_Click"/>
+            <MenuItem Header="恢复文件默认图标"
+                      Click="ResetCustomIconMenuItem_Click"/>
+            <Separator/>
             <MenuItem Header="&#x79FB;&#x52A8;&#x5230;"
                       Tag="MoveToPartitionRoot"/>
             <MenuItem Header="&#x6536;&#x7EB3;&#x5230;&#x9762;&#x677F;"
@@ -361,6 +366,7 @@
 
                     <ContentControl Grid.Row="1"
                                     Content="{Binding}"
+                                    HorizontalContentAlignment="Stretch"
                                     Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ContentControl.Style>
                             <Style TargetType="ContentControl">

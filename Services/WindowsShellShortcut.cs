@@ -14,7 +14,6 @@ internal enum WindowsShellAction
     VirtualDesktopCreate,
     VirtualDesktopClose,
     Widgets,
-    RunDialog,
     SoundOutput,
     ScreenSnipping,
     ProjectDisplay,
@@ -105,7 +104,6 @@ internal static class WindowsShellShortcutMap
         WindowsShellAction.VirtualDesktopClose =>
             new(0x73, true, UsesControl: true),
         WindowsShellAction.Widgets => new(0x57, true),
-        WindowsShellAction.RunDialog => new(0x52, true),
         WindowsShellAction.SoundOutput =>
             new(0x56, true, UsesControl: true),
         WindowsShellAction.ScreenSnipping =>

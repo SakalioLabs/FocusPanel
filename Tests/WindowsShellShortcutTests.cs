@@ -16,7 +16,6 @@ public sealed class WindowsShellShortcutTests
             (WindowsShellAction.InputSwitcher, 0x20),
             (WindowsShellAction.TaskView, 0x09),
             (WindowsShellAction.Widgets, 0x57),
-            (WindowsShellAction.RunDialog, 0x52),
             (WindowsShellAction.ProjectDisplay, 0x50),
             (WindowsShellAction.CastDevices, 0x4B),
             (WindowsShellAction.ShowDesktop, 0x44)

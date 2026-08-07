@@ -582,6 +582,8 @@ public class FileOrganizerService : IDisposable
         {
             item.Icon = IconHelper.GetIcon(
                 fullPath,
+                preference?.CustomIconPath,
+                preference?.CustomIconIndex ?? 0,
                 true);
         }
         catch
@@ -701,6 +703,8 @@ public class FileOrganizerService : IDisposable
         string? ManagedPath,
         long? OriginalAttributes,
         string? FileIdentity,
+        string? CustomIconPath,
+        int? CustomIconIndex,
         DesktopCollectionMode CollectionMode,
         DesktopVisibilityOperation OperationState);
 
@@ -722,6 +726,8 @@ public class FileOrganizerService : IDisposable
                     pref.ManagedPath,
                     pref.OriginalAttributes,
                     pref.FileIdentity,
+                    pref.CustomIconPath,
+                    pref.CustomIconIndex,
                     pref.CollectionMode,
                     pref.OperationState);
         }
@@ -1214,6 +1220,16 @@ public class FileOrganizerService : IDisposable
             await _visibilityIo
                 .ReadAttributesAsync(fullPath)
                 .ConfigureAwait(false);
+        string? detectedIconPath = null;
+        int? detectedIconIndex = null;
+        if (IconHelper.TryResolveCustomIconLocation(
+                fullPath,
+                out string resolvedIconPath,
+                out int resolvedIconIndex))
+        {
+            detectedIconPath = resolvedIconPath;
+            detectedIconIndex = resolvedIconIndex;
+        }
         int preferenceId = 0;
 
         await Task.Run(() =>
@@ -1232,6 +1248,8 @@ public class FileOrganizerService : IDisposable
             pref.ManagedPath = fullPath;
             pref.OriginalAttributes ??= (long)originalAttributes;
             pref.FileIdentity = _visibility.TryGetIdentity(fullPath);
+            pref.CustomIconPath ??= detectedIconPath;
+            pref.CustomIconIndex ??= detectedIconIndex;
             pref.CollectionMode = DesktopCollectionMode.Attribute;
             pref.OperationState = DesktopVisibilityOperation.Collecting;
 
@@ -1329,6 +1347,58 @@ public class FileOrganizerService : IDisposable
         }
 
         IconHelper.ClearCache(fullPath);
+    }
+
+    public async Task SetCustomIcon(
+        DesktopFile file,
+        string? iconPath)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+        string? normalized = string.IsNullOrWhiteSpace(iconPath)
+            ? null
+            : Path.GetFullPath(iconPath);
+        if (normalized != null
+            && !File.Exists(normalized))
+        {
+            throw new FileNotFoundException(
+                "找不到选择的图标文件。",
+                normalized);
+        }
+
+        await Task.Run(() =>
+        {
+            using var context = new AppDbContext();
+            context.EnsureSchema();
+            DesktopFilePreference? preference =
+                context.DesktopFilePreferences
+                    .FirstOrDefault(item =>
+                        item.ManagedPath == file.FullPath)
+                ?? context.DesktopFilePreferences
+                    .FirstOrDefault(item =>
+                        item.FilePath == file.Name);
+            if (preference == null)
+            {
+                preference = new DesktopFilePreference
+                {
+                    FilePath = file.Name,
+                    PartitionName =
+                        file.CustomPartition ?? string.Empty,
+                    ManagedPath = file.FullPath
+                };
+                context.DesktopFilePreferences.Add(
+                    preference);
+            }
+
+            preference.CustomIconPath = normalized;
+            preference.CustomIconIndex = normalized == null
+                ? null
+                : 0;
+            context.SaveChanges();
+        }).ConfigureAwait(false);
+
+        IconHelper.ClearCache(file.FullPath);
+        if (normalized != null)
+            IconHelper.ClearCache(normalized);
     }
 
     // ============================================================
