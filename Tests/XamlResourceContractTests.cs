@@ -918,8 +918,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "AudioControlCompletionPolicy.Apply(",
             viewModel);
-        Assert.Contains(
-            "ObservableCollection<\n        InputMethodOption> InputMethods",
+        Assert.Matches(
+            @"ObservableCollection<\s*InputMethodOption>\s*InputMethods",
             viewModel);
         Assert.Contains(
             ".TryActivateInputMethod(",
