@@ -3636,6 +3636,67 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void WindowOverview_ReusesNoActivateDwmPreviewAndKeyboardClose()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        string previewCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "TaskbarWindowPreviewWindow.xaml.cs"));
+
+        Assert.Contains(
+            "MouseEnter=\"SearchResult_MouseEnter\"",
+            mainWindow);
+        Assert.Contains(
+            "MouseLeave=\"SearchResult_MouseLeave\"",
+            mainWindow);
+        Assert.Contains(
+            "PreviewKeyDown=\"SearchResultsList_PreviewKeyDown\"",
+            mainWindow);
+        Assert.Contains(
+            "private void SearchWindowHoverOpenTimer_Tick(",
+            codeBehind);
+        Assert.Contains(
+            "TryOpenSearchWindowPreview(",
+            codeBehind);
+        Assert.Contains(
+            "_viewModel.CloseWindowCommand",
+            codeBehind);
+        Assert.Contains(
+            "if (e.Key != Key.Delete",
+            codeBehind);
+        Assert.Contains(
+            "preview.Configure(\n"
+            + "                    applicationName,\n"
+            + "                    new[] { window },\n"
+            + "                    \"点击画面直接切换；右侧按钮正常关闭。\")",
+            codeBehind.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "internal void Configure(\n"
+            + "        string displayName,",
+            previewCode.Replace("\r\n", "\n"));
+        Assert.Contains(
+            "completeFooterText",
+            previewCode);
+        Assert.Contains(
+            "CancelTaskbarHoverPreview(\n"
+            + "            closeMenu: true);\n"
+            + "        _viewModel.IsSearchOpen = false;",
+            codeBehind.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
     public void ContextMenus_UseOneFluentThemeForStaticAndDynamicItems()
     {
         string root = FindRepositoryRoot();

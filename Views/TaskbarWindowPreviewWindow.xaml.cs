@@ -34,6 +34,8 @@ public partial class TaskbarWindowPreviewWindow :
             Array.Empty<WindowReference>();
     private string _displayName =
         string.Empty;
+    private string _completeFooterText =
+        string.Empty;
     private HwndSource? _source;
     private bool _disposed;
 
@@ -51,12 +53,22 @@ public partial class TaskbarWindowPreviewWindow :
         CloseRequested;
 
     internal void Configure(
-        TaskbarAppItem task)
+        TaskbarAppItem task) =>
+        Configure(
+            task.DisplayName,
+            task.Windows,
+            "滚轮可在这些窗口间快速循环。");
+
+    internal void Configure(
+        string displayName,
+        IReadOnlyList<WindowReference>
+            windows,
+        string completeFooterText)
     {
         _displayName =
-            task.DisplayName;
+            displayName;
         _allWindows =
-            task.Windows
+            windows
                 .Select(window =>
                     string.IsNullOrWhiteSpace(
                         window.Title)
@@ -67,10 +79,12 @@ public partial class TaskbarWindowPreviewWindow :
                         }
                         : window)
                 .ToArray();
+        _completeFooterText =
+            completeFooterText;
         AppTitleText.Text =
             _displayName;
         WindowCountText.Text =
-            $"{task.WindowCount} 个运行窗口";
+            $"{_allWindows.Count} 个运行窗口";
         ApplyPreviewLimit(
             MaximumPreviewCount);
     }
@@ -91,7 +105,7 @@ public partial class TaskbarWindowPreviewWindow :
         RemainingText.Text =
             remaining > 0
                 ? $"另有 {remaining} 个窗口；左键应用图标可打开完整文字列表。"
-                : "滚轮可在这些窗口间快速循环。";
+                : _completeFooterText;
         RemainingText.Visibility =
             Visibility.Visible;
     }

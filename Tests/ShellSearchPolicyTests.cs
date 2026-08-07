@@ -119,6 +119,9 @@ public sealed class ShellSearchPolicyTests
         Assert.Equal(
             new IntPtr(91),
             results[0].Window?.Handle);
+        Assert.Equal(
+            "编辑器",
+            results[0].WindowApplicationName);
     }
 
     [Fact]

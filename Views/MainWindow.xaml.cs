@@ -46,6 +46,8 @@ public partial class MainWindow :
     private readonly MainViewModel _viewModel;
     private readonly DispatcherTimer _autoHideTimer;
     private readonly DispatcherTimer _taskbarHoverOpenTimer;
+    private readonly DispatcherTimer
+        _searchWindowHoverOpenTimer;
     private readonly DispatcherTimer _taskbarHoverCloseTimer;
     private readonly FocusToastManager _toastManager;
     private readonly
@@ -76,6 +78,10 @@ public partial class MainWindow :
         _taskbarExternalFileDragActive;
     private Button? _taskbarHoverButton;
     private TaskbarAppItem? _taskbarHoverTask;
+    private FrameworkElement?
+        _searchWindowHoverTarget;
+    private ShellSearchResult?
+        _searchWindowHoverResult;
     private ContextMenu? _taskbarHoverMenu;
     private TaskbarWindowPreviewWindow?
         _taskbarWindowPreview;
@@ -187,6 +193,15 @@ public partial class MainWindow :
         };
         _taskbarHoverOpenTimer.Tick +=
             TaskbarHoverOpenTimer_Tick;
+        _searchWindowHoverOpenTimer =
+            new DispatcherTimer
+            {
+                Interval =
+                    TimeSpan.FromMilliseconds(
+                        TaskbarHoverOpenDelayMilliseconds)
+            };
+        _searchWindowHoverOpenTimer.Tick +=
+            SearchWindowHoverOpenTimer_Tick;
         _taskbarHoverCloseTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(
@@ -849,6 +864,140 @@ public partial class MainWindow :
 
         _viewModel.ExecuteSearchResultCommand.Execute(result);
         e.Handled = true;
+    }
+
+    private void SearchResultsList_PreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        ShellSearchResult? focusedResult =
+            (e.OriginalSource
+                as FrameworkElement)
+            ?.DataContext
+                as ShellSearchResult
+            ?? _viewModel
+                .SelectedSearchResult;
+        if (e.Key != Key.Delete
+            || focusedResult?.Window
+                is not WindowReference window
+            || !_viewModel.CloseWindowCommand
+                .CanExecute(window))
+        {
+            return;
+        }
+
+        _viewModel.CloseWindowCommand
+            .Execute(window);
+        e.Handled = true;
+    }
+
+    private void SearchResult_MouseEnter(
+        object sender,
+        MouseEventArgs e)
+    {
+        if (sender
+                is not FrameworkElement
+                {
+                    DataContext:
+                        ShellSearchResult
+                        {
+                            Window: not null
+                        } result
+                } target)
+        {
+            return;
+        }
+
+        bool ownsCurrentPreview =
+            _taskbarWindowPreview?.IsVisible
+                == true
+            && ReferenceEquals(
+                _searchWindowHoverTarget,
+                target);
+        if (!ownsCurrentPreview
+            && (_taskbarWindowPreview?.IsVisible
+                    == true
+                || _taskbarHoverMenu?.IsOpen
+                    == true
+                || _taskbarHoverButton != null))
+        {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
+        }
+
+        _taskbarHoverOpenTimer.Stop();
+        _taskbarHoverButton = null;
+        _taskbarHoverTask = null;
+        _taskbarHoverCloseTimer.Stop();
+        if (!TaskbarHoverPreviewPolicy.ShouldOpen(
+                windowCount: 1,
+                isPointerOver:
+                    target.IsMouseOver,
+                isMouseButtonPressed:
+                    Mouse.LeftButton
+                    == MouseButtonState.Pressed
+                || Mouse.RightButton
+                    == MouseButtonState.Pressed
+                || Mouse.MiddleButton
+                    == MouseButtonState.Pressed,
+                hasOpenMenu:
+                    _taskbarWindowPreview?.IsVisible
+                    == true
+                && ReferenceEquals(
+                    _searchWindowHoverTarget,
+                    target)))
+        {
+            return;
+        }
+
+        _searchWindowHoverTarget = target;
+        _searchWindowHoverResult = result;
+        _searchWindowHoverOpenTimer.Stop();
+        _searchWindowHoverOpenTimer.Start();
+    }
+
+    private void SearchResult_MouseLeave(
+        object sender,
+        MouseEventArgs e)
+    {
+        _searchWindowHoverOpenTimer.Stop();
+        ScheduleTaskbarHoverPreviewClose();
+    }
+
+    private void SearchWindowHoverOpenTimer_Tick(
+        object? sender,
+        EventArgs e)
+    {
+        _searchWindowHoverOpenTimer.Stop();
+        FrameworkElement? target =
+            _searchWindowHoverTarget;
+        ShellSearchResult? result =
+            _searchWindowHoverResult;
+        if (!_viewModel.IsSearchOpen
+            || target == null
+            || result?.Window == null
+            || !ReferenceEquals(
+                target.DataContext,
+                result)
+            || !TaskbarHoverPreviewPolicy.ShouldOpen(
+                windowCount: 1,
+                isPointerOver:
+                    target.IsMouseOver,
+                isMouseButtonPressed:
+                    Mouse.LeftButton
+                    == MouseButtonState.Pressed
+                || Mouse.RightButton
+                    == MouseButtonState.Pressed
+                || Mouse.MiddleButton
+                    == MouseButtonState.Pressed,
+                hasOpenMenu: false))
+        {
+            return;
+        }
+
+        TryOpenSearchWindowPreview(
+            target,
+            result);
     }
 
     private void OrganizerButton_Click(
@@ -2080,6 +2229,10 @@ public partial class MainWindow :
             return;
         }
 
+        _searchWindowHoverOpenTimer.Stop();
+        _searchWindowHoverTarget = null;
+        _searchWindowHoverResult = null;
+
         if (_taskbarWindowPreview?.IsVisible
                 == true
             && !ReferenceEquals(
@@ -2179,11 +2332,44 @@ public partial class MainWindow :
 
     private bool TryOpenTaskbarWindowPreview(
         Button button,
-        TaskbarAppItem task)
+        TaskbarAppItem task) =>
+        TryOpenWindowPreview(
+            button,
+            preview =>
+                preview.Configure(task));
+
+    private bool TryOpenSearchWindowPreview(
+        FrameworkElement target,
+        ShellSearchResult result)
+    {
+        if (result.Window
+            is not WindowReference window)
+        {
+            return false;
+        }
+
+        string applicationName =
+            string.IsNullOrWhiteSpace(
+                result.WindowApplicationName)
+                ? result.DisplayName
+                : result.WindowApplicationName;
+        return TryOpenWindowPreview(
+            target,
+            preview =>
+                preview.Configure(
+                    applicationName,
+                    new[] { window },
+                    "点击画面直接切换；右侧按钮正常关闭。"));
+    }
+
+    private bool TryOpenWindowPreview(
+        FrameworkElement anchor,
+        Action<TaskbarWindowPreviewWindow>
+            configure)
     {
         var preview =
             new TaskbarWindowPreviewWindow();
-        preview.Configure(task);
+        configure(preview);
         preview.ActivateRequested +=
             TaskbarWindowPreview_ActivateRequested;
         preview.CloseRequested +=
@@ -2200,15 +2386,15 @@ public partial class MainWindow :
         try
         {
             System.Windows.Point topLeft =
-                button.PointToScreen(
+                anchor.PointToScreen(
                     new System.Windows.Point(
                         0,
                         0));
             System.Windows.Point bottomRight =
-                button.PointToScreen(
+                anchor.PointToScreen(
                     new System.Windows.Point(
-                        button.ActualWidth,
-                        button.ActualHeight));
+                        anchor.ActualWidth,
+                        anchor.ActualHeight));
             bool shown =
                 preview.TryShowAt(
                     this,
@@ -2247,12 +2433,17 @@ public partial class MainWindow :
         TaskbarWindowPreview_ActivateRequested(
             WindowReference window)
     {
+        bool closeWindowOverview =
+            _searchWindowHoverTarget != null
+            && _viewModel.IsSearchOpen;
         if (_viewModel.ActivateWindowCommand
                 .CanExecute(window))
         {
             _viewModel.ActivateWindowCommand
                 .Execute(window);
         }
+        if (closeWindowOverview)
+            _viewModel.IsSearchOpen = false;
     }
 
     private void
@@ -2306,6 +2497,9 @@ public partial class MainWindow :
         {
             _taskbarWindowPreview = null;
         }
+        _searchWindowHoverOpenTimer.Stop();
+        _searchWindowHoverTarget = null;
+        _searchWindowHoverResult = null;
 
         if (_taskbarPreviewInteractionActive)
         {
@@ -2366,6 +2560,9 @@ public partial class MainWindow :
         _taskbarHoverCloseTimer.Stop();
         if (_taskbarHoverButton?.IsMouseOver
                 == true
+            || _searchWindowHoverTarget
+                    ?.IsMouseOver
+                == true
             || _taskbarHoverMenu?.IsMouseOver
                 == true
             || _taskbarWindowPreview?.IsMouseOver
@@ -2382,6 +2579,7 @@ public partial class MainWindow :
         bool closeMenu = false)
     {
         _taskbarHoverOpenTimer.Stop();
+        _searchWindowHoverOpenTimer.Stop();
         _taskbarHoverCloseTimer.Stop();
         if (closeMenu
             && _taskbarHoverMenu?.IsOpen
@@ -2398,6 +2596,8 @@ public partial class MainWindow :
 
         _taskbarHoverButton = null;
         _taskbarHoverTask = null;
+        _searchWindowHoverTarget = null;
+        _searchWindowHoverResult = null;
         if (_taskbarHoverMenu?.IsOpen
                 != true)
         {
@@ -2548,6 +2748,8 @@ public partial class MainWindow :
 
     private void CloseOverlayPanels()
     {
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
         _viewModel.IsSearchOpen = false;
         _viewModel.IsCalendarOpen = false;
         _viewModel.IsStatusCenterOpen = false;

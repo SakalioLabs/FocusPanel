@@ -374,6 +374,7 @@
                                          Style="{StaticResource FocusListBox}"
                                          Foreground="{DynamicResource FocusTextBrush}"
                                          AutomationProperties.Name="应用、窗口、待办、系统命令与计算结果"
+                                         PreviewKeyDown="SearchResultsList_PreviewKeyDown"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem"
@@ -384,7 +385,10 @@
                                     </ListBox.ItemContainerStyle>
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Height="64" Margin="10,0">
+                                            <Grid Height="64"
+                                                  Margin="10,0"
+                                                  MouseEnter="SearchResult_MouseEnter"
+                                                  MouseLeave="SearchResult_MouseLeave">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="40"/>
                                                     <ColumnDefinition Width="*"/>

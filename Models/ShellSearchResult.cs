@@ -67,6 +67,12 @@ public sealed record ShellSearchResult
         init;
     }
 
+    public string WindowApplicationName
+    {
+        get;
+        init;
+    } = string.Empty;
+
     public SystemManagementTool? ManagementTool
     {
         get;
@@ -229,7 +235,9 @@ public sealed record ShellSearchResult
             Icon =
                 application.Icon,
             Window =
-                window
+                window,
+            WindowApplicationName =
+                application.DisplayName
         };
     }
 

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#1d2b44"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#327bc1"/>
+      <stop offset="1" stop-color="#745ec5"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <rect width="1120" height="620" rx="32" fill="url(#bg)"/>
+  <g font-family="Segoe UI, Microsoft YaHei">
+    <text x="56" y="66" fill="#f5f8ff" font-size="29" font-weight="600">窗口标题不够，就看实时画面</text>
+    <text x="56" y="103" fill="#9fb1ca" font-size="17">窗口总览与应用栏复用同一个无激活 DWM 预览生命周期</text>
+
+    <g filter="url(#shadow)">
+      <rect x="56" y="140" width="450" height="396" rx="24" fill="#17243a" stroke="#3e5473"/>
+      <text x="84" y="182" fill="#f3f7fd" font-size="22" font-weight="600">当前窗口</text>
+      <text x="84" y="210" fill="#93a8c2" font-size="15">停留窗口行即可预览</text>
+      <rect x="82" y="236" width="398" height="94" rx="16" fill="#294361" stroke="#6bb7ff" stroke-width="2"/>
+      <rect x="102" y="256" width="52" height="52" rx="14" fill="#4b8bd4"/>
+      <text x="128" y="291" text-anchor="middle" fill="#fff" font-size="22" font-weight="700">W</text>
+      <text x="174" y="276" fill="#fff" font-size="19" font-weight="600">季度方案.docx</text>
+      <text x="174" y="303" fill="#b9cae0" font-size="15">Word · 当前窗口</text>
+      <rect x="418" y="257" width="48" height="48" rx="13" fill="#1d3049"/>
+      <path d="M434 273 L450 289 M450 273 L434 289" stroke="#d8e8f8" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="82" y="344" width="398" height="84" rx="16" fill="#1c2c43" stroke="#344963"/>
+      <rect x="82" y="442" width="398" height="64" rx="16" fill="#1c2c43" stroke="#344963"/>
+      <text x="281" y="488" text-anchor="middle" fill="#8fa5c0" font-size="14">列表焦点：Delete 正常关闭</text>
+    </g>
+
+    <path d="M520 282 H572" stroke="#70bdff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M560 272 L574 282 L560 292" fill="none" stroke="#70bdff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="547" y="258" text-anchor="middle" fill="#9fd2ff" font-size="14">420ms</text>
+
+    <g filter="url(#shadow)">
+      <rect x="588" y="140" width="476" height="396" rx="24" fill="#17243a" stroke="#536b8b"/>
+      <text x="616" y="180" fill="#f3f7fd" font-size="21" font-weight="600">Word</text>
+      <text x="1018" y="180" text-anchor="end" fill="#70bdff" font-size="14">DWM 实时预览</text>
+      <rect x="612" y="204" width="428" height="242" rx="16" fill="#20314a"/>
+      <rect x="626" y="218" width="400" height="214" rx="12" fill="url(#screen)"/>
+      <rect x="650" y="245" width="352" height="30" rx="7" fill="#f5f8ff" opacity=".92"/>
+      <rect x="650" y="292" width="254" height="12" rx="6" fill="#dce8f7" opacity=".82"/>
+      <rect x="650" y="320" width="318" height="12" rx="6" fill="#dce8f7" opacity=".72"/>
+      <rect x="650" y="348" width="286" height="12" rx="6" fill="#dce8f7" opacity=".62"/>
+      <rect x="612" y="458" width="428" height="58" rx="14" fill="#20314a"/>
+      <rect x="626" y="476" width="4" height="22" rx="2" fill="#70bdff"/>
+      <text x="646" y="492" fill="#e8f0fa" font-size="16">季度方案.docx</text>
+      <rect x="988" y="468" width="38" height="38" rx="11" fill="#293e5b"/>
+      <path d="M1000 480 L1014 494 M1014 480 L1000 494" stroke="#d8e8f8" stroke-width="2" stroke-linecap="round"/>
+    </g>
+
+    <text x="56" y="595" fill="#91a6c1" font-size="16">点击画面：切换　·　×：正常关闭　·　DWM 不可用：保留文字列表　·　不抢焦点</text>
+  </g>
+</svg>
