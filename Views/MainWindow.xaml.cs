@@ -1121,11 +1121,14 @@ public partial class MainWindow :
                 is not FrameworkElement
                 {
                     DataContext:
-                        ShellSearchResult
-                        {
-                            Window: not null
-                        } result
+                        ShellSearchResult result
                 } target)
+        {
+            return;
+        }
+
+        if (result.Window == null
+            && result.Application == null)
         {
             return;
         }
@@ -1135,12 +1138,100 @@ public partial class MainWindow :
         Dispatcher.BeginInvoke(
             new Action(() =>
             {
-                PopulateSearchWindowContextMenu(
-                    target,
-                    result);
+                if (result.Window != null)
+                {
+                    PopulateSearchWindowContextMenu(
+                        target,
+                        result);
+                }
+                else
+                {
+                    PopulateSearchApplicationContextMenu(
+                        target,
+                        result);
+                }
                 OpenContextMenu(target);
             }),
             DispatcherPriority.Input);
+    }
+
+    private void
+        PopulateSearchApplicationContextMenu(
+            FrameworkElement target,
+            ShellSearchResult result)
+    {
+        AppLaunchItem? application =
+            result.Application;
+        if (application == null)
+            return;
+
+        ContextMenu menu =
+            CreateTaskbarContextMenu();
+        menu.Items.Add(
+            new MenuItem
+            {
+                Header = application.DisplayName,
+                IsEnabled = false
+            });
+        menu.Items.Add(
+            new Separator());
+        menu.Items.Add(
+            new MenuItem
+            {
+                Header = "启动",
+                InputGestureText = "Enter",
+                Command =
+                    _viewModel
+                        .ExecuteSearchResultCommand,
+                CommandParameter = result
+            });
+        if (ElevatedAppLaunchRequestBuilder
+                .TryBuild(
+                    application,
+                    out _))
+        {
+            menu.Items.Add(
+                new MenuItem
+                {
+                    Header = "以管理员身份运行",
+                    Command =
+                        _viewModel
+                            .LaunchElevatedSearchApplicationCommand,
+                    CommandParameter = result
+                });
+        }
+        if (AppLocationPolicy.TryResolve(
+                application,
+                null,
+                out AppLocationTarget location))
+        {
+            menu.Items.Add(
+                new MenuItem
+                {
+                    Header = location.MenuLabel,
+                    Command =
+                        _viewModel
+                            .OpenSearchApplicationLocationCommand,
+                    CommandParameter = result
+                });
+        }
+        menu.Items.Add(
+            new Separator());
+        menu.Items.Add(
+            new MenuItem
+            {
+                Header = application.IsPinned
+                    ? "取消固定"
+                    : "固定到任务栏",
+                Command =
+                    _viewModel
+                        .ToggleSearchPinCommand,
+                CommandParameter = result
+            });
+        AutomationProperties.SetName(
+            menu,
+            $"应用操作 {application.DisplayName}");
+        target.ContextMenu = menu;
     }
 
     private void PopulateSearchWindowContextMenu(
@@ -2230,6 +2321,20 @@ public partial class MainWindow :
                 Command =
                     _viewModel
                         .LaunchElevatedTaskbarAppCommand,
+                CommandParameter = task
+            });
+        }
+        if (AppLocationPolicy.TryResolve(
+                task.CreateLaunchItem(),
+                task.ExecutablePath,
+                out AppLocationTarget location))
+        {
+            menu.Items.Add(new MenuItem
+            {
+                Header = location.MenuLabel,
+                Command =
+                    _viewModel
+                        .OpenTaskbarAppLocationCommand,
                 CommandParameter = task
             });
         }

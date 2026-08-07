@@ -51,6 +51,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _appLaunch;
     private readonly ElevatedAppLaunchCoordinator
         _elevatedAppLaunch;
+    private readonly IAppLocationService
+        _appLocation;
     private readonly SystemActionCoordinator
         _systemActions;
     private readonly ClipboardTextService
@@ -592,7 +594,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IWifiNetworkService?
             wifiNetworks = null,
         ElevatedAppLaunchCoordinator?
-            elevatedAppLaunch = null)
+            elevatedAppLaunch = null,
+        IAppLocationService?
+            appLocation = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -618,6 +622,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ?? new ElevatedAppLaunchCoordinator(
                 new ElevatedAppLaunchService()
                     .Launch);
+        _appLocation =
+            appLocation
+            ?? new AppLocationService();
         _systemActions =
             systemActions
             ?? new SystemActionCoordinator();
@@ -2237,6 +2244,37 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        await LaunchElevatedAppAsync(
+            launch);
+    }
+
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task
+        LaunchElevatedSearchApplication(
+            ShellSearchResult? result)
+    {
+        AppLaunchItem? launch =
+            result?.Application;
+        if (launch == null
+            || !ElevatedAppLaunchRequestBuilder
+                .TryBuild(
+                    launch,
+                    out _))
+        {
+            ReportTaskbarActionFailure(
+                $"“{result?.DisplayName ?? "该应用"}”没有可靠的桌面启动目标，"
+                + "Windows 商店应用不能由 Panel 强制提权。");
+            return;
+        }
+
+        await LaunchElevatedAppAsync(
+            launch);
+    }
+
+    private async Task LaunchElevatedAppAsync(
+        AppLaunchItem launch)
+    {
+
         ElevatedAppLaunchCompletion completion =
             await _elevatedAppLaunch
                 .LaunchAsync(launch);
@@ -2268,6 +2306,78 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     + "目标可能已移动，或 Windows 阻止了此操作。");
                 break;
         }
+    }
+
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task OpenTaskbarAppLocation(
+        TaskbarAppItem? task)
+    {
+        if (task == null
+            || !AppLocationPolicy.TryResolve(
+                task.CreateLaunchItem(),
+                task.ExecutablePath,
+                out AppLocationTarget target))
+        {
+            ReportTaskbarActionFailure(
+                $"“{task?.DisplayName ?? "该应用"}”没有可定位的本地启动文件。");
+            return;
+        }
+
+        await OpenAppLocationAsync(
+            task.DisplayName,
+            target);
+    }
+
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task
+        OpenSearchApplicationLocation(
+            ShellSearchResult? result)
+    {
+        AppLaunchItem? application =
+            result?.Application;
+        if (application == null
+            || !AppLocationPolicy.TryResolve(
+                application,
+                null,
+                out AppLocationTarget target))
+        {
+            ReportTaskbarActionFailure(
+                $"“{result?.DisplayName ?? "该应用"}”没有可定位的本地启动文件。");
+            return;
+        }
+
+        await OpenAppLocationAsync(
+            result!.DisplayName,
+            target);
+    }
+
+    private async Task OpenAppLocationAsync(
+        string displayName,
+        AppLocationTarget target)
+    {
+        AppLocationOpenResult result =
+            await _appLocation.OpenAsync(
+                target);
+        if (_isDisposed)
+            return;
+
+        if (result.Status
+            == AppLocationOpenStatus.Opened)
+        {
+            SystemActionMessage =
+                string.Empty;
+            return;
+        }
+
+        string reason = result.Status
+            == AppLocationOpenStatus.Missing
+                ? "启动文件可能已移动、删除或卸载。"
+                : string.IsNullOrWhiteSpace(
+                    result.Error)
+                    ? "文件资源管理器拒绝了定位请求。"
+                    : result.Error!;
+        ReportTaskbarActionFailure(
+            $"无法定位“{displayName}”。{reason}");
     }
 
     [RelayCommand]
