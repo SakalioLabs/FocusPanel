@@ -21,7 +21,9 @@ internal static class ShellSearchPolicy
                 taskItems = null,
             ShellSearchScope scope =
                 ShellSearchScope.All,
-            string? windowIdentityFilter = null)
+            string? windowIdentityFilter = null,
+            IReadOnlySet<string>?
+                recentApplicationIdentities = null)
     {
         if (limit <= 0)
         {
@@ -59,8 +61,13 @@ internal static class ShellSearchPolicy
             return apps
                 .Take(limit)
                 .Select(
-                    ShellSearchResult
-                        .FromApplication)
+                    app => ShellSearchResult
+                        .FromApplication(
+                            app,
+                            recentApplicationIdentities?
+                                .Contains(
+                                    app.IdentityKey)
+                            == true))
                 .ToList();
         }
 

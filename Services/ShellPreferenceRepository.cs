@@ -17,7 +17,8 @@ internal sealed record ShellPreferenceSnapshot(
     string DisplayTargetMode,
     int AutoHideDelayMilliseconds,
     int HotZoneDwellMilliseconds,
-    bool KeepCompactDockVisible)
+    bool KeepCompactDockVisible,
+    string RecentAppHistoryJson)
 {
     internal static ShellPreferenceSnapshot Default { get; } =
         new(
@@ -32,7 +33,8 @@ internal sealed record ShellPreferenceSnapshot(
                 .DefaultMilliseconds,
             EdgeHotZoneSensitivityPolicy
                 .DefaultDwellMilliseconds,
-            false);
+            false,
+            "[]");
 }
 
 internal static class PersistentCompactDockDefaultPolicy
@@ -96,6 +98,8 @@ internal sealed class ShellPreferenceRepository
         "Shell.HotZoneDwellMilliseconds";
     internal const string KeepCompactDockVisibleKey =
         "Shell.KeepCompactDockVisible";
+    internal const string RecentAppHistoryKey =
+        "Shell.RecentAppHistory";
 
     private static readonly string[] Keys =
     {
@@ -107,7 +111,8 @@ internal sealed class ShellPreferenceRepository
         DisplayTargetModeKey,
         AutoHideDelayKey,
         HotZoneDwellKey,
-        KeepCompactDockVisibleKey
+        KeepCompactDockVisibleKey,
+        RecentAppHistoryKey
     };
 
     private readonly object _sync = new();
@@ -295,6 +300,9 @@ internal sealed class ShellPreferenceRepository
         values.TryGetValue(
             KeepCompactDockVisibleKey,
             out string? storedCompactDockPreference);
+        values.TryGetValue(
+            RecentAppHistoryKey,
+            out string? recentAppHistoryJson);
 
         return new ShellPreferenceSnapshot(
             firstRunAccepted,
@@ -335,7 +343,8 @@ internal sealed class ShellPreferenceRepository
                         EdgeHotZoneSensitivityPolicy
                             .DefaultDwellMilliseconds)),
             PersistentCompactDockDefaultPolicy.Resolve(
-                storedCompactDockPreference));
+                storedCompactDockPreference),
+            recentAppHistoryJson ?? "[]");
     }
 
     private static void SaveCore(

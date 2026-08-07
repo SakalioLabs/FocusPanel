@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#020617" flood-opacity=".38"/>
+    </filter>
+  </defs>
+  <rect width="1000" height="430" rx="30" fill="url(#bg)"/>
+  <text x="56" y="58" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="25" font-weight="600">Panel 原生开始 · 高频应用不用再翻完整目录</text>
+  <text x="56" y="88" fill="#94a3b8" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="14">只记录成功启动 · 精确应用身份 · 最多 8 项 · 跨重启保留</text>
+
+  <g filter="url(#shadow)">
+    <rect x="56" y="116" width="888" height="258" rx="24" fill="#111c33" stroke="#334155"/>
+  </g>
+  <rect x="80" y="140" width="840" height="48" rx="14" fill="#1e293b"/>
+  <circle cx="104" cy="164" r="8" fill="none" stroke="#7dd3fc" stroke-width="2"/>
+  <line x1="110" y1="170" x2="117" y2="177" stroke="#7dd3fc" stroke-width="2" stroke-linecap="round"/>
+  <text x="132" y="170" fill="#94a3b8" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="15">搜索已安装应用</text>
+
+  <text x="82" y="222" fill="#7dd3fc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="13" font-weight="600">固定</text>
+  <g transform="translate(80,238)">
+    <rect width="176" height="58" rx="14" fill="#1e3a5f" stroke="#38bdf8" stroke-opacity=".5"/>
+    <rect x="14" y="13" width="32" height="32" rx="9" fill="#0ea5e9"/>
+    <text x="58" y="26" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="15">文件资源管理器</text>
+    <text x="58" y="44" fill="#7dd3fc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="11">应用 · 已固定</text>
+  </g>
+  <g transform="translate(268,238)">
+    <rect width="176" height="58" rx="14" fill="#1e3a5f" stroke="#38bdf8" stroke-opacity=".5"/>
+    <rect x="14" y="13" width="32" height="32" rx="9" fill="#8b5cf6"/>
+    <text x="58" y="26" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="15">终端</text>
+    <text x="58" y="44" fill="#7dd3fc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="11">应用 · 已固定</text>
+  </g>
+
+  <text x="476" y="222" fill="#a5b4fc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="13" font-weight="600">最近启动</text>
+  <g transform="translate(474,238)">
+    <rect width="204" height="58" rx="14" fill="#252b43" stroke="#6366f1" stroke-opacity=".55"/>
+    <rect x="14" y="13" width="32" height="32" rx="9" fill="#22c55e"/>
+    <text x="58" y="26" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="15">Paint.NET</text>
+    <text x="58" y="44" fill="#a5b4fc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="11">应用 · 最近启动</text>
+  </g>
+  <g transform="translate(690,238)">
+    <rect width="204" height="58" rx="14" fill="#252b43" stroke="#6366f1" stroke-opacity=".55"/>
+    <rect x="14" y="13" width="32" height="32" rx="9" fill="#f59e0b"/>
+    <text x="58" y="26" fill="#f8fafc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="15">浏览器</text>
+    <text x="58" y="44" fill="#a5b4fc" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="11">应用 · 最近启动</text>
+  </g>
+
+  <path d="M80 326 H920" stroke="#334155"/>
+  <text x="82" y="352" fill="#94a3b8" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="13">其余应用保持完整目录顺序；开始输入后立即切换为相关性搜索</text>
+  <g transform="translate(710,395)">
+    <circle cx="0" cy="0" r="5" fill="#38bdf8"/>
+    <text x="14" y="5" fill="#cbd5e1" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="12">不调用 Shell_TrayWnd</text>
+  </g>
+</svg>

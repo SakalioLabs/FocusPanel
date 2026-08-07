@@ -132,6 +132,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private IReadOnlyList<TaskSearchItem>
         _taskSearchItems =
             Array.Empty<TaskSearchItem>();
+    private IReadOnlyList<string>
+        _recentAppIdentities =
+            Array.Empty<string>();
+    private long _recentAppHistoryRevision;
 
     [ObservableProperty]
     private string title = "FocusPanel";
@@ -950,7 +954,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         ? "点击窗口切换；右侧画面按钮预览；输入标题筛选此应用窗口"
                         : "点击窗口切换；右侧画面按钮预览；上方可管理虚拟桌面",
                 ShellSearchScope.Applications =>
-                    "固定应用优先；输入名称筛选，点击启动，右侧图钉固定到任务栏",
+                    "固定应用优先，其后按最近启动排列；输入名称筛选，右侧图钉固定到任务栏",
                 _ =>
                     "输入关键词后用 ↑↓ 选择，按 Enter 执行"
             };
@@ -1155,6 +1159,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task LoadShellPreferencesAsync()
     {
+        long recentHistoryRevision =
+            Volatile.Read(
+                ref _recentAppHistoryRevision);
         ShellPreferenceSnapshot preferenceSnapshot =
             await _shellPreferences.LoadAsync();
         if (_isDisposed)
@@ -1190,6 +1197,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
             KeepCompactDockVisible =
                 preferenceSnapshot
                     .KeepCompactDockVisible;
+            if (Volatile.Read(
+                    ref _recentAppHistoryRevision)
+                == recentHistoryRevision)
+            {
+                _recentAppIdentities =
+                    RecentAppHistoryPolicy.Parse(
+                        preferenceSnapshot
+                            .RecentAppHistoryJson);
+            }
             IsOnboardingVisible =
                 FirstRunOnboardingPolicy.ShouldShow(
                     preferenceSnapshot
@@ -1202,6 +1218,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         ThemeService.SetMode(
             ThemeMode);
+        RefreshSearchResults();
     }
 
     partial void OnSearchQueryChanged(string value)
@@ -2235,6 +2252,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             case ElevatedAppLaunchStatus.Started:
                 SystemActionMessage =
                     string.Empty;
+                RecordSuccessfulAppLaunch(launch);
                 break;
             case ElevatedAppLaunchStatus.Cancelled:
                 SystemActionMessage =
@@ -3338,6 +3356,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _appCatalog.Search(
                 SearchQuery,
                 applicationLimit);
+        bool isApplicationLauncherOverview =
+            SearchScope
+                == ShellSearchScope.Applications
+            && string.IsNullOrWhiteSpace(
+                SearchQuery);
+        IReadOnlySet<string>?
+            recentApplicationIdentities = null;
+        if (isApplicationLauncherOverview)
+        {
+            applications =
+                RecentAppHistoryPolicy
+                    .OrderForLauncher(
+                        applications,
+                        _recentAppIdentities);
+            recentApplicationIdentities =
+                new HashSet<string>(
+                    _recentAppIdentities,
+                    StringComparer.OrdinalIgnoreCase);
+        }
         IReadOnlyList<WindowTaskItem> windows =
             _windowTracker.GetSnapshot();
         OpenWindowCount = windows
@@ -3359,7 +3396,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 windowIdentityFilter:
                     IsWindowApplicationFilterActive
                         ? _windowOverviewIdentityFilter
-                        : null);
+                        : null,
+                recentApplicationIdentities:
+                    recentApplicationIdentities);
         ReplaceCollection(
             SearchResults,
             results);
@@ -4668,6 +4707,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             SystemActionMessage =
                 string.Empty;
+            RecordSuccessfulAppLaunch(app);
             return true;
         }
 
@@ -4677,6 +4717,36 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CloseTransientPanels();
         IsStatusCenterOpen = true;
         return false;
+    }
+
+    private void RecordSuccessfulAppLaunch(
+        AppLaunchItem app)
+    {
+        IReadOnlyList<string> updated =
+            RecentAppHistoryPolicy.Record(
+                _recentAppIdentities,
+                app.IdentityKey);
+        if (_recentAppIdentities.SequenceEqual(
+                updated,
+                StringComparer.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _recentAppIdentities = updated;
+        Interlocked.Increment(
+            ref _recentAppHistoryRevision);
+        QueueShellPreference(
+            ShellPreferenceRepository
+                .RecentAppHistoryKey,
+            RecentAppHistoryPolicy.Serialize(
+                updated));
+        if (IsApplicationLauncherOpen
+            && string.IsNullOrWhiteSpace(
+                SearchQuery))
+        {
+            RefreshSearchResults();
+        }
     }
 
     private async Task<bool> TrySetPinnedAsync(

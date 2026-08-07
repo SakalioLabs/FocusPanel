@@ -177,7 +177,8 @@ public sealed record ShellSearchResult
 
     internal static ShellSearchResult
         FromApplication(
-            AppLaunchItem application) =>
+            AppLaunchItem application,
+            bool isRecentlyLaunched = false) =>
         new()
         {
             Kind =
@@ -195,7 +196,9 @@ public sealed record ShellSearchResult
             SecondaryText =
                 application.IsPinned
                     ? "应用 · 已固定"
-                    : "应用",
+                    : isRecentlyLaunched
+                        ? "应用 · 最近启动"
+                        : "应用",
             AccessibleName =
                 $"启动应用 {application.DisplayName}",
             Icon =

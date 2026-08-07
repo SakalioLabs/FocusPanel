@@ -61,6 +61,11 @@ public sealed class ShellPreferenceRepositoryTests
             ShellPreferenceSnapshot
                 .Default
                 .KeepCompactDockVisible);
+        Assert.Equal(
+            "[]",
+            ShellPreferenceSnapshot
+                .Default
+                .RecentAppHistoryJson);
     }
 
     [Fact]
@@ -78,7 +83,8 @@ public sealed class ShellPreferenceRepositoryTests
                         "Unsupported",
                         999,
                         999,
-                        true),
+                        true,
+                        "[]"),
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
@@ -124,7 +130,8 @@ public sealed class ShellPreferenceRepositoryTests
                         @"device:  \\.\DISPLAY2  ",
                         800,
                         180,
-                        true),
+                        true,
+                        "[]"),
                 (_, _) => { });
 
         ShellPreferenceSnapshot snapshot =
@@ -174,7 +181,8 @@ public sealed class ShellPreferenceRepositoryTests
                             .PrimaryValue,
                         1200,
                         40,
-                        true);
+                        true,
+                        "[]");
                 },
                 (_, _) => { });
 
