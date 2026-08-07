@@ -941,6 +941,7 @@
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="48"/>
                                                         <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding DisplayName}"
@@ -955,6 +956,27 @@
                                                                Text="{Binding SignalText}"
                                                                Style="{StaticResource FocusMetaText}"/>
                                                     <Button Grid.Column="2"
+                                                            Margin="0,0,6,0"
+                                                            MinWidth="60"
+                                                            MinHeight="44"
+                                                            Content="忘记"
+                                                            Command="{Binding DataContext.ForgetWifiNetworkCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Visibility="{Binding CanForget, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                            AutomationProperties.Name="{Binding DisplayName, StringFormat=忘记 Wi-Fi {0}}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button"
+                                                                   BasedOn="{StaticResource FocusSecondaryButton}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.IsWifiNetworkBusy, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                                 Value="True">
+                                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                    <Button Grid.Column="3"
                                                             MinWidth="72"
                                                             MinHeight="44"
                                                             Content="{Binding ActionText}"

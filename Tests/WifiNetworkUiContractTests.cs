@@ -24,6 +24,12 @@ public sealed class WifiNetworkUiContractTests
             "ConnectWifiNetworkCommand",
             xaml);
         Assert.Contains(
+            "ForgetWifiNetworkCommand",
+            xaml);
+        Assert.Contains(
+            "Content=\"忘记\"",
+            xaml);
+        Assert.Contains(
             "Text=\"{Binding SignalText}\"",
             xaml);
         Assert.Contains(
@@ -47,6 +53,11 @@ public sealed class WifiNetworkUiContractTests
                 "WifiCredentialWindow.xaml"));
         Assert.Contains(
             "ConnectWithCredentialsAsync",
+            ReadRepositoryFile(
+                "Services",
+                "WifiNetworkService.cs"));
+        Assert.Contains(
+            "WlanDisconnect",
             ReadRepositoryFile(
                 "Services",
                 "WifiNetworkService.cs"));
@@ -100,6 +111,12 @@ public sealed class WifiNetworkUiContractTests
             tests);
         Assert.DoesNotContain(
             "WlanConnect(",
+            tests);
+        Assert.DoesNotContain(
+            "WlanDisconnect(",
+            tests);
+        Assert.DoesNotContain(
+            "WlanDeleteProfile(",
             tests);
     }
 

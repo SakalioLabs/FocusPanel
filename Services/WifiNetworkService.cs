@@ -76,7 +76,7 @@ public sealed record WifiNetworkSnapshot(
 
     public string ActionText =>
         IsConnected
-            ? "当前"
+            ? "断开"
             : CanConnect
                 ? "连接"
                 : !HasProfile
@@ -97,15 +97,19 @@ public sealed record WifiNetworkSnapshot(
                     : "不可连接";
 
     public bool CanInvokeAction =>
-        !IsConnected
-        && IsConnectable
-        && (CanConnect
+        IsConnected
+        || (IsConnectable
+            && (CanConnect
             || (!HasProfile
                 && SecurityKind is
                     WifiNetworkSecurityKind.Open
                     or WifiNetworkSecurityKind.WpaPersonal
                     or WifiNetworkSecurityKind.Wpa2Personal
-                    or WifiNetworkSecurityKind.Wpa3Personal));
+                    or WifiNetworkSecurityKind.Wpa3Personal)));
+
+    public bool CanForget =>
+        HasProfile
+        && !string.IsNullOrWhiteSpace(ProfileName);
 
     public bool NeedsCredentials =>
         !HasProfile
@@ -144,6 +148,34 @@ public readonly record struct WifiNetworkConnectResult(
         Status == WifiNetworkConnectStatus.Succeeded;
 }
 
+public enum WifiNetworkManageAction
+{
+    Disconnect,
+    Forget
+}
+
+public enum WifiNetworkManageStatus
+{
+    Succeeded,
+    AlreadyInDesiredState,
+    NotFound,
+    AccessDenied,
+    RadioOff,
+    ServiceUnavailable,
+    NotConfirmed,
+    Failed
+}
+
+public readonly record struct WifiNetworkManageResult(
+    WifiNetworkManageStatus Status,
+    WifiNetworkManageAction Action,
+    string DisplayName)
+{
+    public bool Succeeded =>
+        Status is WifiNetworkManageStatus.Succeeded
+            or WifiNetworkManageStatus.AlreadyInDesiredState;
+}
+
 public interface IWifiNetworkService : IDisposable
 {
     Task<WifiNetworkListResult> GetNetworksAsync(
@@ -159,9 +191,27 @@ public interface IWifiNetworkService : IDisposable
             WifiNetworkSnapshot network,
             SecureString password,
             CancellationToken cancellationToken);
+
+    Task<WifiNetworkManageResult> DisconnectAsync(
+        WifiNetworkSnapshot network,
+        CancellationToken cancellationToken);
+
+    Task<WifiNetworkManageResult> ForgetAsync(
+        WifiNetworkSnapshot network,
+        CancellationToken cancellationToken);
 }
 
 internal enum WifiNativeConnectRequestStatus
+{
+    Accepted,
+    NotFound,
+    AccessDenied,
+    RadioOff,
+    ServiceUnavailable,
+    Failed
+}
+
+internal enum WifiNativeManageRequestStatus
 {
     Accepted,
     NotFound,
@@ -194,6 +244,17 @@ internal interface IWifiNetworkNativeApi
         string interfaceId,
         string profileName,
         CancellationToken cancellationToken);
+
+    Task<WifiNativeManageRequestStatus>
+        RequestDisconnectAsync(
+            string interfaceId,
+            CancellationToken cancellationToken);
+
+    Task<WifiNativeManageRequestStatus>
+        RequestForgetProfileAsync(
+            string interfaceId,
+            string profileName,
+            CancellationToken cancellationToken);
 }
 
 public sealed class WifiNetworkService :
@@ -474,6 +535,239 @@ public sealed class WifiNetworkService :
         }
     }
 
+    public async Task<WifiNetworkManageResult>
+        DisconnectAsync(
+            WifiNetworkSnapshot network,
+            CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(network);
+        if (!network.IsConnected)
+        {
+            return ManageResult(
+                WifiNetworkManageStatus
+                    .AlreadyInDesiredState,
+                WifiNetworkManageAction.Disconnect,
+                network);
+        }
+
+        return await ManageNetworkAsync(
+                network,
+                WifiNetworkManageAction.Disconnect,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<WifiNetworkManageResult>
+        ForgetAsync(
+            WifiNetworkSnapshot network,
+            CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(network);
+        if (!network.HasProfile
+            || string.IsNullOrWhiteSpace(
+                network.ProfileName))
+        {
+            return ManageResult(
+                WifiNetworkManageStatus
+                    .AlreadyInDesiredState,
+                WifiNetworkManageAction.Forget,
+                network);
+        }
+
+        return await ManageNetworkAsync(
+                network,
+                WifiNetworkManageAction.Forget,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private async Task<WifiNetworkManageResult>
+        ManageNetworkAsync(
+            WifiNetworkSnapshot network,
+            WifiNetworkManageAction action,
+            CancellationToken cancellationToken)
+    {
+        if (_isDisposed)
+        {
+            return ManageResult(
+                WifiNetworkManageStatus.Failed,
+                action,
+                network);
+        }
+
+        await _connectGate
+            .WaitAsync(cancellationToken)
+            .ConfigureAwait(false);
+        try
+        {
+            if (network.IsConnected)
+            {
+                WifiNativeManageRequestStatus request =
+                    await _nativeApi
+                        .RequestDisconnectAsync(
+                            network.InterfaceId,
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                WifiNetworkManageStatus? failure =
+                    MapManageRequestFailure(request);
+                if (failure.HasValue)
+                {
+                    return ManageResult(
+                        failure.Value,
+                        action,
+                        network);
+                }
+
+                WifiNetworkManageStatus disconnected =
+                    await ConfirmDisconnectedAsync(
+                            network,
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                if (disconnected
+                    != WifiNetworkManageStatus.Succeeded)
+                {
+                    return ManageResult(
+                        disconnected,
+                        action,
+                        network);
+                }
+            }
+
+            if (action
+                == WifiNetworkManageAction.Disconnect)
+            {
+                return ManageResult(
+                    WifiNetworkManageStatus.Succeeded,
+                    action,
+                    network);
+            }
+
+            WifiNativeManageRequestStatus forgetRequest =
+                await _nativeApi
+                    .RequestForgetProfileAsync(
+                        network.InterfaceId,
+                        network.ProfileName,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            WifiNetworkManageStatus? forgetFailure =
+                MapManageRequestFailure(forgetRequest);
+            if (forgetFailure.HasValue)
+            {
+                return ManageResult(
+                    forgetFailure.Value,
+                    action,
+                    network);
+            }
+
+            WifiNetworkManageStatus forgotten =
+                await ConfirmForgottenAsync(
+                        network,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            return ManageResult(
+                forgotten,
+                action,
+                network);
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken
+                .IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return ManageResult(
+                WifiNetworkManageStatus.Failed,
+                action,
+                network);
+        }
+        finally
+        {
+            _connectGate.Release();
+        }
+    }
+
+    private Task<WifiNetworkManageStatus>
+        ConfirmDisconnectedAsync(
+            WifiNetworkSnapshot network,
+            CancellationToken cancellationToken) =>
+        ConfirmManageStateAsync(
+            current =>
+                !current.Networks.Any(item =>
+                    item.IsConnected
+                    && string.Equals(
+                        item.InterfaceId,
+                        network.InterfaceId,
+                        StringComparison.Ordinal)
+                    && string.Equals(
+                        item.Key,
+                        network.Key,
+                        StringComparison.Ordinal)),
+            cancellationToken);
+
+    private Task<WifiNetworkManageStatus>
+        ConfirmForgottenAsync(
+            WifiNetworkSnapshot network,
+            CancellationToken cancellationToken) =>
+        ConfirmManageStateAsync(
+            current =>
+                !current.Networks.Any(item =>
+                    item.HasProfile
+                    && string.Equals(
+                        item.InterfaceId,
+                        network.InterfaceId,
+                        StringComparison.Ordinal)
+                    && (string.Equals(
+                            item.Key,
+                            network.Key,
+                            StringComparison.Ordinal)
+                        || string.Equals(
+                            item.ProfileName,
+                            network.ProfileName,
+                            StringComparison.Ordinal))),
+            cancellationToken);
+
+    private async Task<WifiNetworkManageStatus>
+        ConfirmManageStateAsync(
+            Func<WifiNetworkListResult, bool>
+                isConfirmed,
+            CancellationToken cancellationToken)
+    {
+        for (int attempt = 0;
+             attempt < _confirmationAttempts;
+             attempt++)
+        {
+            WifiNetworkListResult current =
+                await _nativeApi
+                    .GetNetworksAsync(
+                        false,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            if (current.Succeeded
+                && isConfirmed(current))
+            {
+                return WifiNetworkManageStatus.Succeeded;
+            }
+
+            WifiNetworkManageStatus? failure =
+                MapManageListFailure(current.Status);
+            if (failure.HasValue)
+                return failure.Value;
+
+            if (attempt
+                < _confirmationAttempts - 1)
+            {
+                await Task.Delay(
+                        _confirmationDelay,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        return WifiNetworkManageStatus.NotConfirmed;
+    }
+
     private async Task<WifiNetworkConnectResult>
         ConnectProfileAndConfirmAsync(
             WifiNetworkSnapshot network,
@@ -647,6 +941,52 @@ public sealed class WifiNetworkService :
                 WifiNetworkConnectStatus.NotFound,
             _ => null
         };
+
+    private static WifiNetworkManageStatus?
+        MapManageRequestFailure(
+            WifiNativeManageRequestStatus status) =>
+        status switch
+        {
+            WifiNativeManageRequestStatus.Accepted =>
+                null,
+            WifiNativeManageRequestStatus.NotFound =>
+                WifiNetworkManageStatus.NotFound,
+            WifiNativeManageRequestStatus.AccessDenied =>
+                WifiNetworkManageStatus.AccessDenied,
+            WifiNativeManageRequestStatus.RadioOff =>
+                WifiNetworkManageStatus.RadioOff,
+            WifiNativeManageRequestStatus
+                .ServiceUnavailable =>
+                WifiNetworkManageStatus
+                    .ServiceUnavailable,
+            _ => WifiNetworkManageStatus.Failed
+        };
+
+    private static WifiNetworkManageStatus?
+        MapManageListFailure(
+            WifiNetworkListStatus status) =>
+        status switch
+        {
+            WifiNetworkListStatus.Succeeded => null,
+            WifiNetworkListStatus.AccessDenied =>
+                WifiNetworkManageStatus.AccessDenied,
+            WifiNetworkListStatus.RadioOff =>
+                WifiNetworkManageStatus.RadioOff,
+            WifiNetworkListStatus
+                .ServiceUnavailable =>
+                WifiNetworkManageStatus
+                    .ServiceUnavailable,
+            WifiNetworkListStatus.NoAdapter =>
+                WifiNetworkManageStatus.NotFound,
+            _ => null
+        };
+
+    private static WifiNetworkManageResult
+        ManageResult(
+            WifiNetworkManageStatus status,
+            WifiNetworkManageAction action,
+            WifiNetworkSnapshot network) =>
+        new(status, action, network.DisplayName);
 
     private static WifiNetworkListResult Empty(
         WifiNetworkListStatus status) =>
@@ -876,6 +1216,30 @@ internal sealed class NativeWifiNetworkApi :
         Task.Run(
             () =>
                 RemoveProfile(
+                    interfaceId,
+                    profileName,
+                    cancellationToken),
+            cancellationToken);
+
+    public Task<WifiNativeManageRequestStatus>
+        RequestDisconnectAsync(
+            string interfaceId,
+            CancellationToken cancellationToken) =>
+        Task.Run(
+            () =>
+                RequestDisconnect(
+                    interfaceId,
+                    cancellationToken),
+            cancellationToken);
+
+    public Task<WifiNativeManageRequestStatus>
+        RequestForgetProfileAsync(
+            string interfaceId,
+            string profileName,
+            CancellationToken cancellationToken) =>
+        Task.Run(
+            () =>
+                RequestForgetProfile(
                     interfaceId,
                     profileName,
                     cancellationToken),
@@ -1152,6 +1516,93 @@ internal sealed class NativeWifiNetworkApi :
                 ref interfaceGuid,
                 profileName,
                 IntPtr.Zero);
+        }
+        finally
+        {
+            NativeMethods.WlanCloseHandle(
+                clientHandle,
+                IntPtr.Zero);
+        }
+    }
+
+    private static WifiNativeManageRequestStatus
+        RequestDisconnect(
+            string interfaceId,
+            CancellationToken cancellationToken)
+    {
+        cancellationToken
+            .ThrowIfCancellationRequested();
+        if (!Guid.TryParse(
+                interfaceId,
+                out Guid interfaceGuid))
+        {
+            return WifiNativeManageRequestStatus.NotFound;
+        }
+
+        uint openStatus =
+            NativeMethods.WlanOpenHandle(
+                2,
+                IntPtr.Zero,
+                out _,
+                out IntPtr clientHandle);
+        if (openStatus != NativeMethods.ErrorSuccess)
+            return MapManageStatus(openStatus);
+
+        try
+        {
+            uint status =
+                NativeMethods.WlanDisconnect(
+                    clientHandle,
+                    ref interfaceGuid,
+                    IntPtr.Zero);
+            return status == NativeMethods.ErrorSuccess
+                ? WifiNativeManageRequestStatus.Accepted
+                : MapManageStatus(status);
+        }
+        finally
+        {
+            NativeMethods.WlanCloseHandle(
+                clientHandle,
+                IntPtr.Zero);
+        }
+    }
+
+    private static WifiNativeManageRequestStatus
+        RequestForgetProfile(
+            string interfaceId,
+            string profileName,
+            CancellationToken cancellationToken)
+    {
+        cancellationToken
+            .ThrowIfCancellationRequested();
+        if (!Guid.TryParse(
+                interfaceId,
+                out Guid interfaceGuid)
+            || string.IsNullOrWhiteSpace(profileName))
+        {
+            return WifiNativeManageRequestStatus.NotFound;
+        }
+
+        uint openStatus =
+            NativeMethods.WlanOpenHandle(
+                2,
+                IntPtr.Zero,
+                out _,
+                out IntPtr clientHandle);
+        if (openStatus != NativeMethods.ErrorSuccess)
+            return MapManageStatus(openStatus);
+
+        try
+        {
+            uint status =
+                NativeMethods.WlanDeleteProfile(
+                    clientHandle,
+                    ref interfaceGuid,
+                    profileName,
+                    IntPtr.Zero);
+            return status == NativeMethods.ErrorSuccess
+                ? WifiNativeManageRequestStatus.Accepted
+                : MapManageStatus(status);
         }
         finally
         {
@@ -1598,6 +2049,22 @@ internal sealed class NativeWifiNetworkApi :
                 WifiNativeConnectRequestStatus.Failed
         };
 
+    private static WifiNativeManageRequestStatus
+        MapManageStatus(uint status) =>
+        status switch
+        {
+            NativeMethods.ErrorAccessDenied =>
+                WifiNativeManageRequestStatus.AccessDenied,
+            NativeMethods.ErrorRadioPowerInvalid =>
+                WifiNativeManageRequestStatus.RadioOff,
+            NativeMethods.ErrorServiceNotActive =>
+                WifiNativeManageRequestStatus
+                    .ServiceUnavailable,
+            NativeMethods.ErrorNotFound =>
+                WifiNativeManageRequestStatus.NotFound,
+            _ => WifiNativeManageRequestStatus.Failed
+        };
+
     private static WifiNetworkListResult Empty(
         WifiNetworkListStatus status) =>
         new(status, Array.Empty<WifiNetworkSnapshot>());
@@ -1788,6 +2255,12 @@ internal static class NativeMethods
         ref Guid interfaceGuid,
         ref WlanConnectionParameters
             connectionParameters,
+        IntPtr reserved);
+
+    [DllImport("wlanapi.dll")]
+    internal static extern uint WlanDisconnect(
+        IntPtr clientHandle,
+        ref Guid interfaceGuid,
         IntPtr reserved);
 
     [DllImport(

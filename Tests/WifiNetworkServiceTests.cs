@@ -395,6 +395,133 @@ public sealed class WifiNetworkServiceTests
         Assert.Equal(1, native.ListRequests);
     }
 
+    [Fact]
+    public async Task Disconnect_OnlySucceedsAfterDisconnectedObservation()
+    {
+        WifiNetworkSnapshot target =
+            Network("home", "Home", connected: true,
+                hasProfile: true);
+        var native = new FakeWifiNetworkNativeApi();
+        native.ListResults.Enqueue(
+            Success(target with { IsConnected = false }));
+        using var service = CreateService(native);
+
+        WifiNetworkManageResult result =
+            await service.DisconnectAsync(
+                target,
+                CancellationToken.None);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(1, native.DisconnectRequests);
+        Assert.Equal(new[] { "disconnect" }, native.OperationOrder);
+    }
+
+    [Fact]
+    public async Task Disconnect_AcceptedWithoutTransitionIsNotConfirmed()
+    {
+        WifiNetworkSnapshot target =
+            Network("home", "Home", connected: true,
+                hasProfile: true);
+        var native = new FakeWifiNetworkNativeApi
+        {
+            Networks = { target }
+        };
+        using var service = CreateService(native);
+
+        WifiNetworkManageResult result =
+            await service.DisconnectAsync(
+                target,
+                CancellationToken.None);
+
+        Assert.Equal(
+            WifiNetworkManageStatus.NotConfirmed,
+            result.Status);
+        Assert.Equal(3, native.ListRequests);
+    }
+
+    [Fact]
+    public async Task Forget_ConnectedNetworkDisconnectsBeforeDeletingProfile()
+    {
+        WifiNetworkSnapshot target =
+            Network("home", "Home", connected: true,
+                hasProfile: true);
+        var native = new FakeWifiNetworkNativeApi();
+        native.ListResults.Enqueue(
+            Success(target with { IsConnected = false }));
+        native.ListResults.Enqueue(
+            Success(target with
+            {
+                IsConnected = false,
+                HasProfile = false,
+                ProfileName = string.Empty
+            }));
+        using var service = CreateService(native);
+
+        WifiNetworkManageResult result =
+            await service.ForgetAsync(
+                target,
+                CancellationToken.None);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            new[] { "disconnect", "forget" },
+            native.OperationOrder);
+    }
+
+    [Fact]
+    public async Task Forget_UnstoredNetworkNeverCallsNativeBoundary()
+    {
+        var native = new FakeWifiNetworkNativeApi();
+        using var service = CreateService(native);
+
+        WifiNetworkManageResult result =
+            await service.ForgetAsync(
+                Network("guest", "Guest"),
+                CancellationToken.None);
+
+        Assert.Equal(
+            WifiNetworkManageStatus.AlreadyInDesiredState,
+            result.Status);
+        Assert.Equal(0, native.ForgetRequests);
+        Assert.Empty(native.OperationOrder);
+    }
+
+    [Theory]
+    [InlineData(
+        (int)WifiNativeManageRequestStatus.AccessDenied,
+        WifiNetworkManageStatus.AccessDenied)]
+    [InlineData(
+        (int)WifiNativeManageRequestStatus.RadioOff,
+        WifiNetworkManageStatus.RadioOff)]
+    [InlineData(
+        (int)WifiNativeManageRequestStatus.ServiceUnavailable,
+        WifiNetworkManageStatus.ServiceUnavailable)]
+    [InlineData(
+        (int)WifiNativeManageRequestStatus.NotFound,
+        WifiNetworkManageStatus.NotFound)]
+    public async Task Disconnect_MapsRequestFailure(
+        int nativeStatusValue,
+        WifiNetworkManageStatus expected)
+    {
+        var native = new FakeWifiNetworkNativeApi
+        {
+            ManageStatus =
+                (WifiNativeManageRequestStatus)
+                nativeStatusValue
+        };
+        using var service = CreateService(native);
+
+        WifiNetworkManageResult result =
+            await service.DisconnectAsync(
+                Network("home", "Home",
+                    connected: true,
+                    hasProfile: true),
+                CancellationToken.None);
+
+        Assert.Equal(expected, result.Status);
+        Assert.Equal(0, native.ListRequests);
+    }
+
     private static WifiNetworkService CreateService(
         IWifiNetworkNativeApi native) =>
         new(
@@ -478,6 +605,16 @@ public sealed class WifiNetworkServiceTests
             private set;
         }
 
+        internal int DisconnectRequests { get; private set; }
+
+        internal int ForgetRequests { get; private set; }
+
+        internal List<string> OperationOrder { get; } = new();
+
+        internal WifiNativeManageRequestStatus
+            ManageStatus { get; init; } =
+                WifiNativeManageRequestStatus.Accepted;
+
         public Task<WifiNetworkListResult>
             GetNetworksAsync(
                 bool requestScan,
@@ -539,6 +676,29 @@ public sealed class WifiNetworkServiceTests
                 .ThrowIfCancellationRequested();
             RemoveProfileRequests++;
             return Task.CompletedTask;
+        }
+
+        public Task<WifiNativeManageRequestStatus>
+            RequestDisconnectAsync(
+                string interfaceId,
+                CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            DisconnectRequests++;
+            OperationOrder.Add("disconnect");
+            return Task.FromResult(ManageStatus);
+        }
+
+        public Task<WifiNativeManageRequestStatus>
+            RequestForgetProfileAsync(
+                string interfaceId,
+                string profileName,
+                CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ForgetRequests++;
+            OperationOrder.Add("forget");
+            return Task.FromResult(ManageStatus);
         }
     }
 }

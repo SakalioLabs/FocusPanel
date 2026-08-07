@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.46 让 Wi‑Fi 管理形成完整闭环：当前网络不再是不可点击的“当前”，可直接从 Panel 断开；每个已保存网络都提供明确的“忘记”动作。忘记当前网络会先二次确认，再按“断开 → 确认断开 → 删除 Windows 配置 → 确认配置消失”的顺序执行。全部操作使用微软公开的 [`WlanDisconnect`](https://learn.microsoft.com/windows/win32/api/wlanapi/nf-wlanapi-wlandisconnect) 与 [`WlanDeleteProfile`](https://learn.microsoft.com/windows/win32/api/wlanapi/nf-wlanapi-wlandeleteprofile)，权限拒绝、无线服务异常和状态未确认不会显示成成功。
+
+![Panel 内完成 Wi-Fi 连接、断开和忘记网络](docs/images/panel-native-wifi-lifecycle.svg)
+
 > 0.11.45 把蓝牙设备管理收进 Panel：“网络与无线”现在可以直接发现已配对和附近设备，准确区分已连接、已配对、在附近与可配对状态，并在当前侧栏完成配对或移除。Classic 与低功耗端点按 Windows 设备身份去重，已连接和已配对设备优先，不会重复堆出同一副耳机。首次配对仍会由 Windows 显示一次安全确认，这是桌面应用不能绕过的系统安全边界，但不会打开任务栏蓝牙浮层。
 
 ![Panel 内发现、配对和移除蓝牙设备](docs/images/panel-native-bluetooth-devices.svg)

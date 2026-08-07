@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13233e"/><stop offset=".55" stop-color="#3a2e4d"/><stop offset="1" stop-color="#143d43"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f8ff" stop-opacity=".2"/><stop offset="1" stop-color="#c4d2ed" stop-opacity=".1"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="28" flood-color="#000" flood-opacity=".34"/></filter>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/><circle cx="210" cy="120" r="200" fill="#2f7cff" opacity=".14"/><circle cx="1010" cy="610" r="270" fill="#38ddb8" opacity=".1"/>
+  <g font-family="Segoe UI, sans-serif">
+    <text x="72" y="235" fill="#fff" font-size="39" font-weight="680">Wi‑Fi 不再只会连接</text>
+    <text x="74" y="286" fill="#bcc8db" font-size="18">扫描 · 连接 · 断开 · 忘记，一个面板闭环</text>
+    <rect x="74" y="332" width="430" height="174" rx="22" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".12"/>
+    <text x="104" y="372" fill="#80b9ff" font-size="16" font-weight="650">真实状态确认</text>
+    <text x="104" y="409" fill="#d6dfed" font-size="15">1  请求 Windows 断开当前连接</text>
+    <text x="104" y="439" fill="#d6dfed" font-size="15">2  确认连接状态已经消失</text>
+    <text x="104" y="469" fill="#d6dfed" font-size="15">3  删除配置并确认不再保存</text>
+  </g>
+  <g font-family="Segoe UI, sans-serif" filter="url(#shadow)">
+    <rect x="570" y="28" width="580" height="664" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <text x="610" y="79" fill="#f8faff" font-size="26" font-weight="650">附近 Wi‑Fi</text><text x="610" y="110" fill="#c6d1e5" font-size="15">连接与配置管理都留在 Panel</text>
+    <rect x="605" y="142" width="510" height="94" rx="16" fill="#fff" fill-opacity=".1"/>
+    <text x="631" y="177" fill="#fff" font-size="18" font-weight="600">Studio-5G</text><text x="631" y="205" fill="#77e2b7" font-size="14">已连接 · 92%</text>
+    <rect x="917" y="167" width="76" height="44" rx="12" fill="#fff" fill-opacity=".1"/><text x="941" y="195" fill="#f2f6ff" font-size="14">忘记</text>
+    <rect x="1003" y="167" width="86" height="44" rx="12" fill="#378bff"/><text x="1031" y="195" fill="#fff" font-size="14">断开</text>
+    <rect x="605" y="248" width="510" height="94" rx="16" fill="#fff" fill-opacity=".065"/>
+    <text x="631" y="283" fill="#fff" font-size="18" font-weight="600">FocusLab</text><text x="631" y="311" fill="#b8c5d8" font-size="14">已保存 · 安全网络 · 81%</text>
+    <rect x="917" y="273" width="76" height="44" rx="12" fill="#fff" fill-opacity=".1"/><text x="941" y="301" fill="#f2f6ff" font-size="14">忘记</text>
+    <rect x="1003" y="273" width="86" height="44" rx="12" fill="#378bff"/><text x="1031" y="301" fill="#fff" font-size="14">连接</text>
+    <rect x="605" y="354" width="510" height="94" rx="16" fill="#fff" fill-opacity=".065"/>
+    <text x="631" y="389" fill="#fff" font-size="18" font-weight="600">Guest</text><text x="631" y="417" fill="#b8c5d8" font-size="14">开放网络 · 64%</text>
+    <rect x="1003" y="379" width="86" height="44" rx="12" fill="#378bff"/><text x="1031" y="407" fill="#fff" font-size="14">连接</text>
+    <rect x="605" y="478" width="510" height="116" rx="16" fill="#378bff" fill-opacity=".12"/>
+    <text x="631" y="515" fill="#e0e9f8" font-size="15" font-weight="600">忘记 Studio-5G？</text><text x="631" y="546" fill="#c5d3e7" font-size="14">先断开当前连接，再删除 Windows 保存的配置。</text>
+    <rect x="913" y="560" width="78" height="42" rx="12" fill="#fff" fill-opacity=".1"/><text x="938" y="587" fill="#eef3fb" font-size="14">取消</text>
+    <rect x="1001" y="560" width="88" height="42" rx="12" fill="#378bff"/><text x="1031" y="587" fill="#fff" font-size="14">忘记</text>
+  </g>
+</svg>

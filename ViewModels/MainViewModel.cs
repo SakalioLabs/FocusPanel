@@ -4304,6 +4304,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        if (network.IsConnected)
+        {
+            await ManageWifiNetworkCoreAsync(
+                network,
+                WifiNetworkManageAction.Disconnect);
+            return;
+        }
+
         if (network.NeedsCredentials)
         {
             IsStatusCenterOpen = true;
@@ -4324,6 +4332,34 @@ public partial class MainViewModel : ObservableObject, IDisposable
         await ConnectWifiNetworkCoreAsync(
             network,
             null);
+    }
+
+    [RelayCommand]
+    private async Task ForgetWifiNetwork(
+        WifiNetworkSnapshot? network)
+    {
+        if (network == null
+            || IsWifiNetworkBusy
+            || !network.CanForget)
+        {
+            return;
+        }
+
+        string consequence = network.IsConnected
+            ? "Panel 会先断开当前连接，再删除 Windows 保存的网络配置。"
+            : "Windows 保存的网络配置将被删除，下次连接需要重新输入密码。";
+        MessageBoxResult confirmation =
+            FocusDialogService.Show(
+                $"确定要忘记“{network.DisplayName}”吗？\n\n{consequence}",
+                "忘记 Wi‑Fi 网络",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+            return;
+
+        await ManageWifiNetworkCoreAsync(
+            network,
+            WifiNetworkManageAction.Forget);
     }
 
     public Task ConnectWifiNetworkWithCredentialsAsync(
@@ -4394,6 +4430,66 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 : ComposeWifiConnectFailure(result);
         WifiNetworkStatusText =
             "连接没有完成；Panel 已保留网络列表，可直接重试";
+        IsStatusCenterOpen = true;
+    }
+
+    private async Task ManageWifiNetworkCoreAsync(
+        WifiNetworkSnapshot network,
+        WifiNetworkManageAction action)
+    {
+        if (IsWifiNetworkBusy)
+            return;
+
+        long revision =
+            Interlocked.Increment(
+                ref _wifiNetworkRevision);
+        IsWifiNetworkBusy = true;
+        string actionText =
+            action == WifiNetworkManageAction.Forget
+                ? "忘记"
+                : "断开";
+        WifiNetworkStatusText =
+            $"正在{actionText} {network.DisplayName}…";
+        Task<WifiNetworkManageResult>? operation =
+            _wifiNetworkOperations.TryStart(
+                () =>
+                    action
+                        == WifiNetworkManageAction.Forget
+                        ? _wifiNetworks.ForgetAsync(
+                            network,
+                            CancellationToken.None)
+                        : _wifiNetworks.DisconnectAsync(
+                            network,
+                            CancellationToken.None));
+        if (operation == null)
+        {
+            IsWifiNetworkBusy = false;
+            return;
+        }
+
+        WifiNetworkManageResult result =
+            await operation;
+        if (_isDisposed
+            || revision
+                != Volatile.Read(
+                    ref _wifiNetworkRevision))
+        {
+            return;
+        }
+
+        IsWifiNetworkBusy = false;
+        WifiNetworkStatusText =
+            ComposeWifiManageStatus(result);
+        if (result.Succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            await RefreshWifiNetworksCoreAsync(false);
+            RequestSystemStatusRefresh();
+            return;
+        }
+
+        SystemActionMessage =
+            WifiNetworkStatusText;
         IsStatusCenterOpen = true;
     }
 
@@ -4605,6 +4701,39 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _ =>
                 $"无法连接“{result.DisplayName}”，请在 Panel 中刷新后重试。"
         };
+
+    private static string ComposeWifiManageStatus(
+        WifiNetworkManageResult result)
+    {
+        bool forgetting =
+            result.Action
+            == WifiNetworkManageAction.Forget;
+        string action = forgetting
+            ? "忘记"
+            : "断开";
+        return result.Status switch
+        {
+            WifiNetworkManageStatus.Succeeded
+                or WifiNetworkManageStatus
+                    .AlreadyInDesiredState =>
+                forgetting
+                    ? $"已忘记 {result.DisplayName}"
+                    : $"已断开 {result.DisplayName}",
+            WifiNetworkManageStatus.NotFound =>
+                $"{result.DisplayName} 或对应无线适配器已不存在",
+            WifiNetworkManageStatus.AccessDenied =>
+                $"Windows 拒绝{action} {result.DisplayName}；当前账户没有所需的网络配置权限",
+            WifiNetworkManageStatus.RadioOff =>
+                $"Wi‑Fi Radio 已关闭，无法完成{action}",
+            WifiNetworkManageStatus
+                .ServiceUnavailable =>
+                $"Windows WLAN AutoConfig 服务不可用，无法完成{action}",
+            WifiNetworkManageStatus.NotConfirmed =>
+                $"已请求{action} {result.DisplayName}，但 Windows 未确认状态改变",
+            _ =>
+                $"无法{action} {result.DisplayName}，请刷新网络后重试"
+        };
+    }
 
     private async Task ToggleSystemRadioAsync(
         SystemRadioKind kind)
