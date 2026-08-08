@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="650" viewBox="0 0 1180 650">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#091320"/>
+      <stop offset="1" stop-color="#1b2c47"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dff5ff" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#66b8f2" stop-opacity=".10"/>
+    </linearGradient>
+    <filter id="shadow" x="-40%" y="-30%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".40"/>
+    </filter>
+  </defs>
+  <rect width="1180" height="650" rx="30" fill="url(#bg)"/>
+  <text x="54" y="66" fill="#f5f9ff" font-family="Segoe UI, sans-serif" font-size="30" font-weight="700">沿右缘直接拖动 · 三档吸附 · 指示条同步</text>
+  <text x="54" y="104" fill="#a5bad2" font-family="Segoe UI, sans-serif" font-size="16">位置操作不再藏在设置页，多屏与不同 DPI 统一使用物理屏幕坐标</text>
+
+  <rect x="54" y="145" width="680" height="445" rx="24" fill="#142239" stroke="#405979"/>
+  <text x="82" y="184" fill="#dcecff" font-family="Segoe UI, sans-serif" font-size="15">所选显示器</text>
+  <line x1="82" y1="287" x2="706" y2="287" stroke="#38506d" stroke-dasharray="8 8"/>
+  <line x1="82" y1="438" x2="706" y2="438" stroke="#38506d" stroke-dasharray="8 8"/>
+  <text x="96" y="230" fill="#7f9ab9" font-family="Segoe UI, sans-serif" font-size="14">右上吸附区</text>
+  <text x="96" y="365" fill="#7f9ab9" font-family="Segoe UI, sans-serif" font-size="14">右中吸附区</text>
+  <text x="96" y="520" fill="#7f9ab9" font-family="Segoe UI, sans-serif" font-size="14">右下吸附区</text>
+
+  <rect x="640" y="217" width="54" height="300" rx="26" fill="url(#glass)" stroke="#8bd9ff" filter="url(#shadow)"/>
+  <rect x="655" y="229" width="24" height="4" rx="2" fill="#d8f2ff" opacity=".72"/>
+  <circle cx="667" cy="270" r="14" fill="#55c8ff"/>
+  <circle cx="667" cy="314" r="14" fill="#6ce2aa"/>
+  <rect x="651" y="346" width="32" height="2" rx="1" fill="#7693b2"/>
+  <circle cx="667" cy="382" r="15" fill="#9477ff"/>
+  <circle cx="667" cy="430" r="15" fill="#ff7397"/>
+  <circle cx="667" cy="478" r="15" fill="#f7c05f"/>
+  <rect x="703" y="217" width="3" height="300" rx="1.5" fill="#56c9ff"/>
+
+  <path d="M598 245c-48 37-48 202 0 240" fill="none" stroke="#56c9ff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M587 256l11-12 11 12M587 474l11 12 11-12" fill="none" stroke="#56c9ff" stroke-width="3" stroke-linecap="round"/>
+  <text x="420" y="354" fill="#eaf5ff" font-family="Segoe UI, sans-serif" font-size="17" font-weight="600">拖动细把手</text>
+  <text x="387" y="382" fill="#91a9c4" font-family="Segoe UI, sans-serif" font-size="14">松开后吸附到所在分区</text>
+
+  <rect x="778" y="145" width="348" height="445" rx="24" fill="#202f48" stroke="#405979"/>
+  <text x="810" y="190" fill="#f3f8ff" font-family="Segoe UI, sans-serif" font-size="21" font-weight="650">三种直接操作</text>
+  <g font-family="Segoe UI, sans-serif">
+    <rect x="810" y="224" width="284" height="82" rx="16" fill="#172740"/>
+    <circle cx="842" cy="265" r="18" fill="#1687d5"/><text x="837" y="271" fill="#fff" font-size="18">1</text>
+    <text x="876" y="255" fill="#edf6ff" font-size="17">单击把手</text><text x="876" y="279" fill="#91aac6" font-size="13">右上 → 右中 → 右下循环</text>
+    <rect x="810" y="322" width="284" height="82" rx="16" fill="#172740"/>
+    <circle cx="842" cy="363" r="18" fill="#6c55d8"/><text x="837" y="369" fill="#fff" font-size="18">2</text>
+    <text x="876" y="353" fill="#edf6ff" font-size="17">上下拖动</text><text x="876" y="377" fill="#91aac6" font-size="13">按目标屏幕物理区域吸附</text>
+    <rect x="810" y="420" width="284" height="82" rx="16" fill="#172740"/>
+    <circle cx="842" cy="461" r="18" fill="#e16a8b"/><text x="837" y="467" fill="#fff" font-size="18">3</text>
+    <text x="876" y="451" fill="#edf6ff" font-size="17">右键空白处</text><text x="876" y="475" fill="#91aac6" font-size="13">菜单勾选当前固定位置</text>
+  </g>
+  <text x="810" y="542" fill="#7f9ab9" font-family="Segoe UI, sans-serif" font-size="14">设置页选项仍保留，所有入口共享同一状态</text>
+</svg>

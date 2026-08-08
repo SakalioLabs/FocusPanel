@@ -12,6 +12,9 @@ internal readonly record struct PhysicalWindowBounds(
 
 internal static class ShellWindowPlacement
 {
+    internal const double DefaultPanelMarginDip = 12;
+    internal const double PreferredPanelHeightDip = 820;
+
     internal static PhysicalWindowBounds CalculatePanel(
         Rectangle screenBounds,
         uint dpi,
@@ -44,6 +47,48 @@ internal static class ShellWindowPlacement
             screenBounds.Top,
             Math.Max(1, widthPhysicalPixels),
             Math.Max(1, screenBounds.Height));
+
+    internal static PhysicalWindowBounds
+        CalculateAnchoredIndicator(
+            Rectangle screenBounds,
+            uint dpi,
+            int widthPhysicalPixels,
+            double marginDip,
+            double desiredHeightDip,
+            string? verticalAnchor)
+    {
+        double scale = NormalizeDpi(dpi) / 96.0;
+        int margin = Math.Max(
+            0,
+            (int)Math.Round(
+                marginDip * scale));
+        int availableHeight = Math.Max(
+            1,
+            screenBounds.Height - margin * 2);
+        int height = Math.Min(
+            availableHeight,
+            Math.Max(
+                1,
+                (int)Math.Round(
+                    desiredHeightDip
+                    * scale)));
+        int top =
+            ShellPanelVerticalAnchorPolicy
+                .CalculateTop(
+                    screenBounds.Top + margin,
+                    availableHeight,
+                    height,
+                    verticalAnchor);
+        int width = Math.Max(
+            1,
+            widthPhysicalPixels);
+
+        return new PhysicalWindowBounds(
+            screenBounds.Right - width,
+            top,
+            width,
+            height);
+    }
 
     internal static PhysicalWindowBounds CalculateAnchoredPanel(
         Rectangle screenBounds,

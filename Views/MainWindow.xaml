@@ -2040,6 +2040,24 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0">
+                            <Button x:Name="PanelPositionHandleButton"
+                                    Height="20"
+                                    Margin="0,0,0,2"
+                                    Padding="0"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Click="PanelPositionHandleButton_Click"
+                                    PreviewMouseLeftButtonDown="PanelPositionHandleButton_PreviewMouseLeftButtonDown"
+                                    PreviewMouseMove="PanelPositionHandleButton_PreviewMouseMove"
+                                    LostMouseCapture="PanelPositionHandleButton_LostMouseCapture"
+                                    AutomationProperties.Name="调整 Panel 右侧固定位置"
+                                    AutomationProperties.HelpText="单击依次切换右上、右中、右下；上下拖动后松开会吸附到对应位置"
+                                    ToolTip="拖动调整位置 · 单击依次切换右上 / 右中 / 右下">
+                                <Border Width="24"
+                                        Height="4"
+                                        CornerRadius="2"
+                                        Background="{DynamicResource FocusMutedTextBrush}"
+                                        Opacity="0.58"/>
+                            </Button>
                             <Button x:Name="StartButton"
                                     Style="{StaticResource CompactLabeledEntryButton}"
                                     Tag="CompactFixedEntry"

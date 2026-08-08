@@ -74,6 +74,13 @@ public partial class EdgeIndicatorWindow : Window
     internal string TargetValue { get; set; } =
         ShellDisplayTarget.OutermostRightValue;
 
+    internal string VerticalAnchorValue
+    {
+        get;
+        set;
+    } = ShellPanelVerticalAnchorPolicy
+        .CenterValue;
+
     private void ShowWithoutActivation()
     {
         if (!IsVisible)
@@ -108,9 +115,16 @@ public partial class EdgeIndicatorWindow : Window
                 hwnd);
         double scale = dpi / 96.0;
         PhysicalWindowBounds bounds =
-            ShellWindowPlacement.CalculateIndicator(
+            ShellWindowPlacement
+                .CalculateAnchoredIndicator(
                 targetBounds,
-                (int)IndicatorPhysicalWidth);
+                dpi,
+                (int)IndicatorPhysicalWidth,
+                ShellWindowPlacement
+                    .DefaultPanelMarginDip,
+                ShellWindowPlacement
+                    .PreferredPanelHeightDip,
+                VerticalAnchorValue);
         Width = bounds.Width / scale;
         Height = bounds.Height / scale;
         ShellWindowPlacement.Apply(hwnd, bounds);

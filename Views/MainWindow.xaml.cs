@@ -30,10 +30,14 @@ public partial class MainWindow :
 {
     private const double CompactWidth = 76;
     private const double ExpandedWidth = 720;
-    private const double ScreenMargin = 12;
+    private const double ScreenMargin =
+        ShellWindowPlacement
+            .DefaultPanelMarginDip;
     private const double CompactTaskbarScrollStep = 46;
     private const double CompactTaskbarOverflowInset = 46;
-    private const double PreferredPanelHeight = 820;
+    private const double PreferredPanelHeight =
+        ShellWindowPlacement
+            .PreferredPanelHeightDip;
     private const int TaskbarHoverOpenDelayMilliseconds = 420;
     private const int TaskbarHoverCloseDelayMilliseconds = 260;
     private const int TaskbarWindowCycleThrottleMilliseconds = 90;
@@ -85,6 +89,9 @@ public partial class MainWindow :
         _taskbarFileDropTarget;
     private bool
         _taskbarExternalFileDragActive;
+    private bool _panelPositionDragActive;
+    private bool _panelPositionDragMoved;
+    private int _panelPositionDragStartY;
     private Button? _taskbarHoverButton;
     private TaskbarAppItem? _taskbarHoverTask;
     private FrameworkElement?
@@ -551,6 +558,8 @@ public partial class MainWindow :
         _edgeIndicator ??= new EdgeIndicatorWindow();
         _edgeIndicator.TargetValue =
             _viewModel.DisplayTargetMode;
+        _edgeIndicator.VerticalAnchorValue =
+            _viewModel.PanelVerticalAnchor;
     }
 
     private void PositionAtTargetRightEdge()
@@ -2232,6 +2241,104 @@ public partial class MainWindow :
             ShellPanelVerticalAnchorPolicy
                 .NormalizeValue(anchor);
         ScheduleAutoHide();
+    }
+
+    private void PanelPositionHandleButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (_panelPositionDragMoved)
+        {
+            _panelPositionDragMoved = false;
+            return;
+        }
+
+        _viewModel.PanelVerticalAnchor =
+            PanelVerticalAnchorDragPolicy
+                .GetNext(
+                    _viewModel
+                        .PanelVerticalAnchor);
+    }
+
+    private void
+        PanelPositionHandleButton_PreviewMouseLeftButtonDown(
+            object sender,
+            MouseButtonEventArgs e)
+    {
+        if (sender is not Button button)
+            return;
+
+        _panelPositionDragStartY =
+            System.Windows.Forms.Cursor
+                .Position.Y;
+        _panelPositionDragMoved = false;
+        _panelPositionDragActive = true;
+        BeginTransientInteraction();
+        if (!button.CaptureMouse())
+        {
+            _panelPositionDragActive = false;
+            EndTransientInteraction();
+        }
+    }
+
+    private void
+        PanelPositionHandleButton_PreviewMouseMove(
+            object sender,
+            MouseEventArgs e)
+    {
+        if (!_panelPositionDragActive
+            || e.LeftButton
+                != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        int cursorY =
+            System.Windows.Forms.Cursor
+                .Position.Y;
+        if (!_panelPositionDragMoved
+            && Math.Abs(
+                cursorY
+                - _panelPositionDragStartY)
+            < 4)
+        {
+            return;
+        }
+
+        _panelPositionDragMoved = true;
+        string anchor =
+            PanelVerticalAnchorDragPolicy
+                .FromCursor(
+                    cursorY,
+                    GetTargetDisplayBounds());
+        if (!string.Equals(
+                _viewModel.PanelVerticalAnchor,
+                anchor,
+                StringComparison.Ordinal))
+        {
+            _viewModel.PanelVerticalAnchor =
+                anchor;
+        }
+    }
+
+    private void
+        PanelPositionHandleButton_LostMouseCapture(
+            object sender,
+            MouseEventArgs e)
+    {
+        if (!_panelPositionDragActive)
+            return;
+
+        _panelPositionDragActive = false;
+        EndTransientInteraction();
+        if (_panelPositionDragMoved)
+        {
+            _ = Dispatcher.BeginInvoke(
+                new Action(() =>
+                    _panelPositionDragMoved =
+                        false),
+                DispatcherPriority.Input);
+        }
     }
 
     private void PowerButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();

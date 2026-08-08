@@ -383,6 +383,36 @@ public sealed class ShellWindowPlacementTests
         Assert.Equal(1440, bounds.Height);
     }
 
+    [Theory]
+    [InlineData("Top", 138)]
+    [InlineData("Center", 225)]
+    [InlineData("Bottom", 312)]
+    public void AnchoredEdgeIndicator_MatchesPanelVerticalRegion(
+        string anchor,
+        int expectedTop)
+    {
+        var display = new Rectangle(
+            1920,
+            120,
+            2560,
+            1440);
+
+        PhysicalWindowBounds bounds =
+            ShellWindowPlacement
+                .CalculateAnchoredIndicator(
+                    display,
+                    144,
+                    3,
+                    12,
+                    820,
+                    anchor);
+
+        Assert.Equal(expectedTop, bounds.Top);
+        Assert.Equal(1230, bounds.Height);
+        Assert.Equal(4477, bounds.Left);
+        Assert.Equal(3, bounds.Width);
+    }
+
     [Fact]
     public void SideBySideMixedDpi_ExpandedPanelStaysOnTargetDisplay()
     {

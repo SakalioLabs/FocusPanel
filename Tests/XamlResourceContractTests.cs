@@ -3142,6 +3142,18 @@ public sealed class XamlResourceContractTests
             "UpdatePanelAnchorMenuChecks(",
             codeBehind);
         Assert.Contains(
+            "x:Name=\"PanelPositionHandleButton\"",
+            mainWindow);
+        Assert.Contains(
+            "PanelVerticalAnchorDragPolicy",
+            codeBehind);
+        Assert.Contains(
+            "CaptureMouse()",
+            codeBehind);
+        Assert.Contains(
+            "LostMouseCapture=\"PanelPositionHandleButton_LostMouseCapture\"",
+            mainWindow);
+        Assert.Contains(
             "BackgroundAppFilterPolicy.Apply(",
             viewModel);
         Assert.Contains("TaskbarApps,", viewModel);
