@@ -147,6 +147,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private IReadOnlyList<string>
         _recentAppIdentities =
             Array.Empty<string>();
+    private readonly List<IntPtr>
+        _recentWindowHandles = new();
     private long _recentAppHistoryRevision;
 
     [ObservableProperty]
@@ -1148,7 +1150,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ShellSearchScope.Windows =>
                     IsWindowApplicationFilterActive
                         ? $"{_windowOverviewApplicationName} 的窗口"
-                        : "当前窗口",
+                        : "全部窗口",
                 ShellSearchScope.Applications =>
                     "开始 · 全部应用",
                 ShellSearchScope.System =>
@@ -1165,8 +1167,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 ShellSearchScope.Windows =>
                     IsWindowApplicationFilterActive
-                        ? "点击窗口切换；右侧画面按钮预览；输入标题筛选此应用窗口"
-                        : "点击窗口切换；右侧画面按钮预览；上方可管理虚拟桌面",
+                        ? "Enter 切换，Delete 关闭；右侧画面按钮预览；输入标题筛选此应用窗口"
+                        : "再次按窗口快捷键循环；↑↓ 选择，Enter 切换，Delete 关闭",
                 ShellSearchScope.Applications =>
                     "固定应用优先，其后按最近启动排列；输入名称筛选，右侧图钉固定到任务栏",
                 _ =>
@@ -3784,11 +3786,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
             && activeWindow.Handle
                 != IntPtr.Zero)
         {
+            RememberActiveWindow(
+                activeWindow.Handle);
             _lastActiveExternalWindowHandle =
                 activeWindow.Handle;
         }
 
         RefreshBackgroundAppViewPresentation();
+    }
+
+    private void RememberActiveWindow(
+        IntPtr handle)
+    {
+        if (handle == IntPtr.Zero)
+            return;
+
+        _recentWindowHandles.Remove(handle);
+        _recentWindowHandles.Insert(0, handle);
+        const int historyLimit = 32;
+        if (_recentWindowHandles.Count
+            > historyLimit)
+        {
+            _recentWindowHandles.RemoveRange(
+                historyLimit,
+                _recentWindowHandles.Count
+                - historyLimit);
+        }
     }
 
     private void RefreshBackgroundAppViewPresentation()
@@ -3898,7 +3921,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                                 item.IsMuted,
                                 item.IsActive,
                                 item.IsSystemSounds))
-                        .ToArray());
+                        .ToArray(),
+                recentWindowHandles:
+                    _recentWindowHandles);
         ReplaceCollection(
             SearchResults,
             results);

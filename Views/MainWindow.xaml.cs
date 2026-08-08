@@ -4523,17 +4523,43 @@ public partial class MainWindow :
         if (_isExit || !_shellStartupReady)
             return;
 
+        bool isRepeatedInvocation =
+            _viewModel.IsSearchOpen
+            && _viewModel.SearchScope
+                == ShellSearchScope.Windows
+            && string.IsNullOrWhiteSpace(
+                _viewModel.SearchQuery)
+            && !_viewModel
+                .IsWindowApplicationFilterActive;
         ExpandSidebar();
         Activate();
-        ApplySearchEntryState(
-            ShellSearchEntryPolicy
-                .PrepareWindowOverviewFromHotkey());
+        if (!isRepeatedInvocation)
+        {
+            ApplySearchEntryState(
+                ShellSearchEntryPolicy
+                    .PrepareWindowOverviewFromHotkey());
+        }
         if (!_viewModel.IsSearchOpen)
         {
             _viewModel.ToggleSearchCommand
                 .Execute(null);
         }
 
+        int selectedIndex =
+            WindowOverviewHotkeySelectionPolicy
+                .Select(
+                    SearchResultsList.Items.Count,
+                    SearchResultsList
+                        .SelectedIndex,
+                    isRepeatedInvocation);
+        SearchResultsList.SelectedIndex =
+            selectedIndex;
+        if (selectedIndex >= 0)
+        {
+            SearchResultsList.ScrollIntoView(
+                SearchResultsList.Items[
+                    selectedIndex]);
+        }
         FrameworkElement initialTarget =
             SearchResultsList.Items.Count > 0
                 ? SearchResultsList

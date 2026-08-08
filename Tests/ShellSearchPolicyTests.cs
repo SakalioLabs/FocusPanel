@@ -124,6 +124,60 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Fact]
+    public void Compose_WindowOverviewUsesRecentForegroundOrder()
+    {
+        var running = new[]
+        {
+            new WindowTaskItem
+            {
+                DisplayName = "应用",
+                IdentityKey =
+                    "exe:c:\\app.exe",
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(102),
+                        "A 未知窗口"),
+                    new WindowReference(
+                        new IntPtr(103),
+                        "B 更早窗口"),
+                    new WindowReference(
+                        new IntPtr(104),
+                        "Z 上一个窗口"),
+                    new WindowReference(
+                        new IntPtr(101),
+                        "当前窗口",
+                        true)
+                }
+            }
+        };
+
+        ShellSearchResult[] results =
+            ShellSearchPolicy.Compose(
+                    Array.Empty<
+                        AppLaunchItem>(),
+                    running,
+                    string.Empty,
+                    scope:
+                        ShellSearchScope.Windows,
+                    recentWindowHandles:
+                        new[]
+                        {
+                            new IntPtr(101),
+                            new IntPtr(104),
+                            new IntPtr(103),
+                            new IntPtr(104),
+                            IntPtr.Zero
+                        })
+                .ToArray();
+
+        Assert.Equal(
+            new long[] { 101, 104, 103, 102 },
+            results.Select(item =>
+                item.Window!.Handle.ToInt64()));
+    }
+
+    [Fact]
     public void Compose_WindowScopeFiltersOnlyWindows()
     {
         ShellSearchResult result = Assert.Single(

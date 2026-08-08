@@ -26,7 +26,9 @@ internal static class ShellSearchPolicy
                 recentApplicationIdentities = null,
             IEnumerable<
                 ApplicationAudioSessionSnapshot>?
-                applicationAudioSessions = null)
+                applicationAudioSessions = null,
+            IReadOnlyList<IntPtr>?
+                recentWindowHandles = null)
     {
         if (limit <= 0)
         {
@@ -51,7 +53,8 @@ internal static class ShellSearchPolicy
                 return ComposeWindowOverview(
                     runningApplications,
                     limit,
-                    windowIdentityFilter);
+                    windowIdentityFilter,
+                    recentWindowHandles);
             }
 
             if (scope
@@ -410,7 +413,14 @@ internal static class ShellSearchPolicy
             IEnumerable<WindowTaskItem>?
                 runningApplications,
             int limit,
-            string? windowIdentityFilter) =>
+            string? windowIdentityFilter,
+            IReadOnlyList<IntPtr>?
+                recentWindowHandles)
+    {
+        IReadOnlyDictionary<IntPtr, int>
+            recentRanks = BuildRecentWindowRanks(
+                recentWindowHandles);
+        return
         FilterWindowApplications(
             runningApplications,
             windowIdentityFilter)
@@ -427,6 +437,12 @@ internal static class ShellSearchPolicy
         .Select(group => group.First())
         .OrderByDescending(
             item => item.Window.IsActive)
+        .ThenBy(item =>
+            recentRanks.TryGetValue(
+                item.Window.Handle,
+                out int rank)
+                ? rank
+                : int.MaxValue)
         .ThenBy(
             item => item.Application.DisplayName,
             StringComparer.CurrentCultureIgnoreCase)
@@ -441,6 +457,31 @@ internal static class ShellSearchPolicy
                 item.Application,
                 item.Window))
         .ToList();
+    }
+
+    private static IReadOnlyDictionary<IntPtr, int>
+        BuildRecentWindowRanks(
+            IReadOnlyList<IntPtr>? handles)
+    {
+        var ranks =
+            new Dictionary<IntPtr, int>();
+        if (handles == null)
+            return ranks;
+
+        for (int index = 0;
+             index < handles.Count;
+             index++)
+        {
+            IntPtr handle = handles[index];
+            if (handle != IntPtr.Zero
+                && !ranks.ContainsKey(handle))
+            {
+                ranks.Add(handle, index);
+            }
+        }
+
+        return ranks;
+    }
 
     private static IEnumerable<WindowTaskItem>
         FilterWindowApplications(

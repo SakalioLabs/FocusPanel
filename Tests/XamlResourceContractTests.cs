@@ -2312,6 +2312,19 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "WindowOverviewHotkeyId",
             codeBehind);
+        Assert.Contains(
+            "WindowOverviewHotkeySelectionPolicy",
+            codeBehind);
+        Assert.Contains(
+            "isRepeatedInvocation",
+            codeBehind);
+        Assert.Contains(
+            "RememberActiveWindow(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs")));
         Assert.DoesNotContain(
             "Text=\"快速搜索：Ctrl + Alt + Space\"",
             mainWindow);
