@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="620" viewBox="0 0 1180 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07111e"/><stop offset="1" stop-color="#112a42"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8ecff" stop-opacity=".20"/><stop offset="1" stop-color="#65b8ef" stop-opacity=".07"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity=".40"/></filter>
+  </defs>
+  <rect width="1180" height="620" rx="28" fill="url(#bg)"/>
+  <circle cx="120" cy="80" r="180" fill="#329fff" opacity=".10"/><circle cx="1060" cy="520" r="250" fill="#4fd7c3" opacity=".07"/>
+  <text x="58" y="70" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="30" font-weight="700">窗口直接选屏，不再绕道 Panel 所在屏幕</text>
+  <text x="60" y="106" fill="#9fb4cb" font-family="Segoe UI, Microsoft YaHei" font-size="16">单窗口精确移动 · 多窗口应用一键归拢 · 当前屏明确勾选</text>
+
+  <g transform="translate(58 145)" filter="url(#shadow)">
+    <rect width="510" height="420" rx="24" fill="url(#glass)" stroke="#b9ddff" stroke-opacity=".22"/>
+    <text x="30" y="45" fill="#edf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">窗口操作</text>
+    <rect x="28" y="68" width="230" height="324" rx="16" fill="#102338"/>
+    <text x="50" y="102" fill="#f1f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="15" font-weight="600">项目方案.docx</text>
+    <text x="50" y="142" fill="#b5c8da" font-family="Segoe UI, Microsoft YaHei" font-size="14">切换到此窗口</text>
+    <text x="50" y="182" fill="#b5c8da" font-family="Segoe UI, Microsoft YaHei" font-size="14">排列窗口</text>
+    <text x="50" y="222" fill="#b5c8da" font-family="Segoe UI, Microsoft YaHei" font-size="14">置顶窗口</text>
+    <rect x="40" y="245" width="206" height="48" rx="12" fill="#173b58" stroke="#43b5f1" stroke-opacity=".45"/>
+    <text x="55" y="275" fill="#e8f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">移动到显示器</text><text x="222" y="275" text-anchor="end" fill="#65c4f6" font-family="Segoe UI" font-size="17">›</text>
+    <text x="50" y="331" fill="#b5c8da" font-family="Segoe UI, Microsoft YaHei" font-size="14">关闭窗口</text>
+
+    <rect x="274" y="170" width="208" height="190" rx="16" fill="#102b42" stroke="#6dc5f5" stroke-opacity=".38"/>
+    <rect x="286" y="184" width="184" height="48" rx="11" fill="#173b58"/>
+    <circle cx="305" cy="208" r="10" fill="#35a9e9"/><path d="M300 208l4 4 7-9" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="323" y="204" fill="#eaf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="13">显示器 1 · 主屏</text><text x="323" y="221" fill="#7f9bb3" font-family="Segoe UI" font-size="11">1920×1080 · (0,0)</text>
+    <rect x="286" y="238" width="184" height="54" rx="11" fill="#123149"/>
+    <text x="300" y="260" fill="#dbeeff" font-family="Segoe UI, Microsoft YaHei" font-size="13">显示器 2</text><text x="300" y="279" fill="#7f9bb3" font-family="Segoe UI" font-size="11">2560×1440 · (1920,0)</text>
+    <rect x="286" y="298" width="184" height="48" rx="11" fill="#123149"/>
+    <text x="300" y="318" fill="#dbeeff" font-family="Segoe UI, Microsoft YaHei" font-size="13">显示器 3</text><text x="300" y="335" fill="#7f9bb3" font-family="Segoe UI" font-size="11">1280×720 · (-1280,120)</text>
+  </g>
+
+  <g transform="translate(620 145)" filter="url(#shadow)">
+    <rect width="502" height="420" rx="24" fill="url(#glass)" stroke="#b9ddff" stroke-opacity=".22"/>
+    <text x="30" y="45" fill="#edf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">整应用窗口归拢</text>
+    <text x="30" y="74" fill="#8fa7bf" font-family="Segoe UI, Microsoft YaHei" font-size="13">浏览器的 4 个窗口分布在三块屏幕</text>
+    <g transform="translate(30 104)">
+      <rect width="442" height="70" rx="15" fill="#102a41"/>
+      <circle cx="38" cy="35" r="20" fill="#248dd1"/><text x="38" y="41" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="18">e</text>
+      <text x="72" y="29" fill="#eef7ff" font-family="Segoe UI, Microsoft YaHei" font-size="15" font-weight="600">浏览器</text><text x="72" y="51" fill="#8fa7bf" font-family="Segoe UI, Microsoft YaHei" font-size="12">4 个窗口 · 显示器 1 / 2 / 3</text>
+    </g>
+    <rect x="30" y="198" width="442" height="58" rx="14" fill="#173b58" stroke="#43b5f1" stroke-opacity=".45"/>
+    <text x="52" y="233" fill="#e9f6ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">把此应用的窗口移到显示器 2</text><text x="446" y="233" text-anchor="end" fill="#65c4f6" font-family="Segoe UI" font-size="18">›</text>
+    <g transform="translate(30 278)">
+      <rect width="130" height="86" rx="14" fill="#102338" stroke="#7ea1bd" stroke-opacity=".25"/><rect x="160" width="130" height="86" rx="14" fill="#163b58" stroke="#4eb9ef" stroke-opacity=".50"/><rect x="320" width="122" height="86" rx="14" fill="#102338" stroke="#7ea1bd" stroke-opacity=".25"/>
+      <text x="65" y="51" text-anchor="middle" fill="#7790a7" font-family="Segoe UI, Microsoft YaHei" font-size="13">显示器 1</text><text x="225" y="42" text-anchor="middle" fill="#eaf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="13">显示器 2</text><text x="225" y="62" text-anchor="middle" fill="#63c5f7" font-family="Segoe UI, Microsoft YaHei" font-size="12">4 个窗口</text><text x="381" y="51" text-anchor="middle" fill="#7790a7" font-family="Segoe UI, Microsoft YaHei" font-size="13">显示器 3</text>
+    </g>
+    <text x="251" y="392" text-anchor="middle" fill="#8fa7bf" font-family="Segoe UI, Microsoft YaHei" font-size="13">单个失败隔离 · 大小、状态与焦点保持</text>
+  </g>
+</svg>

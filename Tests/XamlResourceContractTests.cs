@@ -4499,6 +4499,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Views",
                 "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
 
         Assert.Contains(
             "ContextMenuOpening=\"SearchWindow_ContextMenuOpening\"",
@@ -4551,12 +4556,35 @@ public sealed class XamlResourceContractTests
             "MoveWindowToPanelDisplayCommand",
             codeBehind);
         Assert.Contains(
+            "Header = \"移动到显示器\"",
+            codeBehind);
+        Assert.Contains(
+            "Header = \"把此应用的窗口移到显示器\"",
+            codeBehind);
+        Assert.Contains(
+            "WindowDisplayMoveMenuPolicy",
+            codeBehind);
+        Assert.Contains(
+            "MoveWindowToDisplayCommand",
+            codeBehind);
+        Assert.Contains(
+            "MoveTaskWindowsToDisplayCommand",
+            codeBehind);
+        Assert.Contains(
+            "new WindowDisplayMoveRequest(",
+            codeBehind);
+        Assert.Contains(
+            "new TaskbarDisplayMoveRequest(",
+            codeBehind);
+        Assert.Contains(
+            "private void MoveWindowToDisplay(",
+            viewModel);
+        Assert.Contains(
+            "private void MoveTaskWindowsToDisplay(",
+            viewModel);
+        Assert.Contains(
             "_windowTracker.MoveToDisplay(",
-            File.ReadAllText(
-                Path.Combine(
-                    root,
-                    "ViewModels",
-                    "MainViewModel.cs")));
+            viewModel);
         Assert.Contains(
             "Header = window.IsTopmost\n"
             + "                    ? \"取消置顶窗口\"\n"
@@ -4595,11 +4623,7 @@ public sealed class XamlResourceContractTests
             codeBehind);
         Assert.Contains(
             "WindowBatchMoveCoordinator.Execute(",
-            File.ReadAllText(
-                Path.Combine(
-                    root,
-                    "ViewModels",
-                    "MainViewModel.cs")));
+            viewModel);
         Assert.Contains(
             "AutomationProperties.SetName(\n"
             + "            menu,\n"

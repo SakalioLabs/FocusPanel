@@ -3218,19 +3218,31 @@ public partial class MainWindow :
                         .CanMoveToDisplay(
                             window.Handle,
                             panelWorkArea)));
-        if (canMoveTaskWindows)
+        MenuItem? displayMoveMenu =
+            CreateTaskWindowDisplayMoveMenu(
+                task);
+        if (canMoveTaskWindows
+            || displayMoveMenu != null)
         {
             menu.Items.Add(
                 new Separator());
-            menu.Items.Add(
-                new MenuItem
-                {
-                    Header = "把此应用的窗口移到 Panel 屏幕",
-                    Command =
-                        _viewModel
-                            .MoveTaskWindowsToPanelDisplayCommand,
-                    CommandParameter = task
-                });
+            if (canMoveTaskWindows)
+            {
+                menu.Items.Add(
+                    new MenuItem
+                    {
+                        Header = "把此应用的窗口移到 Panel 屏幕",
+                        Command =
+                            _viewModel
+                                .MoveTaskWindowsToPanelDisplayCommand,
+                        CommandParameter = task
+                    });
+            }
+            if (displayMoveMenu != null)
+            {
+                menu.Items.Add(
+                    displayMoveMenu);
+            }
         }
 
         if (task.Windows.Count > 0)
@@ -3384,6 +3396,139 @@ public partial class MainWindow :
                     CommandParameter = window
                 });
         }
+
+        MenuItem? displayMoveMenu =
+            CreateWindowDisplayMoveMenu(
+                window);
+        if (displayMoveMenu != null)
+        {
+            windowMenu.Items.Add(
+                displayMoveMenu);
+        }
+    }
+
+    private MenuItem?
+        CreateWindowDisplayMoveMenu(
+        WindowReference window)
+    {
+        IReadOnlyList<WindowDisplayMoveOption>
+            options =
+                WindowDisplayMoveMenuPolicy
+                    .CreateOptions(
+                        ShellDisplayTarget
+                            .CaptureDisplays());
+        if (options.Count < 2)
+            return null;
+
+        IReadOnlyList<WindowDisplayMoveMenuState>
+            states =
+                WindowDisplayMoveMenuPolicy
+                    .ResolveWindow(
+                        options,
+                        workArea =>
+                            _coordinator.Windows
+                                .CanMoveToDisplay(
+                                    window.Handle,
+                                    workArea));
+        if (!states.Any(state =>
+                state.CanMove
+                || state.IsCurrent))
+        {
+            return null;
+        }
+
+        var menu = new MenuItem
+        {
+            Header = "移动到显示器"
+        };
+        AutomationProperties.SetName(
+            menu,
+            $"把“{window.Title}”移动到指定显示器");
+        foreach (WindowDisplayMoveMenuState state
+                 in states)
+        {
+            var item = new MenuItem
+            {
+                Header = state.Option.DisplayName,
+                IsCheckable = true,
+                IsChecked = state.IsCurrent,
+                IsEnabled = state.CanMove,
+                Command =
+                    _viewModel
+                        .MoveWindowToDisplayCommand,
+                CommandParameter =
+                    new WindowDisplayMoveRequest(
+                        window,
+                        state.Option.WorkArea,
+                        state.Option.DisplayName)
+            };
+            AutomationProperties.SetName(
+                item,
+                state.IsCurrent
+                    ? state.Option.DisplayName
+                      + "，当前窗口所在屏幕"
+                    : "移动到"
+                      + state.Option.DisplayName);
+            menu.Items.Add(item);
+        }
+
+        return menu;
+    }
+
+    private MenuItem?
+        CreateTaskWindowDisplayMoveMenu(
+        TaskbarAppItem task)
+    {
+        if (task.WindowCount < 2)
+            return null;
+
+        IReadOnlyList<WindowDisplayMoveOption>
+            options =
+                WindowDisplayMoveMenuPolicy
+                    .CreateOptions(
+                        ShellDisplayTarget
+                            .CaptureDisplays());
+        if (options.Count < 2)
+            return null;
+
+        var menu = new MenuItem
+        {
+            Header = "把此应用的窗口移到显示器"
+        };
+        AutomationProperties.SetName(
+            menu,
+            $"把“{task.DisplayName}”的窗口移动到指定显示器");
+        foreach (WindowDisplayMoveOption option
+                 in options)
+        {
+            bool canMove = task.Windows.Any(
+                window =>
+                    SystemActionExecution.Try(
+                        () => _coordinator.Windows
+                            .CanMoveToDisplay(
+                                window.Handle,
+                                option.WorkArea)));
+            menu.Items.Add(
+                new MenuItem
+                {
+                    Header = option.DisplayName,
+                    IsEnabled = canMove,
+                    Command =
+                        _viewModel
+                            .MoveTaskWindowsToDisplayCommand,
+                    CommandParameter =
+                        new TaskbarDisplayMoveRequest(
+                            task,
+                            option.WorkArea,
+                            option.DisplayName)
+                });
+        }
+
+        return menu.Items
+            .OfType<MenuItem>()
+            .Any(item => item.IsEnabled)
+                ? menu
+                : null;
     }
 
     private bool TryAddJumpListSection(

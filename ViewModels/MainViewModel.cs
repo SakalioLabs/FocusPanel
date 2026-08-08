@@ -3089,6 +3089,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void MoveWindowToDisplay(
+        WindowDisplayMoveRequest? request)
+    {
+        if (request == null)
+            return;
+
+        CompleteTaskbarWindowAction(
+            SystemActionExecution.Try(
+                () => _windowTracker.MoveToDisplay(
+                    request.Window.Handle,
+                    request.TargetWorkArea)),
+            $"无法把“{request.Window.Title}”移到"
+            + $"{request.TargetDisplayName}。"
+            + "窗口可能已经关闭，或当前应用拒绝了位置更改。");
+    }
+
+    [RelayCommand]
     private void MoveTaskWindowsToPanelDisplay(
         TaskbarAppItem? task)
     {
@@ -3120,6 +3137,40 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ReportTaskbarActionFailure(
             $"“{task.DisplayName}”有 {result.FailedCount} 个窗口"
             + "未能移到 Panel 所在屏幕。"
+            + (result.MovedCount > 0
+                ? $"另有 {result.MovedCount} 个窗口已经移动。"
+                : "窗口可能已经关闭，或应用拒绝了位置更改。"));
+    }
+
+    [RelayCommand]
+    private void MoveTaskWindowsToDisplay(
+        TaskbarDisplayMoveRequest? request)
+    {
+        if (request == null)
+            return;
+
+        WindowBatchMoveResult result =
+            WindowBatchMoveCoordinator.Execute(
+                request.Task.Windows,
+                handle =>
+                    _windowTracker.CanMoveToDisplay(
+                        handle,
+                        request.TargetWorkArea),
+                handle =>
+                    _windowTracker.MoveToDisplay(
+                        handle,
+                        request.TargetWorkArea));
+        if (!result.HasWork
+            || result.Succeeded)
+        {
+            SystemActionMessage = string.Empty;
+            return;
+        }
+
+        ReportTaskbarActionFailure(
+            $"“{request.Task.DisplayName}”有 "
+            + $"{result.FailedCount} 个窗口未能移到"
+            + $"{request.TargetDisplayName}。"
             + (result.MovedCount > 0
                 ? $"另有 {result.MovedCount} 个窗口已经移动。"
                 : "窗口可能已经关闭，或应用拒绝了位置更改。"));
