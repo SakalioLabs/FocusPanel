@@ -728,7 +728,14 @@ public sealed class XamlResourceContractTests
                 "MainWindow.xaml.cs"));
 
         Assert.DoesNotContain("OpenQuickSettingsCommand", mainWindow);
-        Assert.Contains("OpenNotificationsCommand", mainWindow);
+        Assert.Contains("PanelNotificationsDetailsExpander", mainWindow);
+        Assert.Contains("PanelNotifications", mainWindow);
+        Assert.Contains("UnreadPanelNotificationCount", mainWindow);
+        Assert.Contains("MarkAllPanelNotificationsReadCommand", mainWindow);
+        Assert.Contains("ClearPanelNotificationsCommand", mainWindow);
+        Assert.Contains("InvokePanelNotificationCommand", mainWindow);
+        Assert.Contains("打开 Windows 系统通知（兼容入口）", mainWindow);
+        Assert.DoesNotContain("Content=\"Windows 通知中心\"", mainWindow);
         Assert.DoesNotContain("OpenInputSwitcherCommand", mainWindow);
         Assert.Contains(
             "Content=\"输入法\"",
@@ -996,7 +1003,7 @@ public sealed class XamlResourceContractTests
                      "Content=\"显示桌面\"",
                      "Content=\"锁定\"",
                      "Content=\"电源\"",
-                     "Content=\"Windows 通知中心\""
+                     "AutomationProperties.Name=\"展开 Panel 通知历史\""
                  })
         {
             int position = mainWindow.IndexOf(
@@ -1015,7 +1022,7 @@ public sealed class XamlResourceContractTests
                     "x:Name=\"StatusCenterWindowOverviewButton\"")
                 .Cast<Match>());
         Assert.Contains(
-            "AutomationProperties.Name=\"Windows 系统浮层入口\"",
+            "AutomationProperties.Name=\"Panel 通知历史\"",
             mainWindow);
         Assert.Contains(
             "AutomationProperties.Name=\"设备与会话操作\"",
@@ -1464,7 +1471,7 @@ public sealed class XamlResourceContractTests
         string statusCenter = mainWindow[
             statusStart..calendarStart];
         Assert.Equal(
-            4,
+            5,
             statusCenter.Split(
                 "Style=\"{StaticResource FocusDetailsExpander}\"",
                 StringSplitOptions.None).Length - 1);
@@ -1481,6 +1488,9 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"Panel 输入法详情\"",
             statusCenter);
         Assert.Contains(
+            "AutomationProperties.Name=\"Panel 通知历史\"",
+            statusCenter);
+        Assert.Contains(
             "x:Name=\"NetworkDetailsExpander\"",
             statusCenter);
         Assert.Contains(
@@ -1492,13 +1502,16 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "x:Name=\"InputMethodDetailsExpander\"",
             statusCenter);
+        Assert.Contains(
+            "x:Name=\"PanelNotificationsDetailsExpander\"",
+            statusCenter);
         Assert.Equal(
-            4,
+            5,
             statusCenter.Split(
                 "Expanded=\"StatusDetailsExpander_Expanded\"",
                 StringSplitOptions.None).Length - 1);
         Assert.Equal(
-            4,
+            5,
             statusCenter.Split(
                 "Collapsed=\"StatusDetailsExpander_Collapsed\"",
                 StringSplitOptions.None).Length - 1);
@@ -1613,7 +1626,7 @@ public sealed class XamlResourceContractTests
             "OpenNotificationOverflow",
             compactDock);
         Assert.Contains(
-            "Header=\"Windows 通知中心\"",
+            "Header=\"Panel 通知\"",
             compactDock);
         Assert.Contains(
             "Header=\"输入法 · Panel\"",
@@ -2951,7 +2964,7 @@ public sealed class XamlResourceContractTests
             "Header=\"应用音量 · Panel\"",
             mainWindow);
         Assert.Contains(
-            "Header=\"Windows 通知中心\"",
+            "Header=\"Panel 通知\"",
             mainWindow);
         Assert.Contains(
             "Header=\"输入法 · Panel\"",

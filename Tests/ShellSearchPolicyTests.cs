@@ -245,7 +245,7 @@ public sealed class ShellSearchPolicyTests
                     ShellSearchResultKind.SystemCommand
                 }));
         Assert.Equal(
-            4,
+            5,
             results.Count(item => item.IsPanelStatus));
         Assert.Contains(
             results,

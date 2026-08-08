@@ -14,7 +14,8 @@ public sealed class PanelStatusSearchCatalogTests
             StatusCenterDetail.Network,
             StatusCenterDetail.ApplicationAudio,
             StatusCenterDetail.MediaAndBattery,
-            StatusCenterDetail.InputMethod
+            StatusCenterDetail.InputMethod,
+            StatusCenterDetail.PanelNotifications
         };
 
         Assert.Equal(

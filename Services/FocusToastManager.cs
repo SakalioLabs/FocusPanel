@@ -13,13 +13,18 @@ public sealed class FocusToastManager : IDisposable
 
     private readonly Window _anchor;
     private readonly FocusToastQueue _queue = new();
+    private readonly FocusNotificationCenter?
+        _notificationCenter;
     private readonly DispatcherTimer _dismissTimer;
     private FocusToastWindow? _window;
     private bool _disposed;
 
-    public FocusToastManager(Window anchor)
+    public FocusToastManager(
+        Window anchor,
+        FocusNotificationCenter? notificationCenter = null)
     {
         _anchor = anchor;
+        _notificationCenter = notificationCenter;
         _dismissTimer = new DispatcherTimer(
             DispatcherPriority.Normal,
             anchor.Dispatcher);
@@ -38,6 +43,7 @@ public sealed class FocusToastManager : IDisposable
             return;
         }
 
+        _notificationCenter?.Add(notification);
         if (_queue.Enqueue(notification))
             ShowCurrent();
     }

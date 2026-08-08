@@ -50,6 +50,8 @@ public partial class MainWindow :
         _searchWindowHoverOpenTimer;
     private readonly DispatcherTimer _taskbarHoverCloseTimer;
     private readonly FocusToastManager _toastManager;
+    private readonly FocusNotificationCenter
+        _notificationCenter;
     private readonly
         UpdateInstallPreparationCoordinator
         _updateInstallPreparation;
@@ -110,6 +112,8 @@ public partial class MainWindow :
         _edgeIndicator =
             startupIndicator;
         _coordinator = new ShellCoordinator();
+        _notificationCenter =
+            new FocusNotificationCenter();
         _viewModel = new MainViewModel(
             _coordinator.Apps,
             _coordinator.Windows,
@@ -119,12 +123,15 @@ public partial class MainWindow :
             _coordinator.ApplicationAudio,
             _coordinator.Radios,
             _coordinator.WifiNetworks,
-            _coordinator.BluetoothDevices);
+            _coordinator.BluetoothDevices,
+            _notificationCenter);
 
         InitializeComponent();
         DataContext = _viewModel;
         MyNotifyIcon.Icon = SystemIcons.Application;
-        _toastManager = new FocusToastManager(this);
+        _toastManager = new FocusToastManager(
+            this,
+            _notificationCenter);
         _updateInstallPreparation =
             new
                 UpdateInstallPreparationCoordinator();
@@ -1565,6 +1572,11 @@ public partial class MainWindow :
                 detail
                 == StatusCenterDetail
                     .InputMethod;
+            PanelNotificationsDetailsExpander
+                .IsExpanded =
+                detail
+                == StatusCenterDetail
+                    .PanelNotifications;
         }
         finally
         {
@@ -1582,8 +1594,12 @@ public partial class MainWindow :
                 MediaBatteryDetailsExpander,
             StatusCenterDetail.InputMethod =>
                 InputMethodDetailsExpander,
+            StatusCenterDetail.PanelNotifications =>
+                PanelNotificationsDetailsExpander,
             _ => null
         };
+        if (detail == StatusCenterDetail.PanelNotifications)
+            _viewModel.MarkPanelNotificationsRead();
         if (!bringIntoView || target == null)
             return;
 

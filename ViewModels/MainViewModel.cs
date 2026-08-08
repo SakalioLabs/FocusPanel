@@ -36,6 +36,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IBluetoothDeviceService
         _bluetoothDevices;
     private readonly IAppUpdateService _updateService;
+    private readonly FocusNotificationCenter
+        _notificationCenter;
     private readonly IDesktopItemVisibilityService _desktopVisibility;
     private readonly IShellPreferenceRepository
         _shellPreferences;
@@ -583,7 +585,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             applicationAudio,
         ISystemRadioService radios,
         IWifiNetworkService wifiNetworks,
-        IBluetoothDeviceService bluetoothDevices)
+        IBluetoothDeviceService bluetoothDevices,
+        FocusNotificationCenter? notificationCenter = null)
         : this(
             appCatalog,
             windowTracker,
@@ -595,7 +598,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 applicationAudio,
             radios: radios,
             wifiNetworks: wifiNetworks,
-            bluetoothDevices: bluetoothDevices)
+            bluetoothDevices: bluetoothDevices,
+            notificationCenter: notificationCenter)
     {
     }
 
@@ -628,7 +632,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IAppLocationService?
             appLocation = null,
         IPanelRunService?
-            panelRun = null)
+            panelRun = null,
+        FocusNotificationCenter?
+            notificationCenter = null)
     {
         _appCatalog = appCatalog;
         _windowTracker = windowTracker;
@@ -649,6 +655,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             bluetoothDevices
             ?? new BluetoothDeviceService();
         _updateService = updateService;
+        _notificationCenter =
+            notificationCenter
+            ?? new FocusNotificationCenter();
+        _notificationCenter.Changed +=
+            NotificationCenter_Changed;
         _appLaunch =
             new AppLaunchCoordinator(
                 _appCatalog.Launch);
@@ -794,6 +805,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<ShellSearchResult> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+    public ReadOnlyObservableCollection<FocusNotificationItem>
+        PanelNotifications =>
+            _notificationCenter.Items;
+    public bool HasPanelNotifications =>
+        PanelNotifications.Count > 0;
+    public bool HasUnreadPanelNotifications =>
+        _notificationCenter.UnreadCount > 0;
+    public int UnreadPanelNotificationCount =>
+        _notificationCenter.UnreadCount;
+    public string PanelNotificationBadgeText =>
+        UnreadPanelNotificationCount > 99
+            ? "99+"
+            : UnreadPanelNotificationCount.ToString(
+                ChineseCulture);
     public bool IsStatusEntryActive =>
         IsStatusCenterOpen
         || IsPowerMenuOpen;
@@ -3057,6 +3082,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
         => await RunSystemActionAsync(
             _systemStatus.OpenNotifications,
             "无法唤起 Windows 通知中心，请使用 Win+N。");
+
+    [RelayCommand]
+    private void MarkAllPanelNotificationsRead() =>
+        _notificationCenter.MarkAllRead();
+
+    [RelayCommand]
+    private void ClearPanelNotifications() =>
+        _notificationCenter.Clear();
+
+    [RelayCommand]
+    private void InvokePanelNotification(
+        FocusNotificationItem? notification) =>
+        _notificationCenter.Invoke(notification);
+
+    internal void MarkPanelNotificationsRead() =>
+        _notificationCenter.MarkAllRead();
+
+    private void NotificationCenter_Changed(
+        object? sender,
+        EventArgs e)
+    {
+        OnPropertyChanged(nameof(HasPanelNotifications));
+        OnPropertyChanged(nameof(HasUnreadPanelNotifications));
+        OnPropertyChanged(nameof(UnreadPanelNotificationCount));
+        OnPropertyChanged(nameof(PanelNotificationBadgeText));
+    }
 
     [RelayCommand]
     private async Task ActivateInputMethod(
@@ -5502,6 +5553,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         _shellPreferences.SaveFailed -=
             OnShellPreferenceSaveFailed;
+        _notificationCenter.Changed -=
+            NotificationCenter_Changed;
         _clockTimer.Stop();
         _systemStatusTimer.Stop();
         _taskSummaryTimer.Stop();

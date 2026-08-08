@@ -33,6 +33,11 @@ internal static class PanelStatusSearchCatalog
                 StatusCenterDetail.InputMethod,
                 "输入法",
                 "\uE765",
-                "切换输入法 语言 键盘 拼音 五笔 input language keyboard Win Space")
+                "切换输入法 语言 键盘 拼音 五笔 input language keyboard Win Space"),
+            new PanelStatusSearchEntry(
+                StatusCenterDetail.PanelNotifications,
+                "Panel 通知",
+                "\uE7E7",
+                "消息 通知 更新 专注 完成 恢复 notification history")
         };
 }

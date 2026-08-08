@@ -6,7 +6,8 @@ internal enum StatusCenterDetail
     Network,
     ApplicationAudio,
     MediaAndBattery,
-    InputMethod
+    InputMethod,
+    PanelNotifications
 }
 
 internal static class StatusCenterDetailPolicy
