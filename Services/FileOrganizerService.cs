@@ -1239,6 +1239,17 @@ public class FileOrganizerService : IDisposable
             await _visibilityIo
                 .ReadAttributesAsync(fullPath)
                 .ConfigureAwait(false);
+        string? fileIdentity = null;
+        try
+        {
+            fileIdentity = _visibility.TryGetIdentity(
+                fullPath);
+        }
+        catch
+        {
+            // The managed path remains authoritative when the file system
+            // cannot provide a stable identity.
+        }
         string? detectedIconPath = null;
         int? detectedIconIndex = null;
         if (IconHelper.TryResolveCustomIconLocation(
@@ -1249,6 +1260,9 @@ public class FileOrganizerService : IDisposable
             detectedIconPath = resolvedIconPath;
             detectedIconIndex = resolvedIconIndex;
         }
+        detectedIconPath = await PreserveStandaloneIconAsync(
+                detectedIconPath)
+            .ConfigureAwait(false);
         int preferenceId = 0;
 
         await Task.Run(() =>
@@ -1256,19 +1270,31 @@ public class FileOrganizerService : IDisposable
             using var context = new AppDbContext();
             context.EnsureSchema();
 
-            var pref = context.DesktopFilePreferences.FirstOrDefault(p => p.FilePath == fileName);
+            List<DesktopFilePreference> preferences =
+                context.DesktopFilePreferences.ToList();
+            var pref = DesktopIconPreferenceSelector.Select(
+                preferences,
+                fullPath,
+                fileName,
+                fileIdentity);
             if (pref == null)
             {
                 pref = new DesktopFilePreference { FilePath = fileName, PartitionName = "" };
                 context.DesktopFilePreferences.Add(pref);
             }
+            pref.FilePath = fileName;
             pref.PartitionName = partitionName;
             pref.IsHiddenFromDesktop = true;
             pref.ManagedPath = fullPath;
             pref.OriginalAttributes ??= (long)originalAttributes;
-            pref.FileIdentity = _visibility.TryGetIdentity(fullPath);
-            pref.CustomIconPath ??= detectedIconPath;
-            pref.CustomIconIndex ??= detectedIconIndex;
+            pref.FileIdentity = fileIdentity;
+            if (!string.IsNullOrWhiteSpace(detectedIconPath)
+                && (string.IsNullOrWhiteSpace(pref.CustomIconPath)
+                    || !File.Exists(pref.CustomIconPath)))
+            {
+                pref.CustomIconPath = detectedIconPath;
+                pref.CustomIconIndex = detectedIconIndex;
+            }
             pref.CollectionMode = DesktopCollectionMode.Attribute;
             pref.OperationState = DesktopVisibilityOperation.Collecting;
 
@@ -1366,6 +1392,33 @@ public class FileOrganizerService : IDisposable
         }
 
         IconHelper.ClearCache(fullPath);
+    }
+
+    private async Task<string?> PreserveStandaloneIconAsync(
+        string? iconPath)
+    {
+        if (string.IsNullOrWhiteSpace(iconPath)
+            || !Path.GetExtension(iconPath).Equals(
+                ".ico",
+                StringComparison.OrdinalIgnoreCase)
+            || !File.Exists(iconPath))
+        {
+            return iconPath;
+        }
+
+        try
+        {
+            return await _iconStore.ImportAsync(
+                    Path.GetFullPath(iconPath))
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                "Preserve desktop custom icon error: "
+                + ex.Message);
+            return iconPath;
+        }
     }
 
     public async Task<string?> SetCustomIcon(

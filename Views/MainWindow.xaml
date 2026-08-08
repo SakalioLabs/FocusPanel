@@ -655,7 +655,7 @@
                                               Tag="{x:Static services:StatusCenterDetail.Applications}"
                                               IsChecked="{Binding IsExpanded, ElementName=ApplicationsDetailsExpander, Mode=OneWay}"
                                               Click="StatusCenterDetailButton_Click"
-                                              AutomationProperties.Name="展开 Panel 自有应用与窗口总览"
+                                              AutomationProperties.Name="展开 Panel 自有后台应用与窗口"
                                               ToolTip="只展开 Panel 自有应用抽屉，不调用 Windows 任务栏或隐藏图标抽屉">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -668,7 +668,7 @@
                                                    VerticalAlignment="Center"
                                                    Style="{StaticResource FocusIconText}"/>
                                         <TextBlock Grid.Column="1"
-                                                   Text="应用与窗口总览"
+                                                   Text="后台应用与窗口"
                                                    VerticalAlignment="Center"
                                                    Style="{StaticResource FocusCardTitleText}"/>
                                         <TextBlock Grid.Column="2"
@@ -2441,7 +2441,7 @@
                                         <MenuItem Header="应用音量 · Panel"
                                                   Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
                                                   Click="PanelStatusDetailMenuItem_Click"/>
-                                        <MenuItem Header="应用与窗口总览 · Panel"
+                                        <MenuItem Header="后台应用与窗口 · Panel"
                                                   Tag="{x:Static services:StatusCenterDetail.Applications}"
                                                   Click="PanelStatusDetailMenuItem_Click"/>
                                         <MenuItem Header="Panel 通知"

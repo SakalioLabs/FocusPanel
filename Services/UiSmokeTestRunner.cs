@@ -2061,20 +2061,35 @@ internal static class UiSmokeTestRunner
             window.Show();
             window.UpdateLayout();
 
-            ViewportVirtualizingPanel? panel =
-                FindVisualChild<ViewportVirtualizingPanel>(
+            WrapPanel? panel =
+                FindVisualChild<WrapPanel>(
                     organizer);
             if (panel == null)
             {
                 failures.Add(
-                    "收纳图标视图未生成自适应网格面板");
+                    "收纳图标视图未生成密排图标面板");
                 return;
             }
-            if (panel.ItemsPerRow < 5)
+            double firstTop = panel.Children.Count > 0
+                ? panel.Children[0]
+                    .TranslatePoint(
+                        new Point(0, 0),
+                        panel)
+                    .Y
+                : 0;
+            int firstRowCount = panel.Children
+                .Cast<UIElement>()
+                .Count(child => Math.Abs(
+                    child.TranslatePoint(
+                            new Point(0, 0),
+                            panel)
+                        .Y
+                    - firstTop) < 1);
+            if (firstRowCount < 5)
             {
                 failures.Add(
                     "720px 收纳工作区只排出 "
-                    + $"{panel.ItemsPerRow} 列，仍存在单列或异常空隙风险");
+                    + $"{firstRowCount} 个图标，仍存在单列或异常空隙风险");
                 return;
             }
             if (panel.ActualWidth < 550)
@@ -2087,7 +2102,7 @@ internal static class UiSmokeTestRunner
 
             results.Add(
                 "PASS 720px 收纳图标视图使用 "
-                + $"{panel.ItemsPerRow} 列和 {panel.ActualWidth:F1}px 可用宽度");
+                + $"{firstRowCount} 个密排图标和 {panel.ActualWidth:F1}px 可用宽度");
         }
         catch (Exception ex)
         {

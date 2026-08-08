@@ -831,7 +831,7 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.Contains(
-            "Text=\"应用与窗口总览\"",
+            "Text=\"后台应用与窗口\"",
             mainWindow);
         Assert.Contains(
             "Tag=\"{x:Static services:StatusCenterDetail.Applications}\"",
@@ -1652,7 +1652,7 @@ public sealed class XamlResourceContractTests
             "Visibility=\"{Binding HasUnreadPanelNotifications",
             compactDock);
         Assert.Contains(
-            "Header=\"应用与窗口总览 · Panel\"",
+            "Header=\"后台应用与窗口 · Panel\"",
             compactDock);
         Assert.Contains(
             "Tag=\"{x:Static services:StatusCenterDetail.Applications}\"",
@@ -4435,7 +4435,10 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"全宽图标收纳盒\">",
             organizer);
         Assert.Contains(
-            "ItemSpacing=\"12\"",
+            "<WrapPanel Orientation=\"Horizontal\"/>",
+            organizer);
+        Assert.Contains(
+            "<Setter Property=\"Margin\" Value=\"6\"/>",
             organizer);
         Assert.Contains(
             "HorizontalContentAlignment=\"Stretch\"",
@@ -4527,6 +4530,17 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "StringComparison.OrdinalIgnoreCase",
             selector);
+        string organizerService = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "FileOrganizerService.cs"));
+        Assert.Contains(
+            "PreserveStandaloneIconAsync(",
+            organizerService);
+        Assert.Contains(
+            "DesktopIconPreferenceSelector.Select(",
+            organizerService);
     }
 
     [Fact]
@@ -5442,7 +5456,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void DesktopOrganizer_UsesViewportVirtualizationForBothModes()
+    public void DesktopOrganizer_UsesDenseWrapForIconsAndVirtualizationForLists()
     {
         string root = FindRepositoryRoot();
         string xaml = File.ReadAllText(
@@ -5457,22 +5471,25 @@ public sealed class XamlResourceContractTests
                 "ViewportVirtualizingPanel.cs"));
 
         Assert.Equal(
-            2,
+            1,
             CountOccurrences(
                 xaml,
                 "<controls:ViewportVirtualizingPanel"));
         Assert.Equal(
-            2,
+            1,
             CountOccurrences(
                 xaml,
                 "VirtualizingPanel.IsVirtualizing=\"True\""));
         Assert.Equal(
-            2,
+            1,
             CountOccurrences(
                 xaml,
                 "VirtualizingPanel.VirtualizationMode=\"Recycling\""));
-        Assert.DoesNotContain(
+        Assert.Contains(
             "<WrapPanel Orientation=\"Horizontal\"/>",
+            xaml);
+        Assert.Contains(
+            "<Setter Property=\"Margin\" Value=\"6\"/>",
             xaml);
         Assert.Contains(
             "ScrollOwner_ScrollChanged",
