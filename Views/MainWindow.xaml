@@ -2328,11 +2328,32 @@
                                     Visibility="Collapsed"
                                     Click="TaskbarScrollUpButton_Click"
                                     AutomationProperties.Name="查看上方应用"
-                                    AutomationProperties.HelpText="单击向上滚动一个应用；也可以在应用栏任意位置滚动鼠标滚轮"
-                                    ToolTip="查看上方应用 · 应用栏任意位置均可滚动">
-                                <TextBlock Style="{StaticResource FocusIconText}"
-                                           FontSize="12"
-                                           Text="&#xE70E;"/>
+                                    AutomationProperties.HelpText="单击向上滚动一个应用；角标显示上方尚未完整显示的应用数量，也可以在应用栏任意位置滚动鼠标滚轮">
+                                <Grid Width="44" Height="44">
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontSize="12"
+                                               Text="&#xE70E;"/>
+                                    <Border MinWidth="18"
+                                            Height="16"
+                                            Padding="3,0"
+                                            Margin="0,0,-3,-2"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                            BorderBrush="{DynamicResource FocusAccentBrightBrush}"
+                                            BorderThickness="1"
+                                            IsHitTestVisible="False">
+                                        <TextBlock x:Name="TaskbarScrollUpCountText"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
+                                </Grid>
                             </Button>
 
                             <ScrollViewer x:Name="TaskbarAppsScrollViewer"
@@ -2541,11 +2562,32 @@
                                     Visibility="Collapsed"
                                     Click="TaskbarScrollDownButton_Click"
                                     AutomationProperties.Name="查看下方应用"
-                                    AutomationProperties.HelpText="单击向下滚动一个应用；也可以在应用栏任意位置滚动鼠标滚轮"
-                                    ToolTip="查看下方应用 · 应用栏任意位置均可滚动">
-                                <TextBlock Style="{StaticResource FocusIconText}"
-                                           FontSize="12"
-                                           Text="&#xE70D;"/>
+                                    AutomationProperties.HelpText="单击向下滚动一个应用；角标显示下方尚未完整显示的应用数量，也可以在应用栏任意位置滚动鼠标滚轮">
+                                <Grid Width="44" Height="44">
+                                    <TextBlock Style="{StaticResource FocusIconText}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontSize="12"
+                                               Text="&#xE70D;"/>
+                                    <Border MinWidth="18"
+                                            Height="16"
+                                            Padding="3,0"
+                                            Margin="0,-2,-3,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                            BorderBrush="{DynamicResource FocusAccentBrightBrush}"
+                                            BorderThickness="1"
+                                            IsHitTestVisible="False">
+                                        <TextBlock x:Name="TaskbarScrollDownCountText"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
+                                </Grid>
                             </Button>
                         </Grid>
 

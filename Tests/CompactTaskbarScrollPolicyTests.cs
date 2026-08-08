@@ -115,4 +115,52 @@ public sealed class CompactTaskbarScrollPolicyTests
 
         Assert.Equal(0, target);
     }
+
+    [Theory]
+    [InlineData(0, 156, 460, 10, 0, 4)]
+    [InlineData(52, 156, 460, 10, 2, 3)]
+    [InlineData(156, 156, 460, 10, 4, 0)]
+    [InlineData(155.8, 156, 460, 10, 4, 0)]
+    [InlineData(double.NaN, 156, 460, 10, 0, 4)]
+    [InlineData(52, 156, double.NaN, 10, 0, 0)]
+    [InlineData(52, 156, 460, 0, 0, 0)]
+    public void DescribesHiddenApplicationCounts(
+        double verticalOffset,
+        double scrollableHeight,
+        double extentHeight,
+        int itemCount,
+        int expectedAbove,
+        int expectedBelow)
+    {
+        CompactTaskbarScrollState state =
+            CompactTaskbarScrollPolicy.GetState(
+                verticalOffset,
+                scrollableHeight,
+                extentHeight,
+                itemCount);
+
+        Assert.Equal(
+            expectedAbove,
+            state.HiddenAboveCount);
+        Assert.Equal(
+            expectedBelow,
+            state.HiddenBelowCount);
+    }
+
+    [Theory]
+    [InlineData(-1, "0")]
+    [InlineData(0, "0")]
+    [InlineData(12, "12")]
+    [InlineData(99, "99")]
+    [InlineData(100, "99+")]
+    [InlineData(999, "99+")]
+    public void HiddenCountLabel_RemainsCompact(
+        int count,
+        string expected)
+    {
+        Assert.Equal(
+            expected,
+            CompactTaskbarScrollPolicy
+                .FormatHiddenCount(count));
+    }
 }

@@ -2112,6 +2112,8 @@ public sealed class XamlResourceContractTests
         Assert.Contains("x:Name=\"TaskbarAppsItemsControl\"", mainWindow);
         Assert.Contains("x:Name=\"TaskbarScrollUpButton\"", mainWindow);
         Assert.Contains("x:Name=\"TaskbarScrollDownButton\"", mainWindow);
+        Assert.Contains("x:Name=\"TaskbarScrollUpCountText\"", mainWindow);
+        Assert.Contains("x:Name=\"TaskbarScrollDownCountText\"", mainWindow);
         Assert.Matches(
             "x:Name=\"TaskbarAppsHost\"[\\s\\S]*?PreviewMouseWheel=\"TaskbarAppsHost_PreviewMouseWheel\"",
             mainWindow);
@@ -2126,6 +2128,24 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains(
             "CompactTaskbarScrollPolicy.GetState",
+            codeBehind);
+        Assert.Contains(
+            "TaskbarAppsScrollViewer.ExtentHeight",
+            codeBehind);
+        Assert.Contains(
+            "state.HiddenAboveCount",
+            codeBehind);
+        Assert.Contains(
+            "state.HiddenBelowCount",
+            codeBehind);
+        Assert.Contains(
+            "AutomationProperties.SetName(",
+            codeBehind);
+        Assert.Contains(
+            "上方还有 {state.HiddenAboveCount} 个应用",
+            codeBehind);
+        Assert.Contains(
+            "下方还有 {state.HiddenBelowCount} 个应用",
             codeBehind);
         Assert.Contains(
             "private void TaskbarAppsHost_PreviewMouseWheel(",

@@ -2074,13 +2074,38 @@ public partial class MainWindow :
         CompactTaskbarScrollState state =
             CompactTaskbarScrollPolicy.GetState(
                 TaskbarAppsScrollViewer.VerticalOffset,
-                TaskbarAppsScrollViewer.ScrollableHeight);
+                TaskbarAppsScrollViewer.ScrollableHeight,
+                TaskbarAppsScrollViewer.ExtentHeight,
+                _viewModel
+                    .CompactTaskbarApps.Count);
         TaskbarScrollUpButton.Visibility = state.CanScrollUp
             ? Visibility.Visible
             : Visibility.Collapsed;
         TaskbarScrollDownButton.Visibility = state.CanScrollDown
             ? Visibility.Visible
             : Visibility.Collapsed;
+        TaskbarScrollUpCountText.Text =
+            CompactTaskbarScrollPolicy
+                .FormatHiddenCount(
+                state.HiddenAboveCount);
+        TaskbarScrollDownCountText.Text =
+            CompactTaskbarScrollPolicy
+                .FormatHiddenCount(
+                state.HiddenBelowCount);
+        string upSummary =
+            $"上方还有 {state.HiddenAboveCount} 个应用";
+        string downSummary =
+            $"下方还有 {state.HiddenBelowCount} 个应用";
+        AutomationProperties.SetName(
+            TaskbarScrollUpButton,
+            upSummary);
+        AutomationProperties.SetName(
+            TaskbarScrollDownButton,
+            downSummary);
+        TaskbarScrollUpButton.ToolTip =
+            $"{upSummary} · 单击或滚轮向上";
+        TaskbarScrollDownButton.ToolTip =
+            $"{downSummary} · 单击或滚轮向下";
     }
 
     private void ViewModel_PropertyChanged(
