@@ -8,10 +8,11 @@ namespace FocusPanel.Services;
 
 internal static class TaskbarAppCollectionSynchronizer
 {
-    internal static void Synchronize(
+    internal static bool Synchronize(
         ObservableCollection<TaskbarAppItem> destination,
         IReadOnlyList<TaskbarAppItem> desired)
     {
+        bool structureChanged = false;
         for (int targetIndex = 0; targetIndex < desired.Count; targetIndex++)
         {
             TaskbarAppItem candidate = desired[targetIndex];
@@ -19,11 +20,15 @@ internal static class TaskbarAppCollectionSynchronizer
             if (existingIndex < 0)
             {
                 destination.Insert(targetIndex, candidate);
+                structureChanged = true;
                 continue;
             }
 
             if (existingIndex != targetIndex)
+            {
                 destination.Move(existingIndex, targetIndex);
+                structureChanged = true;
+            }
 
             TaskbarAppItem current =
                 destination[targetIndex];
@@ -32,7 +37,12 @@ internal static class TaskbarAppCollectionSynchronizer
         }
 
         while (destination.Count > desired.Count)
+        {
             destination.RemoveAt(destination.Count - 1);
+            structureChanged = true;
+        }
+
+        return structureChanged;
     }
 
     private static int FindIdentity(

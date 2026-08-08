@@ -282,6 +282,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string? attentionTaskbarIdentity;
 
     [ObservableProperty]
+    private int compactTaskbarStructureRevision;
+
+    [ObservableProperty]
     private bool isCalendarOpen;
 
     [ObservableProperty]
@@ -4245,10 +4248,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         TaskbarAppCollectionSynchronizer.Synchronize(
             TaskbarApps,
             _taskbarComposer.Compose(_appCatalog.GetPinned(), _windowTracker.GetSnapshot()));
-        TaskbarAppCollectionSynchronizer.Synchronize(
+        bool compactStructureChanged =
+            TaskbarAppCollectionSynchronizer.Synchronize(
             CompactTaskbarApps,
             CompactTaskbarAppPolicy.Select(
                 TaskbarApps));
+        if (compactStructureChanged)
+        {
+            CompactTaskbarStructureRevision =
+                unchecked(
+                    CompactTaskbarStructureRevision
+                    + 1);
+        }
         ApplyTaskbarShortcutStates();
         ActiveTaskbarIdentity =
             TaskbarApps.FirstOrDefault(

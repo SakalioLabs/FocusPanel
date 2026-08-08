@@ -128,6 +128,7 @@ public partial class MainWindow :
         _taskbarFileDropTarget;
     private bool
         _taskbarExternalFileDragActive;
+    private bool _taskbarRevealScheduled;
     private bool _panelPositionDragActive;
     private bool _panelPositionDragMoved;
     private System.Drawing.Point
@@ -2204,26 +2205,43 @@ public partial class MainWindow :
             return;
         }
 
-        if (e.PropertyName
-            == nameof(
+        if (e.PropertyName is
+            nameof(
                 MainViewModel
-                    .ActiveTaskbarIdentity))
+                    .ActiveTaskbarIdentity)
+            or nameof(
+                MainViewModel
+                    .AttentionTaskbarIdentity)
+            or nameof(
+                MainViewModel
+                    .CompactTaskbarStructureRevision))
         {
-            _ = Dispatcher.BeginInvoke(
-                RevealActiveTaskbarApp,
-                DispatcherPriority.Render);
+            QueueTaskbarTargetReveal();
+            return;
+        }
+    }
+
+    private void QueueTaskbarTargetReveal()
+    {
+        if (_taskbarRevealScheduled
+            || _isExit)
+        {
             return;
         }
 
-        if (e.PropertyName
-            == nameof(
-                MainViewModel
-                    .AttentionTaskbarIdentity))
-        {
-            _ = Dispatcher.BeginInvoke(
-                RevealAttentionTaskbarApp,
-                DispatcherPriority.Render);
-        }
+        _taskbarRevealScheduled = true;
+        _ = Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                _taskbarRevealScheduled = false;
+                if (_isExit)
+                    return;
+
+                UpdateTaskbarOverflowControls();
+                if (!RevealAttentionTaskbarApp())
+                    RevealActiveTaskbarApp();
+            }),
+            DispatcherPriority.Render);
     }
 
     private void ApplyCompactDockVisibilityPreference()
@@ -2253,24 +2271,24 @@ public partial class MainWindow :
         }
     }
 
-    private void RevealActiveTaskbarApp()
+    private bool RevealActiveTaskbarApp()
         => RevealTaskbarApp(
             _viewModel
                 .ActiveTaskbarIdentity);
 
-    private void RevealAttentionTaskbarApp()
+    private bool RevealAttentionTaskbarApp()
         => RevealTaskbarApp(
             _viewModel
                 .AttentionTaskbarIdentity);
 
-    private void RevealTaskbarApp(
+    private bool RevealTaskbarApp(
         string? identity)
     {
         if (_isExit
             || string.IsNullOrWhiteSpace(
                 identity))
         {
-            return;
+            return false;
         }
 
         int activeIndex = -1;
@@ -2292,12 +2310,12 @@ public partial class MainWindow :
             }
         }
         if (activeIndex < 0)
-            return;
+            return false;
 
-        RevealTaskbarAppAtIndex(activeIndex);
+        return RevealTaskbarAppAtIndex(activeIndex);
     }
 
-    private void RevealTaskbarAppAtIndex(
+    private bool RevealTaskbarAppAtIndex(
         int itemIndex)
     {
         if (itemIndex < 0
@@ -2311,7 +2329,7 @@ public partial class MainWindow :
                 is not FrameworkElement
                     container)
         {
-            return;
+            return false;
         }
 
         try
@@ -2356,11 +2374,14 @@ public partial class MainWindow :
                     .ScrollToVerticalOffset(
                         targetOffset);
             }
+
+            return true;
         }
         catch (InvalidOperationException)
         {
             // The active item changed again while WPF was
             // regenerating the compact taskbar containers.
+            return false;
         }
     }
 

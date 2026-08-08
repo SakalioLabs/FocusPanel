@@ -19,7 +19,8 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         int changes = 0;
         items.CollectionChanged += (_, _) => changes++;
 
-        TaskbarAppCollectionSynchronizer.Synchronize(
+        bool structureChanged =
+            TaskbarAppCollectionSynchronizer.Synchronize(
             items,
             new[]
             {
@@ -30,6 +31,7 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         Assert.Same(first, items[0]);
         Assert.Same(second, items[1]);
         Assert.Equal(0, changes);
+        Assert.False(structureChanged);
     }
 
     [Fact]
@@ -41,7 +43,8 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         var actions = new List<NotifyCollectionChangedAction>();
         items.CollectionChanged += (_, args) => actions.Add(args.Action);
 
-        TaskbarAppCollectionSynchronizer.Synchronize(
+        bool structureChanged =
+            TaskbarAppCollectionSynchronizer.Synchronize(
             items,
             new[]
             {
@@ -53,6 +56,7 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         Assert.Same(second, items[1]);
         Assert.True(items[0].IsActive);
         Assert.Empty(actions);
+        Assert.False(structureChanged);
     }
 
     [Fact]
@@ -64,7 +68,8 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         var actions = new List<NotifyCollectionChangedAction>();
         items.CollectionChanged += (_, args) => actions.Add(args.Action);
 
-        TaskbarAppCollectionSynchronizer.Synchronize(
+        bool structureChanged =
+            TaskbarAppCollectionSynchronizer.Synchronize(
             items,
             new[]
             {
@@ -75,6 +80,39 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         Assert.Same(second, items[0]);
         Assert.Same(first, items[1]);
         Assert.Equal(new[] { NotifyCollectionChangedAction.Move }, actions);
+        Assert.True(structureChanged);
+    }
+
+    [Fact]
+    public void InsertAndRemove_ReportStructuralChanges()
+    {
+        var items =
+            new ObservableCollection<TaskbarAppItem>
+            {
+                App("exe:c:\\one.exe", "一")
+            };
+
+        bool inserted =
+            TaskbarAppCollectionSynchronizer
+                .Synchronize(
+                    items,
+                    new[]
+                    {
+                        App("exe:c:\\one.exe", "一"),
+                        App("exe:c:\\two.exe", "二")
+                    });
+        bool removed =
+            TaskbarAppCollectionSynchronizer
+                .Synchronize(
+                    items,
+                    new[]
+                    {
+                        App("exe:c:\\one.exe", "一")
+                    });
+
+        Assert.True(inserted);
+        Assert.True(removed);
+        Assert.Single(items);
     }
 
     [Fact]

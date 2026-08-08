@@ -6882,6 +6882,18 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "RevealAttentionTaskbarApp",
             codeBehind);
+        Assert.Contains(
+            "CompactTaskbarStructureRevision",
+            viewModel);
+        Assert.Contains(
+            "QueueTaskbarTargetReveal();",
+            codeBehind);
+        Assert.Contains(
+            "if (!RevealAttentionTaskbarApp())",
+            codeBehind);
+        Assert.Contains(
+            "_taskbarRevealScheduled",
+            codeBehind);
     }
 
     [Fact]
