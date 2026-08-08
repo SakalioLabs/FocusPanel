@@ -19,11 +19,14 @@ public sealed class SystemStatusService : ISystemStatusService
         bool> _shortcutSender;
     private readonly IInputMethodNative
         _inputMethods;
+    private readonly IDesktopToggleNative
+        _desktopToggle;
 
     public SystemStatusService()
         : this(
             SendWindowsShortcut,
-            new WindowsInputMethodNative())
+            new WindowsInputMethodNative(),
+            new ShellDesktopToggleNative())
     {
     }
 
@@ -31,7 +34,8 @@ public sealed class SystemStatusService : ISystemStatusService
         Func<
             WindowsShellShortcut,
             bool> shortcutSender,
-        IInputMethodNative? inputMethods = null)
+        IInputMethodNative? inputMethods = null,
+        IDesktopToggleNative? desktopToggle = null)
     {
         _shortcutSender =
             shortcutSender
@@ -40,6 +44,9 @@ public sealed class SystemStatusService : ISystemStatusService
         _inputMethods =
             inputMethods
             ?? new WindowsInputMethodNative();
+        _desktopToggle =
+            desktopToggle
+            ?? new ShellDesktopToggleNative();
     }
 
     public SystemStatusSnapshot GetStatusSnapshot()
@@ -554,9 +561,8 @@ public sealed class SystemStatusService : ISystemStatusService
                 "ms-settings:privacy-location"));
 
     public bool ShowDesktop() =>
-        SystemActionExecution.TryWithFallback(
-            () => TrySendWindowsShortcut(WindowsShellAction.ShowDesktop),
-            NativeMethods.ShowDesktopFallback);
+        SystemActionExecution.Try(
+            _desktopToggle.ToggleDesktop);
 
     public bool Lock() =>
         SystemActionExecution.Try(NativeMethods.LockWorkStation);
@@ -825,29 +831,6 @@ public sealed class SystemStatusService : ISystemStatusService
 
         [DllImport("user32.dll")]
         internal static extern uint SendInput(uint inputCount, Input[] inputs, int inputSize);
-
-        internal static bool ShowDesktopFallback()
-        {
-            Type? shellType = Type.GetTypeFromProgID("Shell.Application");
-            if (shellType == null)
-                return false;
-            object? shell = Activator.CreateInstance(shellType);
-            try
-            {
-                shellType.InvokeMember(
-                    "ToggleDesktop",
-                    System.Reflection.BindingFlags.InvokeMethod,
-                    null,
-                    shell,
-                    null);
-                return true;
-            }
-            finally
-            {
-                if (shell != null && Marshal.IsComObject(shell))
-                    Marshal.FinalReleaseComObject(shell);
-            }
-        }
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]

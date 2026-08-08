@@ -64,7 +64,6 @@ public partial class MainWindow :
     private bool _isExit;
     private bool _shutdownStarted;
     private bool _shutdownCompleted;
-    private bool _hiddenToTray;
     private bool _hiddenForFullscreen;
     private bool _isHotZoneAvailable;
     private bool _shellStartupReady;
@@ -129,7 +128,6 @@ public partial class MainWindow :
 
         InitializeComponent();
         DataContext = _viewModel;
-        MyNotifyIcon.Icon = SystemIcons.Application;
         _toastManager = new FocusToastManager(
             this,
             _notificationCenter);
@@ -359,7 +357,6 @@ public partial class MainWindow :
 
     private void OpenUpdateSettings()
     {
-        _hiddenToTray = false;
         ExpandSidebar();
         CloseOverlayPanels();
         _viewModel.IsSettingsOpen = true;
@@ -385,7 +382,6 @@ public partial class MainWindow :
 
     private void OpenPomodoroWorkspace()
     {
-        _hiddenToTray = false;
         ExpandSidebar();
         _viewModel.NavigateCommand.Execute("Pomodoro");
         Activate();
@@ -393,7 +389,6 @@ public partial class MainWindow :
 
     private void OpenTasksWorkspace()
     {
-        _hiddenToTray = false;
         ExpandSidebar();
         _viewModel.NavigateCommand.Execute(
             "Tasks");
@@ -436,7 +431,6 @@ public partial class MainWindow :
 
     private void OpenDesktopOrganizerWorkspace()
     {
-        _hiddenToTray = false;
         ExpandSidebar();
         _viewModel.NavigateCommand.Execute("Files");
         Activate();
@@ -507,7 +501,7 @@ public partial class MainWindow :
                             isAvailable,
                             _viewModel
                                 .KeepCompactDockVisible,
-                            _hiddenToTray,
+                            false,
                             _isExit,
                             IsVisible,
                             _hiddenForFullscreen);
@@ -568,7 +562,6 @@ public partial class MainWindow :
     private void OpenCompactDock()
     {
         if (!_shellStartupReady
-            || _hiddenToTray
             || (IsVisible
                 && GetVirtualDesktopPresence()
                 != VirtualDesktopPresence.Other))
@@ -585,7 +578,6 @@ public partial class MainWindow :
         if (!_shellStartupReady)
             return;
 
-        _hiddenToTray = false;
         _autoHideTimer.Stop();
         WorkspaceHost.Visibility = Visibility.Visible;
         ShowWithoutActivating();
@@ -740,7 +732,6 @@ public partial class MainWindow :
     {
         if (_isExit
             || !_shellStartupReady
-            || _hiddenToTray
             || _hiddenForFullscreen
             || !IsVisible
             || GetVirtualDesktopPresence()
@@ -1934,8 +1925,7 @@ public partial class MainWindow :
 
     private void ApplyCompactDockVisibilityPreference()
     {
-        if (!_shellStartupReady
-            || _hiddenToTray)
+        if (!_shellStartupReady)
         {
             return;
         }
@@ -3861,8 +3851,7 @@ public partial class MainWindow :
         }
         catch (Exception ex)
         {
-            if (!_hiddenToTray)
-                _hotZoneMonitor?.Start();
+            _hotZoneMonitor?.Start();
 
             _viewModel.UpdateStatus =
                 $"更新失败：{ex.Message}";
@@ -3883,13 +3872,16 @@ public partial class MainWindow :
                 _shutdownStarted,
                 _shutdownCompleted);
         if (action
-            == ShellClosingAction.HideToTray)
+            == ShellClosingAction.KeepRunning)
         {
             e.Cancel = true;
-            _hiddenToTray = true;
             _toastManager.DismissAll();
-            _hotZoneMonitor?.Stop();
-            HideShell();
+            EnsureHotZoneMonitor();
+            _hotZoneMonitor?.Start();
+            if (IsVisible)
+                CollapseSidebar();
+            else if (_viewModel.KeepCompactDockVisible)
+                OpenCompactDock();
             DesktopHelper.ToggleDesktopIcons(true);
             return;
         }
@@ -3994,19 +3986,6 @@ public partial class MainWindow :
         Application.Current.Shutdown();
     }
 
-    public void ShowFromTray()
-    {
-        if (!_shellStartupReady)
-            return;
-
-        _hiddenToTray = false;
-        EnsureHotZoneMonitor();
-        _hotZoneMonitor?.Start();
-        ExpandSidebar();
-        Activate();
-        FocusCompactDock();
-    }
-
     public void ForceClose()
     {
         if (_isExit)
@@ -4014,8 +3993,19 @@ public partial class MainWindow :
 
         _isExit = true;
         _coordinator.RestoreTaskbar();
-        MyNotifyIcon.Dispose();
         Close();
+    }
+
+    private void ShowFromExternalRequest()
+    {
+        if (!_shellStartupReady)
+            return;
+
+        EnsureHotZoneMonitor();
+        _hotZoneMonitor?.Start();
+        ExpandSidebar();
+        Activate();
+        FocusCompactDock();
     }
 
     private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
@@ -4072,7 +4062,7 @@ public partial class MainWindow :
     {
         if (message == ShellMessages.ShowMainWindow)
         {
-            ShowFromTray();
+            ShowFromExternalRequest();
             handled = true;
         }
         else if (message == WmHotkey && wParam.ToInt32() == SummonHotkeyId)
@@ -4243,7 +4233,6 @@ public partial class MainWindow :
             return;
         }
 
-        _hiddenToTray = false;
         ExpandSidebar();
         Activate();
         ApplySearchEntryState(
@@ -4274,7 +4263,7 @@ public partial class MainWindow :
 
     private void UpdateEdgeIndicatorVisibility()
     {
-        if (_hiddenToTray || IsVisible || !_isHotZoneAvailable)
+        if (IsVisible || !_isHotZoneAvailable)
         {
             _edgeIndicator?.HideIndicator();
             return;

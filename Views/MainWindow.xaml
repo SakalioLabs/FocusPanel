@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:FocusPanel.Views"
         xmlns:controls="clr-namespace:FocusPanel.Controls"
         xmlns:converters="clr-namespace:FocusPanel.Converters"
@@ -82,22 +81,6 @@
     </Window.Resources>
 
     <Grid>
-        <tb:TaskbarIcon x:Name="MyNotifyIcon"
-                        ToolTipText="FocusPanel · Ctrl+Alt+Shift+F10 恢复系统任务栏"
-                        MenuActivation="LeftOrRightClick"
-                        DoubleClickCommand="{Binding ShowWindowCommand}">
-            <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Style="{StaticResource FocusContextMenu}"
-                             Opened="TransientContextMenu_Opened"
-                             Closed="TransientContextMenu_Closed">
-                    <MenuItem Header="显示 FocusPanel" Command="{Binding ShowWindowCommand}"/>
-                    <MenuItem Header="恢复原任务栏设置" Command="{Binding DisableReplacementCommand}"/>
-                    <Separator/>
-                    <MenuItem Header="退出" Command="{Binding CloseAppCommand}"/>
-                </ContextMenu>
-            </tb:TaskbarIcon.ContextMenu>
-        </tb:TaskbarIcon>
-
         <Border x:Name="ShellBorder"
                 Margin="0"
                 CornerRadius="0"
@@ -651,10 +634,10 @@
                                         Style="{StaticResource FocusSecondaryButton}"
                                         MinHeight="44"
                                         Margin="0,0,0,8"
-                                        Content="Panel 应用与窗口"
+                                        Content="后台应用与窗口 · Panel"
                                         Click="StatusCenterWindowOverview_Click"
                                         AutomationProperties.Name="打开 Panel 窗口总览"
-                                        ToolTip="完全在 Panel 内查看、切换和管理应用；不会弹出原生任务栏或隐藏图标窗口"/>
+                                        ToolTip="完全在 Panel 内查看、启动、切换和管理可操作应用；第三方专属托盘菜单无法由 Windows 公共接口搬入 Panel"/>
                                 <UniformGrid Columns="5"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="Panel 状态详情">
@@ -2210,7 +2193,7 @@
                                         <MenuItem Header="应用音量 · Panel"
                                                   Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
                                                   Click="PanelStatusDetailMenuItem_Click"/>
-                                        <MenuItem Header="窗口总览"
+                                        <MenuItem Header="后台应用与窗口 · Panel"
                                                   Click="StatusCenterWindowOverview_Click"/>
                                         <MenuItem Header="Panel 通知"
                                                   Tag="{x:Static services:StatusCenterDetail.PanelNotifications}"
@@ -2282,7 +2265,6 @@
                                                  Opened="TransientContextMenu_Opened"
                                                  Closed="TransientContextMenu_Closed">
                                         <MenuItem Header="显示桌面"
-                                                  InputGestureText="Win+D"
                                                   Command="{Binding PlacementTarget.DataContext.ShowDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                         <Separator/>
                                         <MenuItem Header="调整日期和时间"

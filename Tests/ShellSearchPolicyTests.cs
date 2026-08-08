@@ -484,7 +484,10 @@ public sealed class ShellSearchPolicyTests
             "shell:",
             result.StableKey);
         Assert.Equal(
-            "Windows 快捷命令",
+            result.ShellAction
+                == WindowsShellAction.ShowDesktop
+                    ? "Panel 系统操作"
+                    : "Windows 快捷命令",
             result.SecondaryText);
         Assert.Null(
             result.ManagementTool);

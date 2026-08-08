@@ -416,14 +416,7 @@ public sealed class ViewportVirtualizingPanel :
     private double ResolvePanelWidth(
         double availableWidth)
     {
-        if (!double.IsNaN(availableWidth)
-            && !double.IsInfinity(availableWidth)
-            && availableWidth > 0)
-        {
-            return availableWidth;
-        }
-
-        double resolved = 0;
+        double viewportWidth = 0;
         if (_scrollOwner != null
             && _scrollOwner.ViewportWidth > 0)
         {
@@ -437,33 +430,31 @@ public sealed class ViewportVirtualizingPanel :
                     _scrollOwner.ViewportWidth
                     - Math.Max(0, left)
                     - 2;
-                resolved = Math.Max(
-                    resolved,
-                    viewportCandidate);
+                viewportWidth = viewportCandidate;
             }
             catch (InvalidOperationException)
             {
-                resolved = Math.Max(
-                    resolved,
-                    _scrollOwner.ViewportWidth);
+                viewportWidth =
+                    _scrollOwner.ViewportWidth;
             }
         }
 
-        if (ActualWidth > 0)
-            resolved = Math.Max(resolved, ActualWidth);
+        double parentWidth = 0;
         if (VisualTreeHelper.GetParent(this)
             is FrameworkElement parent
             && parent.ActualWidth > 0)
         {
-            resolved = Math.Max(
-                resolved,
-                parent.ActualWidth);
+            parentWidth = parent.ActualWidth;
         }
-        return resolved > 0
-            ? resolved
-            : Math.Max(
-                1,
-                ItemWidth + ItemSpacing);
+        return ViewportVirtualizationCalculator
+            .ResolvePanelWidth(
+                availableWidth,
+                ActualWidth,
+                parentWidth,
+                viewportWidth,
+                Math.Max(
+                    1,
+                    ItemWidth + ItemSpacing));
     }
 
     private void Panel_Loaded(

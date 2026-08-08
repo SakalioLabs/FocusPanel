@@ -33,6 +33,12 @@ public partial class DesktopFile : ObservableObject
     private ImageSource? icon;
 
     [ObservableProperty]
+    private string? customIconPath;
+
+    [ObservableProperty]
+    private int customIconIndex;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Category))]
     private string fileType = string.Empty; // e.g. "Image", "Document"
 

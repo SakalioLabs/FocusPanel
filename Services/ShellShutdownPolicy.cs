@@ -2,7 +2,7 @@ namespace FocusPanel.Services;
 
 internal enum ShellClosingAction
 {
-    HideToTray,
+    KeepRunning,
     BeginAsyncShutdown,
     WaitForAsyncShutdown,
     AllowClose
@@ -16,7 +16,7 @@ internal static class ShellShutdownPolicy
         bool shutdownCompleted)
     {
         if (!isExitRequested)
-            return ShellClosingAction.HideToTray;
+            return ShellClosingAction.KeepRunning;
         if (shutdownCompleted)
             return ShellClosingAction.AllowClose;
         return shutdownStarted

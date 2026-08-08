@@ -76,7 +76,7 @@
             <Setter Property="Height" Value="{Binding DataContext.CardHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Top"/>
-            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="6"/>
             <Setter Property="CornerRadius" Value="{StaticResource FocusControlCornerRadius}"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -377,6 +377,7 @@
                                             <ItemsControl ItemsSource="{Binding Files}"
                                                           Margin="6"
                                                           HorizontalAlignment="Stretch"
+                                                          HorizontalContentAlignment="Stretch"
                                                           VirtualizingPanel.IsVirtualizing="True"
                                                           VirtualizingPanel.VirtualizationMode="Recycling">
                                                 <ItemsControl.ItemsPanel>
@@ -384,7 +385,7 @@
                                                         <controls:ViewportVirtualizingPanel
                                                             ItemWidth="{Binding Data.CardWidth, Source={StaticResource VmProxy}}"
                                                             ItemHeight="{Binding Data.CardHeight, Source={StaticResource VmProxy}}"
-                                                            ItemSpacing="8"
+                                                            ItemSpacing="12"
                                                             IsWrapping="True"/>
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
@@ -673,6 +674,7 @@
                     <ItemsControl ItemsSource="{Binding AllPartitions}"
                                   ItemTemplate="{StaticResource PartitionTemplate}"
                                   HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Stretch"
                                   Visibility="{Binding IsListView, Converter={StaticResource InverseBoolConverter}}"
                                   AutomationProperties.Name="全宽图标收纳盒">
                         <ItemsControl.ItemsPanel>
@@ -695,7 +697,8 @@
                                 Tag="0"
                                 Margin="0,0,7,0">
                             <ItemsControl ItemsSource="{Binding PartitionsCol1}"
-                                          ItemTemplate="{StaticResource PartitionTemplate}">
+                                          ItemTemplate="{StaticResource PartitionTemplate}"
+                                          HorizontalContentAlignment="Stretch">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Vertical"/>
@@ -711,7 +714,8 @@
                                 Tag="1"
                                 Margin="7,0,0,0">
                             <ItemsControl ItemsSource="{Binding PartitionsCol2}"
-                                          ItemTemplate="{StaticResource PartitionTemplate}">
+                                          ItemTemplate="{StaticResource PartitionTemplate}"
+                                          HorizontalContentAlignment="Stretch">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Vertical"/>

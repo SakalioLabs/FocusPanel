@@ -12,8 +12,7 @@ public sealed class WindowsShellShortcutTests
         var expected = new (WindowsShellAction Action, ushort Key)[]
         {
             (WindowsShellAction.ProjectDisplay, 0x50),
-            (WindowsShellAction.CastDevices, 0x4B),
-            (WindowsShellAction.ShowDesktop, 0x44)
+            (WindowsShellAction.CastDevices, 0x4B)
         };
 
         foreach ((WindowsShellAction action, ushort key) in expected)
@@ -22,6 +21,14 @@ public sealed class WindowsShellShortcutTests
             Assert.True(shortcut.UsesWindowsKey);
             Assert.Equal(key, shortcut.Key);
         }
+    }
+
+    [Fact]
+    public void ShowDesktop_DoesNotHaveASyntheticKeyboardChord()
+    {
+        Assert.Throws<System.ArgumentOutOfRangeException>(
+            () => WindowsShellShortcutMap.Get(
+                WindowsShellAction.ShowDesktop));
     }
 
     [Fact]

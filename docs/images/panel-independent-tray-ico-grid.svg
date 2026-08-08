@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="560" viewBox="0 0 1180 560" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 独立任务栏入口、自定义 ICO 与稳定网格</title>
+  <desc id="desc">左侧表示 FocusPanel 不再进入 Windows 隐藏图标区，中间展示自定义 ICO 进入应用图标库，右侧展示固定十二像素间距的收纳网格。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0d1421"/><stop offset="1" stop-color="#172944"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff" stop-opacity=".17"/><stop offset="1" stop-color="#7cc4ff" stop-opacity=".07"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1180" height="560" rx="30" fill="url(#bg)"/>
+  <text x="52" y="62" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="29" font-weight="650">不回任务栏找 Panel，图标也不再乱</text>
+  <text x="52" y="96" fill="#a9bad0" font-family="Segoe UI, Microsoft YaHei" font-size="16">0.11.55 · Panel 自有入口 / 持久 ICO / 固定节奏网格</text>
+
+  <g filter="url(#shadow)">
+    <rect x="50" y="132" width="310" height="366" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".16"/>
+    <text x="78" y="174" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">入口独立</text>
+    <rect x="80" y="205" width="250" height="62" rx="16" fill="#1687d9"/>
+    <text x="105" y="244" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="17">后台应用与窗口 · Panel</text>
+    <rect x="80" y="289" width="250" height="68" rx="16" fill="#0a1220" fill-opacity=".7" stroke="#8093aa" stroke-opacity=".35"/>
+    <text x="105" y="319" fill="#dfe9f7" font-family="Segoe UI, Microsoft YaHei" font-size="15">右缘触发 + 全局快捷键</text>
+    <text x="105" y="342" fill="#8fa5bf" font-family="Segoe UI, Microsoft YaHei" font-size="13">普通关闭只折回紧凑栏</text>
+    <path d="M105 405h195" stroke="#ff7587" stroke-width="4" stroke-linecap="round"/>
+    <path d="M118 387l26 36m0-36l-26 36" stroke="#ff7587" stroke-width="4" stroke-linecap="round"/>
+    <text x="158" y="411" fill="#ffc1ca" font-family="Segoe UI, Microsoft YaHei" font-size="15">无 TaskbarIcon</text>
+    <text x="105" y="456" fill="#8fa5bf" font-family="Segoe UI, Microsoft YaHei" font-size="13">不打开 Windows 隐藏图标抽屉</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="384" y="132" width="310" height="366" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".16"/>
+    <text x="412" y="174" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">ICO 持久保留</text>
+    <rect x="416" y="210" width="82" height="82" rx="20" fill="#253c59" stroke="#72bcff"/>
+    <path d="M440 253h34m-17-17v34" stroke="#8dccff" stroke-width="5" stroke-linecap="round"/>
+    <path d="M515 251h42" stroke="#75c9ff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M548 239l12 12-12 12" fill="none" stroke="#75c9ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="576" y="210" width="82" height="82" rx="20" fill="#1687d9"/>
+    <text x="617" y="260" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="24" font-weight="700">ICO</text>
+    <text x="416" y="334" fill="#dfe9f7" font-family="Segoe UI, Microsoft YaHei" font-size="15">%APPDATA%\FocusPanel\Icons</text>
+    <text x="416" y="369" fill="#9fb2ca" font-family="Segoe UI, Microsoft YaHei" font-size="14">内容哈希去重</text>
+    <text x="416" y="398" fill="#9fb2ca" font-family="Segoe UI, Microsoft YaHei" font-size="14">完整路径 → 文件标识 → 唯一名称</text>
+    <rect x="416" y="430" width="242" height="38" rx="12" fill="#183f37"/>
+    <text x="537" y="455" text-anchor="middle" fill="#8ce0c2" font-family="Segoe UI, Microsoft YaHei" font-size="14">收纳后仍显示自定义图标</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="718" y="132" width="412" height="366" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".16"/>
+    <text x="746" y="174" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">稳定图标网格</text>
+    <text x="1102" y="174" text-anchor="end" fill="#80c8ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">固定 12px</text>
+    <g fill="#213a58" stroke="#6eb9f3" stroke-opacity=".55">
+      <rect x="750" y="212" width="76" height="92" rx="14"/><rect x="838" y="212" width="76" height="92" rx="14"/><rect x="926" y="212" width="76" height="92" rx="14"/><rect x="1014" y="212" width="76" height="92" rx="14"/>
+      <rect x="750" y="316" width="76" height="92" rx="14"/><rect x="838" y="316" width="76" height="92" rx="14"/><rect x="926" y="316" width="76" height="92" rx="14"/>
+    </g>
+    <g fill="#a7d8ff">
+      <circle cx="788" cy="248" r="16"/><circle cx="876" cy="248" r="16"/><circle cx="964" cy="248" r="16"/><circle cx="1052" cy="248" r="16"/>
+      <circle cx="788" cy="352" r="16"/><circle cx="876" cy="352" r="16"/><circle cx="964" cy="352" r="16"/>
+    </g>
+    <g fill="#91a8c2"><rect x="767" y="276" width="42" height="7" rx="3"/><rect x="855" y="276" width="42" height="7" rx="3"/><rect x="943" y="276" width="42" height="7" rx="3"/><rect x="1031" y="276" width="42" height="7" rx="3"/><rect x="767" y="380" width="42" height="7" rx="3"/><rect x="855" y="380" width="42" height="7" rx="3"/><rect x="943" y="380" width="42" height="7" rx="3"/></g>
+    <path d="M750 438h340" stroke="#71bfff" stroke-opacity=".5" stroke-dasharray="5 7"/>
+    <text x="750" y="468" fill="#9fb2ca" font-family="Segoe UI, Microsoft YaHei" font-size="14">真实视口宽度优先 · 不再被首帧单列锁死</text>
+  </g>
+</svg>

@@ -1404,10 +1404,17 @@ public partial class FileOrganizerViewModel :
                 "选择的文件不是可读取的 ICO 图标。");
         }
 
-        await _fileService.SetCustomIcon(
+        string? storedIconPath =
+            await _fileService.SetCustomIcon(
             file,
             iconPath);
-        file.Icon = icon;
+        file.Icon = storedIconPath == null
+            ? icon
+            : IconHelper.GetIconFromLocation(
+                storedIconPath,
+                0,
+                true)
+                ?? icon;
     }
 
     public async Task<DesktopImportResult> ImportFiles(

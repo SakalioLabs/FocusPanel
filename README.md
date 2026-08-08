@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.55 把 FocusPanel 自己也从 Windows 通知区撤出：程序不再创建任务栏托盘图标，普通关闭只折回 76px 紧凑栏并保留右缘与全局快捷键，因此不用再从底部“显示隐藏图标”寻找 Panel。状态中心的“后台应用与窗口 · Panel”只进入 Panel 自有总览，不触发原生溢出抽屉；Windows 没有公开接口允许第三方安全搬走其他应用的托盘图标及菜单，本项目不会用 Explorer 注入冒充完整接管。桌面收纳同时修复真实宽度被首次单卡片测量锁死的问题，改为固定 12px 图标节奏；用户选择的 `.ico` 会复制进 `%APPDATA%\FocusPanel\Icons` 并按完整路径/文件标识绑定，同名桌面项不会串图标。显示桌面也改用公开 `Shell.Application.ToggleDesktop`，不再模拟 `Win+D`。
+
+![Panel 不再依赖任务栏托盘，并稳定保留 ICO 与图标网格](docs/images/panel-independent-tray-ico-grid.svg)
+
 > 0.11.54 把通知管理的最后一段系统壳依赖收回 Panel：通知详情不再提供 Win+N 兼容按钮，开始右键和统一搜索也删除只会发送 Win+W 的“小组件”；对应服务接口、Shell 枚举与虚拟键映射一并移除，不是单纯隐藏界面。Panel 通知新增只看未读、逐条已读、逐条删除和总数摘要，打开详情不会擅自把全部消息标为已读；最多 50 条历史放入 360px 有界虚拟化列表，不再把状态中心越撑越长。
 
 ![Panel 原生通知历史不再借用 Windows 任务栏表面](docs/images/panel-native-notification-history.svg)
@@ -234,7 +238,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 > 0.10.94 起，多窗口应用支持 Windows 任务栏式 `Ctrl+左键` 循环：`Ctrl+左键` 直接切到下一个窗口并在首尾环绕，连续点击沿用刚刚切换的真实窗口，不等待前台快照回写。0.11.27 起普通左键改为打开按应用身份筛选的完整窗口总览；提示文字继续明确为 `Ctrl+滚轮`，不再错误宣称普通滚轮会切窗口。
 
-> 0.10.93 起，“显示桌面”不再只能进入状态中心寻找：紧凑栏时间入口支持 `Shift+左键`、`Shift+Enter` 或鼠标中键一步切换桌面；右键菜单也把“显示桌面 · Win+D”放在日期时间和通知设置之前。普通左键仍打开月历与今日任务，不新增第六个固定按钮。
+> 0.10.93 起，“显示桌面”不再只能进入状态中心寻找：紧凑栏时间入口支持 `Shift+左键`、`Shift+Enter` 或鼠标中键一步切换桌面；右键菜单也提供同一动作。0.11.55 起该动作直接调用 Windows Shell 的公开 `ToggleDesktop`，不再模拟 `Win+D`。普通左键仍打开月历与今日任务，不新增第六个固定按钮。
 
 > 0.10.92 曾为紧凑栏 Focus 入口增加 `Shift+左键` 直达；0.10.98 已取消这种需要记忆的差异手势，普通左键和 Enter 都直接打开最近工作区。右键或 `Shift+F10` 继续提供概览、桌面收纳、任务、番茄钟、AI 与设置的单层菜单。
 
@@ -565,7 +569,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 ### 无激活原生通知
 
-更新可用和番茄钟完成不再依赖 Explorer 托盘气泡，而由 FocusPanel 在 Panel 左侧显示单层 Fluent Toast。通知复用 Windows 11 DWM 原生圆角与 Desktop Acrylic；显示时不激活窗口、不打断当前输入，鼠标悬停会暂停自动关闭。更新通知可直接进入设置页，专注完成通知可直接回到番茄钟；托盘图标只保留恢复原生任务栏与安全退出能力。
+更新可用和番茄钟完成不再依赖 Explorer 托盘气泡，而由 FocusPanel 在 Panel 左侧显示单层 Fluent Toast。通知复用 Windows 11 DWM 原生圆角与 Desktop Acrylic；显示时不激活窗口、不打断当前输入，鼠标悬停会暂停自动关闭。更新通知可直接进入设置页，专注完成通知可直接回到番茄钟。0.11.55 起 FocusPanel 不再创建任务栏托盘图标；原生任务栏恢复与安全退出由 Panel、watchdog 和紧急快捷键承担。
 
 ![FocusPanel 无激活原生毛玻璃通知](docs/images/native-focus-toast.svg)
 
@@ -611,7 +615,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 - Explorer 重启或任务栏状态改变：停止本次替代并恢复原设置，避免可见性循环
 - 恢复会话：`%LOCALAPPDATA%\FocusPanel\taskbar-session.json`
 
-遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。Panel 不拦截用户主动按下的 Windows 系统快捷键，但自身界面不发送 Win+A、Win+N、Win+W、Win+Space 或 Win+Tab；FocusPanel 自己产生的更新、任务、番茄钟和恢复消息进入 Panel 通知历史，并在 Panel 内完成筛选、已读、删除和跨重启保存。读取其他应用的完整 Windows 通知需要安装包清单能力和用户授权，当前版本不伪装成已经接管。第三方托盘图标不会被复制，也不会通过原生任务栏抽屉伪装成 Panel 能力，后台可操作应用统一进入 Panel 自有窗口总览。
+遇到异常时，先按紧急恢复快捷键。仍未恢复可重新启动 FocusPanel；启动阶段会检查并恢复遗留会话。程序永远不会结束 Explorer，也不会持续覆盖 Windows 工作区。Panel 不拦截用户主动按下的 Windows 系统快捷键，但自身界面不发送 Win+A、Win+N、Win+W、Win+Space、Win+Tab 或 Win+D；FocusPanel 自己产生的更新、任务、番茄钟和恢复消息进入 Panel 通知历史，并在 Panel 内完成筛选、已读、删除和跨重启保存。读取其他应用的完整 Windows 通知需要安装包清单能力和用户授权，当前版本不伪装成已经接管。第三方托盘图标不会被复制，也不会通过原生任务栏抽屉伪装成 Panel 能力，后台可操作应用统一进入 Panel 自有窗口总览。
 
 ![任务栏安全状态机](docs/images/taskbar-safety-flow.svg)
 
@@ -740,7 +744,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 | 架构 | MVVM / CommunityToolkit.Mvvm |
 | UI | 自定义 Fluent ResourceDictionary / DWM |
 | 数据库 | SQLite / EF Core 7 |
-| 托盘 | Hardcodet.NotifyIcon.Wpf |
+| Panel 通知 | 自有无激活 Fluent Toast 与本地通知历史（无任务栏托盘图标） |
 | 系统集成 | Win32 / DWM / AppBar / Core Audio / Shell |
 | 安装与更新 | Velopack 1.2 / GitHub Releases |
 

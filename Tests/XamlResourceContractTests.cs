@@ -831,7 +831,7 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.Contains(
-            "Content=\"Panel 应用与窗口\"",
+            "Content=\"后台应用与窗口 · Panel\"",
             mainWindow);
         Assert.Contains(
             "Click=\"StatusCenterWindowOverview_Click\"",
@@ -1643,7 +1643,7 @@ public sealed class XamlResourceContractTests
             "Visibility=\"{Binding HasUnreadPanelNotifications",
             compactDock);
         Assert.Contains(
-            "Header=\"窗口总览\"",
+            "Header=\"后台应用与窗口 · Panel\"",
             compactDock);
         Assert.Contains(
             "StatusCenterWindowOverview_Click",
@@ -1664,10 +1664,14 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Services", "SystemStatusService.cs"));
         string statusContract = File.ReadAllText(
             Path.Combine(root, "Services", "ISystemStatusService.cs"));
+        string project = File.ReadAllText(
+            Path.Combine(root, "FocusPanel.csproj"));
         Assert.DoesNotContain("OpenNotificationOverflow", systemStatus);
         Assert.DoesNotContain("OpenNotificationOverflow", statusContract);
         Assert.DoesNotContain("OpenNotifications", systemStatus);
         Assert.DoesNotContain("OpenNotifications", statusContract);
+        Assert.DoesNotContain("TaskbarIcon", mainWindow);
+        Assert.DoesNotContain("Hardcodet.NotifyIcon", project);
         Assert.DoesNotContain("OpenWidgets", systemStatus);
         Assert.DoesNotContain("OpenWidgets", statusContract);
         Assert.DoesNotContain("System.Windows.Automation", systemStatus);
@@ -2572,7 +2576,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Header=\"显示桌面\"",
             timeButton);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "InputGestureText=\"Win+D\"",
             timeButton);
         Assert.Contains(
@@ -2835,10 +2839,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            6,
+            5,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            6,
+            5,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -4198,7 +4202,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            7,
+            6,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);
@@ -4352,6 +4356,15 @@ public sealed class XamlResourceContractTests
             "HorizontalScrollBarVisibility=\"Disabled\"",
             organizer);
         Assert.Contains(
+            "AutomationProperties.Name=\"全宽图标收纳盒\">",
+            organizer);
+        Assert.Contains(
+            "ItemSpacing=\"12\"",
+            organizer);
+        Assert.Contains(
+            "HorizontalContentAlignment=\"Stretch\"",
+            organizer);
+        Assert.Contains(
             "Property=\"HorizontalAlignment\" Value=\"Center\"",
             organizer);
     }
@@ -4412,6 +4425,13 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Models", "DesktopFilePreference.cs"));
         string schema = File.ReadAllText(
             Path.Combine(root, "Data", "AppDbContext.cs"));
+        string iconStore = File.ReadAllText(
+            Path.Combine(root, "Services", "PanelIconStore.cs"));
+        string selector = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "DesktopIconPreferenceSelector.cs"));
 
         Assert.Contains("Header=\"更换 Panel 图标…\"", organizer);
         Assert.Contains("Header=\"恢复文件默认图标\"", organizer);
@@ -4425,6 +4445,12 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "ADD COLUMN CustomIconPath TEXT",
             schema);
+        Assert.Contains("SHA256.HashDataAsync", iconStore);
+        Assert.Contains("FocusPanel", iconStore);
+        Assert.Contains("Icons", iconStore);
+        Assert.Contains(
+            "StringComparison.OrdinalIgnoreCase",
+            selector);
     }
 
     [Fact]

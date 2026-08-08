@@ -29,8 +29,35 @@ internal static class ViewportVirtualizationCalculator
             panelWidth,
             requestedCellWidth);
         return wrap
-            ? panelWidth / Math.Max(1, itemsPerRow)
+            ? Math.Min(panelWidth, requestedCellWidth)
             : panelWidth;
+    }
+
+    internal static double ResolvePanelWidth(
+        double availableWidth,
+        double actualWidth,
+        double parentWidth,
+        double viewportWidth,
+        double fallbackWidth)
+    {
+        double resolved = 0;
+        resolved = MaxFinitePositive(
+            resolved,
+            availableWidth);
+        resolved = MaxFinitePositive(
+            resolved,
+            actualWidth);
+        resolved = MaxFinitePositive(
+            resolved,
+            parentWidth);
+        resolved = MaxFinitePositive(
+            resolved,
+            viewportWidth);
+        return resolved > 0
+            ? resolved
+            : NormalizeLength(
+                fallbackWidth,
+                1);
     }
 
     internal static ViewportVirtualizationLayout
@@ -118,4 +145,13 @@ internal static class ViewportVirtualizationCalculator
             || value <= 0
                 ? fallback
                 : value;
+
+    private static double MaxFinitePositive(
+        double current,
+        double candidate)
+        => double.IsNaN(candidate)
+            || double.IsInfinity(candidate)
+            || candidate <= 0
+                ? current
+                : Math.Max(current, candidate);
 }

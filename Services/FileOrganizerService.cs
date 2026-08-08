@@ -34,6 +34,7 @@ public class FileOrganizerService : IDisposable
         _visibilityIo;
     private readonly IAiDesktopPartitionService
         _aiPartitionService;
+    private readonly IPanelIconStore _iconStore;
     private FileSystemWatcher _desktopWatcher = null!;
     private FileSystemWatcher? _commonDesktopWatcher;
     private FileSystemWatcher? _storageWatcher;
@@ -77,7 +78,8 @@ public class FileOrganizerService : IDisposable
         string desktopPath,
         string commonDesktopPath,
         IDesktopItemVisibilityService visibility,
-        IAiDesktopPartitionService? aiPartitionService = null)
+        IAiDesktopPartitionService? aiPartitionService = null,
+        IPanelIconStore? iconStore = null)
     {
         _desktopPath = desktopPath;
         _commonDesktopPath = commonDesktopPath;
@@ -88,6 +90,8 @@ public class FileOrganizerService : IDisposable
                 visibility);
         _aiPartitionService = aiPartitionService
             ?? new AiDesktopPartitionService();
+        _iconStore = iconStore
+            ?? new PanelIconStore();
         _debounceTimer = new System.Threading.Timer(
             _ => _ = ProcessPendingChangesSafelyAsync(),
             null,
@@ -580,10 +584,14 @@ public class FileOrganizerService : IDisposable
 
         try
         {
+            item.CustomIconPath =
+                preference?.CustomIconPath;
+            item.CustomIconIndex =
+                preference?.CustomIconIndex ?? 0;
             item.Icon = IconHelper.GetIcon(
                 fullPath,
-                preference?.CustomIconPath,
-                preference?.CustomIconIndex ?? 0,
+                item.CustomIconPath,
+                item.CustomIconIndex,
                 true);
         }
         catch
@@ -1349,33 +1357,40 @@ public class FileOrganizerService : IDisposable
         IconHelper.ClearCache(fullPath);
     }
 
-    public async Task SetCustomIcon(
+    public async Task<string?> SetCustomIcon(
         DesktopFile file,
         string? iconPath)
     {
         ArgumentNullException.ThrowIfNull(file);
         string? normalized = string.IsNullOrWhiteSpace(iconPath)
             ? null
-            : Path.GetFullPath(iconPath);
-        if (normalized != null
-            && !File.Exists(normalized))
+            : await _iconStore.ImportAsync(
+                    Path.GetFullPath(iconPath))
+                .ConfigureAwait(false);
+
+        string? identity = null;
+        try
         {
-            throw new FileNotFoundException(
-                "找不到选择的图标文件。",
-                normalized);
+            identity = _visibility.TryGetIdentity(
+                file.FullPath);
+        }
+        catch
+        {
+            // Managed path remains the primary key when identity is unavailable.
         }
 
         await Task.Run(() =>
         {
             using var context = new AppDbContext();
             context.EnsureSchema();
+            List<DesktopFilePreference> preferences =
+                context.DesktopFilePreferences.ToList();
             DesktopFilePreference? preference =
-                context.DesktopFilePreferences
-                    .FirstOrDefault(item =>
-                        item.ManagedPath == file.FullPath)
-                ?? context.DesktopFilePreferences
-                    .FirstOrDefault(item =>
-                        item.FilePath == file.Name);
+                DesktopIconPreferenceSelector.Select(
+                    preferences,
+                    file.FullPath,
+                    file.Name,
+                    identity);
             if (preference == null)
             {
                 preference = new DesktopFilePreference
@@ -1383,7 +1398,8 @@ public class FileOrganizerService : IDisposable
                     FilePath = file.Name,
                     PartitionName =
                         file.CustomPartition ?? string.Empty,
-                    ManagedPath = file.FullPath
+                    ManagedPath = file.FullPath,
+                    FileIdentity = identity
                 };
                 context.DesktopFilePreferences.Add(
                     preference);
@@ -1399,6 +1415,9 @@ public class FileOrganizerService : IDisposable
         IconHelper.ClearCache(file.FullPath);
         if (normalized != null)
             IconHelper.ClearCache(normalized);
+        file.CustomIconPath = normalized;
+        file.CustomIconIndex = 0;
+        return normalized;
     }
 
     // ============================================================

@@ -6,7 +6,7 @@ namespace FocusPanel.Tests;
 public sealed class ViewportVirtualizationCalculatorTests
 {
     [Fact]
-    public void WrappedCells_DistributeTheAvailableRowWidthEvenly()
+    public void WrappedCells_KeepStableDesktopSpacing()
     {
         double width =
             ViewportVirtualizationCalculator
@@ -16,7 +16,37 @@ public sealed class ViewportVirtualizationCalculatorTests
                     requestedCellWidth: 110,
                     wrap: true);
 
-        Assert.Equal(130, width);
+        Assert.Equal(110, width);
+    }
+
+    [Fact]
+    public void PanelWidth_UsesTheLargestRealViewportCandidate()
+    {
+        double width =
+            ViewportVirtualizationCalculator
+                .ResolvePanelWidth(
+                    availableWidth: 112,
+                    actualWidth: 112,
+                    parentWidth: 648,
+                    viewportWidth: 646,
+                    fallbackWidth: 112);
+
+        Assert.Equal(648, width);
+    }
+
+    [Fact]
+    public void PanelWidth_FallsBackWhenLayoutHasNoFiniteWidth()
+    {
+        double width =
+            ViewportVirtualizationCalculator
+                .ResolvePanelWidth(
+                    availableWidth: double.PositiveInfinity,
+                    actualWidth: 0,
+                    parentWidth: double.NaN,
+                    viewportWidth: -1,
+                    fallbackWidth: 112);
+
+        Assert.Equal(112, width);
     }
 
     [Fact]

@@ -3261,7 +3261,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ShowDesktop()
         => await RunSystemActionAsync(
             _systemStatus.ShowDesktop,
-            "无法显示桌面，请使用 Win+D。");
+            "Windows 桌面服务拒绝切换；当前窗口状态保持不变。");
 
     [RelayCommand]
     private async Task LockComputer()
@@ -3370,13 +3370,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (Application.Current.MainWindow is MainWindow mainWindow)
             mainWindow.CollapseSidebar();
-    }
-
-    [RelayCommand]
-    private void ShowWindow()
-    {
-        if (Application.Current.MainWindow is MainWindow mainWindow)
-            mainWindow.ShowFromTray();
     }
 
     [RelayCommand]

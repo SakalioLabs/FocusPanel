@@ -313,9 +313,13 @@ public sealed record ShellSearchResult
             DisplayName =
                 entry.DisplayName,
             SecondaryText =
-                "Windows 快捷命令",
+                entry.Action == WindowsShellAction.ShowDesktop
+                    ? "Panel 系统操作"
+                    : "Windows 快捷命令",
             AccessibleName =
-                $"执行快捷命令 {entry.DisplayName}",
+                entry.Action == WindowsShellAction.ShowDesktop
+                    ? $"执行 Panel 系统操作 {entry.DisplayName}"
+                    : $"执行快捷命令 {entry.DisplayName}",
             Glyph =
                 entry.Glyph,
             ShellAction =

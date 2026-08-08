@@ -100,7 +100,6 @@ internal static class WindowsShellShortcutMap
             new(0x53, true, UsesShift: true),
         WindowsShellAction.ProjectDisplay => new(0x50, true),
         WindowsShellAction.CastDevices => new(0x4B, true),
-        WindowsShellAction.ShowDesktop => new(0x44, true),
         WindowsShellAction.MediaPreviousTrack =>
             new(0xB1, false),
         WindowsShellAction.MediaPlayPause =>

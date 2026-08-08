@@ -10,7 +10,7 @@ public sealed class ShellShutdownPolicyTests
         false,
         false,
         false,
-        (int)ShellClosingAction.HideToTray)]
+        (int)ShellClosingAction.KeepRunning)]
     [InlineData(
         true,
         false,
@@ -26,7 +26,7 @@ public sealed class ShellShutdownPolicyTests
         true,
         true,
         (int)ShellClosingAction.AllowClose)]
-    public void Decide_SeparatesTrayCloseFromTwoPhaseExit(
+    public void Decide_SeparatesCompactCloseFromTwoPhaseExit(
         bool isExitRequested,
         bool shutdownStarted,
         bool shutdownCompleted,
