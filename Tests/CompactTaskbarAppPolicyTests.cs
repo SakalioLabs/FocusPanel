@@ -9,7 +9,7 @@ namespace FocusPanel.Tests;
 public sealed class CompactTaskbarAppPolicyTests
 {
     [Fact]
-    public void Select_KeepsPinnedAndEveryRunningApp()
+    public void Select_KeepsPinnedAndWindowedAppsButExcludesBackgroundOnly()
     {
         TaskbarAppItem pinnedStopped =
             Pinned("固定但未运行");
@@ -21,6 +21,15 @@ public sealed class CompactTaskbarAppPolicyTests
                     "窗口"));
         TaskbarAppItem backgroundOnly =
             Running("纯后台");
+        TaskbarAppItem minimizedRunning =
+            Running(
+                "已最小化",
+                new WindowReference(
+                    new IntPtr(8),
+                    "最小化窗口",
+                    State:
+                        TrackedWindowState
+                            .Minimized));
         var staleUnpinned = new TaskbarAppItem
         {
             IdentityKey = "stale",
@@ -35,19 +44,23 @@ public sealed class CompactTaskbarAppPolicyTests
                         backgroundOnly,
                         pinnedStopped,
                         staleUnpinned,
-                        visibleRunning
+                        visibleRunning,
+                        minimizedRunning
                     })
                 .ToArray();
 
         Assert.Equal(
             new[]
             {
-                "纯后台",
                 "固定但未运行",
-                "有窗口"
+                "有窗口",
+                "已最小化"
             },
             result.Select(item =>
                 item.DisplayName));
+        Assert.DoesNotContain(
+            result,
+            item => item.IsBackgroundOnly);
     }
 
     [Fact]
