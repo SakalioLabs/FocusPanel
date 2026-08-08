@@ -159,4 +159,49 @@ public sealed class ShellSummonHotkeyPolicyTests
             "紧凑栏“窗口”",
             unavailable.DisplayText);
     }
+
+    [Fact]
+    public void WindowFocus_UsesDedicatedChordAndSafeFallback()
+    {
+        var attempts =
+            new List<(uint Modifiers, uint Key)>();
+        ShellHotkeyRegistration registration =
+            ShellSummonHotkeyPolicy
+                .RegisterWindowFocus(
+                    (modifiers, key) =>
+                    {
+                        attempts.Add(
+                            (modifiers, key));
+                        return attempts.Count == 2;
+                    });
+
+        Assert.True(registration.IsRegistered);
+        Assert.Contains(
+            "Ctrl + Alt + Shift + F",
+            registration.DisplayText);
+        Assert.Equal(2, attempts.Count);
+        Assert.All(
+            attempts,
+            attempt => Assert.Equal(
+                0x46u,
+                attempt.Key));
+        Assert.NotEqual(
+            0u,
+            attempts[1].Modifiers
+                & 0x4000u);
+    }
+
+    [Fact]
+    public void WindowFocus_ReportsMenuFallbackWhenUnavailable()
+    {
+        ShellHotkeyRegistration registration =
+            ShellSummonHotkeyPolicy
+                .RegisterWindowFocus(
+                    (_, _) => false);
+
+        Assert.False(registration.IsRegistered);
+        Assert.Contains(
+            "右键菜单",
+            registration.DisplayText);
+    }
 }

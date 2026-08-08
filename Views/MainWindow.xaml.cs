@@ -84,6 +84,8 @@ public partial class MainWindow :
     private const int SummonHotkeyId = 0x4650;
     private const int WindowOverviewHotkeyId =
         0x4651;
+    private const int WindowFocusHotkeyId =
+        0x4652;
 
     private readonly ShellCoordinator _coordinator;
     private readonly MainViewModel _viewModel;
@@ -105,6 +107,7 @@ public partial class MainWindow :
     private HwndSource? _windowSource;
     private bool _summonHotkeyRegistered;
     private bool _windowOverviewHotkeyRegistered;
+    private bool _windowFocusHotkeyRegistered;
     private bool _isExit;
     private bool _shutdownStarted;
     private bool _shutdownCompleted;
@@ -546,6 +549,22 @@ public partial class MainWindow :
         _viewModel
             .SetWindowOverviewShortcutStatus(
                 windowOverviewRegistration);
+        ShellHotkeyRegistration
+            windowFocusRegistration =
+                ShellSummonHotkeyPolicy
+                    .RegisterWindowFocus(
+                        (modifiers, virtualKey) =>
+                            NativeMethods.RegisterHotKey(
+                                hwnd,
+                                WindowFocusHotkeyId,
+                                modifiers,
+                                virtualKey));
+        _windowFocusHotkeyRegistered =
+            windowFocusRegistration
+                .IsRegistered;
+        _viewModel
+            .SetWindowFocusShortcutStatus(
+                windowFocusRegistration);
         ApplyDwmBackdrop();
     }
 
@@ -4987,6 +5006,15 @@ public partial class MainWindow :
             _windowOverviewHotkeyRegistered =
                 false;
         }
+        if (_windowFocusHotkeyRegistered
+            && hwnd != IntPtr.Zero)
+        {
+            NativeMethods.UnregisterHotKey(
+                hwnd,
+                WindowFocusHotkeyId);
+            _windowFocusHotkeyRegistered =
+                false;
+        }
         _windowSource?.RemoveHook(WindowMessageHook);
         _windowSource = null;
         SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
@@ -5153,6 +5181,13 @@ public partial class MainWindow :
                     == WindowOverviewHotkeyId)
         {
             OpenWindowOverviewFromHotkey();
+            handled = true;
+        }
+        else if (message == WmHotkey
+                 && wParam.ToInt32()
+                    == WindowFocusHotkeyId)
+        {
+            ToggleWindowFocusFromHotkey();
             handled = true;
         }
         else if (message == WmHotkey
@@ -5398,6 +5433,72 @@ public partial class MainWindow :
             SearchButton,
             initialTarget,
             () => _viewModel.IsSearchOpen);
+    }
+
+    private void ToggleWindowFocusFromHotkey()
+    {
+        if (_isExit || !_shellStartupReady)
+            return;
+
+        if (_viewModel.HasWindowFocusSession)
+        {
+            _viewModel
+                .RestoreWindowFocusSessionCommand
+                .Execute(null);
+            bool restored =
+                !_viewModel.HasWindowFocusSession;
+            _toastManager.Enqueue(
+                new FocusToastNotification(
+                    "window-focus-hotkey",
+                    restored
+                        ? "窗口已经恢复"
+                        : "仍有窗口未能恢复",
+                    restored
+                        ? "已还原本次窗口专注收起的窗口。"
+                        : _viewModel.SystemActionMessage,
+                    restored ? "\uE777" : "\uE7BA",
+                    restored
+                        ? FocusToastKind.Success
+                        : FocusToastKind.Warning));
+            return;
+        }
+
+        TaskbarAppItem? target =
+            _viewModel
+                .GetWindowFocusShortcutTarget();
+        if (target == null)
+        {
+            _toastManager.Enqueue(
+                new FocusToastNotification(
+                    "window-focus-hotkey",
+                    "没有可专注的应用",
+                    "请先切换到一个拥有普通窗口的应用，再按窗口专注快捷键。",
+                    "\uE7BA",
+                    FocusToastKind.Warning));
+            return;
+        }
+
+        _viewModel
+            .FocusTaskWindowsCommand
+            .Execute(target);
+        bool started =
+            _viewModel.HasWindowFocusSession;
+        _toastManager.Enqueue(
+            new FocusToastNotification(
+                "window-focus-hotkey",
+                started
+                    ? $"正在专注 {target.DisplayName}"
+                    : "当前已经足够专注",
+                started
+                    ? _viewModel.WindowFocusSessionSummary
+                    : string.IsNullOrWhiteSpace(
+                        _viewModel.SystemActionMessage)
+                        ? "当前没有其他可收起的窗口。"
+                        : _viewModel.SystemActionMessage,
+                started ? "\uE71C" : "\uE73E",
+                started
+                    ? FocusToastKind.Success
+                    : FocusToastKind.Information));
     }
 
     private void UpdateEdgeIndicatorVisibility()

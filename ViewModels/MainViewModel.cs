@@ -453,6 +453,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "正在注册窗口总览快捷键…";
 
     [ObservableProperty]
+    private string windowFocusShortcutText =
+        "正在注册窗口专注快捷键…";
+
+    [ObservableProperty]
     private string taskbarSlotShortcutText =
         "九槽位全局快速键已关闭";
 
@@ -1480,6 +1484,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
         WindowOverviewShortcutText =
             registration.DisplayText;
     }
+
+    internal void SetWindowFocusShortcutStatus(
+        ShellHotkeyRegistration registration)
+    {
+        WindowFocusShortcutText =
+            registration.DisplayText;
+    }
+
+    internal TaskbarAppItem?
+        GetWindowFocusShortcutTarget() =>
+        WindowFocusShortcutTargetPolicy.Select(
+            TaskbarApps,
+            _lastActiveExternalWindowHandle);
 
     internal void SetTaskbarSlotShortcutStatus(
         TaskbarSlotHotkeyRegistration

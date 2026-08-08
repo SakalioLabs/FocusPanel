@@ -2029,6 +2029,10 @@
                                                TextWrapping="Wrap"
                                                Style="{StaticResource FocusCaptionText}"/>
                                     <TextBlock Margin="0,5,0,0"
+                                               Text="{Binding WindowFocusShortcutText}"
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource FocusCaptionText}"/>
+                                    <TextBlock Margin="0,5,0,0"
                                                Text="{Binding TaskbarSlotShortcutText}"
                                                TextWrapping="Wrap"
                                                Style="{StaticResource FocusCaptionText}"/>

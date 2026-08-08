@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="620" viewBox="0 0 1180 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eaf4ff"/>
+      <stop offset="1" stop-color="#dce7fb"/>
+    </linearGradient>
+    <linearGradient id="active" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".94"/>
+      <stop offset="1" stop-color="#edf6ff" stop-opacity=".86"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#17365d" flood-opacity=".2"/>
+    </filter>
+  </defs>
+  <rect width="1180" height="620" rx="28" fill="url(#bg)"/>
+  <circle cx="88" cy="86" r="132" fill="#3399ff" opacity=".14"/>
+  <circle cx="1090" cy="560" r="205" fill="#7c5cff" opacity=".12"/>
+
+  <text x="64" y="72" font-family="Microsoft YaHei, Segoe UI" font-size="24" font-weight="700" fill="#17253b">不用展开 Panel，也能一步清理当前工作</text>
+  <text x="64" y="104" font-family="Microsoft YaHei, Segoe UI" font-size="14" fill="#61718a">全局快捷键直接作用于真实前台应用，不发送系统按键</text>
+
+  <rect x="64" y="140" width="650" height="374" rx="24" fill="url(#active)" stroke="#fff" filter="url(#shadow)"/>
+  <rect x="64" y="140" width="650" height="46" rx="24" fill="#f7faff"/>
+  <circle cx="91" cy="163" r="6" fill="#ff6b6b"/>
+  <circle cx="111" cy="163" r="6" fill="#f4bf4f"/>
+  <circle cx="131" cy="163" r="6" fill="#4ecb79"/>
+  <text x="168" y="169" font-family="Microsoft YaHei, Segoe UI" font-size="14" font-weight="700" fill="#33445c">Paint.NET · 设计稿.png</text>
+  <rect x="94" y="218" width="590" height="252" rx="16" fill="#d9eaff"/>
+  <path d="M250 376l80-91 70 65 74-102 114 128z" fill="#67a9e8" opacity=".72"/>
+  <circle cx="548" cy="270" r="30" fill="#ffd062"/>
+  <rect x="94" y="438" width="590" height="32" fill="#225b91" opacity=".18"/>
+
+  <g opacity=".42">
+    <rect x="760" y="140" width="356" height="142" rx="18" fill="#fff" stroke="#cad7e7"/>
+    <rect x="784" y="164" width="308" height="22" rx="6" fill="#b9c8d9"/>
+    <rect x="784" y="202" width="196" height="12" rx="6" fill="#ced9e6"/>
+    <rect x="784" y="226" width="264" height="12" rx="6" fill="#ced9e6"/>
+    <text x="938" y="266" text-anchor="middle" font-family="Microsoft YaHei, Segoe UI" font-size="13" fill="#64758c">浏览器 · 已最小化</text>
+    <rect x="760" y="304" width="356" height="142" rx="18" fill="#fff" stroke="#cad7e7"/>
+    <rect x="784" y="328" width="132" height="94" rx="9" fill="#c4d2e2"/>
+    <rect x="934" y="332" width="158" height="12" rx="6" fill="#ced9e6"/>
+    <rect x="934" y="356" width="132" height="12" rx="6" fill="#ced9e6"/>
+    <text x="1012" y="410" text-anchor="middle" font-family="Microsoft YaHei, Segoe UI" font-size="13" fill="#64758c">文件管理器 · 已最小化</text>
+  </g>
+
+  <rect x="228" y="532" width="418" height="60" rx="16" fill="#173f69" filter="url(#shadow)"/>
+  <g font-family="Segoe UI, Microsoft YaHei" font-size="14" font-weight="700" fill="#fff">
+    <rect x="250" y="545" width="54" height="34" rx="8" fill="#2a5b88"/>
+    <text x="277" y="567" text-anchor="middle">Ctrl</text>
+    <text x="319" y="567">+</text>
+    <rect x="336" y="545" width="44" height="34" rx="8" fill="#2a5b88"/>
+    <text x="358" y="567" text-anchor="middle">Alt</text>
+    <text x="394" y="567">+</text>
+    <rect x="411" y="545" width="36" height="34" rx="8" fill="#1677d2"/>
+    <text x="429" y="567" text-anchor="middle">F</text>
+    <text x="469" y="567" fill="#cfe6ff">再按一次恢复</text>
+  </g>
+
+  <rect x="760" y="474" width="356" height="118" rx="18" fill="#1677d2" filter="url(#shadow)"/>
+  <circle cx="794" cy="510" r="17" fill="#fff" opacity=".2"/>
+  <path d="M786 510l6 6 11-13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="824" y="507" font-family="Microsoft YaHei, Segoe UI" font-size="16" font-weight="700" fill="#fff">正在专注 Paint.NET</text>
+  <text x="824" y="532" font-family="Microsoft YaHei, Segoe UI" font-size="13" fill="#dceeff">已收起 2 个窗口</text>
+  <text x="784" y="570" font-family="Microsoft YaHei, Segoe UI" font-size="12" fill="#dceeff">Panel 保持隐藏，不打断当前输入</text>
+</svg>

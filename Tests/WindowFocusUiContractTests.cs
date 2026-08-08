@@ -49,6 +49,30 @@ public sealed class WindowFocusUiContractTests
         Assert.Contains("_windowTracker.Maximize(handle)", disposeBody);
     }
 
+    [Fact]
+    public void GlobalShortcut_IsRegisteredHandledReportedAndUnregistered()
+    {
+        string root = FindRepositoryRoot();
+        string xaml = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string code = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.Contains("WindowFocusHotkeyId", code);
+        Assert.Contains("RegisterWindowFocus", code);
+        Assert.Contains("ToggleWindowFocusFromHotkey();", code);
+        Assert.Contains(
+            "UnregisterHotKey(\n                hwnd,\n                WindowFocusHotkeyId)",
+            code.Replace("\r\n", "\n"));
+        Assert.Contains("WindowFocusShortcutText", xaml);
+        Assert.Contains("SetWindowFocusShortcutStatus", viewModel);
+        Assert.Contains("GetWindowFocusShortcutTarget()", viewModel);
+        Assert.DoesNotContain("_viewModel.TaskbarApps", code);
+        Assert.DoesNotContain("Activate();\n        ToggleWindowFocusFromHotkey", code);
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

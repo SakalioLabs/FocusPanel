@@ -26,6 +26,7 @@ internal static class ShellSummonHotkeyPolicy
     private const uint ModShift = 0x0004;
     private const uint ModNoRepeat = 0x4000;
     private const uint VkSpace = 0x20;
+    private const uint VkF = 0x46;
     private const uint VkW = 0x57;
 
     internal static IReadOnlyList<
@@ -70,6 +71,28 @@ internal static class ShellSummonHotkeyPolicy
     };
 
     internal static IReadOnlyList<
+        ShellHotkeyCandidate>
+        WindowFocusCandidates
+    {
+        get;
+    } = new[]
+    {
+        new ShellHotkeyCandidate(
+            ModControl
+            | ModAlt
+            | ModNoRepeat,
+            VkF,
+            "窗口专注：Ctrl + Alt + F"),
+        new ShellHotkeyCandidate(
+            ModControl
+            | ModAlt
+            | ModShift
+            | ModNoRepeat,
+            VkF,
+            "窗口专注：Ctrl + Alt + Shift + F（备用）")
+    };
+
+    internal static IReadOnlyList<
         ShellHotkeyCandidate> Candidates =>
             SearchCandidates;
 
@@ -90,6 +113,16 @@ internal static class ShellSummonHotkeyPolicy
             new ShellHotkeyRegistration(
                 false,
                 "窗口总览快捷键注册失败；仍可点击紧凑栏“窗口”"));
+
+    internal static ShellHotkeyRegistration
+        RegisterWindowFocus(
+            Func<uint, uint, bool> register) =>
+        RegisterFirstAvailable(
+            WindowFocusCandidates,
+            register,
+            new ShellHotkeyRegistration(
+                false,
+                "窗口专注快捷键注册失败；仍可在应用或窗口右键菜单使用"));
 
     private static ShellHotkeyRegistration
         RegisterFirstAvailable(
