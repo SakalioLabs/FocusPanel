@@ -657,9 +657,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _updateService = updateService;
         _notificationCenter =
             notificationCenter
-            ?? new FocusNotificationCenter();
-        _notificationCenter.Changed +=
-            NotificationCenter_Changed;
+            ?? new FocusNotificationCenter(
+                new TransientFocusNotificationStore());
         _appLaunch =
             new AppLaunchCoordinator(
                 _appCatalog.Launch);
@@ -717,6 +716,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             OnShellPreferenceSaveFailed;
         _desktopVisibility = new WindowsDesktopItemVisibilityService();
         _uiDispatcher = Dispatcher.CurrentDispatcher;
+        _notificationCenter.Changed +=
+            NotificationCenter_Changed;
+        _notificationCenter.PersistenceStatusChanged +=
+            NotificationCenter_PersistenceStatusChanged;
         IFileOrganizerViewModelFactory
             organizerFactory =
                 fileOrganizerFactory
@@ -819,6 +822,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ? "99+"
             : UnreadPanelNotificationCount.ToString(
                 ChineseCulture);
+    public string NotificationPersistenceError =>
+        _notificationCenter.LastPersistenceError
+        ?? string.Empty;
+    public bool HasNotificationPersistenceError =>
+        !string.IsNullOrWhiteSpace(
+            NotificationPersistenceError);
     public bool IsStatusEntryActive =>
         IsStatusCenterOpen
         || IsPowerMenuOpen;
@@ -3107,6 +3116,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasUnreadPanelNotifications));
         OnPropertyChanged(nameof(UnreadPanelNotificationCount));
         OnPropertyChanged(nameof(PanelNotificationBadgeText));
+    }
+
+    private void NotificationCenter_PersistenceStatusChanged(
+        object? sender,
+        EventArgs e)
+    {
+        if (_isDisposed)
+            return;
+
+        if (!_uiDispatcher.CheckAccess())
+        {
+            _uiDispatcher.BeginInvoke(
+                new Action(() =>
+                    NotificationCenter_PersistenceStatusChanged(
+                        sender,
+                        e)));
+            return;
+        }
+
+        OnPropertyChanged(nameof(NotificationPersistenceError));
+        OnPropertyChanged(nameof(HasNotificationPersistenceError));
     }
 
     [RelayCommand]
@@ -5555,6 +5585,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             OnShellPreferenceSaveFailed;
         _notificationCenter.Changed -=
             NotificationCenter_Changed;
+        _notificationCenter.PersistenceStatusChanged -=
+            NotificationCenter_PersistenceStatusChanged;
         _clockTimer.Stop();
         _systemStatusTimer.Stop();
         _taskSummaryTimer.Stop();

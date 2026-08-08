@@ -3787,7 +3787,8 @@ public partial class MainWindow :
             }
 
             _viewModel.UpdateStatus =
-                "备份完成，正在恢复任务栏并启动安装…";
+                "备份完成，正在保存 Panel 通知并恢复任务栏…";
+            await _notificationCenter.FlushAsync();
             UnregisterTaskbarSlotHotkeys();
             _coordinator.RestoreTaskbar();
             DesktopHelper.ToggleDesktopIcons(true);
@@ -3905,6 +3906,7 @@ public partial class MainWindow :
         {
             await Task.WhenAll(
                 _viewModel.DisposeAsync(),
+                _notificationCenter.CompleteAsync(),
                 _updateInstallPreparation
                     .CompleteAsync(),
                 _coordinator.DisposeAsync());

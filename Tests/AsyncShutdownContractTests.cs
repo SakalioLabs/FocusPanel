@@ -32,6 +32,12 @@ public sealed class AsyncShutdownContractTests
             "_coordinator.DisposeAsync()",
             window);
         Assert.Contains(
+            "_notificationCenter.CompleteAsync()",
+            window);
+        Assert.Contains(
+            "await _notificationCenter.FlushAsync();",
+            window);
+        Assert.Contains(
             "_shutdownCompleted = true;",
             window);
     }

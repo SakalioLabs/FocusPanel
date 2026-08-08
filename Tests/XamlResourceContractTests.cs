@@ -6502,6 +6502,16 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "_toastManager.DismissAll()",
             mainWindow);
+        Assert.Contains(
+            "FocusNotificationCenter",
+            manager);
+        Assert.Contains(
+            "PanelNotificationsDetailsExpander",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "Views",
+                    "MainWindow.xaml")));
         Assert.DoesNotContain(
             "ShowBalloonTip",
             mainWindow);

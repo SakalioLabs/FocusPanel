@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using FocusPanel.Services;
 using Xunit;
 
@@ -10,7 +13,7 @@ public sealed class FocusNotificationCenterTests
     [Fact]
     public void Add_PrependsNotificationAndTracksUnreadCount()
     {
-        var center = new FocusNotificationCenter();
+        var center = CreateCenter();
 
         center.Add(Create("first", "第一条"));
         center.Add(Create("second", "第二条"));
@@ -25,7 +28,7 @@ public sealed class FocusNotificationCenterTests
     [Fact]
     public void Add_ReplacesDuplicateKeyWithoutGrowingHistory()
     {
-        var center = new FocusNotificationCenter();
+        var center = CreateCenter();
         center.Add(Create("update", "旧版本"));
         center.MarkAllRead();
 
@@ -40,7 +43,7 @@ public sealed class FocusNotificationCenterTests
     [Fact]
     public void MarkAllReadAndClear_KeepCountsConsistent()
     {
-        var center = new FocusNotificationCenter();
+        var center = CreateCenter();
         center.Add(Create("first", "第一条"));
         center.Add(Create("second", "第二条"));
 
@@ -58,7 +61,7 @@ public sealed class FocusNotificationCenterTests
     [Fact]
     public void Invoke_MarksItemReadAndRunsItsAction()
     {
-        var center = new FocusNotificationCenter();
+        var center = CreateCenter();
         int invocations = 0;
         center.Add(
             Create(
@@ -76,7 +79,7 @@ public sealed class FocusNotificationCenterTests
     [Fact]
     public void Add_TrimsOldestItemsAtBoundedCapacity()
     {
-        var center = new FocusNotificationCenter();
+        var center = CreateCenter();
 
         for (int index = 0;
              index < FocusNotificationCenter.MaximumItems + 3;
@@ -91,6 +94,184 @@ public sealed class FocusNotificationCenterTests
         Assert.Equal("item-3", center.Items[^1].Key);
     }
 
+    [Fact]
+    public void Constructor_RestoresUnreadHistoryWithoutStaleActions()
+    {
+        DateTimeOffset createdAt =
+            new(2026, 8, 8, 8, 30, 0, TimeSpan.Zero);
+        var store = new RecordingStore(
+            new FocusNotificationSnapshot(
+                "update",
+                "发现更新",
+                "0.11.51",
+                "\uE7E7",
+                FocusToastKind.Information,
+                "查看更新",
+                createdAt,
+                true));
+
+        var center = new FocusNotificationCenter(store);
+
+        FocusNotificationItem item = Assert.Single(center.Items);
+        Assert.Equal(createdAt, item.CreatedAt);
+        Assert.Equal(1, center.UnreadCount);
+        Assert.True(item.IsUnread);
+        Assert.False(item.HasAction);
+        Assert.True(item.IsExpiredAction);
+    }
+
+    [Fact]
+    public void Constructor_NormalizesAndBoundsUntrustedHistory()
+    {
+        FocusNotificationSnapshot[] snapshots =
+            Enumerable.Range(0, FocusNotificationCenter.MaximumItems + 5)
+                .Select(index =>
+                    new FocusNotificationSnapshot(
+                        index == 1 ? "item-0" : $"item-{index}",
+                        index == 2 ? string.Empty : $"标题 {index}",
+                        "消息",
+                        "\uE7E7",
+                        (FocusToastKind)999,
+                        null,
+                        DateTimeOffset.Now,
+                        true))
+                .ToArray();
+        var center = new FocusNotificationCenter(
+            new RecordingStore(snapshots));
+
+        Assert.True(
+            center.Items.Count
+            <= FocusNotificationCenter.MaximumItems);
+        Assert.Equal(
+            center.Items.Count,
+            center.Items.Select(item => item.Key)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Count());
+        Assert.DoesNotContain(
+            center.Items,
+            item => string.IsNullOrWhiteSpace(item.Title));
+        Assert.All(
+            center.Items,
+            item => Assert.Equal(
+                FocusToastKind.Information,
+                item.Kind));
+    }
+
+    [Fact]
+    public async Task CompleteAsync_DrainsLatestCoalescedSnapshot()
+    {
+        var store = new RecordingStore();
+        var center = new FocusNotificationCenter(store);
+
+        center.Add(Create("first", "第一条"));
+        center.Add(Create("second", "第二条"));
+        center.MarkAllRead();
+        await center.CompleteAsync();
+
+        IReadOnlyList<FocusNotificationSnapshot> saved =
+            Assert.IsAssignableFrom<
+                IReadOnlyList<FocusNotificationSnapshot>>(
+                store.Saves.Last());
+        Assert.Equal(
+            new[] { "second", "first" },
+            saved.Select(item => item.Key));
+        Assert.All(saved, item => Assert.False(item.IsUnread));
+    }
+
+    [Fact]
+    public async Task FlushAsync_DrainsCurrentWorkAndKeepsAcceptingSaves()
+    {
+        var store = new RecordingStore();
+        var center = new FocusNotificationCenter(store);
+        center.Add(Create("before-update", "更新前"));
+
+        await center.FlushAsync();
+        center.Add(Create("install-failed", "安装启动失败"));
+        await center.CompleteAsync();
+
+        Assert.Contains(
+            store.Saves,
+            saved => saved.Any(item => item.Key == "before-update"));
+        Assert.Contains(
+            store.Saves.Last(),
+            item => item.Key == "install-failed");
+    }
+
+    [Fact]
+    public async Task SaveFailure_IsReportedWithoutEscapingMutation()
+    {
+        var store = new RecordingStore
+        {
+            SaveException = new IOException("磁盘已满")
+        };
+        var center = new FocusNotificationCenter(store);
+        int statusChanges = 0;
+        center.PersistenceStatusChanged +=
+            (_, _) => statusChanges++;
+
+        center.Add(Create("warning", "仍保留在内存"));
+        await center.CompleteAsync();
+
+        Assert.Single(center.Items);
+        Assert.Contains("磁盘已满", center.LastPersistenceError);
+        Assert.Equal(1, statusChanges);
+    }
+
+    [Fact]
+    public void JsonStore_CorruptionIsArchivedAndReturnsWarning()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            $"FocusPanel-notification-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string path = Path.Combine(directory, "history.json");
+            File.WriteAllText(path, "{not-json");
+            var store = new JsonFocusNotificationStore(path);
+
+            FocusNotificationLoadResult result = store.Load();
+
+            Assert.Empty(result.Items);
+            Assert.False(string.IsNullOrWhiteSpace(result.Warning));
+            Assert.False(File.Exists(path));
+            Assert.Single(
+                Directory.GetFiles(
+                    directory,
+                    "panel-notifications.corrupt-*.json"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void JsonStore_SaveAndLoadRoundTripsSnapshot()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            $"FocusPanel-notification-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string path = Path.Combine(directory, "history.json");
+            var store = new JsonFocusNotificationStore(path);
+            FocusNotificationSnapshot expected = Snapshot("roundtrip");
+
+            store.Save(new[] { expected });
+            FocusNotificationLoadResult loaded = store.Load();
+
+            Assert.Equal(expected, Assert.Single(loaded.Items));
+            Assert.Empty(
+                Directory.GetFiles(directory, "*.tmp"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static FocusToastNotification Create(
         string key,
         string message,
@@ -102,4 +283,59 @@ public sealed class FocusNotificationCenterTests
             "\uE7E7",
             ActionLabel: action == null ? null : "执行",
             Action: action);
+
+    private static FocusNotificationCenter CreateCenter() =>
+        new(new RecordingStore());
+
+    private static FocusNotificationSnapshot Snapshot(
+        string key) =>
+        new(
+            key,
+            "FocusPanel",
+            "消息",
+            "\uE7E7",
+            FocusToastKind.Information,
+            null,
+            new DateTimeOffset(
+                2026,
+                8,
+                8,
+                8,
+                30,
+                0,
+                TimeSpan.Zero),
+            true);
+
+    private sealed class RecordingStore
+        : IFocusNotificationStore
+    {
+        private readonly IReadOnlyList<FocusNotificationSnapshot>
+            _loaded;
+
+        internal RecordingStore(
+            params FocusNotificationSnapshot[] loaded)
+        {
+            _loaded = loaded;
+        }
+
+        internal List<IReadOnlyList<FocusNotificationSnapshot>>
+            Saves { get; } = new();
+
+        internal Exception? SaveException { get; set; }
+
+        public FocusNotificationLoadResult Load() =>
+            new(_loaded);
+
+        public void Save(
+            IReadOnlyList<FocusNotificationSnapshot> items)
+        {
+            if (SaveException != null)
+                throw SaveException;
+
+            lock (Saves)
+            {
+                Saves.Add(items.ToArray());
+            }
+        }
+    }
 }

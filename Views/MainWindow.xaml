@@ -818,10 +818,15 @@
                                         </Grid>
                                     </Expander.Header>
                                     <StackPanel Margin="0,8,0,0">
-                                        <TextBlock Text="更新、任务、番茄钟和恢复消息会留在这里，不再随 7 秒提示一起消失。"
-                                                   Margin="4,0,4,10"
+                                        <TextBlock Text="更新、任务、番茄钟和恢复消息会跨重启保留，不再随 7 秒提示一起消失。"
+                                                   Margin="4,0,4,6"
                                                    TextWrapping="Wrap"
                                                    Style="{StaticResource FocusSecondaryBodyText}"/>
+                                        <TextBlock Text="{Binding NotificationPersistenceError}"
+                                                   Margin="4,0,4,10"
+                                                   Foreground="{DynamicResource FocusDangerBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="{Binding HasNotificationPersistenceError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                         <TextBlock Text="还没有 Panel 通知"
                                                    Margin="4,10"
                                                    HorizontalAlignment="Center">
@@ -872,6 +877,10 @@
                                                                         Command="{Binding DataContext.InvokePanelNotificationCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                         CommandParameter="{Binding}"
                                                                         Visibility="{Binding HasAction, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                                <TextBlock Margin="0,6,0,0"
+                                                                           Text="上次运行的操作已失效；消息仍可阅读。"
+                                                                           Style="{StaticResource FocusMetaText}"
+                                                                           Visibility="{Binding IsExpiredAction, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                             </StackPanel>
                                                             <StackPanel Grid.Column="2"
                                                                         HorizontalAlignment="Right">
