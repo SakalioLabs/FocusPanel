@@ -6411,11 +6411,37 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Text=\"{Binding ReplacementDiagnostics}\"",
             mainWindow);
+        Assert.Equal(
+            2,
+            mainWindow.Split(
+                    "Text=\"{Binding ReplacementDiagnostics}\"")
+                .Length - 1);
+        Assert.Contains(
+            "Content=\"重新检查任务栏接管\"",
+            mainWindow);
+        Assert.Contains(
+            "Visibility=\"{Binding HasTaskbarHealthWarning, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"任务栏接管需要注意\"",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding TaskbarHealthStatus}\"",
+            mainWindow);
+        Assert.Contains(
+            "DataTrigger Binding=\"{Binding HasTaskbarHealthWarning}\"",
+            mainWindow);
         Assert.Contains(
             "RequestInspectTaskbarReplacement",
             viewModel);
         Assert.Contains(
             "MarkReplacementDiagnostics(",
+            viewModel);
+        Assert.Contains(
+            "+ TaskbarHealthStatus;",
+            viewModel);
+        Assert.Contains(
+            "TaskbarHealthPresentationPolicy.Compose(",
             viewModel);
         Assert.Contains(
             "InspectTaskbarReplacement();",

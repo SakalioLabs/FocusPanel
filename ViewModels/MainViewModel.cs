@@ -340,6 +340,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool isOnboardingVisible;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(TaskbarHealthStatus))]
+    [NotifyPropertyChangedFor(
+        nameof(StatusCenterAutomationName))]
     private bool isReplacementEnabled;
 
     [ObservableProperty]
@@ -352,15 +356,33 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string replacementDiagnostics = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(HasTaskbarHealthWarning))]
+    [NotifyPropertyChangedFor(
+        nameof(TaskbarHealthStatus))]
+    [NotifyPropertyChangedFor(
+        nameof(StatusCenterAutomationName))]
     private bool hasReplacementDiagnostics;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(HasTaskbarHealthWarning))]
+    [NotifyPropertyChangedFor(
+        nameof(TaskbarHealthStatus))]
+    [NotifyPropertyChangedFor(
+        nameof(StatusCenterAutomationName))]
     private bool isReplacementDiagnosticsHealthy;
 
     [ObservableProperty]
     private TaskbarReplacementStopReason? replacementStopReason;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(HasTaskbarHealthWarning))]
+    [NotifyPropertyChangedFor(
+        nameof(TaskbarHealthStatus))]
+    [NotifyPropertyChangedFor(
+        nameof(StatusCenterAutomationName))]
     private bool hasReplacementWarning;
 
     [ObservableProperty]
@@ -1128,7 +1150,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
             BatterySummary,
             UnreadPanelNotificationCount);
     public string StatusCenterAutomationName =>
-        $"状态中心，{StatusCenterSummary}";
+        $"状态中心，{StatusCenterSummary}，"
+        + TaskbarHealthStatus;
+    public bool HasTaskbarHealthWarning =>
+        GetTaskbarHealthPresentation()
+            .HasWarning;
+    public string TaskbarHealthStatus =>
+        GetTaskbarHealthPresentation()
+            .Status;
+
+    private TaskbarHealthPresentation
+        GetTaskbarHealthPresentation() =>
+        TaskbarHealthPresentationPolicy.Compose(
+            IsReplacementEnabled,
+            HasReplacementWarning,
+            HasReplacementDiagnostics,
+            IsReplacementDiagnosticsHealthy);
 
     public bool HasOpenTasks =>
         GetTaskEntryPresentation().HasBadge;

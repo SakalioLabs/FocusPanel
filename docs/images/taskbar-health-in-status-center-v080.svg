@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a1220"/><stop offset="1" stop-color="#1a2941"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2c3b54" stop-opacity=".97"/><stop offset="1" stop-color="#162236" stop-opacity=".92"/></linearGradient>
+    <filter id="shadow" x="-40%" y="-30%" width="180%" height="180%"><feDropShadow dy="18" stdDeviation="24" flood-opacity=".44"/></filter>
+  </defs>
+  <rect width="1200" height="650" fill="url(#bg)"/>
+  <circle cx="1040" cy="100" r="260" fill="#2c92e7" opacity=".1"/><circle cx="110" cy="610" r="220" fill="#7764e8" opacity=".08"/>
+  <text x="70" y="78" fill="#f5f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="34" font-weight="700">任务栏健康，不必再去设置里找</text>
+  <text x="70" y="118" fill="#afbdd0" font-family="Segoe UI, Microsoft YaHei" font-size="20">状态中心直接查看和复查，紧凑栏只在异常时提醒</text>
+
+  <g transform="translate(75 170)" filter="url(#shadow)">
+    <rect width="390" height="405" rx="24" fill="url(#glass)" stroke="#7184a1" stroke-opacity=".52"/>
+    <text x="24" y="42" fill="#f3f7fb" font-family="Segoe UI, Microsoft YaHei" font-size="23" font-weight="700">状态中心</text>
+    <text x="24" y="74" fill="#d5dfeb" font-family="Segoe UI, Microsoft YaHei" font-size="16">侧边任务栏运行中 · Windows 任务栏已完整隐藏</text>
+    <text x="24" y="110" fill="#63c1ff" font-family="Segoe UI, Microsoft YaHei" font-size="16" font-weight="600">接管检查正常</text>
+    <text x="24" y="138" fill="#b8c7d9" font-family="Segoe UI, Microsoft YaHei" font-size="14">原生边缘呼出已关闭，主屏工作区已释放，</text>
+    <text x="24" y="162" fill="#b8c7d9" font-family="Segoe UI, Microsoft YaHei" font-size="14">呈现抑制为窗口区域 + DWM 双层保护。</text>
+    <rect x="24" y="184" width="210" height="42" rx="12" fill="#fff" fill-opacity=".07" stroke="#4ba8ef" stroke-opacity=".65"/>
+    <text x="129" y="211" fill="#9bd6ff" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="15">重新检查任务栏接管</text>
+    <text x="28" y="262" fill="#9eacc0" font-family="Segoe UI, Microsoft YaHei" font-size="14">常用</text>
+    <g font-family="Segoe UI, Microsoft YaHei" font-size="15" fill="#e1e9f3">
+      <rect x="24" y="278" width="342" height="48" rx="13" fill="#fff" fill-opacity=".05"/><text x="48" y="308">后台应用与窗口</text><text x="330" y="308" fill="#aab9cb" text-anchor="end">12 项</text>
+      <rect x="24" y="338" width="62" height="44" rx="12" fill="#fff" fill-opacity=".05"/><text x="55" y="366" text-anchor="middle">网络</text>
+      <rect x="94" y="338" width="62" height="44" rx="12" fill="#fff" fill-opacity=".05"/><text x="125" y="366" text-anchor="middle">音量</text>
+      <rect x="164" y="338" width="62" height="44" rx="12" fill="#fff" fill-opacity=".05"/><text x="195" y="366" text-anchor="middle">电池</text>
+    </g>
+  </g>
+
+  <g transform="translate(525 215)" filter="url(#shadow)">
+    <rect width="76" height="300" rx="24" fill="url(#glass)" stroke="#7184a1" stroke-opacity=".52"/>
+    <text x="38" y="48" fill="#dbe5f1" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="12">窗口</text>
+    <line x1="14" y1="68" x2="62" y2="68" stroke="#72859f" stroke-opacity=".45"/>
+    <g transform="translate(15 84)"><rect width="46" height="46" rx="12" fill="#2f8fe5"/><circle cx="23" cy="23" r="12" fill="#fff"/></g>
+    <g transform="translate(15 139)"><rect width="46" height="46" rx="12" fill="#26354b"/><circle cx="23" cy="23" r="12" fill="#4bc77d"/></g>
+    <line x1="14" y1="202" x2="62" y2="202" stroke="#72859f" stroke-opacity=".45"/>
+    <g transform="translate(15 215)">
+      <rect width="46" height="46" rx="12" fill="#26354b"/>
+      <text x="23" y="28" fill="#ff6b6b" text-anchor="middle" font-family="Segoe UI Symbol" font-size="20">🔊</text>
+      <circle cx="43" cy="43" r="8" fill="#d94b55"/><text x="43" y="47" fill="#fff" text-anchor="middle" font-family="Segoe UI" font-size="11" font-weight="700">!</text>
+    </g>
+    <text x="38" y="280" fill="#dbe5f1" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="12">状态</text>
+  </g>
+
+  <g transform="translate(675 185)">
+    <text x="0" y="26" fill="#f4f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">提醒有边界，不再混在一起</text>
+    <g transform="translate(0 65)" font-family="Segoe UI, Microsoft YaHei">
+      <rect width="440" height="98" rx="18" fill="#fff" fill-opacity=".06" stroke="#fff" stroke-opacity=".12"/>
+      <circle cx="42" cy="49" r="20" fill="#2e92e7"/><text x="42" y="56" fill="#fff" text-anchor="middle" font-family="Segoe UI" font-size="20">✓</text>
+      <text x="78" y="41" fill="#edf4fa" font-size="20" font-weight="600">正常时保持安静</text>
+      <text x="78" y="70" fill="#afbdd0" font-size="16">不增加常驻徽章，不占用状态按钮空间</text>
+      <rect y="120" width="440" height="98" rx="18" fill="#fff" fill-opacity=".06" stroke="#fff" stroke-opacity=".12"/>
+      <circle cx="42" cy="169" r="20" fill="#d94b55"/><text x="42" y="176" fill="#fff" text-anchor="middle" font-family="Segoe UI" font-size="20" font-weight="700">!</text>
+      <text x="78" y="161" fill="#edf4fa" font-size="20" font-weight="600">异常时独立告警</text>
+      <text x="78" y="190" fill="#afbdd0" font-size="16">右下角 ! 专属接管健康，右上角仍是通知数</text>
+      <rect y="240" width="440" height="98" rx="18" fill="#258fe6" fill-opacity=".14" stroke="#399be6" stroke-opacity=".55"/>
+      <text x="26" y="279" fill="#d8efff" font-size="19" font-weight="600">状态中心随时复查</text>
+      <text x="26" y="307" fill="#9ed6ff" font-size="16">继续只读、后台执行，不触发原任务栏</text>
+    </g>
+  </g>
+</svg>

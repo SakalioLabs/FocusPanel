@@ -674,8 +674,28 @@
                                 <TextBlock Text="状态中心"
                                            Style="{StaticResource FocusSectionTitleText}"/>
                                 <TextBlock Text="{Binding ReplacementStatus}"
-                                           Margin="0,5,0,12"
+                                           Margin="0,5,0,4"
                                            Style="{StaticResource FocusSecondaryBodyText}"/>
+                                <TextBlock Text="{Binding ReplacementDiagnostics}"
+                                           Margin="0,0,0,8"
+                                           TextWrapping="Wrap"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           Visibility="{Binding HasReplacementDiagnostics, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock"
+                                               BasedOn="{StaticResource FocusCaptionText}">
+                                            <Setter Property="Foreground"
+                                                    Value="{DynamicResource FocusDangerBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsReplacementDiagnosticsHealthy}"
+                                                             Value="True">
+                                                    <Setter Property="Foreground"
+                                                            Value="{DynamicResource FocusAccentBrightBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <TextBlock Text="{Binding ReplacementError}" Margin="0,0,0,10"
                                            Foreground="{DynamicResource FocusDangerBrush}" TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding SystemActionMessage}"
@@ -686,6 +706,12 @@
                                 <Button Style="{StaticResource FocusSecondaryButton}" Content="重新接管任务栏"
                                         Command="{Binding EnableReplacementCommand}"
                                         Visibility="{Binding HasReplacementWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <Button Style="{StaticResource FocusSecondaryButton}"
+                                        Margin="0,0,0,4"
+                                        Content="重新检查任务栏接管"
+                                        Command="{Binding InspectTaskbarReplacementCommand}"
+                                        AutomationProperties.Name="只读重新检查任务栏接管状态"
+                                        Visibility="{Binding IsReplacementEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 <TextBlock Text="常用"
                                            Margin="4,14,0,7"
                                            Style="{StaticResource FocusCaptionText}"/>
@@ -2750,6 +2776,9 @@
                                     <StackPanel>
                                         <TextBlock Text="{Binding StatusCenterSummary}"/>
                                         <TextBlock Margin="0,4,0,0"
+                                                   Text="{Binding TaskbarHealthStatus}"
+                                                   Style="{StaticResource FocusCaptionText}"/>
+                                        <TextBlock Margin="0,4,0,0"
                                                    Text="Shift+点击通知 · 滚轮调音量 · 右键菜单"
                                                    Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
@@ -2792,7 +2821,7 @@
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource FocusIconText}">
                                                     <Setter Property="Text" Value="{Binding AudioGlyph}"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding HasReplacementWarning}" Value="True">
+                                                        <DataTrigger Binding="{Binding HasTaskbarHealthWarning}" Value="True">
                                                             <Setter Property="Foreground" Value="{DynamicResource FocusDangerBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -2829,6 +2858,22 @@
                                                    Foreground="{DynamicResource FocusWarningTextBrush}"
                                                    FontWeight="SemiBold"/>
                                     </Border>
+                                    <Grid Width="14"
+                                          Height="14"
+                                          Margin="0,0,-3,-3"
+                                          HorizontalAlignment="Right"
+                                          VerticalAlignment="Bottom"
+                                          IsHitTestVisible="False"
+                                          Visibility="{Binding HasTaskbarHealthWarning, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                          AutomationProperties.Name="任务栏接管需要注意">
+                                        <Ellipse Fill="{DynamicResource FocusDangerBrush}"/>
+                                        <TextBlock Text="!"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Foreground="{DynamicResource FocusWarningTextBrush}"
+                                                   FontWeight="Bold"/>
+                                    </Grid>
                                 </Grid>
                             </Button>
                             <Button x:Name="TimeButton"
