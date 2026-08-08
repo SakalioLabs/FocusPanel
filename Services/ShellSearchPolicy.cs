@@ -23,7 +23,10 @@ internal static class ShellSearchPolicy
                 ShellSearchScope.All,
             string? windowIdentityFilter = null,
             IReadOnlySet<string>?
-                recentApplicationIdentities = null)
+                recentApplicationIdentities = null,
+            IEnumerable<
+                ApplicationAudioSessionSnapshot>?
+                applicationAudioSessions = null)
     {
         if (limit <= 0)
         {
@@ -154,6 +157,28 @@ internal static class ShellSearchPolicy
                     Category: -1,
                     IsActive: false,
                     originalIndex++));
+        }
+
+        if (includeSystem)
+        {
+            foreach (
+                ApplicationAudioSearchCommand
+                    applicationAudioCommand
+                in ApplicationAudioSearchCommandParser
+                    .Parse(
+                        query,
+                        applicationAudioSessions))
+            {
+                ranked.Add(
+                    new RankedResult(
+                        ShellSearchResult
+                            .FromApplicationAudioCommand(
+                                applicationAudioCommand),
+                        Rank: -2,
+                        Category: -1,
+                        IsActive: false,
+                        originalIndex++));
+            }
         }
 
         if (includeSystem

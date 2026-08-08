@@ -246,8 +246,8 @@
                                          Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                          PreviewKeyDown="SearchBox_PreviewKeyDown"
                                          AutomationProperties.Name="搜索应用、窗口、待办、Panel 运行、系统命令与计算"
-                                         AutomationProperties.HelpText="输入应用名、窗口标题、已有待办、系统工具、音量、媒体、专注或任务命令、算式；输入大于号运行程序、文件或网址；使用上下方向键选择，按回车执行"
-                                         ToolTip="搜索应用、窗口和已有待办；输入 > 可在 Panel 内运行程序、文件、文件夹或网址"/>
+                                         AutomationProperties.HelpText="输入应用名、窗口标题、已有待办、系统工具、音量、媒体、专注或任务命令、算式；输入应用名加音量或静音可直接控制当前音频会话；输入大于号运行程序、文件或网址；使用上下方向键选择，按回车执行"
+                                         ToolTip="搜索应用、窗口和已有待办；输入“应用名 音量 30”可直接调节应用；输入 > 可在 Panel 内运行目标"/>
                                 <TextBlock Text="{Binding SearchPlaceholder}"
                                            Margin="16,0"
                                            VerticalAlignment="Center"
@@ -389,6 +389,16 @@
                                         Tag="音量 50"
                                         Click="SearchSuggestion_Click"
                                         ToolTip="填入搜索框，按 Enter 执行"/>
+                                <Button Height="36"
+                                        Margin="3,0"
+                                        Padding="12,0"
+                                        Style="{StaticResource FocusSecondaryButton}"
+                                        Content="{Binding ApplicationAudioSearchSuggestion}"
+                                        Tag="{Binding ApplicationAudioSearchSuggestion}"
+                                        Click="SearchSuggestion_Click"
+                                        Visibility="{Binding HasApplicationAudioSearchSuggestion, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                        ToolTip="直接调整当前应用音频会话；可把 30 改成任意 0–100 数值"
+                                        AutomationProperties.Name="应用音量搜索示例"/>
                                 <Button Height="36"
                                         Margin="3,0"
                                         Padding="12,0"

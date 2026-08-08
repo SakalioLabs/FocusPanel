@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">统一搜索直接控制逐应用音量</title>
+  <desc id="desc">在 FocusPanel 搜索框输入应用名称和音量命令，直接调整对应 Core Audio 会话，不打开 Windows 任务栏声音浮层。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0c1725"/><stop offset="1" stop-color="#243a51"/></linearGradient>
+    <linearGradient id="surface" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#29445f"/><stop offset="1" stop-color="#17283b"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#050a10" flood-opacity="0.42"/></filter>
+  </defs>
+  <rect width="1200" height="560" rx="36" fill="url(#background)"/>
+  <text x="52" y="66" fill="#f5f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">不用找滑块，一句话调好应用音量</text>
+  <text x="52" y="96" fill="#9eb6ce" font-family="Segoe UI, Microsoft YaHei" font-size="15">0.11.64 · 真实音频会话 · 绝对值、增减、静音与取消静音</text>
+
+  <rect x="44" y="132" width="720" height="374" rx="26" fill="url(#surface)" stroke="#496984" filter="url(#shadow)"/>
+  <text x="76" y="176" fill="#eef6ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="600">Panel 统一搜索</text>
+  <rect x="74" y="198" width="660" height="58" rx="16" fill="#0e2032" stroke="#65a6d8" stroke-width="2"/>
+  <circle cx="108" cy="227" r="15" fill="none" stroke="#9fd7ff" stroke-width="3"/><path d="m119 238 12 12" stroke="#9fd7ff" stroke-width="3" stroke-linecap="round"/>
+  <text x="148" y="234" fill="#f8fbff" font-family="Segoe UI, Microsoft YaHei" font-size="19">Spotify 音量 30</text>
+
+  <rect x="74" y="278" width="660" height="104" rx="18" fill="#31597a" stroke="#70b6e8"/>
+  <circle cx="118" cy="330" r="27" fill="#1ed760"/><path d="M101 320c17-5 37-3 52 5M104 331c15-4 31-2 44 4M108 341c11-3 23-1 33 3" fill="none" stroke="#0b2a17" stroke-width="4" stroke-linecap="round"/>
+  <text x="164" y="320" fill="#f8fbff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">将 Spotify 音量设为 30%</text>
+  <text x="164" y="348" fill="#c5def0" font-family="Segoe UI, Microsoft YaHei" font-size="14">应用音量快捷命令 · 点击或按 Enter 执行</text>
+  <rect x="594" y="302" width="112" height="54" rx="15" fill="#1b3c55"/><text x="650" y="335" text-anchor="middle" fill="#9fe4cb" font-family="Segoe UI, Microsoft YaHei" font-size="15">Session ID</text>
+
+  <g font-family="Segoe UI, Microsoft YaHei" font-size="14">
+    <rect x="74" y="404" width="205" height="50" rx="14" fill="#213a50"/><text x="177" y="435" text-anchor="middle" fill="#dceafa">微信静音</text>
+    <rect x="291" y="404" width="205" height="50" rx="14" fill="#213a50"/><text x="394" y="435" text-anchor="middle" fill="#dceafa">Chrome 音量 +10</text>
+    <rect x="508" y="404" width="226" height="50" rx="14" fill="#213a50"/><text x="621" y="435" text-anchor="middle" fill="#dceafa">Spotify volume down 5</text>
+  </g>
+
+  <path d="M790 322h80" stroke="#78dec0" stroke-width="3"/><path d="m858 314 14 8-14 8" fill="none" stroke="#78dec0" stroke-width="3"/>
+  <rect x="894" y="176" width="260" height="286" rx="24" fill="#172a3e" stroke="#4b6a84"/>
+  <text x="924" y="220" fill="#eff7ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">Spotify</text>
+  <text x="1124" y="220" text-anchor="end" fill="#82dfc4" font-family="Segoe UI, Microsoft YaHei" font-size="13">正在播放</text>
+  <text x="924" y="266" fill="#a9bfd3" font-family="Segoe UI, Microsoft YaHei" font-size="14">应用音量</text>
+  <rect x="924" y="286" width="200" height="8" rx="4" fill="#334e66"/><rect x="924" y="286" width="60" height="8" rx="4" fill="#69b8ef"/><circle cx="984" cy="290" r="12" fill="#dff2ff"/>
+  <text x="924" y="336" fill="#f7fbff" font-family="Segoe UI, Microsoft YaHei" font-size="30" font-weight="700">30%</text>
+  <rect x="924" y="366" width="200" height="52" rx="14" fill="#173c36"/><text x="1024" y="397" text-anchor="middle" fill="#8ce1c5" font-family="Segoe UI, Microsoft YaHei" font-size="14">不打开任务栏浮层</text>
+  <text x="1024" y="444" text-anchor="middle" fill="#8fa9bf" font-family="Segoe UI, Microsoft YaHei" font-size="12">写入失败自动回滚</text>
+</svg>

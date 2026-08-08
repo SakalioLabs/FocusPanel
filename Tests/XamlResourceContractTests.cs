@@ -3933,17 +3933,23 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "DataTrigger Binding=\"{Binding AreSearchSuggestionsVisible}\" Value=\"True\"",
             mainWindow);
-        Assert.True(
+        Assert.Equal(
+            6,
             Regex.Matches(
                 mainWindow,
                 "Click=\"SearchSuggestion_Click\"")
-                .Count
-            == 5);
+                .Count);
         Assert.Contains("Tag=\"任务管理器\"", mainWindow);
         Assert.Contains("Tag=\">\"", mainWindow);
         Assert.Contains("Tag=\"音量 50\"", mainWindow);
         Assert.Contains("Tag=\"专注 25\"", mainWindow);
         Assert.Contains("Tag=\"任务：\"", mainWindow);
+        Assert.Contains(
+            "Tag=\"{Binding ApplicationAudioSearchSuggestion}\"",
+            mainWindow);
+        Assert.Contains(
+            "Visibility=\"{Binding HasApplicationAudioSearchSuggestion, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            mainWindow);
 
         int start = codeBehind.IndexOf(
             "private void SearchSuggestion_Click(",

@@ -867,6 +867,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     } = new();
     public bool HasApplicationAudioSessions =>
         ApplicationAudioSessions.Count > 0;
+    public bool HasApplicationAudioSearchSuggestion =>
+        ApplicationAudioSessions.Count > 0;
+    public string ApplicationAudioSearchSuggestion
+    {
+        get
+        {
+            ApplicationAudioSessionItem? item =
+                ApplicationAudioSessions
+                    .FirstOrDefault(candidate =>
+                        candidate.IsActive)
+                ?? ApplicationAudioSessions
+                    .FirstOrDefault();
+            return item == null
+                ? string.Empty
+                : $"{item.DisplayName} 音量 30";
+        }
+    }
     public ObservableCollection<
         WifiNetworkSnapshot> WifiNetworks
     {
@@ -1827,6 +1844,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        if (result?.ApplicationAudioCommand
+            is ApplicationAudioSearchCommand
+                applicationAudioCommand)
+        {
+            ExecuteApplicationAudioSearchCommand(
+                applicationAudioCommand);
+            return;
+        }
+
         if (result?.BrightnessCommand
             is BrightnessSearchCommand
                 brightnessCommand)
@@ -2139,6 +2165,41 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 muted;
         }
 
+        IsSearchOpen = false;
+    }
+
+    private void
+        ExecuteApplicationAudioSearchCommand(
+            ApplicationAudioSearchCommand command)
+    {
+        ApplicationAudioSessionItem? item =
+            ApplicationAudioSessions
+                .FirstOrDefault(candidate =>
+                    string.Equals(
+                        candidate.SessionId,
+                        command.SessionId,
+                        StringComparison.Ordinal));
+        if (item == null)
+        {
+            SystemActionMessage =
+                $"“{command.ApplicationName}”的音频会话已经结束。"
+                + "请重新搜索或在声音与应用音量中刷新。";
+            CloseTransientPanels();
+            IsStatusCenterOpen = true;
+            RequestSystemStatusRefresh();
+            return;
+        }
+
+        AudioSearchMutation mutation =
+            command.Command.Resolve(
+                item.Volume);
+        SystemActionMessage = string.Empty;
+        if (mutation.Volume is float volume)
+            item.Volume = volume;
+        if (mutation.Muted is bool muted)
+            SetApplicationAudioMuted(
+                item,
+                muted);
         IsSearchOpen = false;
     }
 
@@ -2820,8 +2881,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool open = !IsSearchOpen;
         CloseTransientPanels();
         IsSearchOpen = open;
-        if (IsSearchOpen)
+        if (IsSearchOpen
+            && SearchScope
+                is ShellSearchScope.All
+                    or ShellSearchScope.System
+            && ApplicationAudioSearchCommandParser
+                .HasTargetedCommandSyntax(
+                    SearchQuery))
+        {
             RefreshSearchResults();
+        }
     }
 
     internal void PrepareTaskbarWindowOverview(
@@ -3702,7 +3771,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         ? _windowOverviewIdentityFilter
                         : null,
                 recentApplicationIdentities:
-                    recentApplicationIdentities);
+                    recentApplicationIdentities,
+                applicationAudioSessions:
+                    ApplicationAudioSessions
+                        .Select(item =>
+                            new ApplicationAudioSessionSnapshot(
+                                item.SessionId,
+                                item.DisplayName,
+                                item.ProcessId,
+                                item.Volume,
+                                item.IsMuted,
+                                item.IsActive,
+                                item.IsSystemSounds))
+                        .ToArray());
         ReplaceCollection(
             SearchResults,
             results);
@@ -4266,6 +4347,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 nameof(
                     HasApplicationAudioSessions));
         }
+
+        OnPropertyChanged(
+            nameof(
+                HasApplicationAudioSearchSuggestion));
+        OnPropertyChanged(
+            nameof(
+                ApplicationAudioSearchSuggestion));
+
+        if (IsSearchOpen)
+            RefreshSearchResults();
     }
 
     private void ApplySystemRadioSnapshots(
@@ -4995,7 +5086,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (item == null)
             return;
 
-        bool target = !item.IsMuted;
+        SetApplicationAudioMuted(
+            item,
+            !item.IsMuted);
+    }
+
+    private void SetApplicationAudioMuted(
+        ApplicationAudioSessionItem item,
+        bool target)
+    {
+        if (item.IsMuted == target)
+            return;
+
         item.ApplyDisplayedMuted(target);
         long revision =
             Interlocked.Increment(

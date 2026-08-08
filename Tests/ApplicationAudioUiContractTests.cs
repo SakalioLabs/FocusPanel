@@ -51,6 +51,41 @@ public sealed class
             viewModel);
     }
 
+    [Fact]
+    public void UnifiedSearch_ExposesLiveApplicationAudioShortcut()
+    {
+        string xaml =
+            ReadRepositoryFile(
+                "Views",
+                "MainWindow.xaml");
+        string viewModel =
+            ReadRepositoryFile(
+                "ViewModels",
+                "MainViewModel.cs");
+
+        Assert.Contains(
+            "Content=\"{Binding ApplicationAudioSearchSuggestion}\"",
+            xaml);
+        Assert.Contains(
+            "Tag=\"{Binding ApplicationAudioSearchSuggestion}\"",
+            xaml);
+        Assert.Contains(
+            "AutomationProperties.Name=\"应用音量搜索示例\"",
+            xaml);
+        Assert.Contains(
+            "应用名 音量 30",
+            xaml);
+        Assert.Contains(
+            "public string ApplicationAudioSearchSuggestion",
+            viewModel);
+        Assert.Contains(
+            "applicationAudioSessions:",
+            viewModel);
+        Assert.Contains(
+            "SetApplicationAudioMuted(",
+            viewModel);
+    }
+
     private static string ReadRepositoryFile(
         params string[] segments)
     {

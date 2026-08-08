@@ -11,6 +11,7 @@ public enum ShellSearchResultKind
     SystemCommand,
     Calculation,
     AudioCommand,
+    ApplicationAudioCommand,
     BrightnessCommand,
     FocusCommand,
     RunCommand,
@@ -99,6 +100,13 @@ public sealed record ShellSearchResult
         init;
     }
 
+    internal ApplicationAudioSearchCommand?
+        ApplicationAudioCommand
+    {
+        get;
+        init;
+    }
+
     internal BrightnessSearchCommand?
         BrightnessCommand
     {
@@ -161,6 +169,11 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.AudioCommand;
 
+    public bool IsApplicationAudioCommand =>
+        Kind
+        == ShellSearchResultKind
+            .ApplicationAudioCommand;
+
     public bool IsBrightnessCommand =>
         Kind
         == ShellSearchResultKind.BrightnessCommand;
@@ -189,6 +202,7 @@ public sealed record ShellSearchResult
         IsSystemCommand
         || IsCalculation
         || IsAudioCommand
+        || IsApplicationAudioCommand
         || IsBrightnessCommand
         || IsFocusCommand
         || IsRunCommand
@@ -414,6 +428,23 @@ public sealed record ShellSearchResult
                 command.Glyph,
             AudioCommand =
                 command
+        };
+
+    internal static ShellSearchResult
+        FromApplicationAudioCommand(
+            ApplicationAudioSearchCommand command) =>
+        new()
+        {
+            Kind = ShellSearchResultKind
+                .ApplicationAudioCommand,
+            StableKey = command.StableKey,
+            DisplayName = command.DisplayName,
+            SecondaryText =
+                "应用音量快捷命令 · 点击或按 Enter 执行",
+            AccessibleName =
+                $"执行应用音量快捷命令 {command.DisplayName}",
+            Glyph = command.Command.Glyph,
+            ApplicationAudioCommand = command
         };
 
     internal static ShellSearchResult
