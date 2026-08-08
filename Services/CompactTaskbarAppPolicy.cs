@@ -12,8 +12,7 @@ internal static class CompactTaskbarAppPolicy
     {
         ArgumentNullException.ThrowIfNull(item);
         return item.IsPinned
-               || (item.IsRunning
-                   && !item.IsBackgroundOnly);
+               || item.IsRunning;
     }
 
     internal static IReadOnlyList<TaskbarAppItem>

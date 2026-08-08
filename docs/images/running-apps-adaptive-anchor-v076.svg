@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c1220"/>
+      <stop offset="1" stop-color="#18263b"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#27364d" stop-opacity=".94"/>
+      <stop offset="1" stop-color="#162236" stop-opacity=".88"/>
+    </linearGradient>
+    <filter id="shadow" x="-40%" y="-20%" width="180%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".42"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="650" fill="url(#bg)"/>
+  <circle cx="210" cy="130" r="170" fill="#178ce8" opacity=".12"/>
+  <circle cx="960" cy="550" r="230" fill="#5ed7bd" opacity=".08"/>
+
+  <text x="70" y="86" fill="#f4f7fb" font-family="Segoe UI, Microsoft YaHei" font-size="34" font-weight="700">运行应用重新回到 Panel</text>
+  <text x="70" y="126" fill="#aab8cc" font-family="Segoe UI, Microsoft YaHei" font-size="20">短屏自动压缩固定入口，应用区不再被挤没</text>
+
+  <g transform="translate(85 170)" filter="url(#shadow)">
+    <rect width="76" height="400" rx="24" fill="url(#glass)" stroke="#7184a1" stroke-opacity=".45"/>
+    <rect x="24" y="16" width="24" height="4" rx="2" fill="#9aacc5"/>
+    <path d="M55 16l5 4-5 4" fill="none" stroke="#9aacc5" stroke-width="2"/>
+    <g fill="#d8e2f0" font-family="Segoe UI Symbol" font-size="19" text-anchor="middle">
+      <text x="38" y="64">⊞</text><text x="38" y="106">⌕</text><text x="38" y="148">◫</text>
+    </g>
+    <line x1="16" y1="166" x2="60" y2="166" stroke="#7184a1" stroke-opacity=".5"/>
+    <g>
+      <rect x="15" y="180" width="46" height="46" rx="12" fill="#3478d4"/>
+      <circle cx="38" cy="203" r="11" fill="#fff"/><path d="M38 194v18M29 203h18" stroke="#3478d4" stroke-width="3"/>
+      <rect x="15" y="234" width="46" height="46" rx="12" fill="#252f42"/>
+      <circle cx="38" cy="257" r="12" fill="#35c46a"/><path d="M31 257l5 5 10-12" fill="none" stroke="#fff" stroke-width="3"/>
+      <rect x="15" y="288" width="46" height="46" rx="12" fill="#252f42"/>
+      <circle cx="38" cy="311" r="12" fill="#ffb642"/><path d="M33 316l10-10M33 306h10v10" fill="none" stroke="#352611" stroke-width="2.5"/>
+      <circle cx="58" cy="184" r="5" fill="#67e09f"/>
+      <circle cx="58" cy="238" r="5" fill="#67e09f"/>
+      <circle cx="58" cy="292" r="5" fill="#67e09f"/>
+    </g>
+    <path d="M31 355h14M31 363h14" stroke="#aebbd0" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(190 172)" filter="url(#shadow)">
+    <rect width="320" height="255" rx="18" fill="#202c40" stroke="#7184a1" stroke-opacity=".55"/>
+    <text x="24" y="42" fill="#f5f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">固定到屏幕右侧</text>
+    <g font-family="Segoe UI, Microsoft YaHei" font-size="18">
+      <rect x="14" y="58" width="292" height="50" rx="12" fill="#328ee6" opacity=".2"/>
+      <text x="30" y="90" fill="#f3f7fd">✓  右上</text>
+      <text x="30" y="140" fill="#d7e1ef">　 右中</text>
+      <text x="30" y="190" fill="#d7e1ef">　 右下</text>
+      <line x1="20" y1="208" x2="300" y2="208" stroke="#7184a1" stroke-opacity=".42"/>
+      <text x="30" y="239" fill="#8ecbff">移动到屏幕　›</text>
+    </g>
+  </g>
+
+  <g transform="translate(590 174)">
+    <text x="0" y="20" fill="#f4f7fb" font-family="Segoe UI, Microsoft YaHei" font-size="27" font-weight="700">这次解决的两个断点</text>
+    <g transform="translate(0 55)">
+      <rect width="510" height="125" rx="18" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".12"/>
+      <circle cx="42" cy="42" r="20" fill="#258fe8"/><text x="42" y="50" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="22" font-weight="700">1</text>
+      <text x="78" y="42" fill="#f0f5fb" font-family="Segoe UI, Microsoft YaHei" font-size="21" font-weight="600">运行中的应用不会再被投影过滤</text>
+      <text x="78" y="75" fill="#aebbd0" font-family="Segoe UI, Microsoft YaHei" font-size="17">可见窗口与后台宿主都保留，停止项才移除</text>
+      <text x="78" y="100" fill="#79dda8" font-family="Segoe UI, Microsoft YaHei" font-size="16">● 统一身份、稳定顺序、可滚动</text>
+    </g>
+    <g transform="translate(0 202)">
+      <rect width="510" height="125" rx="18" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".12"/>
+      <circle cx="42" cy="42" r="20" fill="#7a61e8"/><text x="42" y="50" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="22" font-weight="700">2</text>
+      <text x="78" y="42" fill="#f0f5fb" font-family="Segoe UI, Microsoft YaHei" font-size="21" font-weight="600">位置选择从隐藏手势变成直接菜单</text>
+      <text x="78" y="75" fill="#aebbd0" font-family="Segoe UI, Microsoft YaHei" font-size="17">单击把手选择右上、右中、右下</text>
+      <text x="78" y="100" fill="#a995ff" font-family="Segoe UI, Microsoft YaHei" font-size="16">◆ 仍支持拖动吸附与多屏切换</text>
+    </g>
+    <rect y="358" width="510" height="62" rx="16" fill="#258fe8" fill-opacity=".16" stroke="#258fe8" stroke-opacity=".5"/>
+    <text x="24" y="397" fill="#cce9ff" font-family="Segoe UI, Microsoft YaHei" font-size="18">低于 640 DIP → 固定入口 54px 自动收紧为 44px</text>
+  </g>
+</svg>

@@ -3206,8 +3206,13 @@ public sealed class XamlResourceContractTests
             + "_viewModel\\.DisplayTargetMode\\s*=\\s*target;",
             codeBehind);
         Assert.Contains(
-            "右键选择 Panel 所在屏幕",
+            "单击直接选择右上、右中或右下",
             mainWindow);
+        Assert.Matches(
+            "PanelPositionHandleButton_Click\\([\\s\\S]*?"
+            + "CompactDock\\.ContextMenu[\\s\\S]*?"
+            + "menu\\.IsOpen\\s*=\\s*true;",
+            codeBehind);
         Assert.Contains(
             "x:Name=\"PanelPositionHandleButton\"",
             mainWindow);

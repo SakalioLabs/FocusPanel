@@ -28,6 +28,25 @@ public partial class MainWindow :
     Window,
     IFocusDialogInteractionHost
 {
+    public static readonly DependencyProperty
+        CompactFixedEntryHeightProperty =
+            DependencyProperty.Register(
+                nameof(CompactFixedEntryHeight),
+                typeof(double),
+                typeof(MainWindow),
+                new PropertyMetadata(
+                    CompactDockDensityPolicy
+                        .NormalEntryHeightDip));
+
+    public double CompactFixedEntryHeight
+    {
+        get => (double)GetValue(
+            CompactFixedEntryHeightProperty);
+        private set => SetValue(
+            CompactFixedEntryHeightProperty,
+            value);
+    }
+
     private const double CompactWidth = 76;
     private const double ExpandedWidth = 720;
     private const double ScreenMargin =
@@ -592,6 +611,9 @@ public partial class MainWindow :
                 _viewModel
                     .PanelVerticalAnchor);
         Height = bounds.Height / (dpi / 96.0);
+        CompactFixedEntryHeight =
+            CompactDockDensityPolicy
+                .GetEntryHeight(Height);
         ShellWindowPlacement.Apply(hwnd, bounds);
     }
 
@@ -2309,11 +2331,16 @@ public partial class MainWindow :
             return;
         }
 
-        _viewModel.PanelVerticalAnchor =
-            PanelVerticalAnchorDragPolicy
-                .GetNext(
-                    _viewModel
-                        .PanelVerticalAnchor);
+        ContextMenu? menu =
+            CompactDock.ContextMenu;
+        if (menu == null)
+            return;
+
+        menu.PlacementTarget =
+            PanelPositionHandleButton;
+        menu.Placement =
+            PlacementMode.Left;
+        menu.IsOpen = true;
     }
 
     private void

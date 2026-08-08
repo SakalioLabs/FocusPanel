@@ -32,7 +32,8 @@
                TargetType="Button"
                BasedOn="{StaticResource FocusIconButton}">
             <Setter Property="Width" Value="54"/>
-            <Setter Property="Height" Value="54"/>
+            <Setter Property="Height"
+                    Value="{Binding CompactFixedEntryHeight, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"/>
         </Style>
 
         <Style x:Key="CompactDesktopEntryButton"
@@ -2063,13 +2064,23 @@
                                     PreviewMouseMove="PanelPositionHandleButton_PreviewMouseMove"
                                     LostMouseCapture="PanelPositionHandleButton_LostMouseCapture"
                                     AutomationProperties.Name="调整 Panel 右侧固定位置"
-                                    AutomationProperties.HelpText="单击依次切换右上、右中、右下；上下拖动后吸附；右键选择 Panel 所在屏幕"
-                                    ToolTip="拖动调整上下位置 · 单击切换右上 / 右中 / 右下 · 右键选择屏幕">
-                                <Border Width="24"
-                                        Height="4"
-                                        CornerRadius="2"
-                                        Background="{DynamicResource FocusMutedTextBrush}"
-                                        Opacity="0.58"/>
+                                    AutomationProperties.HelpText="单击直接选择右上、右中或右下；上下拖动后吸附；菜单还可选择 Panel 所在屏幕"
+                                    ToolTip="单击选择右上 / 右中 / 右下 · 拖动调整位置 · 菜单中可选择屏幕">
+                                <Grid Width="30" Height="12">
+                                    <Border Width="24"
+                                            Height="4"
+                                            HorizontalAlignment="Left"
+                                            CornerRadius="2"
+                                            Background="{DynamicResource FocusMutedTextBrush}"
+                                            Opacity="0.58"/>
+                                    <TextBlock Margin="22,-5,0,0"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center"
+                                               Style="{StaticResource FocusIconText}"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                                               Text="&#xE70D;"/>
+                                </Grid>
                             </Button>
                             <Button x:Name="StartButton"
                                     Style="{StaticResource CompactLabeledEntryButton}"
@@ -2159,7 +2170,7 @@
                                                   Command="{Binding PlacementTarget.DataContext.ShowDesktopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
-                                <Grid Width="48" Height="48">
+                                <Grid Width="48" Height="44">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"
                                                    HorizontalAlignment="Center"
@@ -2186,7 +2197,7 @@
                                     AutomationProperties.Name="窗口总览与统一搜索"
                                     AutomationProperties.HelpText="点击查看全部窗口；顶部可切换应用、任务、系统命令和计算搜索"
                                     ToolTip="窗口总览与统一搜索">
-                                <Grid Width="48" Height="48">
+                                <Grid Width="48" Height="44">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"
                                                    HorizontalAlignment="Center"
@@ -2231,7 +2242,7 @@
                                     AutomationProperties.Name="打开 Panel 自有后台应用抽屉"
                                     AutomationProperties.HelpText="只显示 Panel 已识别的固定、运行和后台应用，不调用 Windows 任务栏隐藏图标"
                                     ToolTip="后台应用 · Panel 自有抽屉">
-                                <Grid Width="48" Height="48">
+                                <Grid Width="48" Height="44">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"
                                                    HorizontalAlignment="Center"
@@ -2524,7 +2535,7 @@
                                     AutomationProperties.Name="{Binding OrganizerEntryAutomationName}"
                                     AutomationProperties.HelpText="按 Enter 直接展开桌面收纳工作区"
                                     ToolTip="{Binding OrganizerEntryAutomationName}">
-                                <Grid Width="48" Height="48">
+                                <Grid Width="48" Height="44">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"
                                                    HorizontalAlignment="Center"
@@ -2578,7 +2589,7 @@
                                                   Click="TaskQuickCaptureMenuItem_Click"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
-                                <Grid Width="48" Height="48">
+                                <Grid Width="48" Height="44">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource FocusIconText}"
                                                    HorizontalAlignment="Center"
@@ -2665,7 +2676,7 @@
                                                   Click="PowerMenuItem_Click"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
-                                <Grid Width="48" Height="48">
+                                <Grid Width="48" Height="44">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock HorizontalAlignment="Center">
                                             <TextBlock.Style>
@@ -2734,7 +2745,7 @@
                                                   CommandParameter="{x:Static services:SystemManagementTool.NotificationSettings}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
-                                <Grid Width="48" Height="48">
+                                <Grid Width="48" Height="44">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="{Binding CurrentTime, StringFormat={}{0:HH:mm}}"
                                                    HorizontalAlignment="Center"

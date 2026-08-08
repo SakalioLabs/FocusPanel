@@ -9,7 +9,7 @@ namespace FocusPanel.Tests;
 public sealed class CompactTaskbarAppPolicyTests
 {
     [Fact]
-    public void Select_KeepsPinnedAndVisibleRunningAppsOnly()
+    public void Select_KeepsPinnedAndEveryRunningApp()
     {
         TaskbarAppItem pinnedStopped =
             Pinned("固定但未运行");
@@ -42,6 +42,7 @@ public sealed class CompactTaskbarAppPolicyTests
         Assert.Equal(
             new[]
             {
+                "纯后台",
                 "固定但未运行",
                 "有窗口"
             },
