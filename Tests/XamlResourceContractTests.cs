@@ -6431,9 +6431,16 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain(
             "SetTaskbarAppCloaked(",
             diagnostics);
-        Assert.Contains(
-            "Content=\"检查接管状态\"",
-            mainWindow);
+        Assert.Equal(
+            2,
+            mainWindow.Split(
+                    "Content=\"{Binding TaskbarDiagnosticsActionText}\"")
+                .Length - 1);
+        Assert.Equal(
+            2,
+            mainWindow.Split(
+                    "IsEnabled=\"{Binding CanInspectTaskbarReplacement}\"")
+                .Length - 1);
         Assert.Contains(
             "Command=\"{Binding InspectTaskbarReplacementCommand}\"",
             mainWindow);
@@ -6445,9 +6452,6 @@ public sealed class XamlResourceContractTests
             mainWindow.Split(
                     "Text=\"{Binding ReplacementDiagnostics}\"")
                 .Length - 1);
-        Assert.Contains(
-            "Content=\"重新检查任务栏接管\"",
-            mainWindow);
         Assert.Contains(
             "Visibility=\"{Binding HasTaskbarHealthWarning, Converter={StaticResource BooleanToVisibilityConverter}}\"",
             mainWindow);
@@ -6472,6 +6476,29 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "TaskbarHealthPresentationPolicy.Compose(",
             viewModel);
+        Assert.Contains(
+            "TaskbarDiagnosticsPresentationPolicy",
+            viewModel);
+        Assert.Contains(
+            "RequestInspectTaskbarReplacement?",
+            viewModel);
+        Assert.Matches(
+            "OnIsStatusCenterOpenChanged\\([\\s\\S]*?"
+            + "IsReplacementEnabled[\\s\\S]*?"
+            + "RequestInspectTaskbarReplacement",
+            viewModel);
+        Assert.Contains(
+            "IsTaskbarDiagnosticsBusy",
+            codeBehind);
+        Assert.Contains(
+            "_taskbarDiagnosticsRefreshPending",
+            codeBehind);
+        Assert.Contains(
+            "InvalidateTaskbarDiagnostics();",
+            codeBehind);
+        Assert.Contains(
+            "TaskbarDiagnosticsResultPolicy",
+            codeBehind);
         Assert.Contains(
             "InspectTaskbarReplacement();",
             codeBehind);

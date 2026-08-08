@@ -147,6 +147,9 @@ public partial class MainWindow :
     private CancellationTokenSource?
         _jumpListCancellation;
     private long _jumpListRevision;
+    private long _taskbarDiagnosticsRevision;
+    private bool
+        _taskbarDiagnosticsRefreshPending;
     private string? _lastTaskbarWindowCycleIdentity;
     private IntPtr _lastTaskbarWindowCycleHandle;
     private long _lastTaskbarWindowCycleTick = -1;
@@ -4527,6 +4530,7 @@ public partial class MainWindow :
 
     private void EnableTaskbarReplacement()
     {
+        InvalidateTaskbarDiagnostics();
         if (_coordinator.TryEnableTaskbarReplacement(out string? error))
         {
             _viewModel.MarkReplacementEnabled(true);
@@ -4548,6 +4552,7 @@ public partial class MainWindow :
 
     private void DisableTaskbarReplacement()
     {
+        InvalidateTaskbarDiagnostics();
         UnregisterTaskbarSlotHotkeys();
         _coordinator.RestoreTaskbar();
         _viewModel.MarkReplacementEnabled(false);
@@ -4555,15 +4560,100 @@ public partial class MainWindow :
 
     private async void InspectTaskbarReplacement()
     {
-        TaskbarReplacementDiagnostics diagnostics =
-            await Task.Run(() =>
-                _coordinator.Taskbar
-                    .GetDiagnostics());
         if (_isExit)
             return;
 
-        _viewModel.MarkReplacementDiagnostics(
-            diagnostics);
+        if (_viewModel.IsTaskbarDiagnosticsBusy)
+        {
+            _taskbarDiagnosticsRefreshPending =
+                true;
+            return;
+        }
+
+        long revision = Interlocked.Increment(
+            ref _taskbarDiagnosticsRevision);
+        bool enabledAtStart =
+            _coordinator.Taskbar
+                .IsReplacementEnabled;
+        _viewModel.MarkTaskbarDiagnosticsBusy(
+            true);
+        try
+        {
+            TaskbarReplacementDiagnostics diagnostics =
+                await Task.Run(() =>
+                    _coordinator.Taskbar
+                        .GetDiagnostics());
+            if (!CanApplyTaskbarDiagnostics(
+                    revision,
+                    enabledAtStart,
+                    diagnostics.IsEnabled))
+            {
+                return;
+            }
+
+            _viewModel.MarkReplacementDiagnostics(
+                diagnostics);
+        }
+        catch (Exception ex)
+        {
+            if (CanApplyTaskbarDiagnostics(
+                    revision,
+                    enabledAtStart,
+                    enabledAtStart))
+            {
+                _viewModel.MarkReplacementDiagnostics(
+                    TaskbarReplacementDiagnosticsComposer
+                        .Failure(
+                            enabledAtStart,
+                            ex.Message));
+            }
+        }
+        finally
+        {
+            if (!_isExit)
+            {
+                _viewModel.MarkTaskbarDiagnosticsBusy(
+                    false);
+            }
+
+            if (_taskbarDiagnosticsRefreshPending
+                && !_isExit)
+            {
+                _taskbarDiagnosticsRefreshPending =
+                    false;
+                _ = Dispatcher.BeginInvoke(
+                    new Action(
+                        InspectTaskbarReplacement),
+                    DispatcherPriority.Background);
+            }
+        }
+    }
+
+    private bool CanApplyTaskbarDiagnostics(
+        long revision,
+        bool enabledAtStart,
+        bool resultEnabled)
+    {
+        bool currentlyEnabled =
+            _coordinator.Taskbar
+                .IsReplacementEnabled;
+        return TaskbarDiagnosticsResultPolicy
+            .CanApply(
+                _isExit,
+                revision,
+                Volatile.Read(
+                    ref _taskbarDiagnosticsRevision),
+                enabledAtStart,
+                currentlyEnabled,
+                resultEnabled);
+    }
+
+    private void InvalidateTaskbarDiagnostics()
+    {
+        Interlocked.Increment(
+            ref _taskbarDiagnosticsRevision);
+        _taskbarDiagnosticsRefreshPending =
+            false;
     }
 
     private void Taskbar_ReplacementStopped(TaskbarReplacementStoppedEvent stopped)
@@ -4578,6 +4668,7 @@ public partial class MainWindow :
                 if (_isExit)
                     return;
 
+                InvalidateTaskbarDiagnostics();
                 UnregisterTaskbarSlotHotkeys();
                 _viewModel.MarkReplacementStopped(stopped.Reason, stopped.Message);
             });
@@ -4617,6 +4708,7 @@ public partial class MainWindow :
             _viewModel.UpdateStatus =
                 "备份完成，正在保存 Panel 通知并恢复任务栏…";
             await _notificationCenter.FlushAsync();
+            InvalidateTaskbarDiagnostics();
             UnregisterTaskbarSlotHotkeys();
             _coordinator.RestoreTaskbar();
             DesktopHelper.ToggleDesktopIcons(true);

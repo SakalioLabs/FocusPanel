@@ -362,7 +362,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         nameof(TaskbarHealthStatus))]
     [NotifyPropertyChangedFor(
         nameof(StatusCenterAutomationName))]
+    [NotifyPropertyChangedFor(
+        nameof(TaskbarDiagnosticsActionText))]
     private bool hasReplacementDiagnostics;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(TaskbarDiagnosticsActionText))]
+    [NotifyPropertyChangedFor(
+        nameof(CanInspectTaskbarReplacement))]
+    private bool isTaskbarDiagnosticsBusy;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(
@@ -1188,6 +1197,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string TaskbarHealthStatus =>
         GetTaskbarHealthPresentation()
             .Status;
+    public string TaskbarDiagnosticsActionText =>
+        GetTaskbarDiagnosticsActionPresentation()
+            .Text;
+    public bool CanInspectTaskbarReplacement =>
+        GetTaskbarDiagnosticsActionPresentation()
+            .IsEnabled;
 
     private TaskbarHealthPresentation
         GetTaskbarHealthPresentation() =>
@@ -1196,6 +1211,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             HasReplacementWarning,
             HasReplacementDiagnostics,
             IsReplacementDiagnosticsHealthy);
+
+    private TaskbarDiagnosticsActionPresentation
+        GetTaskbarDiagnosticsActionPresentation() =>
+        TaskbarDiagnosticsPresentationPolicy
+            .Compose(
+                IsTaskbarDiagnosticsBusy,
+                HasReplacementDiagnostics);
 
     public bool HasOpenTasks =>
         GetTaskEntryPresentation().HasBadge;
@@ -1572,6 +1594,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnIsStatusCenterOpenChanged(bool value)
     {
+        if (value && IsReplacementEnabled)
+        {
+            RequestInspectTaskbarReplacement?
+                .Invoke();
+        }
+
         if (value && _isShellVisible)
         {
             RequestSystemStatusRefresh();
@@ -3709,6 +3737,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsReplacementDiagnosticsHealthy =
             diagnostics.IsHealthy;
     }
+
+    public void MarkTaskbarDiagnosticsBusy(
+        bool isBusy) =>
+        IsTaskbarDiagnosticsBusy = isBusy;
 
     [RelayCommand]
     private void CloseApp() => RequestClose?.Invoke();
