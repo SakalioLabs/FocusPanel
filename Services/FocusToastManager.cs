@@ -19,6 +19,9 @@ public sealed class FocusToastManager : IDisposable
     private FocusToastWindow? _window;
     private bool _disposed;
 
+    internal string PanelEdgeValue { get; set; } =
+        ShellPanelEdgePolicy.RightValue;
+
     public FocusToastManager(
         Window anchor,
         FocusNotificationCenter? notificationCenter = null)
@@ -101,9 +104,19 @@ public sealed class FocusToastManager : IDisposable
             ? _anchor.ActualHeight
             : _anchor.Height;
 
-        window.Left = Math.Max(
-            workArea.Left + 12,
-            _anchor.Left - width - 12);
+        window.Left =
+            ShellPanelEdgePolicy.IsLeft(
+                PanelEdgeValue)
+                ? Math.Min(
+                    workArea.Right
+                        - width
+                        - 12,
+                    _anchor.Left
+                        + _anchor.ActualWidth
+                        + 12)
+                : Math.Max(
+                    workArea.Left + 12,
+                    _anchor.Left - width - 12);
         window.Top = Math.Max(
             workArea.Top + 12,
             Math.Min(

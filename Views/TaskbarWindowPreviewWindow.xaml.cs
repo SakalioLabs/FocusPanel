@@ -148,8 +148,9 @@ public partial class TaskbarWindowPreviewWindow :
     internal bool TryShowAt(
         Window owner,
         Rectangle displayBounds,
-        int anchorLeftPhysical,
-        int anchorCenterYPhysical)
+        int anchorNearEdgePhysical,
+        int anchorCenterYPhysical,
+        string? panelEdge = null)
     {
         if (_windows.Count == 0
             || _disposed)
@@ -178,8 +179,9 @@ public partial class TaskbarWindowPreviewWindow :
         UpdateLayout();
         PositionAtAnchor(
             displayBounds,
-            anchorLeftPhysical,
-            anchorCenterYPhysical);
+            anchorNearEdgePhysical,
+            anchorCenterYPhysical,
+            panelEdge);
         UpdateLayout();
 
         if (!RegisterThumbnails())
@@ -238,8 +240,9 @@ public partial class TaskbarWindowPreviewWindow :
 
     private void PositionAtAnchor(
         Rectangle displayBounds,
-        int anchorLeftPhysical,
-        int anchorCenterYPhysical)
+        int anchorNearEdgePhysical,
+        int anchorCenterYPhysical,
+        string? panelEdge)
     {
         IntPtr hwnd =
             new WindowInteropHelper(this)
@@ -262,12 +265,20 @@ public partial class TaskbarWindowPreviewWindow :
                 1,
                 bounds.Bottom
                 - bounds.Top);
-        int left = Math.Max(
-            displayBounds.Left
-                + PreviewGapPhysical,
-            anchorLeftPhysical
-                - width
-                - PreviewGapPhysical);
+        int left = ShellPanelEdgePolicy
+                .IsLeft(panelEdge)
+            ? Math.Min(
+                displayBounds.Right
+                    - width
+                    - PreviewGapPhysical,
+                anchorNearEdgePhysical
+                    + PreviewGapPhysical)
+            : Math.Max(
+                displayBounds.Left
+                    + PreviewGapPhysical,
+                anchorNearEdgePhysical
+                    - width
+                    - PreviewGapPhysical);
         int top = Math.Clamp(
             anchorCenterYPhysical
                 - height / 2,

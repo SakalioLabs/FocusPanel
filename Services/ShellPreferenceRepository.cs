@@ -15,6 +15,7 @@ internal sealed record ShellPreferenceSnapshot(
     bool DisableHotZoneInFullscreen,
     bool EnableTaskbarSlotHotkeys,
     string DisplayTargetMode,
+    string PanelEdge,
     string PanelVerticalAnchor,
     int AutoHideDelayMilliseconds,
     int HotZoneDwellMilliseconds,
@@ -30,6 +31,8 @@ internal sealed record ShellPreferenceSnapshot(
             false,
             ShellDisplayTarget
                 .OutermostRightValue,
+            ShellPanelEdgePolicy
+                .RightValue,
             ShellPanelVerticalAnchorPolicy
                 .CenterValue,
             ShellAutoHideDelayPolicy
@@ -95,6 +98,8 @@ internal sealed class ShellPreferenceRepository
         "Shell.EnableTaskbarSlotHotkeys";
     internal const string DisplayTargetModeKey =
         "Shell.DisplayTargetMode";
+    internal const string PanelEdgeKey =
+        "Shell.PanelEdge";
     internal const string PanelVerticalAnchorKey =
         "Shell.PanelVerticalAnchor";
     internal const string AutoHideDelayKey =
@@ -114,6 +119,7 @@ internal sealed class ShellPreferenceRepository
         FullscreenHotZoneKey,
         TaskbarSlotHotkeysKey,
         DisplayTargetModeKey,
+        PanelEdgeKey,
         PanelVerticalAnchorKey,
         AutoHideDelayKey,
         HotZoneDwellKey,
@@ -335,6 +341,12 @@ internal sealed class ShellPreferenceRepository
                     DisplayTargetModeKey,
                     ShellDisplayTarget
                         .OutermostRightValue)),
+            ShellPanelEdgePolicy.NormalizeValue(
+                ReadString(
+                    values,
+                    PanelEdgeKey,
+                    ShellPanelEdgePolicy
+                        .RightValue)),
             ShellPanelVerticalAnchorPolicy
                 .NormalizeValue(
                     ReadString(
@@ -394,6 +406,10 @@ internal sealed class ShellPreferenceRepository
             DisplayTargetMode =
                 ShellDisplayTarget.NormalizeValue(
                     snapshot.DisplayTargetMode),
+            PanelEdge =
+                ShellPanelEdgePolicy
+                    .NormalizeValue(
+                        snapshot.PanelEdge),
             PanelVerticalAnchor =
                 ShellPanelVerticalAnchorPolicy
                     .NormalizeValue(

@@ -124,10 +124,12 @@
                 AllowDrop="True"
                 DragEnter="Sidebar_DragEnter"
                 DragLeave="Sidebar_DragLeave">
-            <Grid>
+            <Grid x:Name="ShellLayoutGrid">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="76"/>
+                    <ColumnDefinition x:Name="WorkspaceColumn"
+                                      Width="*"/>
+                    <ColumnDefinition x:Name="CompactColumn"
+                                      Width="76"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Expandable FocusPanel workspace -->
@@ -1907,26 +1909,35 @@
                                                Margin="0,12,0,5"
                                                Style="{StaticResource FocusCaptionText}"/>
                                     <ComboBox SelectedValuePath="Tag"
+                                              SelectedValue="{Binding PanelEdge, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              AutomationProperties.Name="Panel 固定在所选屏幕的左侧或右侧">
+                                        <ComboBoxItem Content="屏幕左侧" Tag="Left"/>
+                                        <ComboBoxItem Content="屏幕右侧" Tag="Right"/>
+                                    </ComboBox>
+                                    <TextBlock Text="垂直位置"
+                                               Margin="0,12,0,5"
+                                               Style="{StaticResource FocusCaptionText}"/>
+                                    <ComboBox SelectedValuePath="Tag"
                                               SelectedValue="{Binding PanelVerticalAnchor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                              AutomationProperties.Name="Panel 在所选屏幕右侧的固定位置">
-                                        <ComboBoxItem Content="右上" Tag="Top"/>
-                                        <ComboBoxItem Content="右中" Tag="Center"/>
-                                        <ComboBoxItem Content="右下" Tag="Bottom"/>
+                                              AutomationProperties.Name="Panel 在所选屏幕边缘的垂直位置">
+                                        <ComboBoxItem Content="上方" Tag="Top"/>
+                                        <ComboBoxItem Content="中间" Tag="Center"/>
+                                        <ComboBoxItem Content="下方" Tag="Bottom"/>
                                     </ComboBox>
                                     <TextBlock Margin="0,5,0,0"
-                                               Text="Panel 会固定到所选屏幕的右上、右中或右下；右缘热区仍可在整条屏幕边缘呼出。"
+                                               Text="Panel、触边热区、运行指示条和展开方向会一起切换到所选边缘；上、中、下位置可独立选择。"
                                                TextWrapping="Wrap"
                                                Style="{StaticResource FocusCaptionText}"/>
-                                    <TextBlock Text="右缘呼出灵敏度"
+                                    <TextBlock Text="屏幕边缘呼出灵敏度"
                                                Margin="0,12,0,5"
                                                Style="{StaticResource FocusCaptionText}"/>
                                     <ComboBox ItemsSource="{Binding HotZoneSensitivityOptions}"
                                               DisplayMemberPath="DisplayName"
                                               SelectedValuePath="DwellMilliseconds"
                                               SelectedValue="{Binding HotZoneDwellMilliseconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                              AutomationProperties.Name="右缘悬停呼出灵敏度"/>
+                                              AutomationProperties.Name="所选屏幕边缘悬停呼出灵敏度"/>
                                     <TextBlock Margin="0,5,0,0"
-                                               Text="灵敏档更容易快速呼出；稳妥和刻意档可减少经过屏幕右缘时的误触。"
+                                               Text="灵敏档更容易快速呼出；稳妥和刻意档可减少经过所选屏幕边缘时的误触。"
                                                TextWrapping="Wrap"
                                                Style="{StaticResource FocusCaptionText}"/>
                                     <TextBlock Text="鼠标离开后自动收起"
@@ -2101,15 +2112,24 @@
                         <ContextMenu Style="{StaticResource FocusContextMenu}"
                                      Opened="TransientContextMenu_Opened"
                                      Closed="TransientContextMenu_Closed">
-                            <MenuItem Header="固定到右上"
+                            <MenuItem Header="屏幕左侧"
+                                      Tag="Left"
+                                      IsCheckable="True"
+                                      Click="PanelEdgeMenuItem_Click"/>
+                            <MenuItem Header="屏幕右侧"
+                                      Tag="Right"
+                                      IsCheckable="True"
+                                      Click="PanelEdgeMenuItem_Click"/>
+                            <Separator/>
+                            <MenuItem Header="上方"
                                       Tag="Top"
                                       IsCheckable="True"
                                       Click="PanelVerticalAnchorMenuItem_Click"/>
-                            <MenuItem Header="固定到右中"
+                            <MenuItem Header="中间"
                                       Tag="Center"
                                       IsCheckable="True"
                                       Click="PanelVerticalAnchorMenuItem_Click"/>
-                            <MenuItem Header="固定到右下"
+                            <MenuItem Header="下方"
                                       Tag="Bottom"
                                       IsCheckable="True"
                                       Click="PanelVerticalAnchorMenuItem_Click"/>
@@ -2137,9 +2157,9 @@
                                     PreviewMouseLeftButtonDown="PanelPositionHandleButton_PreviewMouseLeftButtonDown"
                                     PreviewMouseMove="PanelPositionHandleButton_PreviewMouseMove"
                                     LostMouseCapture="PanelPositionHandleButton_LostMouseCapture"
-                                    AutomationProperties.Name="调整 Panel 右侧固定位置"
-                                    AutomationProperties.HelpText="单击直接选择右上、右中或右下；上下拖动后吸附；菜单还可选择 Panel 所在屏幕"
-                                    ToolTip="{Binding PanelVerticalAnchorLabel, StringFormat={}{0} · 单击选择右上 / 右中 / 右下 · 可上下拖动}">
+                                    AutomationProperties.Name="调整 Panel 屏幕边缘与固定位置"
+                                    AutomationProperties.HelpText="单击选择屏幕左侧或右侧以及上中下位置；上下拖动后吸附；菜单还可选择 Panel 所在屏幕"
+                                    ToolTip="{Binding PanelVerticalAnchorLabel, StringFormat={}{0} · 单击选择左 / 右与上 / 中 / 下 · 可上下拖动}">
                                 <Grid Width="48" Height="20">
                                     <TextBlock HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
@@ -2975,7 +2995,8 @@
                 </Border>
 
                 <!-- First-run safety onboarding -->
-                <Border Grid.Column="0"
+                <Border x:Name="OnboardingHost"
+                        Grid.Column="0"
                         Panel.ZIndex="50"
                         Margin="0"
                         Padding="28"

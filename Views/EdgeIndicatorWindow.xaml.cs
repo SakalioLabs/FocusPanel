@@ -74,6 +74,9 @@ public partial class EdgeIndicatorWindow : Window
     internal string TargetValue { get; set; } =
         ShellDisplayTarget.OutermostRightValue;
 
+    internal string EdgeValue { get; set; } =
+        ShellPanelEdgePolicy.RightValue;
+
     internal string VerticalAnchorValue
     {
         get;
@@ -103,7 +106,8 @@ public partial class EdgeIndicatorWindow : Window
     {
         Rectangle targetBounds =
             ShellDisplayTarget.GetBounds(
-                TargetValue);
+                TargetValue,
+                EdgeValue);
         if (targetBounds.Width <= 0
             || targetBounds.Height <= 0)
             return;
@@ -124,7 +128,8 @@ public partial class EdgeIndicatorWindow : Window
                     .DefaultPanelMarginDip,
                 ShellWindowPlacement
                     .PreferredPanelHeightDip,
-                VerticalAnchorValue);
+                VerticalAnchorValue,
+                EdgeValue);
         Width = bounds.Width / scale;
         Height = bounds.Height / scale;
         ShellWindowPlacement.Apply(hwnd, bounds);

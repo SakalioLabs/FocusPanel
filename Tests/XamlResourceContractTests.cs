@@ -1764,7 +1764,12 @@ public sealed class XamlResourceContractTests
             systemStatus);
 
         string onboarding = mainWindow[onboardingStart..];
-        Assert.Contains("<Border Grid.Column=\"0\"", onboarding);
+        Assert.Contains(
+            "x:Name=\"OnboardingHost\"",
+            onboarding);
+        Assert.Contains(
+            "Grid.Column=\"0\"",
+            onboarding);
         Assert.DoesNotContain("Grid.ColumnSpan=\"2\"", onboarding);
     }
 
@@ -3241,13 +3246,10 @@ public sealed class XamlResourceContractTests
             "Text=\"{Binding PanelVerticalAnchorLabel}\"",
             mainWindow);
         Assert.Contains(
-            "\"位置 · 上\"",
+            "ShellPanelEdgePolicy.IsLeft(PanelEdge)",
             viewModel);
         Assert.Contains(
-            "\"位置 · 中\"",
-            viewModel);
-        Assert.Contains(
-            "\"位置 · 下\"",
+            "+ \" · \"",
             viewModel);
         Assert.DoesNotContain(
             "_viewModel.TaskbarApps",
@@ -3278,8 +3280,17 @@ public sealed class XamlResourceContractTests
             + "_viewModel\\.DisplayTargetMode\\s*=\\s*target;",
             codeBehind);
         Assert.Contains(
-            "单击直接选择右上、右中或右下",
+            "单击选择屏幕左侧或右侧以及上中下位置",
             mainWindow);
+        Assert.Contains(
+            "Click=\"PanelEdgeMenuItem_Click\"",
+            mainWindow);
+        Assert.Contains(
+            "ApplyPanelEdgeLayout();",
+            codeBehind);
+        Assert.Contains(
+            "_hotZoneMonitor?.SetPanelEdge(",
+            codeBehind);
         Assert.Matches(
             "PanelPositionHandleButton_Click\\([\\s\\S]*?"
             + "CompactDock\\.ContextMenu[\\s\\S]*?"
@@ -7036,6 +7047,18 @@ public sealed class XamlResourceContractTests
             "PanelVerticalAnchorKey",
             repository);
         Assert.Contains(
+            "PanelEdgeKey",
+            repository);
+        Assert.Contains(
+            "OnPanelEdgeChanged(",
+            viewModel);
+        Assert.Contains(
+            "SelectedValue=\"{Binding PanelEdge",
+            mainXaml);
+        Assert.Contains(
+            "AutomationProperties.Name=\"Panel 固定在所选屏幕的左侧或右侧\"",
+            mainXaml);
+        Assert.Contains(
             "OnPanelVerticalAnchorChanged(",
             viewModel);
         Assert.Contains(
@@ -7078,7 +7101,7 @@ public sealed class XamlResourceContractTests
             "SelectedValue=\"{Binding HotZoneDwellMilliseconds",
             mainXaml);
         Assert.Contains(
-            "AutomationProperties.Name=\"右缘悬停呼出灵敏度\"",
+            "AutomationProperties.Name=\"所选屏幕边缘悬停呼出灵敏度\"",
             mainXaml);
         Assert.Contains(
             "KeepCompactDockVisibleKey",

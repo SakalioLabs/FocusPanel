@@ -21,6 +21,9 @@ public sealed class EdgeHotZoneMonitor : IDisposable
     private readonly Func<long> _clock;
     private readonly TimeSpan _pollInterval;
     private EdgeHotZoneDetector _detector;
+    private string _panelEdge =
+        ShellPanelEdgePolicy.RightValue;
+    private int _dwellMilliseconds;
     private Rectangle _targetBounds;
     private CancellationTokenSource? _pollCancellation;
     private Task _pollTask = Task.CompletedTask;
@@ -88,9 +91,14 @@ public sealed class EdgeHotZoneMonitor : IDisposable
         }
 
         _pollInterval = pollInterval;
+        _dwellMilliseconds =
+            EdgeHotZoneSensitivityPolicy
+                .NormalizeDwell(
+                    (int)dwellMilliseconds);
         _detector = new EdgeHotZoneDetector(
             dwellMilliseconds:
-                dwellMilliseconds);
+                _dwellMilliseconds,
+            panelEdge: _panelEdge);
         RefreshDisplayBounds();
     }
 
@@ -197,11 +205,39 @@ public sealed class EdgeHotZoneMonitor : IDisposable
             if (_disposed)
                 return;
 
-            _detector =
-                new EdgeHotZoneDetector(
-                    dwellMilliseconds:
-                        normalized);
+            _dwellMilliseconds = normalized;
+            RecreateDetectorLocked();
         }
+    }
+
+    internal void SetPanelEdge(
+        string? panelEdge)
+    {
+        string normalized =
+            ShellPanelEdgePolicy
+                .NormalizeValue(panelEdge);
+        lock (_sync)
+        {
+            if (_disposed
+                || string.Equals(
+                    _panelEdge,
+                    normalized,
+                    StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _panelEdge = normalized;
+            RecreateDetectorLocked();
+        }
+    }
+
+    private void RecreateDetectorLocked()
+    {
+        _detector = new EdgeHotZoneDetector(
+            dwellMilliseconds:
+                _dwellMilliseconds,
+            panelEdge: _panelEdge);
     }
 
     public void Dispose()

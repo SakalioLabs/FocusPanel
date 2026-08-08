@@ -182,6 +182,8 @@ public partial class MainWindow :
         _toastManager = new FocusToastManager(
             this,
             _notificationCenter);
+        _toastManager.PanelEdgeValue =
+            _viewModel.PanelEdge;
         _updateInstallPreparation =
             new
                 UpdateInstallPreparationCoordinator();
@@ -296,13 +298,15 @@ public partial class MainWindow :
         object sender,
         RoutedEventArgs e)
     {
-        PositionAtTargetRightEdge();
+        PositionAtTargetEdge();
         HideShell();
         await _viewModel
             .WaitForShellPreferencesAsync();
         if (_isExit)
             return;
 
+        ApplyPanelEdgeLayout();
+        PositionAtTargetEdge();
         EnsureEdgeIndicator();
         EnsureHotZoneMonitor();
         _hotZoneMonitor?.Start();
@@ -559,6 +563,8 @@ public partial class MainWindow :
             GetTargetDisplayBounds,
             _viewModel
                 .HotZoneDwellMilliseconds);
+        _hotZoneMonitor.SetPanelEdge(
+            _viewModel.PanelEdge);
         _hotZoneMonitor.OpenRequested += (_, _) => OpenCompactDock();
         _hotZoneMonitor.AvailabilityChanged += isAvailable =>
         {
@@ -598,13 +604,48 @@ public partial class MainWindow :
         _edgeIndicator ??= new EdgeIndicatorWindow();
         _edgeIndicator.TargetValue =
             _viewModel.DisplayTargetMode;
+        _edgeIndicator.EdgeValue =
+            _viewModel.PanelEdge;
         _edgeIndicator.VerticalAnchorValue =
             _viewModel.PanelVerticalAnchor;
     }
 
-    private void PositionAtTargetRightEdge()
+    private void PositionAtTargetEdge()
     {
         ApplyPanelPlacement(Width);
+    }
+
+    private void ApplyPanelEdgeLayout()
+    {
+        bool isLeft =
+            ShellPanelEdgePolicy.IsLeft(
+                _viewModel.PanelEdge);
+        WorkspaceColumn.Width = isLeft
+            ? new GridLength(
+                CompactWidth,
+                GridUnitType.Pixel)
+            : new GridLength(
+                1,
+                GridUnitType.Star);
+        CompactColumn.Width = isLeft
+            ? new GridLength(
+                1,
+                GridUnitType.Star)
+            : new GridLength(
+                CompactWidth,
+                GridUnitType.Pixel);
+        Grid.SetColumn(
+            CompactDock,
+            isLeft ? 0 : 1);
+        Grid.SetColumn(
+            WorkspaceHost,
+            isLeft ? 1 : 0);
+        Grid.SetColumn(
+            OnboardingHost,
+            isLeft ? 1 : 0);
+        WorkspaceHost.Margin = isLeft
+            ? new Thickness(2, 12, 12, 12)
+            : new Thickness(12, 12, 2, 12);
     }
 
     private void ApplyPanelPlacement(double widthDip)
@@ -628,7 +669,8 @@ public partial class MainWindow :
                 ScreenMargin,
                 PreferredPanelHeight,
                 _viewModel
-                    .PanelVerticalAnchor);
+                    .PanelVerticalAnchor,
+                _viewModel.PanelEdge);
         Height = bounds.Height / (dpi / 96.0);
         CompactFixedEntryHeight =
             CompactDockDensityPolicy
@@ -802,7 +844,7 @@ public partial class MainWindow :
         if (result
             == VirtualDesktopPlacementResult.Moved)
         {
-            PositionAtTargetRightEdge();
+            PositionAtTargetEdge();
         }
     }
 
@@ -2335,6 +2377,24 @@ public partial class MainWindow :
         ScheduleAutoHide();
     }
 
+    private void PanelEdgeMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not MenuItem
+            {
+                Tag: string edge
+            })
+        {
+            return;
+        }
+
+        _viewModel.PanelEdge =
+            ShellPanelEdgePolicy
+                .NormalizeValue(edge);
+        ScheduleAutoHide();
+    }
+
     private void
         PanelDisplayTargetMenuItem_SubmenuOpened(
             object sender,
@@ -2402,7 +2462,10 @@ public partial class MainWindow :
         menu.PlacementTarget =
             PanelPositionHandleButton;
         menu.Placement =
-            PlacementMode.Left;
+            ShellPanelEdgePolicy.IsLeft(
+                _viewModel.PanelEdge)
+                ? PlacementMode.Right
+                : PlacementMode.Left;
         menu.IsOpen = true;
     }
 
@@ -2540,6 +2603,24 @@ public partial class MainWindow :
             item.IsChecked = string.Equals(
                 _viewModel.PanelVerticalAnchor,
                 anchor,
+                StringComparison.Ordinal);
+        }
+
+        foreach (MenuItem item
+                 in menu.Items.OfType<MenuItem>())
+        {
+            if (item.Tag is not string edge
+                || edge is not (
+                    ShellPanelEdgePolicy.LeftValue
+                    or ShellPanelEdgePolicy.RightValue))
+            {
+                continue;
+            }
+
+            item.IsCheckable = true;
+            item.IsChecked = string.Equals(
+                _viewModel.PanelEdge,
+                edge,
                 StringComparison.Ordinal);
         }
     }
@@ -3119,7 +3200,8 @@ public partial class MainWindow :
 
         Rectangle panelWorkArea =
             ShellDisplayTarget.GetWorkingArea(
-                _viewModel.DisplayTargetMode);
+                _viewModel.DisplayTargetMode,
+                _viewModel.PanelEdge);
         bool canMoveTaskWindows =
             task.WindowCount > 1
             && task.Windows.Any(window =>
@@ -3277,7 +3359,8 @@ public partial class MainWindow :
 
         Rectangle targetWorkArea =
             ShellDisplayTarget.GetWorkingArea(
-                _viewModel.DisplayTargetMode);
+                _viewModel.DisplayTargetMode,
+                _viewModel.PanelEdge);
         if (_coordinator.Windows
                 .CanMoveToDisplay(
                     window.Handle,
@@ -3867,11 +3950,15 @@ public partial class MainWindow :
                     this,
                     GetTargetDisplayBounds(),
                     (int)Math.Round(
-                        topLeft.X),
+                        ShellPanelEdgePolicy.IsLeft(
+                            _viewModel.PanelEdge)
+                            ? bottomRight.X
+                            : topLeft.X),
                     (int)Math.Round(
                         (topLeft.Y
                          + bottomRight.Y)
-                        / 2));
+                        / 2),
+                    _viewModel.PanelEdge);
             if (!shown)
                 return false;
 
@@ -4713,7 +4800,7 @@ public partial class MainWindow :
                 closeMenu: true);
             _viewModel
                 .RefreshDisplayTargetOptions();
-            PositionAtTargetRightEdge();
+            PositionAtTargetEdge();
             _toastManager.Reposition();
             _hotZoneMonitor?.RefreshDisplayBounds();
             _edgeIndicator?.Reposition();
@@ -4729,15 +4816,23 @@ public partial class MainWindow :
         {
             _edgeIndicator.TargetValue =
                 _viewModel.DisplayTargetMode;
+            _edgeIndicator.EdgeValue =
+                _viewModel.PanelEdge;
         }
-        PositionAtTargetRightEdge();
+        ApplyPanelEdgeLayout();
+        _toastManager.PanelEdgeValue =
+            _viewModel.PanelEdge;
+        _hotZoneMonitor?.SetPanelEdge(
+            _viewModel.PanelEdge);
+        PositionAtTargetEdge();
         _hotZoneMonitor?.RefreshDisplayBounds();
         _edgeIndicator?.Reposition();
     }
 
     private Rectangle GetTargetDisplayBounds() =>
         ShellDisplayTarget.GetBounds(
-            _viewModel.DisplayTargetMode);
+            _viewModel.DisplayTargetMode,
+            _viewModel.PanelEdge);
 
     private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
     {
@@ -4789,7 +4884,7 @@ public partial class MainWindow :
         else if (message == WmDpiChanged)
         {
             _ = Dispatcher.BeginInvoke(
-                new Action(PositionAtTargetRightEdge),
+                new Action(PositionAtTargetEdge),
                 DispatcherPriority.Loaded);
         }
 

@@ -76,7 +76,7 @@ public sealed class ShellSummonHotkeyPolicyTests
                 .Candidates.Count,
             attempts);
         Assert.Contains(
-            "右缘热区",
+            "所选屏幕边缘热区",
             result.DisplayText);
         Assert.Contains(
             "快速搜索",

@@ -48,10 +48,20 @@ internal static class ShellDisplayTarget
 
     internal static Rectangle GetBounds(
         string? value)
+        => GetBounds(
+            value,
+            ShellPanelEdgePolicy.RightValue);
+
+    internal static Rectangle GetBounds(
+        string? value,
+        string? panelEdge)
     {
         ShellDisplaySnapshot[] displays =
             CaptureDisplays();
-        return Select(displays, value)?.Bounds
+        return Select(
+                   displays,
+                   value,
+                   panelEdge)?.Bounds
             ?? Rectangle.Empty;
     }
 
@@ -59,17 +69,28 @@ internal static class ShellDisplayTarget
         string? value) =>
         GetWorkingArea(
             CaptureDisplays(),
-            value);
+            value,
+            ShellPanelEdgePolicy.RightValue);
+
+    internal static Rectangle GetWorkingArea(
+        string? value,
+        string? panelEdge) =>
+        GetWorkingArea(
+            CaptureDisplays(),
+            value,
+            panelEdge);
 
     internal static Rectangle GetWorkingArea(
         IReadOnlyCollection<ShellDisplaySnapshot>
             displays,
-        string? value)
+        string? value,
+        string? panelEdge = null)
     {
         ShellDisplaySnapshot? selected =
             Select(
                 displays,
-                value);
+                value,
+                panelEdge);
         if (selected == null)
             return Rectangle.Empty;
 
@@ -108,6 +129,15 @@ internal static class ShellDisplayTarget
     internal static ShellDisplaySnapshot? Select(
         IReadOnlyCollection<ShellDisplaySnapshot> displays,
         string? value)
+        => Select(
+            displays,
+            value,
+            ShellPanelEdgePolicy.RightValue);
+
+    internal static ShellDisplaySnapshot? Select(
+        IReadOnlyCollection<ShellDisplaySnapshot> displays,
+        string? value,
+        string? panelEdge)
     {
         if (displays.Count == 0)
             return null;
@@ -136,15 +166,46 @@ internal static class ShellDisplayTarget
                     return display;
             }
 
+            return SelectOutermost(
+                displays,
+                panelEdge);
+        }
+
+        if (Parse(normalized)
+            == ShellDisplayTargetMode.Primary)
+        {
             return Select(
+                displays,
+                ShellDisplayTargetMode.Primary);
+        }
+
+        return SelectOutermost(
+            displays,
+            panelEdge);
+    }
+
+    private static ShellDisplaySnapshot? SelectOutermost(
+        IReadOnlyCollection<ShellDisplaySnapshot> displays,
+        string? panelEdge)
+    {
+        if (displays.Count == 0)
+            return null;
+
+        return ShellPanelEdgePolicy.IsLeft(panelEdge)
+            ? displays
+                .OrderBy(display =>
+                    display.Bounds.Left)
+                .ThenByDescending(display =>
+                    display.IsPrimary)
+                .ThenBy(display =>
+                    display.Bounds.Top)
+                .ThenByDescending(display =>
+                    display.Bounds.Width)
+                .First()
+            : Select(
                 displays,
                 ShellDisplayTargetMode
                     .OutermostRight);
-        }
-
-        return Select(
-            displays,
-            Parse(normalized));
     }
 
     internal static ShellDisplayTargetMode Parse(
@@ -174,23 +235,29 @@ internal static class ShellDisplayTarget
 
     internal static IReadOnlyList<
         ShellDisplayTargetOption> GetOptions(
-        string? selectedValue = null) =>
+        string? selectedValue = null,
+        string? panelEdge = null) =>
         CreateOptions(
             CaptureDisplays(),
-            selectedValue);
+            selectedValue,
+            panelEdge);
 
     internal static IReadOnlyList<
         ShellDisplayTargetOption> CreateOptions(
         IReadOnlyCollection<ShellDisplaySnapshot>
             displays,
-        string? selectedValue = null)
+        string? selectedValue = null,
+        string? panelEdge = null)
     {
         var options =
             new List<ShellDisplayTargetOption>
             {
                 new(
                     OutermostRightValue,
-                    "自动：最右侧屏幕"),
+                    ShellPanelEdgePolicy.IsLeft(
+                        panelEdge)
+                        ? "自动：最左侧屏幕"
+                        : "自动：最右侧屏幕"),
                 new(
                     PrimaryValue,
                     "自动：Windows 主屏")

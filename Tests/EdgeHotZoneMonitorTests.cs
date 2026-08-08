@@ -149,16 +149,49 @@ public sealed class EdgeHotZoneMonitorTests
         }
     }
 
+    [Fact]
+    public void SetPanelEdge_RebuildsDetectorForLeftEdge()
+    {
+        using var opened =
+            new ManualResetEventSlim();
+        using var monitor =
+            CreateMonitor(
+                cursorProvider: () =>
+                    new Point(
+                        Screen.Left,
+                        Screen.Top + 100),
+                pollInterval:
+                    TimeSpan.FromMilliseconds(10));
+        monitor.SetPanelEdge(
+            ShellPanelEdgePolicy.LeftValue);
+        monitor.OpenRequested +=
+            (_, _) => opened.Set();
+
+        monitor.Start();
+        try
+        {
+            Assert.True(
+                opened.Wait(
+                    TimeSpan.FromSeconds(2)));
+        }
+        finally
+        {
+            monitor.Stop();
+        }
+    }
+
     private static EdgeHotZoneMonitor
         CreateMonitor(
             Func<bool>? isSuppressed = null,
             Action<Action>? postToUi = null,
+            Func<Point>? cursorProvider = null,
             TimeSpan? pollInterval = null) =>
             new(
                 () => Screen,
-                () => new Point(
-                    Screen.Right - 1,
-                    Screen.Top + 100),
+                cursorProvider
+                    ?? (() => new Point(
+                        Screen.Right - 1,
+                        Screen.Top + 100)),
                 isSuppressed
                     ?? (() => false),
                 postToUi

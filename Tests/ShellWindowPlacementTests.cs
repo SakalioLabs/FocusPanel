@@ -24,6 +24,27 @@ public sealed class ShellWindowPlacementTests
     }
 
     [Fact]
+    public void LeftEdgeAutoTarget_SelectsOutermostLeftDisplay()
+    {
+        var displays = new List<ShellDisplaySnapshot>
+        {
+            new(new Rectangle(0, 0, 1920, 1080), true),
+            new(new Rectangle(-2560, -180, 2560, 1440), false),
+            new(new Rectangle(1920, 0, 1600, 900), false)
+        };
+
+        ShellDisplaySnapshot? target =
+            ShellDisplayTarget.Select(
+                displays,
+                ShellDisplayTarget
+                    .OutermostRightValue,
+                ShellPanelEdgePolicy.LeftValue);
+
+        Assert.NotNull(target);
+        Assert.Equal(displays[1], target.Value);
+    }
+
+    [Fact]
     public void LeftSecondaryDisplay_KeepsPrimaryOuterRightEdge()
     {
         var displays = new List<ShellDisplaySnapshot>
@@ -306,6 +327,35 @@ public sealed class ShellWindowPlacementTests
         Assert.Equal(-15, bounds.Left + bounds.Width);
     }
 
+    [Fact]
+    public void NegativeDisplay_AnchorsExpandedPanelInsideLeftEdge()
+    {
+        var display = new Rectangle(
+            -2560,
+            -200,
+            2560,
+            1440);
+
+        PhysicalWindowBounds bounds =
+            ShellWindowPlacement
+                .CalculateAnchoredPanel(
+                    display,
+                    120,
+                    720,
+                    12,
+                    820,
+                    ShellPanelVerticalAnchorPolicy
+                        .CenterValue,
+                    ShellPanelEdgePolicy
+                        .LeftValue);
+
+        Assert.Equal(-2545, bounds.Left);
+        Assert.Equal(900, bounds.Width);
+        Assert.True(
+            bounds.Left + bounds.Width
+            <= display.Right);
+    }
+
     [Theory]
     [InlineData("Top", 12)]
     [InlineData("Center", 130)]
@@ -381,6 +431,25 @@ public sealed class ShellWindowPlacementTests
         Assert.Equal(120, bounds.Top);
         Assert.Equal(3, bounds.Width);
         Assert.Equal(1440, bounds.Height);
+    }
+
+    [Fact]
+    public void LeftEdgeIndicator_IsExactlyThreePhysicalPixels()
+    {
+        var display = new Rectangle(
+            -1920,
+            120,
+            1920,
+            1080);
+
+        PhysicalWindowBounds bounds =
+            ShellWindowPlacement.CalculateIndicator(
+                display,
+                3,
+                ShellPanelEdgePolicy.LeftValue);
+
+        Assert.Equal(-1920, bounds.Left);
+        Assert.Equal(3, bounds.Width);
     }
 
     [Theory]

@@ -1819,7 +1819,7 @@ internal static class UiSmokeTestRunner
                         "FocusEdgeIndicatorBrush")))
             {
                 failures.Add(
-                    "右缘运行指示条未使用动态主题令牌");
+                    "屏幕边缘运行指示条未使用动态主题令牌");
                 return;
             }
 
@@ -1852,7 +1852,7 @@ internal static class UiSmokeTestRunner
             }
 
             results.Add(
-                "PASS 右缘指示、遮罩与警告状态动态主题");
+                "PASS 屏幕边缘指示、遮罩与警告状态动态主题");
         }
         catch (Exception ex)
         {

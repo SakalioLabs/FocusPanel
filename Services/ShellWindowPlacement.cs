@@ -19,7 +19,8 @@ internal static class ShellWindowPlacement
         Rectangle screenBounds,
         uint dpi,
         double widthDip,
-        double marginDip)
+        double marginDip,
+        string? panelEdge = null)
     {
         double scale = NormalizeDpi(dpi) / 96.0;
         int width = Math.Max(
@@ -32,7 +33,9 @@ internal static class ShellWindowPlacement
             (int)Math.Round(320 * scale),
             screenBounds.Height - margin * 2);
         return new PhysicalWindowBounds(
-            screenBounds.Right - width - margin,
+            ShellPanelEdgePolicy.IsLeft(panelEdge)
+                ? screenBounds.Left + margin
+                : screenBounds.Right - width - margin,
             screenBounds.Top + margin,
             width,
             height);
@@ -40,10 +43,13 @@ internal static class ShellWindowPlacement
 
     internal static PhysicalWindowBounds CalculateIndicator(
         Rectangle screenBounds,
-        int widthPhysicalPixels) =>
+        int widthPhysicalPixels,
+        string? panelEdge = null) =>
         new(
-            screenBounds.Right
-                - Math.Max(1, widthPhysicalPixels),
+            ShellPanelEdgePolicy.IsLeft(panelEdge)
+                ? screenBounds.Left
+                : screenBounds.Right
+                  - Math.Max(1, widthPhysicalPixels),
             screenBounds.Top,
             Math.Max(1, widthPhysicalPixels),
             Math.Max(1, screenBounds.Height));
@@ -55,7 +61,8 @@ internal static class ShellWindowPlacement
             int widthPhysicalPixels,
             double marginDip,
             double desiredHeightDip,
-            string? verticalAnchor)
+            string? verticalAnchor,
+            string? panelEdge = null)
     {
         double scale = NormalizeDpi(dpi) / 96.0;
         int margin = Math.Max(
@@ -84,7 +91,9 @@ internal static class ShellWindowPlacement
             widthPhysicalPixels);
 
         return new PhysicalWindowBounds(
-            screenBounds.Right - width,
+            ShellPanelEdgePolicy.IsLeft(panelEdge)
+                ? screenBounds.Left
+                : screenBounds.Right - width,
             top,
             width,
             height);
@@ -96,7 +105,8 @@ internal static class ShellWindowPlacement
         double widthDip,
         double marginDip,
         double desiredHeightDip,
-        string? verticalAnchor)
+        string? verticalAnchor,
+        string? panelEdge = null)
     {
         double scale = NormalizeDpi(dpi) / 96.0;
         int width = Math.Max(
@@ -126,7 +136,9 @@ internal static class ShellWindowPlacement
                     verticalAnchor);
 
         return new PhysicalWindowBounds(
-            screenBounds.Right - width - margin,
+            ShellPanelEdgePolicy.IsLeft(panelEdge)
+                ? screenBounds.Left + margin
+                : screenBounds.Right - width - margin,
             top,
             width,
             height);

@@ -7,17 +7,22 @@ internal sealed class EdgeHotZoneDetector
     private readonly int _edgeWidth;
     private readonly long _dwellMilliseconds;
     private readonly int _resetDistance;
+    private readonly bool _isLeftEdge;
     private long? _enteredAtMilliseconds;
     private bool _isLatched;
 
     public EdgeHotZoneDetector(
         int edgeWidth = 12,
         long dwellMilliseconds = 100,
-        int resetDistance = 32)
+        int resetDistance = 32,
+        string? panelEdge = null)
     {
         _edgeWidth = edgeWidth;
         _dwellMilliseconds = dwellMilliseconds;
         _resetDistance = resetDistance;
+        _isLeftEdge =
+            ShellPanelEdgePolicy.IsLeft(
+                panelEdge);
     }
 
     public bool Update(Point cursor, Rectangle screenBounds, long nowMilliseconds)
@@ -33,15 +38,25 @@ internal sealed class EdgeHotZoneDetector
             && cursor.Y < screenBounds.Bottom;
         bool withinEdge =
             withinVerticalBounds
-            && cursor.X >= screenBounds.Right - _edgeWidth
-            && cursor.X < screenBounds.Right;
+            && (_isLeftEdge
+                ? cursor.X >= screenBounds.Left
+                  && cursor.X < screenBounds.Left
+                      + _edgeWidth
+                : cursor.X >= screenBounds.Right
+                      - _edgeWidth
+                  && cursor.X < screenBounds.Right);
 
         if (_isLatched)
         {
             bool leftResetZone =
                 !withinVerticalBounds
-                || cursor.X < screenBounds.Right - _resetDistance
-                || cursor.X >= screenBounds.Right;
+                || (_isLeftEdge
+                    ? cursor.X >= screenBounds.Left
+                          + _resetDistance
+                      || cursor.X < screenBounds.Left
+                    : cursor.X < screenBounds.Right
+                          - _resetDistance
+                      || cursor.X >= screenBounds.Right);
             if (leftResetZone)
                 Reset();
 

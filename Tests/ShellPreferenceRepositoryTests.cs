@@ -46,6 +46,11 @@ public sealed class ShellPreferenceRepositoryTests
                 .Default
                 .EnableTaskbarSlotHotkeys);
         Assert.Equal(
+            ShellPanelEdgePolicy.RightValue,
+            ShellPreferenceSnapshot
+                .Default
+                .PanelEdge);
+        Assert.Equal(
             ShellAutoHideDelayPolicy
                 .DefaultMilliseconds,
             ShellPreferenceSnapshot
@@ -82,6 +87,7 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         "Unsupported",
                         "Unsupported",
+                        "Unsupported",
                         999,
                         999,
                         true,
@@ -109,6 +115,9 @@ public sealed class ShellPreferenceRepositoryTests
                 .CenterValue,
             snapshot.PanelVerticalAnchor);
         Assert.Equal(
+            ShellPanelEdgePolicy.RightValue,
+            snapshot.PanelEdge);
+        Assert.Equal(
             ShellAutoHideDelayPolicy
                 .DefaultMilliseconds,
             snapshot.AutoHideDelayMilliseconds);
@@ -133,6 +142,8 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         false,
                         @"device:  \\.\DISPLAY2  ",
+                        ShellPanelEdgePolicy
+                            .LeftValue,
                         ShellPanelVerticalAnchorPolicy
                             .BottomValue,
                         800,
@@ -147,6 +158,9 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             @"Device:\\.\DISPLAY2",
             snapshot.DisplayTargetMode);
+        Assert.Equal(
+            ShellPanelEdgePolicy.LeftValue,
+            snapshot.PanelEdge);
         Assert.Equal(
             ShellPanelVerticalAnchorPolicy
                 .BottomValue,
@@ -190,6 +204,8 @@ public sealed class ShellPreferenceRepositoryTests
                         false,
                         ShellDisplayTarget
                             .PrimaryValue,
+                        ShellPanelEdgePolicy
+                            .RightValue,
                         ShellPanelVerticalAnchorPolicy
                             .TopValue,
                         1200,

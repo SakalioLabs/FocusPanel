@@ -436,6 +436,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(PanelVerticalAnchorLabel))]
+    private string panelEdge =
+        ShellPanelEdgePolicy.RightValue;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(PanelVerticalAnchorLabel))]
     private string panelVerticalAnchor =
         ShellPanelVerticalAnchorPolicy
             .CenterValue;
@@ -911,13 +917,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ? "尚未读取到运行应用，单击刷新"
             : $"正在运行 {RunningApplicationCount} 个应用";
     public string PanelVerticalAnchorLabel =>
-        ShellPanelVerticalAnchorPolicy
+        (ShellPanelEdgePolicy.IsLeft(PanelEdge)
+            ? "左"
+            : "右")
+        + " · "
+        + (ShellPanelVerticalAnchorPolicy
             .Parse(PanelVerticalAnchor) switch
         {
-            ShellPanelVerticalAnchor.Top => "位置 · 上",
-            ShellPanelVerticalAnchor.Bottom => "位置 · 下",
-            _ => "位置 · 中"
-        };
+            ShellPanelVerticalAnchor.Top => "上",
+            ShellPanelVerticalAnchor.Bottom => "下",
+            _ => "中"
+        });
     public IReadOnlyList<TaskbarAppItem>
         FilteredBackgroundApps =>
             BackgroundAppFilterPolicy.Apply(
@@ -1434,7 +1444,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IReadOnlyList<ShellDisplayTargetOption>
             options =
                 ShellDisplayTarget.GetOptions(
-                    selectedValue);
+                    selectedValue,
+                    PanelEdge);
         _refreshingDisplayTargetOptions = true;
         try
         {
@@ -1495,6 +1506,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             DisplayTargetMode =
                 preferenceSnapshot
                     .DisplayTargetMode;
+            PanelEdge =
+                preferenceSnapshot.PanelEdge;
             PanelVerticalAnchor =
                 preferenceSnapshot
                     .PanelVerticalAnchor;
@@ -1761,6 +1774,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
             QueueShellPreference(
                 ShellPreferenceRepository
                     .PanelVerticalAnchorKey,
+                normalized);
+        }
+    }
+
+    partial void OnPanelEdgeChanged(
+        string value)
+    {
+        string normalized =
+            ShellPanelEdgePolicy
+                .NormalizeValue(value);
+        if (!string.Equals(
+                normalized,
+                value,
+                StringComparison.Ordinal))
+        {
+            PanelEdge = normalized;
+            return;
+        }
+
+        DisplayTargetChanged?.Invoke();
+        RefreshDisplayTargetOptions();
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .PanelEdgeKey,
                 normalized);
         }
     }
@@ -2926,7 +2965,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         System.Drawing.Rectangle targetWorkArea =
             ShellDisplayTarget.GetWorkingArea(
-                DisplayTargetMode);
+                DisplayTargetMode,
+                PanelEdge);
         CompleteTaskbarWindowAction(
             SystemActionExecution.Try(
                 () => _windowTracker.MoveToDisplay(
@@ -2945,7 +2985,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         System.Drawing.Rectangle targetWorkArea =
             ShellDisplayTarget.GetWorkingArea(
-                DisplayTargetMode);
+                DisplayTargetMode,
+                PanelEdge);
         WindowBatchMoveResult result =
             WindowBatchMoveCoordinator.Execute(
                 task.Windows,

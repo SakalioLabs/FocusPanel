@@ -16,7 +16,7 @@ internal readonly record struct ShellHotkeyRegistration(
         Unavailable { get; } =
         new(
             false,
-            "快速搜索快捷键注册失败；请使用右缘热区");
+            "快速搜索快捷键注册失败；请使用所选屏幕边缘热区");
 }
 
 internal static class ShellSummonHotkeyPolicy

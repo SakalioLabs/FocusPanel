@@ -102,7 +102,7 @@ public sealed class UiSmokeTestProcessTests
                 "PASS Fluent 切换与分段选择动态强调状态",
                 report);
             Assert.Contains(
-                "PASS 右缘指示、遮罩与警告状态动态主题",
+                "PASS 屏幕边缘指示、遮罩与警告状态动态主题",
                 report);
             Assert.Contains(
                 "PASS 公开虚拟桌面接口识别当前 WPF 窗口",

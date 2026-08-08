@@ -70,6 +70,51 @@ public sealed class EdgeHotZoneDetectorTests
     }
 
     [Fact]
+    public void LeftEdgeDetector_DwellsAndResetsTowardScreenInterior()
+    {
+        var detector = new EdgeHotZoneDetector(
+            panelEdge:
+                ShellPanelEdgePolicy.LeftValue);
+        var screen = new Rectangle(
+            -1920,
+            -100,
+            1920,
+            1080);
+        var edgePoint = new Point(-1920, 300);
+
+        Assert.False(
+            detector.Update(
+                edgePoint,
+                screen,
+                0));
+        Assert.True(
+            detector.Update(
+                edgePoint,
+                screen,
+                100));
+        Assert.False(
+            detector.Update(
+                new Point(-1900, 300),
+                screen,
+                200));
+        Assert.False(
+            detector.Update(
+                new Point(-1888, 300),
+                screen,
+                300));
+        Assert.False(
+            detector.Update(
+                edgePoint,
+                screen,
+                400));
+        Assert.True(
+            detector.Update(
+                edgePoint,
+                screen,
+                500));
+    }
+
+    [Fact]
     public void PointerOutsideVerticalBounds_DoesNotTrigger()
     {
         var detector = new EdgeHotZoneDetector();
