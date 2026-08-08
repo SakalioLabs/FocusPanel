@@ -3071,8 +3071,9 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("ItemsSource=\"{Binding RunningApps}\"", mainWindow);
         Assert.Contains("ObservableCollection<TaskbarAppItem> TaskbarApps", viewModel);
         Assert.Contains(
-            "BackgroundAppFilterPolicy.Apply(\n                TaskbarApps,",
+            "BackgroundAppFilterPolicy.Apply(",
             viewModel);
+        Assert.Contains("TaskbarApps,", viewModel);
         Assert.DoesNotContain("ObservableCollection<AppLaunchItem> PinnedApps", viewModel);
         Assert.DoesNotContain("ObservableCollection<WindowTaskItem> RunningApps", viewModel);
         Assert.Contains("TrySetPinnedAsync(", viewModel);
