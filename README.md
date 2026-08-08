@@ -1,5 +1,13 @@
 # FocusPanel
 
+> 0.11.59 把“显示隐藏图标”这条错误依赖彻底收口为 Panel 自有的“应用与窗口总览”：入口只展示统一应用栏、后台宿主和可管理窗口，不调用 Windows 任务栏抽屉。桌面收纳的完整刷新现在会继续读取每个项目持久化的自定义 `.ico`，不再恢复成系统默认图标；图标模式也改为使用收纳盒与滚动视口的真实宽度计算列数，以固定 12px 节奏居中排列，避免错误单列和不规则空洞。
+
+![Panel 自有应用总览、自定义 ICO 与自适应收纳网格](docs/images/panel-owned-overview-ico-adaptive-grid.svg)
+
+> 0.11.58 让另一类托盘式后台应用进入统一应用栏：如果应用没有普通顶层窗口、只保留 Windows 消息窗口，Panel 现在会通过微软公开的 [`FindWindowEx(HWND_MESSAGE, …)`](https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-findwindowexw) 找到宿主，并沿用现有应用身份、图标、固定和点击打开语义。消息窗口、隐藏宿主与可见窗口按 AUMID/可执行路径合并，同一浏览器或多进程程序不会重复堆图标；实现不轮询全部进程、不读取 Explorer。没有统一公开协议的第三方托盘菜单仍不会被复制，但“应用入口完全消失”的范围进一步缩小。
+
+![消息窗口后台应用进入 FocusPanel 统一应用栏](docs/images/panel-message-only-apps.svg)
+
 > 0.11.57 补上原生任务栏隐藏后非常关键的“应用请求注意”反馈：聊天消息、安装确认或后台操作触发 Windows 系统警报时，Panel 中对应应用出现单层琥珀色 `!`，完整窗口总览也标出具体窗口；图标滚出可视区域时会自动露出一次，但不打乱固定顺序。状态来自微软公开 [`EVENT_SYSTEM_ALERT`](https://learn.microsoft.com/windows/win32/winauto/event-constants) 与 [`SetWinEventHook`](https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-setwineventhook)，复用现有事件快照，不轮询、不读取 Explorer。应用真正切到前台、窗口关闭或跟踪停止后徽标立即清除，不会留下永久假提醒。
 
 ![Panel 在统一任务栏中显示并清除应用注意请求](docs/images/panel-app-attention.svg)

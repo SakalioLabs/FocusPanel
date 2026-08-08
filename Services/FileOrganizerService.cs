@@ -603,7 +603,8 @@ public class FileOrganizerService : IDisposable
 
     private DesktopFile BuildRecoveryItem(
         DesktopPreferenceSnapshot preference)
-        => new()
+    {
+        var item = new DesktopFile
         {
             Name = preference.FileName,
             FullPath = preference.ManagedPath
@@ -617,8 +618,25 @@ public class FileOrganizerService : IDisposable
             IsHidden = true,
             NeedsRecovery = true,
             DesktopX = preference.X ?? 16,
-            DesktopY = preference.Y ?? 16
+            DesktopY = preference.Y ?? 16,
+            CustomIconPath = preference.CustomIconPath,
+            CustomIconIndex = preference.CustomIconIndex ?? 0
         };
+        try
+        {
+            item.Icon = IconHelper.GetIcon(
+                item.FullPath,
+                item.CustomIconPath,
+                item.CustomIconIndex,
+                true);
+        }
+        catch
+        {
+            // Keep the recovery action available even if its icon source is
+            // temporarily unavailable.
+        }
+        return item;
+    }
 
     private static void MarkRecoveryRequired(int preferenceId)
     {
@@ -790,10 +808,11 @@ public class FileOrganizerService : IDisposable
                         if (!isCollected && IsSystemHidden(file.Attributes)) continue;
                         desktopRootFiles.Add(file.Name);
 
-                        var df = BuildDesktopFile(file.FullName, file.Name, file.Extension,
-                            file.Length, file.CreationTime, ClassifyFile(file), isCollected, pref?.X, pref?.Y, fileList.Count);
-                        try { df.Icon = IconHelper.GetIcon(file.FullName, true); } catch { }
-                        fileList.Add(df);
+                        fileList.Add(BuildDesktopFileFromPath(
+                            file.FullName,
+                            isCollected,
+                            pref,
+                            fileList.Count));
                     }
 
                     foreach (var dir in new DirectoryInfo(desktopRoot).GetDirectories())
@@ -805,10 +824,11 @@ public class FileOrganizerService : IDisposable
                         if (!isCollected && IsSystemHidden(dir.Attributes)) continue;
                         desktopRootFiles.Add(dir.Name);
 
-                        var df = BuildDesktopFile(dir.FullName, dir.Name, "", 0,
-                            dir.CreationTime, "Folder", isCollected, pref?.X, pref?.Y, fileList.Count);
-                        try { df.Icon = IconHelper.GetIcon(dir.FullName, true); } catch { }
-                        fileList.Add(df);
+                        fileList.Add(BuildDesktopFileFromPath(
+                            dir.FullName,
+                            isCollected,
+                            pref,
+                            fileList.Count));
                     }
                 }
 
@@ -826,10 +846,11 @@ public class FileOrganizerService : IDisposable
                             if (desktopRootFiles.Contains(fi.Name)) continue;
 
                             preferences.TryGetValue(fi.Name, out var pref);
-                            var df = BuildDesktopFile(fi.FullName, fi.Name, fi.Extension,
-                                fi.Length, fi.CreationTime, ClassifyFile(fi), true, pref?.X, pref?.Y, fileList.Count);
-                            try { df.Icon = IconHelper.GetIcon(fi.FullName, true); } catch { }
-                            fileList.Add(df);
+                            fileList.Add(BuildDesktopFileFromPath(
+                                fi.FullName,
+                                true,
+                                pref,
+                                fileList.Count));
                         }
 
                         foreach (var dirPath in Directory.GetDirectories(partitionDir))
@@ -838,10 +859,11 @@ public class FileOrganizerService : IDisposable
                             if (desktopRootFiles.Contains(di.Name)) continue;
 
                             preferences.TryGetValue(di.Name, out var pref);
-                            var df = BuildDesktopFile(di.FullName, di.Name, "", 0,
-                                di.CreationTime, "Folder", true, pref?.X, pref?.Y, fileList.Count);
-                            try { df.Icon = IconHelper.GetIcon(di.FullName, true); } catch { }
-                            fileList.Add(df);
+                            fileList.Add(BuildDesktopFileFromPath(
+                                di.FullName,
+                                true,
+                                pref,
+                                fileList.Count));
                         }
                     }
                 }
@@ -855,18 +877,7 @@ public class FileOrganizerService : IDisposable
                             p.FileName,
                             StringComparison.OrdinalIgnoreCase))))
                 {
-                    fileList.Add(new DesktopFile
-                    {
-                        Name = pref.FileName,
-                        FullPath = pref.ManagedPath ?? Path.Combine(_desktopPath, pref.FileName),
-                        Extension = Path.GetExtension(pref.FileName),
-                        FileType = "Recovery",
-                        CreatedAt = DateTime.Now,
-                        IsHidden = true,
-                        NeedsRecovery = true,
-                        DesktopX = pref.X ?? 16,
-                        DesktopY = pref.Y ?? 16
-                    });
+                    fileList.Add(BuildRecoveryItem(pref));
                 }
 
                 return fileList.OrderByDescending(f => f.FileType == "Folder").ThenBy(f => f.Name).ToList();

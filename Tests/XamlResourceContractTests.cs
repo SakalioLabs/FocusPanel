@@ -831,7 +831,7 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.Contains(
-            "Content=\"后台应用与窗口 · Panel\"",
+            "Content=\"应用与窗口总览 · Panel\"",
             mainWindow);
         Assert.Contains(
             "Click=\"StatusCenterWindowOverview_Click\"",
@@ -1643,7 +1643,7 @@ public sealed class XamlResourceContractTests
             "Visibility=\"{Binding HasUnreadPanelNotifications",
             compactDock);
         Assert.Contains(
-            "Header=\"后台应用与窗口 · Panel\"",
+            "Header=\"应用与窗口总览 · Panel\"",
             compactDock);
         Assert.Contains(
             "StatusCenterWindowOverview_Click",

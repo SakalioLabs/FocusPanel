@@ -8,6 +8,41 @@ namespace FocusPanel.Tests;
 public sealed class FileOrganizerLifecycleContractTests
 {
     [Fact]
+    public void FullRefresh_PreservesStoredCustomIconsForEveryItemSource()
+    {
+        string service = ReadService();
+        Match refreshCore = Regex.Match(
+            service,
+            @"private async Task RefreshFilesCore\(\)(?<body>[\s\S]*?)private IEnumerable<string> GetDesktopRoots");
+
+        Assert.True(refreshCore.Success);
+        string body = refreshCore.Groups["body"].Value;
+        Assert.Equal(
+            4,
+            Regex.Matches(
+                body,
+                @"BuildDesktopFileFromPath\(")
+                .Count);
+        Assert.DoesNotContain(
+            "IconHelper.GetIcon(",
+            body);
+        Assert.Contains(
+            "BuildRecoveryItem(pref)",
+            body);
+
+        Match recovery = Regex.Match(
+            service,
+            @"private DesktopFile BuildRecoveryItem\((?<body>[\s\S]*?)private static void MarkRecoveryRequired");
+        Assert.True(recovery.Success);
+        Assert.Contains(
+            "CustomIconPath = preference.CustomIconPath",
+            recovery.Groups["body"].Value);
+        Assert.Contains(
+            "item.CustomIconPath",
+            recovery.Groups["body"].Value);
+    }
+
+    [Fact]
     public void RefreshPaths_ShareOneGateWithoutRecursiveAcquisition()
     {
         string service = ReadService();

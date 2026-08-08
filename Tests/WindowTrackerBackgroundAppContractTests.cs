@@ -25,6 +25,18 @@ public sealed class WindowTrackerBackgroundAppContractTests
         Assert.Contains(
             "BackgroundAppSnapshotComposer.Append(",
             tracker);
+        Assert.Contains(
+            "CaptureMessageOnlyBackgroundOwners(",
+            tracker);
+        Assert.Contains(
+            "MessageOnlyWindowEnumerator.Enumerate(",
+            tracker);
+        Assert.Contains(
+            "NativeMethods.FindWindowEx(",
+            tracker);
+        Assert.Contains(
+            "new(-3)",
+            tracker);
         Assert.DoesNotContain(
             "Process.GetProcesses()",
             tracker);

@@ -161,6 +161,13 @@ public sealed class ViewportVirtualizingPanel :
                     _layout.ItemsPerRow,
                     _cellWidth,
                     IsWrapping);
+        double rowOriginX =
+            ViewportVirtualizationCalculator
+                .GetWrappedRowOriginX(
+                    finalSize.Width,
+                    _layout.ItemsPerRow,
+                    arrangedCellWidth,
+                    IsWrapping);
         IItemContainerGenerator generator =
             ItemContainerGenerator;
         for (int childIndex = 0;
@@ -184,7 +191,8 @@ public sealed class ViewportVirtualizingPanel :
                 itemIndex
                 % _layout.ItemsPerRow;
             double x = IsWrapping
-                ? column * arrangedCellWidth
+                ? rowOriginX
+                    + column * arrangedCellWidth
                 : 0;
             double width = IsWrapping
                 ? arrangedCellWidth
@@ -446,15 +454,42 @@ public sealed class ViewportVirtualizingPanel :
         {
             parentWidth = parent.ActualWidth;
         }
+        ItemsControl? itemsOwner =
+            ItemsControl.GetItemsOwner(this);
+        double itemsOwnerWidth =
+            itemsOwner?.ActualWidth ?? 0;
+        double ancestorWidth =
+            ResolveAncestorWidth();
         return ViewportVirtualizationCalculator
             .ResolvePanelWidth(
                 availableWidth,
                 ActualWidth,
                 parentWidth,
+                itemsOwnerWidth,
+                ancestorWidth,
                 viewportWidth,
                 Math.Max(
                     1,
                     ItemWidth + ItemSpacing));
+    }
+
+    private double ResolveAncestorWidth()
+    {
+        double width = 0;
+        DependencyObject? current =
+            VisualTreeHelper.GetParent(this);
+        while (current != null
+               && !ReferenceEquals(current, _scrollOwner))
+        {
+            if (current is FrameworkElement element)
+            {
+                width = Math.Max(
+                    width,
+                    element.ActualWidth);
+            }
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return width;
     }
 
     private void Panel_Loaded(
@@ -480,7 +515,8 @@ public sealed class ViewportVirtualizingPanel :
     private void AttachWidthOwner()
     {
         FrameworkElement? owner =
-            VisualTreeHelper.GetParent(this)
+            ItemsControl.GetItemsOwner(this)
+            ?? VisualTreeHelper.GetParent(this)
                 as FrameworkElement;
         if (ReferenceEquals(owner, _widthOwner))
             return;

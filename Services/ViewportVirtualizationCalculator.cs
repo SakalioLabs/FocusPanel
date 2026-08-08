@@ -33,10 +33,32 @@ internal static class ViewportVirtualizationCalculator
             : panelWidth;
     }
 
+    internal static double GetWrappedRowOriginX(
+        double panelWidth,
+        int itemsPerRow,
+        double cellWidth,
+        bool wrap)
+    {
+        if (!wrap)
+            return 0;
+
+        panelWidth = NormalizeLength(panelWidth, 1);
+        cellWidth = NormalizeLength(cellWidth, 1);
+        int safeColumns = Math.Max(1, itemsPerRow);
+        double occupiedWidth = Math.Min(
+            panelWidth,
+            safeColumns * cellWidth);
+        return Math.Max(
+            0,
+            (panelWidth - occupiedWidth) / 2);
+    }
+
     internal static double ResolvePanelWidth(
         double availableWidth,
         double actualWidth,
         double parentWidth,
+        double itemsOwnerWidth,
+        double ancestorWidth,
         double viewportWidth,
         double fallbackWidth)
     {
@@ -50,6 +72,12 @@ internal static class ViewportVirtualizationCalculator
         resolved = MaxFinitePositive(
             resolved,
             parentWidth);
+        resolved = MaxFinitePositive(
+            resolved,
+            itemsOwnerWidth);
+        resolved = MaxFinitePositive(
+            resolved,
+            ancestorWidth);
         resolved = MaxFinitePositive(
             resolved,
             viewportWidth);

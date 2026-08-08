@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="560" viewBox="0 0 1180 560" role="img" aria-labelledby="title desc">
+  <title id="title">Panel 自有应用总览、自定义 ICO 与自适应收纳网格</title>
+  <desc id="desc">展示应用入口不再唤起 Windows 隐藏图标抽屉，自定义 ICO 在刷新后保留，以及收纳图标按照真实宽度固定间距居中排列。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111827"/><stop offset="1" stop-color="#203047"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff" stop-opacity=".16"/><stop offset="1" stop-color="#8ec5ff" stop-opacity=".07"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-opacity=".25"/></filter>
+  </defs>
+  <rect width="1180" height="560" rx="30" fill="url(#bg)"/>
+  <text x="52" y="62" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">不借原生任务栏，Panel 自己完成入口与收纳</text>
+  <text x="52" y="94" fill="#9fb3ca" font-family="Segoe UI, Microsoft YaHei" font-size="15">0.11.59 · 自有应用总览 / ICO 持久化 / 固定节奏自适应网格</text>
+
+  <g transform="translate(52 130)" filter="url(#shadow)">
+    <rect width="316" height="376" rx="22" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".16"/>
+    <circle cx="42" cy="45" r="16" fill="#3b82f6"/><text x="73" y="52" fill="#f5f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">应用与窗口总览</text>
+    <rect x="22" y="82" width="272" height="58" rx="14" fill="#0f172a" fill-opacity=".58"/>
+    <circle cx="52" cy="111" r="15" fill="#60a5fa"/><text x="80" y="107" fill="#eaf2ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">统一应用栏与可见窗口</text><text x="80" y="127" fill="#8fa5bf" font-family="Segoe UI, Microsoft YaHei" font-size="12">Panel 内切换、最小化与关闭</text>
+    <rect x="22" y="151" width="272" height="58" rx="14" fill="#0f172a" fill-opacity=".58"/>
+    <circle cx="52" cy="180" r="15" fill="#34d399"/><text x="80" y="176" fill="#eaf2ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">后台宿主与消息窗口</text><text x="80" y="196" fill="#8fa5bf" font-family="Segoe UI, Microsoft YaHei" font-size="12">公开窗口接口识别并去重</text>
+    <path d="M44 257h230" stroke="#fb7185" stroke-width="3" stroke-linecap="round"/><text x="44" y="248" fill="#fda4af" font-family="Segoe UI, Microsoft YaHei" font-size="14">Windows“显示隐藏图标”</text>
+    <text x="44" y="288" fill="#c9d7e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">不调用 Shell_TrayWnd</text><text x="44" y="315" fill="#c9d7e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">不读取 Explorer 私有结构</text><text x="44" y="342" fill="#c9d7e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">不靠任务栏抽屉兜底</text>
+  </g>
+
+  <g transform="translate(392 130)" filter="url(#shadow)">
+    <rect width="250" height="376" rx="22" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".16"/>
+    <text x="24" y="48" fill="#f5f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">自定义 ICO 不丢</text>
+    <rect x="55" y="88" width="140" height="140" rx="28" fill="#17263a" stroke="#71b7ff" stroke-opacity=".42"/>
+    <path d="M94 177v-52h62v52z" fill="#60a5fa"/><path d="M104 125v-15h42v15" fill="none" stroke="#bfdbfe" stroke-width="7"/><circle cx="125" cy="151" r="12" fill="#eff6ff"/>
+    <text x="125" y="260" text-anchor="middle" fill="#eaf2ff" font-family="Segoe UI, Microsoft YaHei" font-size="15">完整刷新后仍读取</text><text x="125" y="284" text-anchor="middle" fill="#91a7c0" font-family="Consolas, Segoe UI" font-size="13">CustomIconPath</text>
+    <rect x="28" y="313" width="194" height="38" rx="12" fill="#123151"/><text x="125" y="338" text-anchor="middle" fill="#93c5fd" font-family="Segoe UI, Microsoft YaHei" font-size="14">源文件隐藏也不受影响</text>
+  </g>
+
+  <g transform="translate(666 130)" filter="url(#shadow)">
+    <rect width="462" height="376" rx="22" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".16"/>
+    <text x="24" y="48" fill="#f5f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">真实宽度 · 固定 12px 节奏 · 整组居中</text>
+    <rect x="24" y="76" width="414" height="266" rx="18" fill="#0f172a" fill-opacity=".55" stroke="#7dd3fc" stroke-opacity=".25"/>
+    <g fill="#22354c" stroke="#79bfff" stroke-opacity=".24">
+      <rect x="48" y="100" width="78" height="98" rx="14"/><rect x="138" y="100" width="78" height="98" rx="14"/><rect x="228" y="100" width="78" height="98" rx="14"/><rect x="318" y="100" width="78" height="98" rx="14"/>
+      <rect x="48" y="210" width="78" height="98" rx="14"/><rect x="138" y="210" width="78" height="98" rx="14"/><rect x="228" y="210" width="78" height="98" rx="14"/>
+    </g>
+    <g fill="#93c5fd"><circle cx="87" cy="136" r="16"/><circle cx="177" cy="136" r="16"/><circle cx="267" cy="136" r="16"/><circle cx="357" cy="136" r="16"/><circle cx="87" cy="246" r="16"/><circle cx="177" cy="246" r="16"/><circle cx="267" cy="246" r="16"/></g>
+    <g fill="#cbd9ea" font-family="Segoe UI, Microsoft YaHei" font-size="11" text-anchor="middle"><text x="87" y="178">设计</text><text x="177" y="178">工作</text><text x="267" y="178">学习</text><text x="357" y="178">工具</text><text x="87" y="288">图片</text><text x="177" y="288">文档</text><text x="267" y="288">其他</text></g>
+  </g>
+</svg>

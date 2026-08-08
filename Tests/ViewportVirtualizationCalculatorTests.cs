@@ -28,10 +28,12 @@ public sealed class ViewportVirtualizationCalculatorTests
                     availableWidth: 112,
                     actualWidth: 112,
                     parentWidth: 648,
+                    itemsOwnerWidth: 650,
+                    ancestorWidth: 652,
                     viewportWidth: 646,
                     fallbackWidth: 112);
 
-        Assert.Equal(648, width);
+        Assert.Equal(652, width);
     }
 
     [Fact]
@@ -43,10 +45,40 @@ public sealed class ViewportVirtualizationCalculatorTests
                     availableWidth: double.PositiveInfinity,
                     actualWidth: 0,
                     parentWidth: double.NaN,
+                    itemsOwnerWidth: 0,
+                    ancestorWidth: -1,
                     viewportWidth: -1,
                     fallbackWidth: 112);
 
         Assert.Equal(112, width);
+    }
+
+    [Fact]
+    public void WrappedRow_IsCenteredInsideUnusedWidth()
+    {
+        double origin =
+            ViewportVirtualizationCalculator
+                .GetWrappedRowOriginX(
+                    panelWidth: 650,
+                    itemsPerRow: 5,
+                    cellWidth: 112,
+                    wrap: true);
+
+        Assert.Equal(45, origin);
+    }
+
+    [Fact]
+    public void ListRow_HasNoHorizontalOriginOffset()
+    {
+        double origin =
+            ViewportVirtualizationCalculator
+                .GetWrappedRowOriginX(
+                    panelWidth: 650,
+                    itemsPerRow: 1,
+                    cellWidth: 112,
+                    wrap: false);
+
+        Assert.Equal(0, origin);
     }
 
     [Fact]

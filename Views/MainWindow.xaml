@@ -651,10 +651,10 @@
                                         Style="{StaticResource FocusSecondaryButton}"
                                         MinHeight="44"
                                         Margin="0,0,0,8"
-                                        Content="后台应用与窗口 · Panel"
+                                        Content="应用与窗口总览 · Panel"
                                         Click="StatusCenterWindowOverview_Click"
-                                        AutomationProperties.Name="打开 Panel 窗口总览"
-                                        ToolTip="完全在 Panel 内查看、启动、切换和管理可操作应用；第三方专属托盘菜单无法由 Windows 公共接口搬入 Panel"/>
+                                        AutomationProperties.Name="打开 Panel 自有应用与窗口总览"
+                                        ToolTip="只打开 Panel 自有应用总览，不调用 Windows 任务栏或隐藏图标抽屉"/>
                                 <UniformGrid Columns="5"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="Panel 状态详情">
@@ -2248,7 +2248,7 @@
                                         <MenuItem Header="应用音量 · Panel"
                                                   Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
                                                   Click="PanelStatusDetailMenuItem_Click"/>
-                                        <MenuItem Header="后台应用与窗口 · Panel"
+                                        <MenuItem Header="应用与窗口总览 · Panel"
                                                   Click="StatusCenterWindowOverview_Click"/>
                                         <MenuItem Header="Panel 通知"
                                                   Tag="{x:Static services:StatusCenterDetail.PanelNotifications}"

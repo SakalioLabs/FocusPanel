@@ -28,6 +28,8 @@ public sealed class WindowTracker : IWindowTracker
     private const long WsExToolWindow = 0x00000080L;
     private const long WsExNoActivate = 0x08000000L;
     private const int DwmwaCloaked = 14;
+    private static readonly IntPtr HwndMessage =
+        new(-3);
 
     private readonly DispatcherTimer _refreshDebounce;
     private readonly Dispatcher _uiDispatcher;
@@ -324,6 +326,9 @@ public sealed class WindowTracker : IWindowTracker
                     "Windows 未能枚举顶层窗口。");
         }
 
+        CaptureMessageOnlyBackgroundOwners(
+            backgroundOwners);
+
         List<WindowTaskItem> taskWindows = windows
             .GroupBy(item => item.IdentityKey, StringComparer.OrdinalIgnoreCase)
             .Select(group =>
@@ -387,6 +392,46 @@ public sealed class WindowTracker : IWindowTracker
         return BackgroundAppSnapshotComposer.Append(
             taskWindows,
             backgroundOwners.Values);
+    }
+
+    private void CaptureMessageOnlyBackgroundOwners(
+        IDictionary<uint, BackgroundAppObservation>
+            owners)
+    {
+        try
+        {
+            IReadOnlyList<IntPtr> messageWindows =
+                MessageOnlyWindowEnumerator.Enumerate(
+                    previous =>
+                        NativeMethods.FindWindowEx(
+                            HwndMessage,
+                            previous,
+                            null,
+                            null));
+            foreach (IntPtr hwnd in messageWindows)
+            {
+                try
+                {
+                    CaptureBackgroundOwner(
+                        hwnd,
+                        owners);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(
+                        "Skipping message-only window "
+                        + $"0x{hwnd.ToInt64():X}: "
+                        + ex.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(
+                "Message-only window enumeration failed; "
+                + "visible windows remain available: "
+                + ex.Message);
+        }
     }
 
     private void CaptureBackgroundOwner(
@@ -764,6 +809,16 @@ public sealed class WindowTracker : IWindowTracker
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetWindow(IntPtr hwnd, uint command);
+
+        [DllImport(
+            "user32.dll",
+            CharSet = CharSet.Unicode,
+            SetLastError = true)]
+        internal static extern IntPtr FindWindowEx(
+            IntPtr parent,
+            IntPtr childAfter,
+            string? className,
+            string? windowName);
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetAncestor(
