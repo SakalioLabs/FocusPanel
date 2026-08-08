@@ -1685,6 +1685,15 @@ public sealed class XamlResourceContractTests
             "Click=\"PanelVerticalAnchorMenuItem_Click\"",
             compactDock);
         Assert.Contains(
+            "x:Name=\"PanelDisplayTargetMenuItem\"",
+            compactDock);
+        Assert.Contains(
+            "Header=\"移动到屏幕\"",
+            compactDock);
+        Assert.Contains(
+            "SubmenuOpened=\"PanelDisplayTargetMenuItem_SubmenuOpened\"",
+            compactDock);
+        Assert.Contains(
             "Header=\"后台应用与窗口 · Panel\"",
             compactDock);
         Assert.Contains(
@@ -3177,6 +3186,28 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "UpdatePanelAnchorMenuChecks(",
             codeBehind);
+        Assert.Contains(
+            "PanelDisplayTargetMenuItem_SubmenuOpened(",
+            codeBehind);
+        Assert.Contains(
+            "_viewModel.RefreshDisplayTargetOptions();",
+            codeBehind);
+        Assert.Contains(
+            "in _viewModel.DisplayTargetOptions",
+            codeBehind);
+        Assert.Contains(
+            "IsChecked = string.Equals(",
+            codeBehind);
+        Assert.Contains(
+            "PanelDisplayTargetMenuOption_Click",
+            codeBehind);
+        Assert.Matches(
+            "PanelDisplayTargetMenuOption_Click\\([\\s\\S]*?"
+            + "_viewModel\\.DisplayTargetMode\\s*=\\s*target;",
+            codeBehind);
+        Assert.Contains(
+            "右键选择 Panel 所在屏幕",
+            mainWindow);
         Assert.Contains(
             "x:Name=\"PanelPositionHandleButton\"",
             mainWindow);

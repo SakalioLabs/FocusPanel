@@ -2038,6 +2038,11 @@
                                       Tag="Bottom"
                                       IsCheckable="True"
                                       Click="PanelVerticalAnchorMenuItem_Click"/>
+                            <Separator/>
+                            <MenuItem x:Name="PanelDisplayTargetMenuItem"
+                                      Header="移动到屏幕"
+                                      SubmenuOpened="PanelDisplayTargetMenuItem_SubmenuOpened"
+                                      AutomationProperties.Name="选择 Panel 所在屏幕"/>
                         </ContextMenu>
                     </Border.ContextMenu>
                     <Grid Margin="0,3">
@@ -2058,8 +2063,8 @@
                                     PreviewMouseMove="PanelPositionHandleButton_PreviewMouseMove"
                                     LostMouseCapture="PanelPositionHandleButton_LostMouseCapture"
                                     AutomationProperties.Name="调整 Panel 右侧固定位置"
-                                    AutomationProperties.HelpText="单击依次切换右上、右中、右下；上下拖动后松开会吸附到对应位置"
-                                    ToolTip="拖动调整位置 · 单击依次切换右上 / 右中 / 右下">
+                                    AutomationProperties.HelpText="单击依次切换右上、右中、右下；上下拖动后吸附；右键选择 Panel 所在屏幕"
+                                    ToolTip="拖动调整上下位置 · 单击切换右上 / 右中 / 右下 · 右键选择屏幕">
                                 <Border Width="24"
                                         Height="4"
                                         CornerRadius="2"

@@ -2250,6 +2250,55 @@ public partial class MainWindow :
         ScheduleAutoHide();
     }
 
+    private void
+        PanelDisplayTargetMenuItem_SubmenuOpened(
+            object sender,
+            RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menu)
+            return;
+
+        _viewModel.RefreshDisplayTargetOptions();
+        menu.Items.Clear();
+        foreach (ShellDisplayTargetOption option
+                 in _viewModel.DisplayTargetOptions)
+        {
+            var item = new MenuItem
+            {
+                Header = option.DisplayName,
+                Tag = option.Value,
+                IsCheckable = true,
+                IsChecked = string.Equals(
+                    _viewModel.DisplayTargetMode,
+                    option.Value,
+                    StringComparison.OrdinalIgnoreCase)
+            };
+            AutomationProperties.SetName(
+                item,
+                $"把 Panel 移到 {option.DisplayName}");
+            item.Click +=
+                PanelDisplayTargetMenuOption_Click;
+            menu.Items.Add(item);
+        }
+    }
+
+    private void
+        PanelDisplayTargetMenuOption_Click(
+            object sender,
+            RoutedEventArgs e)
+    {
+        if (sender is not MenuItem
+            {
+                Tag: string target
+            })
+        {
+            return;
+        }
+
+        _viewModel.DisplayTargetMode =
+            target;
+    }
+
     private void PanelPositionHandleButton_Click(
         object sender,
         RoutedEventArgs e)
