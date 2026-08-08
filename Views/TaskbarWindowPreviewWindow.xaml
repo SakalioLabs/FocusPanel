@@ -33,8 +33,9 @@
                                Margin="0,3,0,0"
                                Style="{StaticResource FocusMetaText}"/>
                 </StackPanel>
-                <TextBlock Grid.Column="1"
-                           Text="实时预览"
+                <TextBlock x:Name="ModeText"
+                           Grid.Column="1"
+                           Text="悬停预览"
                            Margin="12,0,0,0"
                            VerticalAlignment="Center"
                            Style="{StaticResource FocusMetaText}"
@@ -213,10 +214,26 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <TextBlock x:Name="RemainingText"
-                       Margin="4,0,4,3"
-                       Style="{StaticResource FocusCaptionText}"
-                       Visibility="Collapsed"/>
+            <Grid Margin="4,0,4,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="RemainingText"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource FocusCaptionText}"
+                           Visibility="Collapsed"/>
+                <Button x:Name="FullOverviewButton"
+                        Grid.Column="1"
+                        MinWidth="88"
+                        Height="36"
+                        Margin="12,0,0,0"
+                        Style="{StaticResource FocusSecondaryButton}"
+                        Click="FullOverviewButton_Click"
+                        AutomationProperties.Name="查看此应用的完整窗口列表"
+                        Content="完整列表"
+                        Visibility="Collapsed"/>
+            </Grid>
         </StackPanel>
     </Border>
 </Window>

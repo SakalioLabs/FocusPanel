@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -51,6 +52,8 @@ public partial class TaskbarWindowPreviewWindow :
         ActivateRequested;
     public event Action<WindowReference>?
         CloseRequested;
+    internal event Action?
+        FullOverviewRequested;
     internal event Action<
         WindowReference,
         WindowStateAction>?
@@ -65,6 +68,19 @@ public partial class TaskbarWindowPreviewWindow :
     {
         get;
         private set;
+    }
+
+    internal void SetPinned(
+        bool isPinned)
+    {
+        ModeText.Text = isPinned
+            ? "已固定 · 再点图标收起"
+            : "悬停预览";
+        AutomationProperties.SetHelpText(
+            this,
+            isPinned
+                ? "再次点击同一个应用图标或按 Esc 只收起此窗口预览"
+                : "鼠标移出应用图标和预览卡后自动收起");
     }
 
     internal void Configure(
@@ -119,10 +135,14 @@ public partial class TaskbarWindowPreviewWindow :
             - _windows.Count;
         RemainingText.Text =
             remaining > 0
-                ? $"另有 {remaining} 个窗口；左键应用图标可打开完整文字列表。"
+                ? $"另有 {remaining} 个窗口"
                 : _completeFooterText;
         RemainingText.Visibility =
             Visibility.Visible;
+        FullOverviewButton.Visibility =
+            remaining > 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
     }
 
     internal bool TryShowAt(
@@ -424,6 +444,11 @@ public partial class TaskbarWindowPreviewWindow :
             e.Handled = true;
         }
     }
+
+    private void FullOverviewButton_Click(
+        object sender,
+        RoutedEventArgs e) =>
+        FullOverviewRequested?.Invoke();
 
     private void CloseWindowButton_Click(
         object sender,

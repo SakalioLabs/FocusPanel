@@ -54,7 +54,8 @@ public sealed class TaskbarAppPresentationTests
             "编辑器，正在使用 · 2 个窗口",
             item.AccessibleName);
         Assert.Equal(
-            "左键打开此应用窗口总览，Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用；"
+            "左键固定实时窗口缩略卡，再次左键收起；"
+            + "Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用；"
             + "Shift+左键或中键启动新实例；"
             + "Ctrl+Shift+左键以管理员身份启动；"
             + "可拖入文件用此应用打开",

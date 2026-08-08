@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="680" viewBox="0 0 1180 680" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 多窗口应用点击固定实时缩略卡</title>
+  <desc id="desc">右侧紧凑任务栏中的浏览器应用被点击后，在左侧显示已固定的三个实时窗口缩略图，并提供完整列表入口。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172033"/>
+      <stop offset="0.55" stop-color="#263652"/>
+      <stop offset="1" stop-color="#102638"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7fbff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#b9ddff" stop-opacity="0.10"/>
+    </linearGradient>
+    <linearGradient id="shot1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#377bd4"/>
+      <stop offset="1" stop-color="#142b4d"/>
+    </linearGradient>
+    <linearGradient id="shot2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5d42a4"/>
+      <stop offset="1" stop-color="#252238"/>
+    </linearGradient>
+    <linearGradient id="shot3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#23897c"/>
+      <stop offset="1" stop-color="#163b42"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#02060c" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+
+  <rect width="1180" height="680" fill="url(#bg)"/>
+  <circle cx="230" cy="145" r="170" fill="#4e7bd1" opacity="0.12"/>
+  <circle cx="820" cy="560" r="240" fill="#21a6a0" opacity="0.09"/>
+
+  <text x="70" y="76" fill="#f5f9ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="30" font-weight="650">点击多窗口应用，直接固定实时缩略卡</text>
+  <text x="70" y="112" fill="#b9c9dd" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="18">第二次点击或 Esc 只收起缩略卡，不会收回整个 Panel</text>
+
+  <g filter="url(#shadow)">
+    <rect x="180" y="145" width="760" height="470" rx="24" fill="url(#glass)" stroke="#dceeff" stroke-opacity="0.22"/>
+    <text x="212" y="187" fill="#f5f9ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="20" font-weight="650">浏览器</text>
+    <text x="826" y="187" text-anchor="end" fill="#79c8ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="15">已固定 · 再点图标收起</text>
+
+    <g transform="translate(212 210)">
+      <rect width="696" height="104" rx="16" fill="#101827" fill-opacity="0.70"/>
+      <rect x="10" y="10" width="180" height="84" rx="11" fill="url(#shot1)"/>
+      <rect x="24" y="24" width="112" height="9" rx="4.5" fill="#ddecff" opacity="0.82"/>
+      <rect x="24" y="42" width="142" height="7" rx="3.5" fill="#ddecff" opacity="0.37"/>
+      <text x="210" y="45" fill="#f2f7ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="16">项目看板 · FocusPanel</text>
+      <text x="210" y="72" fill="#98abc2" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="14">当前窗口</text>
+      <g fill="#cfe4f8" font-family="Segoe Fluent Icons, Segoe UI Symbol" font-size="16">
+        <text x="550" y="59">▭</text><text x="588" y="59">—</text><text x="626" y="59">□</text><text x="664" y="59">×</text>
+      </g>
+    </g>
+
+    <g transform="translate(212 326)">
+      <rect width="696" height="104" rx="16" fill="#101827" fill-opacity="0.70"/>
+      <rect x="10" y="10" width="180" height="84" rx="11" fill="url(#shot2)"/>
+      <rect x="24" y="24" width="96" height="9" rx="4.5" fill="#eee8ff" opacity="0.82"/>
+      <rect x="24" y="42" width="138" height="7" rx="3.5" fill="#eee8ff" opacity="0.34"/>
+      <text x="210" y="45" fill="#f2f7ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="16">设计参考 · Figma</text>
+      <text x="210" y="72" fill="#98abc2" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="14">后台窗口</text>
+      <g fill="#cfe4f8" font-family="Segoe Fluent Icons, Segoe UI Symbol" font-size="16">
+        <text x="550" y="59">▭</text><text x="588" y="59">—</text><text x="626" y="59">□</text><text x="664" y="59">×</text>
+      </g>
+    </g>
+
+    <g transform="translate(212 442)">
+      <rect width="696" height="104" rx="16" fill="#101827" fill-opacity="0.70"/>
+      <rect x="10" y="10" width="180" height="84" rx="11" fill="url(#shot3)"/>
+      <rect x="24" y="24" width="120" height="9" rx="4.5" fill="#e1fffa" opacity="0.82"/>
+      <rect x="24" y="42" width="132" height="7" rx="3.5" fill="#e1fffa" opacity="0.34"/>
+      <text x="210" y="45" fill="#f2f7ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="16">更新说明 · GitHub</text>
+      <text x="210" y="72" fill="#98abc2" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="14">已最小化</text>
+      <g fill="#cfe4f8" font-family="Segoe Fluent Icons, Segoe UI Symbol" font-size="16">
+        <text x="550" y="59">▭</text><text x="588" y="59">—</text><text x="626" y="59">□</text><text x="664" y="59">×</text>
+      </g>
+    </g>
+
+    <text x="216" y="583" fill="#a9bbd0" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="14">另有 2 个窗口</text>
+    <rect x="786" y="558" width="122" height="38" rx="12" fill="#72c7ff" fill-opacity="0.16" stroke="#83d0ff" stroke-opacity="0.45"/>
+    <text x="847" y="582" text-anchor="middle" fill="#cfeeff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="14">完整列表</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="976" y="136" width="76" height="488" rx="24" fill="#d8eaff" fill-opacity="0.16" stroke="#e7f4ff" stroke-opacity="0.22"/>
+    <rect x="1002" y="154" width="24" height="4" rx="2" fill="#c1d4e8" opacity="0.68"/>
+    <g fill="#dcecff" font-family="Segoe Fluent Icons, Segoe UI Symbol" font-size="22" text-anchor="middle">
+      <text x="1014" y="208">⊞</text>
+      <text x="1014" y="261">⌕</text>
+      <text x="1014" y="314">●</text>
+    </g>
+    <rect x="988" y="337" width="52" height="58" rx="14" fill="#79c8ff" fill-opacity="0.22" stroke="#83d0ff" stroke-opacity="0.52"/>
+    <circle cx="1014" cy="363" r="13" fill="#55a9ed"/>
+    <path d="M1008 357h12v12h-12z" fill="#f5fbff" opacity="0.92"/>
+    <circle cx="1034" cy="345" r="10" fill="#14283e" stroke="#83d0ff"/>
+    <text x="1034" y="349" text-anchor="middle" fill="#cfeeff" font-family="Segoe UI, sans-serif" font-size="11">5</text>
+    <rect x="980" y="350" width="4" height="32" rx="2" fill="#79c8ff"/>
+    <g fill="#dcecff" font-family="Segoe Fluent Icons, Segoe UI Symbol" font-size="21" text-anchor="middle">
+      <text x="1014" y="445">▣</text>
+      <text x="1014" y="500">✓</text>
+      <text x="1014" y="555">◉</text>
+    </g>
+    <text x="1014" y="594" text-anchor="middle" fill="#ecf6ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="13">18:42</text>
+  </g>
+
+  <path d="M944 365h24" stroke="#79c8ff" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"/>
+  <circle cx="956" cy="365" r="4" fill="#79c8ff"/>
+</svg>

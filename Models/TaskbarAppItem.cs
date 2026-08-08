@@ -185,7 +185,7 @@ public sealed class TaskbarAppItem : ObservableObject
         get
         {
             string primaryAction = WindowCount > 1
-                ? "左键打开此应用窗口总览，Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用"
+                ? "左键固定实时窗口缩略卡，再次左键收起；Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用"
                 : IsBackgroundOnly
                     ? "左键请求应用打开界面，右键管理应用"
                 : IsFullyMinimized

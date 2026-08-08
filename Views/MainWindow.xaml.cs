@@ -104,6 +104,8 @@ public partial class MainWindow :
     private TaskbarWindowPreviewWindow?
         _taskbarWindowPreview;
     private bool _taskbarPreviewInteractionActive;
+    private bool _taskbarWindowPreviewPinned;
+    private string? _taskbarWindowPreviewIdentity;
     private TaskbarSlotHotkeySession?
         _taskbarSlotHotkeySession;
     private CancellationTokenSource?
@@ -2419,7 +2421,6 @@ public partial class MainWindow :
 
     private void TaskbarApp_Click(object sender, RoutedEventArgs e)
     {
-        CancelTaskbarHoverPreview();
         if (sender is not Button { DataContext: TaskbarAppItem task } button)
             return;
 
@@ -2430,16 +2431,22 @@ public partial class MainWindow :
             task.WindowCount);
         if (action == TaskbarAppClickAction.LaunchElevated)
         {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
             _viewModel.LaunchElevatedTaskbarAppCommand.Execute(task);
             return;
         }
         if (action == TaskbarAppClickAction.LaunchNewInstance)
         {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
             _viewModel.LaunchNewTaskbarAppCommand.Execute(task);
             return;
         }
         if (action == TaskbarAppClickAction.CycleWindows)
         {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
             CycleTaskbarWindows(
                 task,
                 wheelDelta: -1,
@@ -2447,15 +2454,62 @@ public partial class MainWindow :
             return;
         }
 
-        if (task.WindowCount <= 1)
+        bool isSamePreviewVisible =
+            _taskbarWindowPreview?.IsVisible
+                == true
+            && string.Equals(
+                _taskbarWindowPreviewIdentity,
+                task.IdentityKey,
+                StringComparison.OrdinalIgnoreCase);
+        TaskbarPreviewClickAction previewAction =
+            TaskbarPreviewPinPolicy.Resolve(
+                task.WindowCount,
+                isSamePreviewVisible,
+                _taskbarWindowPreviewPinned);
+        if (previewAction
+            == TaskbarPreviewClickAction
+                .ActivateOrLaunch)
         {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
             _viewModel.ActivateTaskbarAppCommand.Execute(task);
             return;
         }
 
-        OpenTaskbarWindowOverview(
-            button,
-            task);
+        if (previewAction
+            == TaskbarPreviewClickAction
+                .ClosePinnedPreview)
+        {
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
+            button.Focus();
+            return;
+        }
+
+        if (previewAction
+            == TaskbarPreviewClickAction
+                .PinExistingPreview)
+        {
+            _taskbarHoverOpenTimer.Stop();
+            _taskbarHoverCloseTimer.Stop();
+            _taskbarWindowPreviewPinned = true;
+            _taskbarWindowPreview?.SetPinned(
+                true);
+            button.Focus();
+            return;
+        }
+
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
+        if (!TryOpenTaskbarWindowPreview(
+                button,
+                task,
+                pinned: true))
+        {
+            OpenTaskbarWindowOverview(
+                button,
+                task);
+        }
     }
 
     private void OpenTaskbarWindowOverview(
@@ -3474,6 +3528,9 @@ public partial class MainWindow :
         _searchWindowHoverResult = null;
         _statusWindowPreviewTarget = null;
 
+        if (_taskbarWindowPreviewPinned)
+            return;
+
         if (_taskbarWindowPreview?.IsVisible
                 == true
             && !ReferenceEquals(
@@ -3573,11 +3630,26 @@ public partial class MainWindow :
 
     private bool TryOpenTaskbarWindowPreview(
         Button button,
-        TaskbarAppItem task) =>
-        TryOpenWindowPreview(
+        TaskbarAppItem task,
+        bool pinned = false)
+    {
+        bool shown = TryOpenWindowPreview(
             button,
             preview =>
                 preview.Configure(task));
+        if (shown)
+        {
+            _taskbarHoverButton = button;
+            _taskbarHoverTask = task;
+            _taskbarWindowPreviewIdentity =
+                task.IdentityKey;
+            _taskbarWindowPreviewPinned =
+                pinned;
+            _taskbarWindowPreview?.SetPinned(
+                pinned);
+        }
+        return shown;
+    }
 
     private bool TryOpenSearchWindowPreview(
         FrameworkElement target,
@@ -3608,6 +3680,8 @@ public partial class MainWindow :
         Action<TaskbarWindowPreviewWindow>
             configure)
     {
+        _taskbarWindowPreviewPinned = false;
+        _taskbarWindowPreviewIdentity = null;
         var preview =
             new TaskbarWindowPreviewWindow();
         configure(preview);
@@ -3615,6 +3689,8 @@ public partial class MainWindow :
             TaskbarWindowPreview_ActivateRequested;
         preview.CloseRequested +=
             TaskbarWindowPreview_CloseRequested;
+        preview.FullOverviewRequested +=
+            TaskbarWindowPreview_FullOverviewRequested;
         preview.StateActionRequested +=
             TaskbarWindowPreview_StateActionRequested;
         preview.LayoutRequested +=
@@ -3703,6 +3779,26 @@ public partial class MainWindow :
             _viewModel.CloseWindowCommand
                 .Execute(window);
         }
+    }
+
+    private void
+        TaskbarWindowPreview_FullOverviewRequested()
+    {
+        Button? returnTarget =
+            _taskbarHoverButton;
+        TaskbarAppItem? task =
+            _taskbarHoverTask;
+        if (returnTarget == null
+            || task == null)
+        {
+            return;
+        }
+
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
+        OpenTaskbarWindowOverview(
+            returnTarget,
+            task);
     }
 
     private void
@@ -3796,6 +3892,8 @@ public partial class MainWindow :
             TaskbarWindowPreview_ActivateRequested;
         preview.CloseRequested -=
             TaskbarWindowPreview_CloseRequested;
+        preview.FullOverviewRequested -=
+            TaskbarWindowPreview_FullOverviewRequested;
         preview.StateActionRequested -=
             TaskbarWindowPreview_StateActionRequested;
         preview.LayoutRequested -=
@@ -3813,6 +3911,10 @@ public partial class MainWindow :
                 preview))
         {
             _taskbarWindowPreview = null;
+            _taskbarWindowPreviewPinned =
+                false;
+            _taskbarWindowPreviewIdentity =
+                null;
         }
         _searchWindowHoverOpenTimer.Stop();
         _searchWindowHoverTarget = null;
@@ -3862,6 +3964,9 @@ public partial class MainWindow :
 
     private void ScheduleTaskbarHoverPreviewClose()
     {
+        if (_taskbarWindowPreviewPinned)
+            return;
+
         if (_taskbarHoverMenu?.IsOpen != true
             && _taskbarWindowPreview?.IsVisible
                 != true)
@@ -3876,6 +3981,9 @@ public partial class MainWindow :
         EventArgs e)
     {
         _taskbarHoverCloseTimer.Stop();
+        if (_taskbarWindowPreviewPinned)
+            return;
+
         if (_taskbarHoverButton?.IsMouseOver
                 == true
             || _searchWindowHoverTarget
@@ -3917,6 +4025,8 @@ public partial class MainWindow :
 
         _taskbarHoverButton = null;
         _taskbarHoverTask = null;
+        _taskbarWindowPreviewPinned = false;
+        _taskbarWindowPreviewIdentity = null;
         _searchWindowHoverTarget = null;
         _searchWindowHoverResult = null;
         _statusWindowPreviewTarget = null;
@@ -4092,6 +4202,19 @@ public partial class MainWindow :
     {
         if (e.Key != Key.Escape)
             return;
+
+        if (_taskbarWindowPreviewPinned
+            && _taskbarWindowPreview?.IsVisible
+                == true)
+        {
+            Button? returnTarget =
+                _taskbarHoverButton;
+            CancelTaskbarHoverPreview(
+                closeMenu: true);
+            returnTarget?.Focus();
+            e.Handled = true;
+            return;
+        }
 
         if (_viewModel.IsSearchOpen
             || _viewModel.IsCalendarOpen

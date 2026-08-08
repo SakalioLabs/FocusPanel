@@ -3394,6 +3394,21 @@ public sealed class XamlResourceContractTests
             "CloseWindowButton_Click",
             previewXaml);
         Assert.Contains(
+            "x:Name=\"FullOverviewButton\"",
+            previewXaml);
+        Assert.Contains(
+            "Click=\"FullOverviewButton_Click\"",
+            previewXaml);
+        Assert.Contains(
+            "AutomationProperties.Name=\"查看此应用的完整窗口列表\"",
+            previewXaml);
+        Assert.Contains(
+            "x:Name=\"ModeText\"",
+            previewXaml);
+        Assert.Contains(
+            "已固定 · 再点图标收起",
+            previewCode);
+        Assert.Contains(
             "MinimizeWindowButton_Click",
             previewXaml);
         Assert.Contains(
@@ -3440,6 +3455,25 @@ public sealed class XamlResourceContractTests
             session);
         Assert.Contains(
             "if (TryOpenTaskbarWindowPreview(",
+            mainWindow);
+        Assert.Contains(
+            "TaskbarPreviewPinPolicy.Resolve(",
+            mainWindow);
+        Assert.Contains(
+            "pinned: true",
+            mainWindow);
+        Assert.Contains(
+            "_taskbarWindowPreviewPinned",
+            mainWindow);
+        Assert.Contains(
+            "_taskbarWindowPreview?.SetPinned(",
+            mainWindow);
+        Assert.Contains(
+            "TaskbarWindowPreview_FullOverviewRequested",
+            mainWindow);
+        Assert.Contains(
+            "if (_taskbarWindowPreviewPinned\n"
+            + "            && _taskbarWindowPreview?.IsVisible",
             mainWindow);
         Assert.Contains(
             "PopulateTaskbarWindowList(",
