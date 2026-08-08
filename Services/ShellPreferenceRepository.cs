@@ -15,6 +15,7 @@ internal sealed record ShellPreferenceSnapshot(
     bool DisableHotZoneInFullscreen,
     bool EnableTaskbarSlotHotkeys,
     string DisplayTargetMode,
+    string PanelVerticalAnchor,
     int AutoHideDelayMilliseconds,
     int HotZoneDwellMilliseconds,
     bool KeepCompactDockVisible,
@@ -29,6 +30,8 @@ internal sealed record ShellPreferenceSnapshot(
             false,
             ShellDisplayTarget
                 .OutermostRightValue,
+            ShellPanelVerticalAnchorPolicy
+                .CenterValue,
             ShellAutoHideDelayPolicy
                 .DefaultMilliseconds,
             EdgeHotZoneSensitivityPolicy
@@ -92,6 +95,8 @@ internal sealed class ShellPreferenceRepository
         "Shell.EnableTaskbarSlotHotkeys";
     internal const string DisplayTargetModeKey =
         "Shell.DisplayTargetMode";
+    internal const string PanelVerticalAnchorKey =
+        "Shell.PanelVerticalAnchor";
     internal const string AutoHideDelayKey =
         "Shell.AutoHideDelayMilliseconds";
     internal const string HotZoneDwellKey =
@@ -109,6 +114,7 @@ internal sealed class ShellPreferenceRepository
         FullscreenHotZoneKey,
         TaskbarSlotHotkeysKey,
         DisplayTargetModeKey,
+        PanelVerticalAnchorKey,
         AutoHideDelayKey,
         HotZoneDwellKey,
         KeepCompactDockVisibleKey,
@@ -329,6 +335,13 @@ internal sealed class ShellPreferenceRepository
                     DisplayTargetModeKey,
                     ShellDisplayTarget
                         .OutermostRightValue)),
+            ShellPanelVerticalAnchorPolicy
+                .NormalizeValue(
+                    ReadString(
+                        values,
+                        PanelVerticalAnchorKey,
+                        ShellPanelVerticalAnchorPolicy
+                            .CenterValue)),
             ShellAutoHideDelayPolicy.Normalize(
                 ReadInt32(
                     values,
@@ -381,6 +394,11 @@ internal sealed class ShellPreferenceRepository
             DisplayTargetMode =
                 ShellDisplayTarget.NormalizeValue(
                     snapshot.DisplayTargetMode),
+            PanelVerticalAnchor =
+                ShellPanelVerticalAnchorPolicy
+                    .NormalizeValue(
+                        snapshot
+                            .PanelVerticalAnchor),
             AutoHideDelayMilliseconds =
                 ShellAutoHideDelayPolicy.Normalize(
                     snapshot

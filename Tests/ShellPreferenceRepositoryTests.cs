@@ -81,6 +81,7 @@ public sealed class ShellPreferenceRepositoryTests
                         false,
                         true,
                         "Unsupported",
+                        "Unsupported",
                         999,
                         999,
                         true,
@@ -103,6 +104,10 @@ public sealed class ShellPreferenceRepositoryTests
             ShellDisplayTarget
                 .OutermostRightValue,
             snapshot.DisplayTargetMode);
+        Assert.Equal(
+            ShellPanelVerticalAnchorPolicy
+                .CenterValue,
+            snapshot.PanelVerticalAnchor);
         Assert.Equal(
             ShellAutoHideDelayPolicy
                 .DefaultMilliseconds,
@@ -128,6 +133,8 @@ public sealed class ShellPreferenceRepositoryTests
                         true,
                         false,
                         @"device:  \\.\DISPLAY2  ",
+                        ShellPanelVerticalAnchorPolicy
+                            .BottomValue,
                         800,
                         180,
                         true,
@@ -140,6 +147,10 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             @"Device:\\.\DISPLAY2",
             snapshot.DisplayTargetMode);
+        Assert.Equal(
+            ShellPanelVerticalAnchorPolicy
+                .BottomValue,
+            snapshot.PanelVerticalAnchor);
         Assert.Equal(
             800,
             snapshot.AutoHideDelayMilliseconds);
@@ -179,6 +190,8 @@ public sealed class ShellPreferenceRepositoryTests
                         false,
                         ShellDisplayTarget
                             .PrimaryValue,
+                        ShellPanelVerticalAnchorPolicy
+                            .TopValue,
                         1200,
                         40,
                         true,
@@ -209,6 +222,10 @@ public sealed class ShellPreferenceRepositoryTests
         Assert.Equal(
             ShellDisplayTarget.PrimaryValue,
             snapshot.DisplayTargetMode);
+        Assert.Equal(
+            ShellPanelVerticalAnchorPolicy
+                .TopValue,
+            snapshot.PanelVerticalAnchor);
         Assert.Equal(
             1200,
             snapshot.AutoHideDelayMilliseconds);

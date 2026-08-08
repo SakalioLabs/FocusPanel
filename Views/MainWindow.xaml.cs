@@ -33,6 +33,7 @@ public partial class MainWindow :
     private const double ScreenMargin = 12;
     private const double CompactTaskbarScrollStep = 46;
     private const double CompactTaskbarOverflowInset = 46;
+    private const double PreferredPanelHeight = 820;
     private const int TaskbarHoverOpenDelayMilliseconds = 420;
     private const int TaskbarHoverCloseDelayMilliseconds = 260;
     private const int TaskbarWindowCycleThrottleMilliseconds = 90;
@@ -571,11 +572,14 @@ public partial class MainWindow :
                 targetBounds,
                 hwnd);
         PhysicalWindowBounds bounds =
-            ShellWindowPlacement.CalculatePanel(
+            ShellWindowPlacement.CalculateAnchoredPanel(
                 targetBounds,
                 dpi,
                 widthDip,
-                ScreenMargin);
+                ScreenMargin,
+                PreferredPanelHeight,
+                _viewModel
+                    .PanelVerticalAnchor);
         Height = bounds.Height / (dpi / 96.0);
         ShellWindowPlacement.Apply(hwnd, bounds);
     }

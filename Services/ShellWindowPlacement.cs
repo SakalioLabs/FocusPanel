@@ -45,6 +45,48 @@ internal static class ShellWindowPlacement
             Math.Max(1, widthPhysicalPixels),
             Math.Max(1, screenBounds.Height));
 
+    internal static PhysicalWindowBounds CalculateAnchoredPanel(
+        Rectangle screenBounds,
+        uint dpi,
+        double widthDip,
+        double marginDip,
+        double desiredHeightDip,
+        string? verticalAnchor)
+    {
+        double scale = NormalizeDpi(dpi) / 96.0;
+        int width = Math.Max(
+            1,
+            (int)Math.Round(widthDip * scale));
+        int margin = Math.Max(
+            0,
+            (int)Math.Round(marginDip * scale));
+        int availableHeight = Math.Max(
+            1,
+            screenBounds.Height - margin * 2);
+        int requestedHeight = Math.Max(
+            1,
+            (int)Math.Round(
+                desiredHeightDip * scale));
+        int height = Math.Min(
+            availableHeight,
+            requestedHeight);
+        int availableTop =
+            screenBounds.Top + margin;
+        int top =
+            ShellPanelVerticalAnchorPolicy
+                .CalculateTop(
+                    availableTop,
+                    availableHeight,
+                    height,
+                    verticalAnchor);
+
+        return new PhysicalWindowBounds(
+            screenBounds.Right - width - margin,
+            top,
+            width,
+            height);
+    }
+
     internal static uint GetWindowDpi(IntPtr hwnd)
     {
         uint dpi = hwnd == IntPtr.Zero

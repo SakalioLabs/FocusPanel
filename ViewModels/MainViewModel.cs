@@ -403,6 +403,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ShellDisplayTarget.OutermostRightValue;
 
     [ObservableProperty]
+    private string panelVerticalAnchor =
+        ShellPanelVerticalAnchorPolicy
+            .CenterValue;
+
+    [ObservableProperty]
     private int autoHideDelayMilliseconds =
         ShellAutoHideDelayPolicy
             .DefaultMilliseconds;
@@ -1278,7 +1283,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _isShellVisible,
                 isVisible);
         _isShellVisible = isVisible;
-        _windowTracker.SetTrackingActive(isVisible);
+        // Running applications are core taskbar state. Keep the event-driven
+        // tracker current even while the auto-hidden shell is not visible.
+        _windowTracker.SetTrackingActive(true);
         if (becameVisible)
         {
             CurrentTime = DateTime.Now;
@@ -1415,6 +1422,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             DisplayTargetMode =
                 preferenceSnapshot
                     .DisplayTargetMode;
+            PanelVerticalAnchor =
+                preferenceSnapshot
+                    .PanelVerticalAnchor;
             AutoHideDelayMilliseconds =
                 preferenceSnapshot
                     .AutoHideDelayMilliseconds;
@@ -1653,6 +1663,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
             QueueShellPreference(
                 ShellPreferenceRepository
                     .DisplayTargetModeKey,
+                normalized);
+        }
+    }
+
+    partial void OnPanelVerticalAnchorChanged(
+        string value)
+    {
+        string normalized =
+            ShellPanelVerticalAnchorPolicy
+                .NormalizeValue(value);
+        if (!string.Equals(
+                normalized,
+                value,
+                StringComparison.Ordinal))
+        {
+            PanelVerticalAnchor = normalized;
+            return;
+        }
+
+        DisplayTargetChanged?.Invoke();
+        if (!_loadingShellPreferences)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .PanelVerticalAnchorKey,
                 normalized);
         }
     }

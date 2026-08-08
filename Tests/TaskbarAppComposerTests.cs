@@ -115,6 +115,42 @@ public sealed class TaskbarAppComposerTests
     }
 
     [Fact]
+    public void Compose_BackgroundOwnersNeverPushVisibleWindowsBelowThem()
+    {
+        var composer = new TaskbarAppComposer();
+        var background = new WindowTaskItem
+        {
+            AppKey = "exe:c:\\sync.exe",
+            IdentityKey = "exe:c:\\sync.exe",
+            DisplayName = "后台同步",
+            ExecutablePath = @"C:\Sync.exe",
+            Windows = Array.Empty<WindowReference>()
+        };
+        WindowTaskItem visible =
+            Running(
+                "正在运行的编辑器",
+                "exe:c:\\editor.exe",
+                7);
+
+        composer.Compose(
+            Array.Empty<AppLaunchItem>(),
+            new[] { background });
+        IReadOnlyList<TaskbarAppItem> result =
+            composer.Compose(
+                Array.Empty<AppLaunchItem>(),
+                new[] { background, visible });
+
+        Assert.Equal(
+            new[]
+            {
+                "正在运行的编辑器",
+                "后台同步"
+            },
+            result.Select(item =>
+                item.DisplayName));
+    }
+
+    [Fact]
     public void UnpinnedRunningItem_RemainsUntilItsLastWindowCloses()
     {
         var composer = new TaskbarAppComposer();

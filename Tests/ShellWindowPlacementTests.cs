@@ -306,6 +306,63 @@ public sealed class ShellWindowPlacementTests
         Assert.Equal(-15, bounds.Left + bounds.Width);
     }
 
+    [Theory]
+    [InlineData("Top", 12)]
+    [InlineData("Center", 130)]
+    [InlineData("Bottom", 248)]
+    [InlineData("invalid", 130)]
+    public void AnchoredPanel_UsesRequestedVerticalPosition(
+        string anchor,
+        int expectedTop)
+    {
+        var display = new Rectangle(
+            0,
+            0,
+            1920,
+            1080);
+
+        PhysicalWindowBounds bounds =
+            ShellWindowPlacement
+                .CalculateAnchoredPanel(
+                    display,
+                    96,
+                    76,
+                    12,
+                    820,
+                    anchor);
+
+        Assert.Equal(expectedTop, bounds.Top);
+        Assert.Equal(820, bounds.Height);
+        Assert.Equal(1832, bounds.Left);
+    }
+
+    [Fact]
+    public void AnchoredPanel_ShrinksToShortDisplayWithoutLeavingIt()
+    {
+        var display = new Rectangle(
+            -1280,
+            -100,
+            1280,
+            720);
+
+        PhysicalWindowBounds bounds =
+            ShellWindowPlacement
+                .CalculateAnchoredPanel(
+                    display,
+                    96,
+                    720,
+                    12,
+                    820,
+                    ShellPanelVerticalAnchorPolicy
+                        .BottomValue);
+
+        Assert.Equal(-88, bounds.Top);
+        Assert.Equal(696, bounds.Height);
+        Assert.Equal(
+            608,
+            bounds.Top + bounds.Height);
+    }
+
     [Fact]
     public void EdgeIndicator_IsExactlyThreePhysicalPixels()
     {

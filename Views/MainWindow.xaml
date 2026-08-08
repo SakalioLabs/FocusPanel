@@ -1820,8 +1820,18 @@
                                               SelectedValuePath="Value"
                                               SelectedValue="{Binding DisplayTargetMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                     </ComboBox>
+                                    <TextBlock Text="Panel 固定位置"
+                                               Margin="0,12,0,5"
+                                               Style="{StaticResource FocusCaptionText}"/>
+                                    <ComboBox SelectedValuePath="Tag"
+                                              SelectedValue="{Binding PanelVerticalAnchor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              AutomationProperties.Name="Panel 在所选屏幕右侧的固定位置">
+                                        <ComboBoxItem Content="右上" Tag="Top"/>
+                                        <ComboBoxItem Content="右中" Tag="Center"/>
+                                        <ComboBoxItem Content="右下" Tag="Bottom"/>
+                                    </ComboBox>
                                     <TextBlock Margin="0,5,0,0"
-                                               Text="Panel、右缘热区和运行指示条会一起迁移。"
+                                               Text="Panel 会固定到所选屏幕的右上、右中或右下；右缘热区仍可在整条屏幕边缘呼出。"
                                                TextWrapping="Wrap"
                                                Style="{StaticResource FocusCaptionText}"/>
                                     <TextBlock Text="右缘呼出灵敏度"
@@ -2217,6 +2227,7 @@
 
                         <Grid Grid.Row="1"
                               x:Name="TaskbarAppsHost"
+                              MinHeight="98"
                               AllowDrop="True"
                               PreviewMouseWheel="TaskbarAppsHost_PreviewMouseWheel"
                               PreviewDragEnter="TaskbarAppsHost_PreviewDragEnter"

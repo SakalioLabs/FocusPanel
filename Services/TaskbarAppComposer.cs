@@ -40,7 +40,14 @@ internal sealed class TaskbarAppComposer
 
         result.AddRange(runningByIdentity
             .Where(pair => !pinnedIdentities.Contains(pair.Key))
-            .OrderBy(pair => _runningOrder[pair.Key])
+            // Keep switchable windows in the visible taskbar section. Pure
+            // background owners remain available from the background drawer,
+            // but must not push normal running applications below the fold.
+            .OrderBy(pair =>
+                pair.Value.Windows.Count == 0
+                    ? 1
+                    : 0)
+            .ThenBy(pair => _runningOrder[pair.Key])
             .Select(pair => Create(pair.Key, null, Array.Empty<AppLaunchItem>(), pair.Value)));
         return result;
     }

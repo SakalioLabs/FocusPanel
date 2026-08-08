@@ -6288,7 +6288,7 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain(
             "_systemStatus.GetNetworkStatus()",
             viewModel);
-        Assert.Contains("_windowTracker.SetTrackingActive(isVisible)", viewModel);
+        Assert.Contains("_windowTracker.SetTrackingActive(true)", viewModel);
         Assert.Contains("ShellRefreshActivityPolicy.GetActivity", viewModel);
         Assert.Contains(
             "if (_trackingActive && !_disposed)",
@@ -6643,6 +6643,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Views",
                 "MainWindow.xaml"));
+        string mainWindowCode = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
 
         Assert.Contains(
             "ShellPreferenceSnapshot preferenceSnapshot",
@@ -6689,6 +6694,24 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "ShellDisplayTarget.GetOptions(",
             viewModel);
+        Assert.Contains(
+            "PanelVerticalAnchorKey",
+            repository);
+        Assert.Contains(
+            "OnPanelVerticalAnchorChanged(",
+            viewModel);
+        Assert.Contains(
+            "SelectedValue=\"{Binding PanelVerticalAnchor",
+            mainXaml);
+        Assert.Contains(
+            "CalculateAnchoredPanel(",
+            mainWindowCode);
+        Assert.Contains(
+            "x:Name=\"TaskbarAppsHost\"",
+            mainXaml);
+        Assert.Contains(
+            "MinHeight=\"98\"",
+            mainXaml);
         Assert.Contains(
             "AutoHideDelayKey",
             repository);
