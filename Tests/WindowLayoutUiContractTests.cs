@@ -30,8 +30,8 @@ public sealed class WindowLayoutUiContractTests
         Assert.Contains(
             "Header = \"排列窗口\"",
             shell);
-        Assert.Contains(
-            "Enum.GetValues<\n                     WindowLayoutTarget>()",
+        Assert.Matches(
+            @"Enum\.GetValues<\s*WindowLayoutTarget>\(\)",
             shell);
         Assert.Contains(
             "ArrangeWindowCommand",
