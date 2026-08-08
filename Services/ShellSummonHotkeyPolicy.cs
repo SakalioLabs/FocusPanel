@@ -26,9 +26,10 @@ internal static class ShellSummonHotkeyPolicy
     private const uint ModShift = 0x0004;
     private const uint ModNoRepeat = 0x4000;
     private const uint VkSpace = 0x20;
+    private const uint VkW = 0x57;
 
     internal static IReadOnlyList<
-        ShellHotkeyCandidate> Candidates
+        ShellHotkeyCandidate> SearchCandidates
     {
         get;
     } = new[]
@@ -47,9 +48,55 @@ internal static class ShellSummonHotkeyPolicy
             "快速搜索：Ctrl + Shift + Space（备用）")
     };
 
+    internal static IReadOnlyList<
+        ShellHotkeyCandidate>
+        WindowOverviewCandidates
+    {
+        get;
+    } = new[]
+    {
+        new ShellHotkeyCandidate(
+            ModControl
+            | ModAlt
+            | ModNoRepeat,
+            VkW,
+            "窗口总览：Ctrl + Alt + W"),
+        new ShellHotkeyCandidate(
+            ModControl
+            | ModShift
+            | ModNoRepeat,
+            VkW,
+            "窗口总览：Ctrl + Shift + W（备用）")
+    };
+
+    internal static IReadOnlyList<
+        ShellHotkeyCandidate> Candidates =>
+            SearchCandidates;
+
     internal static ShellHotkeyRegistration
         RegisterFirstAvailable(
             Func<uint, uint, bool> register)
+        => RegisterFirstAvailable(
+            SearchCandidates,
+            register,
+            ShellHotkeyRegistration.Unavailable);
+
+    internal static ShellHotkeyRegistration
+        RegisterWindowOverview(
+            Func<uint, uint, bool> register) =>
+        RegisterFirstAvailable(
+            WindowOverviewCandidates,
+            register,
+            new ShellHotkeyRegistration(
+                false,
+                "窗口总览快捷键注册失败；仍可点击紧凑栏“窗口”"));
+
+    private static ShellHotkeyRegistration
+        RegisterFirstAvailable(
+            IReadOnlyList<ShellHotkeyCandidate>
+                candidates,
+            Func<uint, uint, bool> register,
+            ShellHotkeyRegistration unavailable)
     {
         if (register == null)
         {
@@ -58,7 +105,7 @@ internal static class ShellSummonHotkeyPolicy
         }
 
         foreach (ShellHotkeyCandidate candidate
-                 in Candidates)
+                 in candidates)
         {
             try
             {
@@ -78,7 +125,6 @@ internal static class ShellSummonHotkeyPolicy
             }
         }
 
-        return ShellHotkeyRegistration
-            .Unavailable;
+        return unavailable;
     }
 }

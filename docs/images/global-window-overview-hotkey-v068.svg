@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16243a"/>
+      <stop offset="1" stop-color="#07101e"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf7ff" stop-opacity=".24"/>
+      <stop offset="1" stop-color="#8eb4dd" stop-opacity=".10"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity=".38"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <circle cx="188" cy="110" r="190" fill="#2e8df1" opacity=".16"/>
+  <circle cx="1080" cy="625" r="250" fill="#43d5bc" opacity=".10"/>
+  <text x="76" y="88" fill="#f5f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="40" font-weight="700">一步进入全部窗口</text>
+  <text x="78" y="130" fill="#aebed1" font-family="Segoe UI, Microsoft YaHei" font-size="21">不发送 Win+Tab · 不显示原生任务栏 · 不依赖 Explorer</text>
+  <g transform="translate(80 220)" font-family="Segoe UI, Microsoft YaHei">
+    <rect width="140" height="78" rx="18" fill="#10223a" stroke="#82baf3" stroke-opacity=".45"/>
+    <text x="70" y="49" text-anchor="middle" fill="#f5f9ff" font-size="26" font-weight="600">Ctrl</text>
+    <text x="158" y="49" fill="#83baf3" font-size="28">+</text>
+    <rect x="190" width="140" height="78" rx="18" fill="#10223a" stroke="#82baf3" stroke-opacity=".45"/>
+    <text x="260" y="49" text-anchor="middle" fill="#f5f9ff" font-size="26" font-weight="600">Alt</text>
+    <text x="348" y="49" fill="#83baf3" font-size="28">+</text>
+    <rect x="380" width="110" height="78" rx="18" fill="#2589ee"/>
+    <text x="435" y="50" text-anchor="middle" fill="white" font-size="28" font-weight="700">W</text>
+    <text x="0" y="126" fill="#aebed1" font-size="18">冲突时自动使用 Ctrl + Shift + W</text>
+    <path d="M492 39h80" stroke="#58cbb7" stroke-width="4" stroke-linecap="round"/>
+    <path d="M560 27l14 12-14 12" fill="none" stroke="#58cbb7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g transform="translate(610 55)" filter="url(#shadow)" font-family="Segoe UI, Microsoft YaHei">
+    <rect width="590" height="610" rx="32" fill="url(#glass)" stroke="#dcecff" stroke-opacity=".27"/>
+    <text x="32" y="52" fill="#f5f9ff" font-size="25" font-weight="600">窗口总览</text>
+    <text x="470" y="52" fill="#9fb4ca" font-size="17">4 个窗口</text>
+    <g transform="translate(30 78)" font-size="18">
+      <rect width="530" height="48" rx="14" fill="#2589ee"/>
+      <text x="65" y="31" text-anchor="middle" fill="white">全部</text>
+      <text x="202" y="31" text-anchor="middle" fill="#eaf5ff">窗口 4</text>
+      <text x="340" y="31" text-anchor="middle" fill="#d8e5f2">应用</text>
+      <text x="466" y="31" text-anchor="middle" fill="#d8e5f2">系统</text>
+    </g>
+    <g transform="translate(30 150)">
+      <rect width="530" height="88" rx="17" fill="#19395b" stroke="#55a8ef" stroke-width="2"/>
+      <rect x="18" y="20" width="48" height="48" rx="12" fill="#e6a940"/>
+      <text x="84" y="40" fill="#f5f9ff" font-size="20" font-weight="600">项目方案.docx</text>
+      <text x="84" y="65" fill="#adc0d4" font-size="16">Word · 当前窗口</text>
+      <text x="470" y="53" fill="#6fc7ff" font-size="14">Enter</text>
+      <rect y="102" width="530" height="88" rx="17" fill="#0a1728" fill-opacity=".76"/>
+      <rect x="18" y="122" width="48" height="48" rx="12" fill="#4e94e8"/>
+      <text x="84" y="142" fill="#f5f9ff" font-size="20" font-weight="600">FocusPanel - GitHub</text>
+      <text x="84" y="167" fill="#adc0d4" font-size="16">浏览器 · 正常</text>
+      <rect y="204" width="530" height="88" rx="17" fill="#0a1728" fill-opacity=".76"/>
+      <rect x="18" y="224" width="48" height="48" rx="12" fill="#45b99e"/>
+      <text x="84" y="244" fill="#f5f9ff" font-size="20" font-weight="600">资源管理器</text>
+      <text x="84" y="269" fill="#adc0d4" font-size="16">下载 · 正常</text>
+      <rect y="306" width="530" height="88" rx="17" fill="#0a1728" fill-opacity=".76"/>
+      <rect x="18" y="326" width="48" height="48" rx="12" fill="#8969e8"/>
+      <text x="84" y="346" fill="#f5f9ff" font-size="20" font-weight="600">终端</text>
+      <text x="84" y="371" fill="#adc0d4" font-size="16">PowerShell · 已最小化</text>
+    </g>
+    <text x="34" y="574" fill="#8fc5f7" font-size="17">↑ ↓ 选择　Enter 切换　Delete 关闭　Esc 返回</text>
+  </g>
+  <g transform="translate(80 470)" font-family="Segoe UI, Microsoft YaHei">
+    <text fill="#f5f9ff" font-size="26" font-weight="600">复用 Panel 现有窗口能力</text>
+    <text y="48" fill="#b7c7d9" font-size="19">WinEvent 实时快照 · DWM 预览 · 正常关闭</text>
+    <text y="84" fill="#b7c7d9" font-size="19">活动窗口优先 · 多屏可用 · 无进程轮询</text>
+    <rect y="120" width="455" height="52" rx="15" fill="#10223a"/>
+    <text x="22" y="153" fill="#58d0b8" font-size="18">设置页显示本次真正生效的快捷键</text>
+  </g>
+</svg>

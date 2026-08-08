@@ -389,6 +389,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "正在注册主动唤出快捷键…";
 
     [ObservableProperty]
+    private string windowOverviewShortcutText =
+        "正在注册窗口总览快捷键…";
+
+    [ObservableProperty]
     private string taskbarSlotShortcutText =
         "九槽位全局快速键已关闭";
 
@@ -1307,6 +1311,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ShellHotkeyRegistration registration)
     {
         SummonShortcutText =
+            registration.DisplayText;
+    }
+
+    internal void SetWindowOverviewShortcutStatus(
+        ShellHotkeyRegistration registration)
+    {
+        WindowOverviewShortcutText =
             registration.DisplayText;
     }
 

@@ -41,6 +41,8 @@ public partial class MainWindow :
     private const int WmHotkey = 0x0312;
     private const int WmDpiChanged = 0x02E0;
     private const int SummonHotkeyId = 0x4650;
+    private const int WindowOverviewHotkeyId =
+        0x4651;
 
     private readonly ShellCoordinator _coordinator;
     private readonly MainViewModel _viewModel;
@@ -61,6 +63,7 @@ public partial class MainWindow :
     private EdgeIndicatorWindow? _edgeIndicator;
     private HwndSource? _windowSource;
     private bool _summonHotkeyRegistered;
+    private bool _windowOverviewHotkeyRegistered;
     private bool _isExit;
     private bool _shutdownStarted;
     private bool _shutdownCompleted;
@@ -471,6 +474,22 @@ public partial class MainWindow :
             registration.IsRegistered;
         _viewModel.SetSummonShortcutStatus(
             registration);
+        ShellHotkeyRegistration
+            windowOverviewRegistration =
+                ShellSummonHotkeyPolicy
+                    .RegisterWindowOverview(
+                        (modifiers, virtualKey) =>
+                            NativeMethods.RegisterHotKey(
+                                hwnd,
+                                WindowOverviewHotkeyId,
+                                modifiers,
+                                virtualKey));
+        _windowOverviewHotkeyRegistered =
+            windowOverviewRegistration
+                .IsRegistered;
+        _viewModel
+            .SetWindowOverviewShortcutStatus(
+                windowOverviewRegistration);
         ApplyDwmBackdrop();
     }
 
@@ -1058,6 +1077,19 @@ public partial class MainWindow :
                 as ShellSearchResult
             ?? _viewModel
                 .SelectedSearchResult;
+        if (e.Key == Key.Enter
+            && focusedResult != null
+            && _viewModel
+                .ExecuteSearchResultCommand
+                .CanExecute(focusedResult))
+        {
+            _viewModel
+                .ExecuteSearchResultCommand
+                .Execute(focusedResult);
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key != Key.Delete
             || focusedResult?.Window
                 is not WindowReference window
@@ -4130,6 +4162,15 @@ public partial class MainWindow :
             NativeMethods.UnregisterHotKey(hwnd, SummonHotkeyId);
             _summonHotkeyRegistered = false;
         }
+        if (_windowOverviewHotkeyRegistered
+            && hwnd != IntPtr.Zero)
+        {
+            NativeMethods.UnregisterHotKey(
+                hwnd,
+                WindowOverviewHotkeyId);
+            _windowOverviewHotkeyRegistered =
+                false;
+        }
         _windowSource?.RemoveHook(WindowMessageHook);
         _windowSource = null;
         SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
@@ -4277,6 +4318,13 @@ public partial class MainWindow :
         else if (message == WmHotkey && wParam.ToInt32() == SummonHotkeyId)
         {
             OpenSearchFromSummonHotkey();
+            handled = true;
+        }
+        else if (message == WmHotkey
+                 && wParam.ToInt32()
+                    == WindowOverviewHotkeyId)
+        {
+            OpenWindowOverviewFromHotkey();
             handled = true;
         }
         else if (message == WmHotkey
@@ -4468,6 +4516,32 @@ public partial class MainWindow :
                 }
             }),
             DispatcherPriority.Input);
+    }
+
+    private void OpenWindowOverviewFromHotkey()
+    {
+        if (_isExit || !_shellStartupReady)
+            return;
+
+        ExpandSidebar();
+        Activate();
+        ApplySearchEntryState(
+            ShellSearchEntryPolicy
+                .PrepareWindowOverviewFromHotkey());
+        if (!_viewModel.IsSearchOpen)
+        {
+            _viewModel.ToggleSearchCommand
+                .Execute(null);
+        }
+
+        FrameworkElement initialTarget =
+            SearchResultsList.Items.Count > 0
+                ? SearchResultsList
+                : SearchBox;
+        QueueOverlayFocus(
+            SearchButton,
+            initialTarget,
+            () => _viewModel.IsSearchOpen);
     }
 
     private void UpdateEdgeIndicatorVisibility()

@@ -53,6 +53,19 @@ public sealed class ShellSearchEntryPolicyTests
     }
 
     [Fact]
+    public void WindowOverviewHotkeyAlwaysOpensCleanWindowList()
+    {
+        ShellSearchEntryState state =
+            ShellSearchEntryPolicy
+                .PrepareWindowOverviewFromHotkey();
+
+        Assert.Equal(
+            ShellSearchScope.Windows,
+            state.Scope);
+        Assert.Equal(string.Empty, state.Query);
+    }
+
+    [Fact]
     public void ApplicationLauncherAlwaysStartsFromAllApplications()
     {
         ShellSearchEntryState state =

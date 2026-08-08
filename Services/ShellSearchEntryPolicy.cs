@@ -29,6 +29,12 @@ internal static class ShellSearchEntryPolicy
             currentQuery ?? string.Empty);
 
     internal static ShellSearchEntryState
+        PrepareWindowOverviewFromHotkey() =>
+        new(
+            ShellSearchScope.Windows,
+            string.Empty);
+
+    internal static ShellSearchEntryState
         PrepareApplicationLauncher() =>
         new(
             ShellSearchScope.Applications,

@@ -2272,6 +2272,9 @@ public sealed class XamlResourceContractTests
             "Text=\"{Binding SummonShortcutText}\"",
             mainWindow);
         Assert.Contains(
+            "Text=\"{Binding WindowOverviewShortcutText}\"",
+            mainWindow);
+        Assert.Contains(
             "ShellSummonHotkeyPolicy",
             codeBehind);
         Assert.Contains(
@@ -2281,6 +2284,34 @@ public sealed class XamlResourceContractTests
                     root,
                     "ViewModels",
                     "MainViewModel.cs")));
+        Assert.Contains(
+            "SetWindowOverviewShortcutStatus(",
+            File.ReadAllText(
+                Path.Combine(
+                    root,
+                    "ViewModels",
+                    "MainViewModel.cs")));
+        Assert.Contains(
+            "RegisterWindowOverview(",
+            codeBehind);
+        Assert.Contains(
+            "OpenWindowOverviewFromHotkey();",
+            codeBehind);
+        Assert.Contains(
+            "PrepareWindowOverviewFromHotkey()",
+            codeBehind);
+        Assert.Contains(
+            "SearchResultsList.Items.Count > 0",
+            codeBehind);
+        Assert.Contains(
+            "if (e.Key == Key.Enter",
+            codeBehind);
+        Assert.Contains(
+            ".ExecuteSearchResultCommand",
+            codeBehind);
+        Assert.Contains(
+            "WindowOverviewHotkeyId",
+            codeBehind);
         Assert.DoesNotContain(
             "Text=\"快速搜索：Ctrl + Alt + Space\"",
             mainWindow);

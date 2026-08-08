@@ -102,4 +102,61 @@ public sealed class ShellSummonHotkeyPolicyTests
         Assert.True(result.IsRegistered);
         Assert.Equal(2, attempts);
     }
+
+    [Fact]
+    public void WindowOverview_UsesDedicatedPrimaryChord()
+    {
+        var attempts =
+            new List<(uint Modifiers, uint Key)>();
+
+        ShellHotkeyRegistration result =
+            ShellSummonHotkeyPolicy
+                .RegisterWindowOverview(
+                    (modifiers, key) =>
+                    {
+                        attempts.Add(
+                            (modifiers, key));
+                        return true;
+                    });
+
+        Assert.True(result.IsRegistered);
+        Assert.Contains(
+            "Ctrl + Alt + W",
+            result.DisplayText);
+        Assert.Contains(
+            "窗口总览",
+            result.DisplayText);
+        Assert.Single(attempts);
+        Assert.Equal(0x57u, attempts[0].Key);
+        Assert.NotEqual(
+            0u,
+            attempts[0].Modifiers
+                & 0x4000u);
+    }
+
+    [Fact]
+    public void WindowOverview_FallsBackAndReportsVisibleEntry()
+    {
+        int attempts = 0;
+        ShellHotkeyRegistration fallback =
+            ShellSummonHotkeyPolicy
+                .RegisterWindowOverview(
+                    (_, _) => ++attempts == 2);
+
+        Assert.True(fallback.IsRegistered);
+        Assert.Contains(
+            "Ctrl + Shift + W",
+            fallback.DisplayText);
+        Assert.Equal(2, attempts);
+
+        ShellHotkeyRegistration unavailable =
+            ShellSummonHotkeyPolicy
+                .RegisterWindowOverview(
+                    (_, _) => false);
+
+        Assert.False(unavailable.IsRegistered);
+        Assert.Contains(
+            "紧凑栏“窗口”",
+            unavailable.DisplayText);
+    }
 }
