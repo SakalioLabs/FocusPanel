@@ -287,6 +287,49 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
+    public void SurfaceWriteWithFailedVerification_IsStillRolledBack()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi
+        {
+            SurfaceSuppressionReadsSucceed =
+                false,
+            CloakWritesSucceed = false
+        };
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    native,
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+
+            Assert.False(
+                controller.TryEnableReplacement(
+                    out _));
+            Assert.False(
+                native.TaskbarSurfaceSuppressed);
+            Assert.True(native.Visible);
+            Assert.Equal(
+                1040,
+                native.WorkArea.Bottom);
+            Assert.False(File.Exists(sessionFile));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
     public void WorkAreaReleaseFailure_RestoresOriginalStateAndKeepsTaskbarVisible()
     {
         string directory = Path.Combine(
@@ -836,11 +879,6 @@ public sealed class TaskbarControllerStateTests
 
             controller.RunGuardOnceForTests();
 
-            Assert.True(controller.IsReplacementEnabled);
-            Assert.Null(stopped);
-
-            controller.RunGuardOnceForTests();
-
             Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
             Assert.NotNull(stopped);
@@ -989,7 +1027,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void BothEnhancementFailures_UseWindowHidingAndDetectReappearance()
+    public void BothPersistentSuppressionFailures_RejectReplacementAndRestoreImmediately()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -1011,22 +1049,15 @@ public sealed class TaskbarControllerStateTests
                 new FakeWatchdogLauncher(),
                 sessionFile);
 
-            Assert.True(controller.TryEnableReplacement(out _));
-            Assert.False(native.Visible);
-            string session = File.ReadAllText(sessionFile);
-            Assert.Contains(
-                "\"UsesEmptyWindowRegion\":false",
-                session);
-            Assert.Contains(
-                "\"UsesDwmCloak\":false",
-                session);
-
-            native.Visible = true;
-            controller.RunGuardOnceForTests();
-
+            Assert.False(
+                controller.TryEnableReplacement(
+                    out string? error));
             Assert.False(controller.IsReplacementEnabled);
             Assert.True(native.Visible);
             Assert.Equal(1040, native.WorkArea.Bottom);
+            Assert.Equal((uint)3, native.AppBarState);
+            Assert.Contains("持久任务栏抑制层", error);
+            Assert.False(File.Exists(sessionFile));
         }
         finally
         {
@@ -1083,7 +1114,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void AllPresentationLayersLost_StopsOnlyAfterTaskbarActuallyReappears()
+    public void AllPresentationLayersLost_RepairsOnceThenStopsOnRecurrence()
     {
         string directory = Path.Combine(
             Path.GetTempPath(),
@@ -1115,12 +1146,26 @@ public sealed class TaskbarControllerStateTests
             native.Visible = true;
             controller.RunGuardOnceForTests();
 
+            Assert.True(controller.IsReplacementEnabled);
+            Assert.Null(stopped);
+            Assert.False(native.Visible);
+            Assert.True(
+                native.TaskbarSurfaceSuppressed
+                || native.TaskbarAppCloaked);
+            Assert.Equal(2, native.HideWriteCount);
+
+            native.TaskbarSurfaceSuppressed = false;
+            native.TaskbarAppCloaked = false;
+            native.Visible = true;
+            controller.RunGuardOnceForTests();
+
             Assert.False(controller.IsReplacementEnabled);
             Assert.NotNull(stopped);
             Assert.Equal(
                 TaskbarReplacementStopReason.WindowsTaskbarReappeared,
                 stopped.Reason);
             Assert.Contains("全部呈现层", stopped.Message);
+            Assert.Equal(2, native.HideWriteCount);
         }
         finally
         {
@@ -1130,7 +1175,7 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
-    public void ExplorerHostChange_ReportsTypedReasonAndDoesNotRehide()
+    public void ExplorerHostChange_RepairsOnceThenReportsASecondReplacement()
     {
         string directory = Path.Combine(Path.GetTempPath(), "FocusPanel.Tests", Guid.NewGuid().ToString("N"));
         string sessionFile = Path.Combine(directory, "taskbar-session.json");
@@ -1144,6 +1189,15 @@ public sealed class TaskbarControllerStateTests
 
             Assert.True(controller.TryEnableReplacement(out _));
             native.TaskbarHandle = new IntPtr(2);
+            controller.RunGuardOnceForTests();
+
+            Assert.True(controller.IsReplacementEnabled);
+            Assert.Null(stopped);
+            Assert.True(
+                native.TaskbarSurfaceSuppressed
+                || native.TaskbarAppCloaked);
+
+            native.TaskbarHandle = new IntPtr(3);
             controller.RunGuardOnceForTests();
 
             Assert.True(controller.IsReplacementEnabled);
@@ -1277,6 +1331,11 @@ public sealed class TaskbarControllerStateTests
             get;
             set;
         } = true;
+        public bool SurfaceSuppressionReadsSucceed
+        {
+            get;
+            set;
+        } = true;
         public bool TaskbarAppCloaked
         {
             get;
@@ -1353,7 +1412,8 @@ public sealed class TaskbarControllerStateTests
 
         public bool IsTaskbarSurfaceSuppressed(
             IntPtr taskbar) =>
-            TaskbarSurfaceSuppressed;
+            SurfaceSuppressionReadsSucceed
+            && TaskbarSurfaceSuppressed;
 
         public bool SetTaskbarSurfaceSuppressed(
             IntPtr taskbar,

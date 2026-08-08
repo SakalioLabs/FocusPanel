@@ -46,6 +46,7 @@ public sealed class TaskbarController : ITaskbarController
     private int _restoring;
     private int _guardRunning;
     private int _replacementGeneration;
+    private int _repairAttempted;
 
     public event Action<TaskbarReplacementStoppedEvent>? ReplacementStopped;
 
@@ -157,6 +158,9 @@ public sealed class TaskbarController : ITaskbarController
 
         Interlocked.Increment(
             ref _replacementGeneration);
+        Interlocked.Exchange(
+            ref _repairAttempted,
+            0);
         IsReplacementEnabled = true;
         _guardConfirmation.ObserveValid();
         _guardTimer = new Timer(
@@ -184,6 +188,9 @@ public sealed class TaskbarController : ITaskbarController
             _state = null;
             _activeTaskbarHandle = IntPtr.Zero;
             _canUseDwmCloak = false;
+            Interlocked.Exchange(
+                ref _repairAttempted,
+                0);
             _guardConfirmation.ObserveValid();
         }
         finally
@@ -377,27 +384,58 @@ public sealed class TaskbarController : ITaskbarController
         // region keeps that host non-drawing and non-interactive even if its
         // WS_VISIBLE bit changes. This is applied once and restored from the
         // watchdog session; the guard never rewrites it.
-        _state.UsesEmptyWindowRegion =
+        bool surfaceMutationApplied =
             _native.SetTaskbarSurfaceSuppressed(
                 taskbar,
-                true)
+                true);
+        bool surfaceSuppressionVerified =
+            surfaceMutationApplied
             && _native.IsTaskbarSurfaceSuppressed(
                 taskbar);
+        _state.UsesEmptyWindowRegion =
+            surfaceMutationApplied;
 
         // DWM cloaking is a second, independent presentation boundary. It
         // keeps the Explorer host invisible even if a Shell edge gesture
         // makes the underlying HWND visible or replaces its GDI region.
         // The original app-cloak bit is recorded before any mutation and is
         // restored by both the main process and the watchdog.
-        _state.UsesDwmCloak =
+        bool cloakMutationApplied =
             _canUseDwmCloak
             && _native.SetTaskbarAppCloaked(
                 taskbar,
-                true)
+                true);
+        bool cloakSuppressionVerified =
+            cloakMutationApplied
             && _native.TryGetTaskbarAppCloaked(
                 taskbar,
                 out bool appCloaked)
             && appCloaked;
+        _state.UsesDwmCloak =
+            cloakMutationApplied;
+
+        if (!surfaceSuppressionVerified
+            && !cloakSuppressionVerified)
+        {
+            if (cloakMutationApplied)
+            {
+                _native.SetTaskbarAppCloaked(
+                    taskbar,
+                    _state.TaskbarWasAppCloaked);
+                _state.UsesDwmCloak = false;
+            }
+            if (surfaceMutationApplied)
+            {
+                _native.SetTaskbarSurfaceSuppressed(
+                    taskbar,
+                    false);
+                _state.UsesEmptyWindowRegion = false;
+            }
+            _lastApplyError =
+                "当前 Windows 环境没有接受任何持久任务栏抑制层；"
+                + "为避免底边悬停后原任务栏重新出现，已取消接管";
+            return false;
+        }
 
         try
         {
@@ -552,6 +590,14 @@ public sealed class TaskbarController : ITaskbarController
 
             if (!valid)
             {
+                if (TaskbarRepairPolicy.IsRepairable(
+                        _lastStopReason)
+                    && TryRepairReplacementOnce())
+                {
+                    _guardConfirmation.ObserveValid();
+                    return;
+                }
+
                 bool requiresConfirmation =
                     _lastStopReason
                     != TaskbarReplacementStopReason
@@ -629,7 +675,9 @@ public sealed class TaskbarController : ITaskbarController
         {
             _lastApplyError =
                 "Windows 已重新启用原生任务栏的边缘呼出，且呈现抑制层已经失效";
-            _lastStopReason = TaskbarReplacementStopReason.Unknown;
+            _lastStopReason =
+                TaskbarReplacementStopReason
+                    .WindowsTaskbarReappeared;
             return false;
         }
 
@@ -649,6 +697,155 @@ public sealed class TaskbarController : ITaskbarController
         _lastApplyError = null;
         _lastStopReason = TaskbarReplacementStopReason.Unknown;
         return true;
+    }
+
+    private bool TryRepairReplacementOnce()
+    {
+        if (Interlocked.CompareExchange(
+                ref _repairAttempted,
+                1,
+                0) != 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            using var mutation = AcquireMutationMutex();
+            if (_state == null
+                || File.Exists(_disabledFile))
+            {
+                return false;
+            }
+
+            IntPtr taskbar =
+                _native.FindPrimaryTaskbar();
+            if (taskbar == IntPtr.Zero
+                || !_native.TryGetPrimaryMonitorInfo(
+                    taskbar,
+                    out NativeRect workArea,
+                    out NativeRect bounds)
+                || !RectsEqual(
+                    bounds,
+                    _state.PrimaryBounds)
+                || !RectsEqual(
+                    workArea,
+                    _state.PrimaryBounds))
+            {
+                return false;
+            }
+
+            uint desiredState =
+                _state.OriginalAppBarState
+                & ~AbsAutoHide;
+            if (_native.GetAppBarState(taskbar)
+                != desiredState)
+            {
+                _native.SetAppBarState(
+                    taskbar,
+                    desiredState);
+            }
+            if ((_native.GetAppBarState(taskbar)
+                    & AbsAutoHide) != 0)
+            {
+                return false;
+            }
+
+            bool surfaceMutationApplied =
+                _native.SetTaskbarSurfaceSuppressed(
+                    taskbar,
+                    true);
+            bool surfaceSuppressed =
+                surfaceMutationApplied
+                && _native.IsTaskbarSurfaceSuppressed(
+                    taskbar);
+            bool cloakMutationApplied =
+                _canUseDwmCloak
+                && _native.SetTaskbarAppCloaked(
+                    taskbar,
+                    true);
+            bool cloakSuppressed =
+                cloakMutationApplied
+                && _native.TryGetTaskbarAppCloaked(
+                    taskbar,
+                    out bool appCloaked)
+                && appCloaked;
+
+            _state.UsesEmptyWindowRegion =
+                surfaceMutationApplied;
+            _state.UsesDwmCloak =
+                cloakMutationApplied;
+            if (!surfaceSuppressed
+                && !cloakSuppressed)
+            {
+                if (cloakMutationApplied)
+                {
+                    _native.SetTaskbarAppCloaked(
+                        taskbar,
+                        _state.TaskbarWasAppCloaked);
+                    _state.UsesDwmCloak = false;
+                }
+                if (surfaceMutationApplied)
+                {
+                    _native.SetTaskbarSurfaceSuppressed(
+                        taskbar,
+                        false);
+                    _state.UsesEmptyWindowRegion = false;
+                }
+                return false;
+            }
+
+            try
+            {
+                File.WriteAllText(
+                    _sessionFile,
+                    JsonSerializer.Serialize(
+                        _state,
+                        SessionJsonOptions));
+            }
+            catch
+            {
+                if (cloakMutationApplied)
+                {
+                    _native.SetTaskbarAppCloaked(
+                        taskbar,
+                        _state.TaskbarWasAppCloaked);
+                }
+                if (surfaceMutationApplied)
+                {
+                    _native.SetTaskbarSurfaceSuppressed(
+                        taskbar,
+                        false);
+                }
+                throw;
+            }
+
+            if (_native.IsWindowVisible(taskbar)
+                && (!_native.SetTaskbarVisible(
+                        taskbar,
+                        false)
+                    || _native.IsWindowVisible(
+                        taskbar)))
+            {
+                return false;
+            }
+
+            _activeTaskbarHandle = taskbar;
+            _lastApplyError = null;
+            _lastStopReason =
+                TaskbarReplacementStopReason.Unknown;
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _lastApplyError =
+                $"任务栏单次修复失败：{ex.Message}";
+            return false;
+        }
     }
 
     private void StopReplacementFromGuard(

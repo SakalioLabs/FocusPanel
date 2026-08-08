@@ -5743,7 +5743,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void TaskbarExclusiveMode_SuppressesNativeSurfaceOnceAndGuardRemainsReadOnly()
+    public void TaskbarExclusiveMode_RequiresPersistentSurfaceAndAllowsOnlyOneRepair()
     {
         string root = FindRepositoryRoot();
         string controller = File.ReadAllText(
@@ -5776,10 +5776,15 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "_native.SetWorkArea(_state.PrimaryBounds)",
             controller);
+        int guardStart = controller.IndexOf(
+            "private void GuardReplacementSafely",
+            StringComparison.Ordinal);
+        int guardEnd = controller.IndexOf(
+            "private bool IsCurrentReplacement",
+            guardStart,
+            StringComparison.Ordinal);
         string guard = controller[
-            controller.IndexOf(
-                "private void GuardReplacementSafely",
-                StringComparison.Ordinal)..];
+            guardStart..guardEnd];
         Assert.DoesNotContain(
             "_native.SetWorkArea(",
             guard);
@@ -5793,7 +5798,19 @@ public sealed class XamlResourceContractTests
             "ApplyReplacement();",
             guard);
         Assert.Contains(
-            "守护器只验证状态，不循环隐藏或反复改写工作区",
+            "TryRepairReplacementOnce()",
+            guard);
+        Assert.Contains(
+            "ref _repairAttempted",
+            controller);
+        Assert.Contains(
+            "Interlocked.CompareExchange(",
+            controller);
+        Assert.Contains(
+            "当前 Windows 环境没有接受任何持久任务栏抑制层",
+            controller);
+        Assert.Contains(
+            "整次会话最多自动修复一次",
             onboarding);
     }
 

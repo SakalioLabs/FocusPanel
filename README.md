@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.49 修复任务栏接管的结构性假成功：只有公开 [`SetWindowRgn`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowrgn) 空区域或 [`DWMWA_CLOAK`](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute) 至少一层写入并回读确认有效，Panel 才会进入替代状态，不再只靠一次 `SW_HIDE` 等待底边悬停把任务栏重新推出来。Explorer 首次重建宿主或持久抑制层同时丢失时，本次会话允许一次受控修复；再次发生就立即恢复系统任务栏，不会形成过去那种隐藏/出现循环。
+
+![任务栏接管必须有持久抑制层并且只允许一次修复](docs/images/bounded-taskbar-takeover-repair.svg)
+
 > 0.11.48 聚焦修复三处直接影响使用的问题：状态中心的入口明确收口为“Panel 应用与窗口”，只进入 Panel 自己的窗口总览，不触发原生任务栏隐藏图标区；用户选择的独立 `.ico` 现在由应用直接解码并选择最合适的尺寸，不再依赖不同机器表现不一致的 Shell 抽取；收纳图标视图会在真实宽度出现后强制重排，并把每一行宽度均匀分给固定尺寸图标卡，避免启动时锁成单列或左右留出怪异大洞。
 
 ![Panel 自有应用入口、可靠 ICO 与均匀图标网格](docs/images/panel-native-apps-ico-grid.svg)
@@ -573,9 +577,9 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 完整替代模式会先保存主屏原工作区、AppBar 状态、任务栏可见性和原始 DWM app-cloak 位，再通过公开 [`ABM_SETSTATE`](https://learn.microsoft.com/en-us/windows/win32/shell/abm-setstate) 清除 `ABS_AUTOHIDE`、一次性把主屏工作区释放到完整显示器边界。随后通过公开 [`SetWindowRgn`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowrgn) 为主屏 `Shell_TrayWnd` 设置空窗口区域，并以公开 [`DWMWA_CLOAK`](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute) 增加独立的 DWM 合成隐藏层后隐藏宿主。即使 Explorer 的边缘手势重新设置逻辑可见位，任务栏仍没有可绘制、可命中或可呈现的表面。FocusPanel 不结束 Explorer、不修改副屏任务栏，也不读取 Explorer 私有结构。
 
-守护器只读取 AppBar、工作区、宿主句柄、空区域和 DWM cloak 状态，不会周期性执行 `SetWindowRgn`、`DwmSetWindowAttribute`、`ShowWindow`、`ABM_SETSTATE` 或 `SPI_SETWORKAREA`，因此不会与 Explorer 在“隐藏/显示”或“占用/释放工作区”之间来回争抢。空区域、DWM cloak 或窗口隐藏任一仍有效时继续稳定接管；只有全部呈现能力都恢复且原生任务栏实际可见时才立即安全恢复。Explorer 宿主或显示布局等其余瞬时变化仍要求连续两次、约 4 秒确认，中间恢复正常会清除待确认状态。原生任务栏原本开启自动隐藏时，恢复完成以 AppBar、工作区和两层表面状态为准，不再被瞬时窗口可见位卡住遗留会话。
+稳定运行时守护器只读取 AppBar、工作区、宿主句柄、空区域和 DWM cloak 状态，不会周期性改写任务栏。启用接管现在要求空窗口区域或 DWM cloak 至少有一层经回读确认有效，不能再只靠容易被底边手势推翻的 `ShowWindow(SW_HIDE)` 假装成功。若 Explorer 在本次会话中重建宿主，或同时丢失所有持久抑制层，守护器最多执行一次受控修复：重新关闭原生自动隐藏边缘、恢复持久抑制并在确实可见时再隐藏一次，但不改写工作区。修复预算耗尽后再次失效会立即安全恢复，因此不会与 Explorer 形成无限隐藏/显示循环。
 
-接管成功时会记录当前主屏 `Shell_TrayWnd` 句柄。Explorer 重启并创建新宿主后，即使新窗口碰巧处于隐藏状态，也会准确报告“Explorer 宿主变化”，而不是误报成普通可见性变化。每次恢复和重新接管都会推进会话代际，已经在后台读取中的旧守护结果会自动作废，不会污染新会话或弹出迟到警告。状态中心和设置页会显示停止原因；确认环境正常后，由用户点击“重新接管任务栏”手动启用。
+接管成功时会记录当前主屏 `Shell_TrayWnd` 句柄。Explorer 第一次重建宿主且主屏边界、完整工作区和安全会话仍一致时，单次修复会把持久抑制迁移到新宿主；同一会话再次重建或修复不能得到可验证结果时才报告“Explorer 宿主变化”并恢复。每次恢复和重新接管都会推进会话代际，已经在后台读取中的旧守护结果会自动作废，不会污染新会话或弹出迟到警告。
 
 首次启用前会显示安全说明。只有在侧边壳层、热区以及独立恢复守护进程都就绪后，FocusPanel 才会隐藏原任务栏；紧急快捷键注册失败时不会改变任务栏设置。
 
