@@ -1699,6 +1699,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "只显示 Panel 已识别的固定、运行和后台应用，不调用 Windows 任务栏隐藏图标",
             compactDock);
+        Assert.DoesNotContain(
+            "Text=\"{Binding TaskbarApps.Count}\"",
+            compactDock);
         Assert.Contains(
             "按 Shift+Enter 直接打开或收起 Panel 通知",
             compactDock);
@@ -3240,6 +3243,15 @@ public sealed class XamlResourceContractTests
             viewModel);
         Assert.Contains(
             "CompactTaskbarAppPolicy.Select(",
+            viewModel);
+        Assert.Contains(
+            "CompactTaskbarApps.Count(item =>",
+            viewModel);
+        Assert.Contains(
+            "item.WindowCount > 0",
+            viewModel);
+        Assert.Contains(
+            "任务栏暂无可切换窗口，单击刷新",
             viewModel);
         Assert.Contains(
             "Command=\"{Binding RefreshRunningApplicationsCommand}\"",

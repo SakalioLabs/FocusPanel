@@ -952,12 +952,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public bool HasCompactTaskbarApps =>
         CompactTaskbarApps.Count > 0;
     public int RunningApplicationCount =>
-        TaskbarApps.Count(item =>
-            item.IsRunning);
+        CompactTaskbarApps.Count(item =>
+            item.WindowCount > 0);
     public string RunningApplicationSummary =>
         RunningApplicationCount == 0
-            ? "尚未读取到运行应用，单击刷新"
-            : $"正在运行 {RunningApplicationCount} 个应用";
+            ? "任务栏暂无可切换窗口，单击刷新"
+            : $"任务栏有 {RunningApplicationCount} 个可切换应用";
     public string PanelVerticalAnchorLabel =>
         (ShellPanelEdgePolicy.IsLeft(PanelEdge)
             ? "左"
