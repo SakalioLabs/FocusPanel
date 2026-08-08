@@ -2380,33 +2380,6 @@
                                             Visibility="{Binding IsUnifiedSearchEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 </Grid>
                             </Button>
-                            <Button x:Name="BackgroundAppsButton"
-                                    Tag="CompactFixedEntry"
-                                    Style="{StaticResource CompactFullOnlyEntryButton}"
-                                    Click="BackgroundAppsButton_Click"
-                                    AutomationProperties.Name="打开 Panel 自有后台应用抽屉"
-                                    AutomationProperties.HelpText="只显示 Panel 已识别的固定、运行和后台应用，不调用 Windows 任务栏隐藏图标"
-                                    ToolTip="后台应用 · Panel 自有抽屉">
-                                <Grid Width="48" Height="44">
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Style="{StaticResource FocusIconText}"
-                                                   HorizontalAlignment="Center"
-                                                   Text="&#xE8FD;"/>
-                                        <TextBlock Margin="0,-2,0,0"
-                                                   HorizontalAlignment="Center"
-                                                   Style="{StaticResource FocusMetaText}"
-                                                   Text="后台"/>
-                                    </StackPanel>
-                                    <Border Width="3"
-                                            Height="22"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Center"
-                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
-                                            Background="{DynamicResource FocusAccentBrightBrush}"
-                                            IsHitTestVisible="False"
-                                            Visibility="{Binding IsStatusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                </Grid>
-                            </Button>
                             <Border Height="1"
                                     Margin="11,6"
                                     Background="{DynamicResource FocusStrokeBrush}"/>

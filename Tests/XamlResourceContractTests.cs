@@ -1582,7 +1582,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_AdaptsEightFullEntriesToSixShortScreenEntries()
+    public void CompactDock_KeepsBackgroundManagementOutOfTaskbar()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
@@ -1595,7 +1595,7 @@ public sealed class XamlResourceContractTests
 
         Assert.True(dockStart >= 0 && onboardingStart > dockStart);
         string compactDock = mainWindow[dockStart..onboardingStart];
-        Assert.Equal(9, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
+        Assert.Equal(8, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
         Assert.Equal(
             1,
             compactDock.Split(
@@ -1606,9 +1606,6 @@ public sealed class XamlResourceContractTests
             StringComparison.Ordinal);
         int search = compactDock.IndexOf(
             "x:Name=\"SearchButton\"",
-            StringComparison.Ordinal);
-        int backgroundApps = compactDock.IndexOf(
-            "x:Name=\"BackgroundAppsButton\"",
             StringComparison.Ordinal);
         int applications = compactDock.IndexOf(
             "x:Name=\"TaskbarAppsScrollViewer\"",
@@ -1634,8 +1631,7 @@ public sealed class XamlResourceContractTests
         Assert.True(
             start >= 0
             && start < search
-            && search < backgroundApps
-            && backgroundApps < applications
+            && search < applications
             && applications < denseFocus
             && denseFocus < organizer
             && organizer < tasks
@@ -1664,7 +1660,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "x:Name=\"StatusCenterButton\"",
             compactDock);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "x:Name=\"BackgroundAppsButton\"",
             compactDock);
         Assert.Contains(
@@ -1680,7 +1676,7 @@ public sealed class XamlResourceContractTests
             "Style=\"{StaticResource CompactDenseOnlyEntryButton}\"",
             compactDock);
         Assert.Equal(
-            3,
+            2,
             compactDock.Split(
                     "Style=\"{StaticResource CompactFullOnlyEntryButton}\"")
                 .Length - 1);
@@ -1693,12 +1689,9 @@ public sealed class XamlResourceContractTests
             + "_viewModel\\.LastWorkspace[\\s\\S]*?"
             + "OpenFocusWorkspace\\(destination\\);",
             codeBehind);
-        Assert.Contains(
-            "Click=\"BackgroundAppsButton_Click\"",
-            compactDock);
-        Assert.Contains(
-            "只显示 Panel 已识别的固定、运行和后台应用，不调用 Windows 任务栏隐藏图标",
-            compactDock);
+        Assert.DoesNotContain(
+            "BackgroundAppsButton_Click",
+            codeBehind);
         Assert.DoesNotContain(
             "Text=\"{Binding TaskbarApps.Count}\"",
             compactDock);
@@ -1857,7 +1850,7 @@ public sealed class XamlResourceContractTests
                 "Style=\"{StaticResource CompactLabeledEntryButton}\"",
                 StringSplitOptions.None).Length - 1);
         Assert.Equal(
-            3,
+            2,
             compactDock.Split(
                 "Style=\"{StaticResource CompactFullOnlyEntryButton}\"",
                 StringSplitOptions.None).Length - 1);

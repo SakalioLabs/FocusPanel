@@ -96,7 +96,12 @@ public sealed class BackgroundAppFilterPolicyTests
         Assert.Contains("Content=\"全部\"", xaml);
         Assert.Contains("Content=\"有窗口\"", xaml);
         Assert.Contains("Content=\"纯后台\"", xaml);
-        Assert.Contains("BackgroundAppSearchBox,", code);
+        Assert.Contains(
+            "BackgroundAppSearchBox.Focus();",
+            code);
+        Assert.Contains(
+            "BackgroundAppSearchBox.SelectAll();",
+            code);
         Assert.DoesNotContain(
             "ItemsSource=\"{Binding TaskbarApps}\"\n                                                 MaxHeight=\"420\"",
             xaml);

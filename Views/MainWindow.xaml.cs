@@ -1001,33 +1001,6 @@ public partial class MainWindow :
         _viewModel.SearchQuery = entry.Query;
     }
 
-    private void BackgroundAppsButton_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        ExpandSidebar();
-        if (!_viewModel.IsStatusCenterOpen
-            || _openStatusCenterDetail
-                != StatusCenterDetail.Applications)
-        {
-            _viewModel.ShowStatusCenterDetail(
-                StatusCenterDetail.Applications);
-            QueueOverlayFocus(
-                BackgroundAppsButton,
-                BackgroundAppSearchBox,
-                () => _viewModel.IsStatusCenterOpen,
-                selectAllText: true);
-            e.Handled = true;
-            return;
-        }
-
-        SetOpenStatusCenterDetail(
-            StatusCenterDetail.None,
-            bringIntoView: false);
-        BackgroundAppsButton.Focus();
-        e.Handled = true;
-    }
-
     private void SearchSuggestion_Click(
         object sender,
         RoutedEventArgs e)
@@ -1932,7 +1905,18 @@ public partial class MainWindow :
             return;
 
         Dispatcher.BeginInvoke(
-            new Action(target.BringIntoView),
+            new Action(() =>
+            {
+                target.BringIntoView();
+                if (detail
+                    != StatusCenterDetail.Applications)
+                {
+                    return;
+                }
+
+                BackgroundAppSearchBox.Focus();
+                BackgroundAppSearchBox.SelectAll();
+            }),
             DispatcherPriority.Background);
     }
 
