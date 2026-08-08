@@ -7,6 +7,14 @@ public sealed class StatusCenterDetailPolicyTests
 {
     [Theory]
     [InlineData(
+        (int)StatusCenterDetail.Applications,
+        (int)StatusCenterDetail.Applications,
+        (int)StatusCenterDetail.None)]
+    [InlineData(
+        (int)StatusCenterDetail.Network,
+        (int)StatusCenterDetail.Applications,
+        (int)StatusCenterDetail.Applications)]
+    [InlineData(
         (int)StatusCenterDetail.None,
         (int)StatusCenterDetail.Network,
         (int)StatusCenterDetail.Network)]

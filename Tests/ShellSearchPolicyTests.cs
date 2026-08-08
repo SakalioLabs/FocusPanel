@@ -270,7 +270,7 @@ public sealed class ShellSearchPolicyTests
                     ShellSearchResultKind.SystemCommand
                 }));
         Assert.Equal(
-            5,
+            6,
             results.Count(item => item.IsPanelStatus));
         Assert.Contains(
             results,
@@ -537,6 +537,8 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
+    [InlineData("应用与窗口", "Applications")]
+    [InlineData("后台应用", "Applications")]
     [InlineData("win a", "Network")]
     [InlineData("快捷设置", "Network")]
     [InlineData("音量混合器", "ApplicationAudio")]

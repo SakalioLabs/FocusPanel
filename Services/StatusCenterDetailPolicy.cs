@@ -3,6 +3,7 @@ namespace FocusPanel.Services;
 internal enum StatusCenterDetail
 {
     None,
+    Applications,
     Network,
     ApplicationAudio,
     MediaAndBattery,

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="560" viewBox="0 0 1180 560" role="img" aria-labelledby="title desc">
+  <title id="title">Panel 状态中心内嵌应用与窗口抽屉</title>
+  <desc id="desc">状态中心直接展示统一应用列表，多窗口可在原位展开并逐个切换或关闭，不跳转搜索浮层或 Windows 隐藏图标区。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#101827"/><stop offset="1" stop-color="#23354c"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff" stop-opacity=".17"/><stop offset="1" stop-color="#7cbcff" stop-opacity=".06"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1180" height="560" rx="30" fill="url(#bg)"/>
+  <text x="48" y="58" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="27" font-weight="700">应用与窗口，不再跳出状态中心</text>
+  <text x="48" y="90" fill="#9fb2ca" font-family="Segoe UI, Microsoft YaHei" font-size="15">0.11.60 · 唯一应用身份 · 原位多窗口 · 独立滚动 · 不调用隐藏图标抽屉</text>
+
+  <g transform="translate(48 124)" filter="url(#shadow)">
+    <rect width="72" height="388" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".17"/>
+    <circle cx="36" cy="42" r="19" fill="#3b82f6"/><path d="M27 42h18M36 33v18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="14" y="82" width="44" height="44" rx="13" fill="#17263a"/><circle cx="36" cy="104" r="12" fill="#60a5fa"/>
+    <rect x="14" y="136" width="44" height="44" rx="13" fill="#17263a"/><circle cx="36" cy="158" r="12" fill="#34d399"/>
+    <rect x="14" y="190" width="44" height="44" rx="13" fill="#17263a"/><circle cx="36" cy="212" r="12" fill="#f59e0b"/>
+    <path d="M17 252h38" stroke="#8ba0b8" stroke-opacity=".45"/>
+    <rect x="10" y="266" width="52" height="52" rx="15" fill="#1e4f7a" stroke="#79bfff" stroke-opacity=".5"/>
+    <text x="36" y="298" text-anchor="middle" fill="#dcebff" font-family="Segoe UI Symbol" font-size="19">⚙</text>
+    <rect x="14" y="329" width="44" height="44" rx="13" fill="#17263a"/><text x="36" y="357" text-anchor="middle" fill="#a8bdd4" font-family="Segoe UI Symbol" font-size="17">◷</text>
+  </g>
+
+  <g transform="translate(144 124)" filter="url(#shadow)">
+    <rect width="430" height="388" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".17"/>
+    <text x="24" y="43" fill="#f5f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">状态中心</text>
+    <text x="24" y="69" fill="#8fa5bf" font-family="Segoe UI, Microsoft YaHei" font-size="13">替代正常 · 网络在线 · 音量 42%</text>
+    <rect x="20" y="91" width="390" height="58" rx="15" fill="#194873" stroke="#79bfff" stroke-opacity=".45"/>
+    <circle cx="51" cy="120" r="14" fill="#60a5fa"/><text x="78" y="116" fill="#f1f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="16" font-weight="600">应用与窗口总览</text><text x="78" y="136" fill="#a9c7e8" font-family="Segoe UI, Microsoft YaHei" font-size="12">9 项 · 点击再次收起当前详情</text><path d="M380 116l8 8 8-8" fill="none" stroke="#dbeafe" stroke-width="2"/>
+    <g transform="translate(20 164)">
+      <rect width="390" height="48" rx="13" fill="#17263a"/><text x="18" y="30" fill="#b8c9da" font-family="Segoe UI, Microsoft YaHei" font-size="14">网络</text><text x="96" y="30" fill="#b8c9da" font-family="Segoe UI, Microsoft YaHei" font-size="14">应用音量</text><text x="203" y="30" fill="#b8c9da" font-family="Segoe UI, Microsoft YaHei" font-size="14">媒体</text><text x="267" y="30" fill="#b8c9da" font-family="Segoe UI, Microsoft YaHei" font-size="14">输入法</text><text x="335" y="30" fill="#b8c9da" font-family="Segoe UI, Microsoft YaHei" font-size="14">通知</text>
+    </g>
+    <rect x="20" y="228" width="390" height="48" rx="13" fill="#17263a"/><text x="46" y="258" fill="#c9d7e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">显示桌面</text><text x="178" y="258" fill="#c9d7e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">锁定</text><text x="286" y="258" fill="#c9d7e8" font-family="Segoe UI, Microsoft YaHei" font-size="14">电源</text>
+    <rect x="20" y="292" width="390" height="72" rx="15" fill="#17263a"/><text x="40" y="322" fill="#e4edf8" font-family="Segoe UI, Microsoft YaHei" font-size="15">状态详情仍在同一层级</text><text x="40" y="346" fill="#91a7c0" font-family="Segoe UI, Microsoft YaHei" font-size="13">互斥展开 · Esc 关闭 · 输入时不自动收回</text>
+  </g>
+
+  <g transform="translate(600 124)" filter="url(#shadow)">
+    <rect width="532" height="388" rx="24" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".17"/>
+    <text x="24" y="43" fill="#f5f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">应用与窗口</text><text x="486" y="43" text-anchor="end" fill="#9bb0c8" font-family="Segoe UI, Microsoft YaHei" font-size="13">9 项</text>
+    <text x="24" y="68" fill="#90a6bf" font-family="Segoe UI, Microsoft YaHei" font-size="13">固定、运行、后台与消息窗口共用同一身份和顺序</text>
+    <g transform="translate(20 88)">
+      <rect width="492" height="58" rx="14" fill="#17385a" stroke="#69b7ff" stroke-opacity=".48"/><circle cx="31" cy="29" r="16" fill="#60a5fa"/><text x="58" y="25" fill="#f1f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="15" font-weight="600">浏览器</text><text x="58" y="44" fill="#a7c2df" font-family="Segoe UI, Microsoft YaHei" font-size="12">正在使用 · 3 个窗口</text><text x="450" y="27" text-anchor="end" fill="#bfdbfe" font-family="Segoe UI, Microsoft YaHei" font-size="12">3 窗口</text><path d="M460 34l7 7 7-7" fill="none" stroke="#bfdbfe" stroke-width="2"/>
+      <rect y="66" width="492" height="42" rx="12" fill="#132238"/><text x="18" y="92" fill="#d3dfec" font-family="Segoe UI, Microsoft YaHei" font-size="13">项目文档 · 当前窗口</text><circle cx="466" cy="87" r="12" fill="#243b55"/><text x="466" y="92" text-anchor="middle" fill="#c7d6e6" font-family="Segoe UI Symbol" font-size="12">×</text>
+      <rect y="114" width="492" height="42" rx="12" fill="#132238"/><text x="18" y="140" fill="#d3dfec" font-family="Segoe UI, Microsoft YaHei" font-size="13">设计参考 · 已最小化</text><circle cx="466" cy="135" r="12" fill="#243b55"/><text x="466" y="140" text-anchor="middle" fill="#c7d6e6" font-family="Segoe UI Symbol" font-size="12">×</text>
+      <rect y="162" width="492" height="58" rx="14" fill="#17263a"/><circle cx="31" cy="191" r="16" fill="#34d399"/><text x="58" y="187" fill="#edf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="15" font-weight="600">同步工具</text><text x="58" y="206" fill="#91a7c0" font-family="Segoe UI, Microsoft YaHei" font-size="12">后台运行 · 无可见窗口</text><circle cx="465" cy="191" r="5" fill="#34d399"/>
+      <rect y="228" width="492" height="58" rx="14" fill="#17263a"/><circle cx="31" cy="257" r="16" fill="#f59e0b"/><text x="58" y="253" fill="#edf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="15" font-weight="600">终端</text><text x="58" y="272" fill="#91a7c0" font-family="Segoe UI, Microsoft YaHei" font-size="12">已固定 · 未运行</text>
+    </g>
+  </g>
+</svg>

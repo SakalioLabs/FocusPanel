@@ -21,6 +21,7 @@ public sealed class TaskbarAppItem : ObservableObject
     private WindowTaskItem? _runningTask;
     private TaskbarDropPlacement? _dropPlacement;
     private bool _isFileDropTarget;
+    private bool _isStatusCenterWindowListExpanded;
     private TaskbarSlotShortcutState
         _shortcutState =
             TaskbarSlotShortcutState.None;
@@ -220,6 +221,13 @@ public sealed class TaskbarAppItem : ObservableObject
         == TaskbarDropPlacement.After;
     public bool IsFileDropTarget =>
         _isFileDropTarget;
+    public bool IsStatusCenterWindowListExpanded
+    {
+        get => _isStatusCenterWindowListExpanded;
+        internal set => SetProperty(
+            ref _isStatusCenterWindowListExpanded,
+            value);
+    }
 
     internal void SetShortcutState(
         TaskbarSlotShortcutState state)
@@ -351,6 +359,11 @@ public sealed class TaskbarAppItem : ObservableObject
         _launchItem = snapshot.LaunchItem;
         _pinnedLaunches = snapshot.PinnedLaunches;
         _runningTask = snapshot.RunningTask;
+        if (snapshot.WindowCount <= 1)
+        {
+            IsStatusCenterWindowListExpanded =
+                false;
+        }
 
         if (launchChanged)
             OnPropertyChanged(nameof(LaunchItem));

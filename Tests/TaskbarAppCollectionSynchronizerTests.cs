@@ -125,6 +125,49 @@ public sealed class TaskbarAppCollectionSynchronizerTests
     }
 
     [Fact]
+    public void StatusCenterWindowList_PersistsUntilAppStopsBeingMultiWindow()
+    {
+        TaskbarAppItem current =
+            MultiWindowApp(
+                "exe:c:\\editor.exe",
+                firstWindowActive: true);
+        current.IsStatusCenterWindowListExpanded =
+            true;
+        var items =
+            new ObservableCollection<TaskbarAppItem>
+            {
+                current
+            };
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[]
+            {
+                MultiWindowApp(
+                    "exe:c:\\editor.exe",
+                    firstWindowActive: false)
+            });
+
+        Assert.Same(current, items[0]);
+        Assert.True(
+            current.IsStatusCenterWindowListExpanded);
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[]
+            {
+                RunningApp(
+                    "exe:c:\\editor.exe",
+                    "编辑器",
+                    9,
+                    true)
+            });
+
+        Assert.False(
+            current.IsStatusCenterWindowListExpanded);
+    }
+
+    [Fact]
     public void ActiveStateChange_RaisesPresentationNotifications()
     {
         TaskbarAppItem current =

@@ -647,14 +647,36 @@
                                 <TextBlock Text="常用"
                                            Margin="4,14,0,7"
                                            Style="{StaticResource FocusCaptionText}"/>
-                                <Button x:Name="StatusCenterWindowOverviewButton"
-                                        Style="{StaticResource FocusSecondaryButton}"
-                                        MinHeight="44"
-                                        Margin="0,0,0,8"
-                                        Content="应用与窗口总览 · Panel"
-                                        Click="StatusCenterWindowOverview_Click"
-                                        AutomationProperties.Name="打开 Panel 自有应用与窗口总览"
-                                        ToolTip="只打开 Panel 自有应用总览，不调用 Windows 任务栏或隐藏图标抽屉"/>
+                                <ToggleButton x:Name="StatusCenterWindowOverviewButton"
+                                              Style="{StaticResource FocusToggleButton}"
+                                              MinHeight="44"
+                                              Margin="0,0,0,8"
+                                              HorizontalContentAlignment="Stretch"
+                                              Tag="{x:Static services:StatusCenterDetail.Applications}"
+                                              IsChecked="{Binding IsExpanded, ElementName=ApplicationsDetailsExpander, Mode=OneWay}"
+                                              Click="StatusCenterDetailButton_Click"
+                                              AutomationProperties.Name="展开 Panel 自有应用与窗口总览"
+                                              ToolTip="只展开 Panel 自有应用抽屉，不调用 Windows 任务栏或隐藏图标抽屉">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="44"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="&#xE8FD;"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource FocusIconText}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="应用与窗口总览"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource FocusCardTitleText}"/>
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding TaskbarApps.Count, StringFormat={}{0} 项}"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource FocusCaptionText}"/>
+                                    </Grid>
+                                </ToggleButton>
                                 <UniformGrid Columns="5"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="Panel 状态详情">
@@ -796,6 +818,177 @@
                                                Foreground="{DynamicResource FocusMutedTextBrush}"
                                                TextWrapping="Wrap"/>
                                 </Grid>
+                                <Expander x:Name="ApplicationsDetailsExpander"
+                                          Style="{StaticResource FocusDetailsExpander}"
+                                          Tag="{x:Static services:StatusCenterDetail.Applications}"
+                                          Expanded="StatusDetailsExpander_Expanded"
+                                          Collapsed="StatusDetailsExpander_Collapsed"
+                                          AutomationProperties.Name="Panel 应用与窗口抽屉">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="应用与窗口"
+                                                       Style="{StaticResource FocusCardTitleText}"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="12,0,0,0"
+                                                       Text="{Binding TaskbarApps.Count, StringFormat={}{0} 项}"
+                                                       Style="{StaticResource FocusCaptionText}"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel Margin="0,8,0,0">
+                                        <TextBlock Margin="4,0,4,8"
+                                                   Text="固定、运行、后台和仅消息窗口应用共用同一身份与顺序。单窗口直接切换，多窗口在此展开。"
+                                                   TextWrapping="Wrap"
+                                                   Style="{StaticResource FocusCaptionText}"/>
+                                        <ListBox ItemsSource="{Binding TaskbarApps}"
+                                                 MaxHeight="420"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                 VirtualizingPanel.IsVirtualizing="True"
+                                                 VirtualizingPanel.VirtualizationMode="Recycling"
+                                                 AutomationProperties.Name="Panel 统一应用列表">
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="ListBoxItem"
+                                                       BasedOn="{StaticResource FocusListBoxItem}">
+                                                    <Setter Property="Padding" Value="0"/>
+                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Margin="0,0,0,6">
+                                                            <Button MinHeight="58"
+                                                                    HorizontalContentAlignment="Stretch"
+                                                                    Click="StatusCenterApp_Click"
+                                                                    PreviewMouseDown="TaskbarApp_PreviewMouseDown"
+                                                                    ContextMenuOpening="TaskbarApp_ContextMenuOpening"
+                                                                    AutomationProperties.Name="{Binding AccessibleName}"
+                                                                    AutomationProperties.HelpText="{Binding InteractionHint}">
+                                                                <Button.Style>
+                                                                    <Style TargetType="Button"
+                                                                           BasedOn="{StaticResource FocusSecondaryButton}">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                                <Setter Property="Background" Value="{DynamicResource FocusAccentSoftBrush}"/>
+                                                                                <Setter Property="BorderBrush" Value="{DynamicResource FocusAccentBrush}"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding IsAttentionRequested}" Value="True">
+                                                                                <Setter Property="Background" Value="{DynamicResource FocusWarningSoftBrush}"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Button.Style>
+                                                                <Button.ContextMenu>
+                                                                    <ContextMenu Style="{StaticResource FocusContextMenu}"
+                                                                                 Opened="TransientContextMenu_Opened"
+                                                                                 Closed="TransientContextMenu_Closed"/>
+                                                                </Button.ContextMenu>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="44"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <controls:AppIconPresenter Icon="{Binding Icon}"
+                                                                                               DisplayName="{Binding DisplayName}"
+                                                                                               HorizontalAlignment="Center"
+                                                                                               VerticalAlignment="Center"/>
+                                                                    <StackPanel Grid.Column="1"
+                                                                                Margin="8,0"
+                                                                                VerticalAlignment="Center">
+                                                                        <TextBlock Text="{Binding DisplayName}"
+                                                                                   Style="{StaticResource FocusCardTitleText}"
+                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                        <TextBlock Text="{Binding StatusSummary}"
+                                                                                   Style="{StaticResource FocusCaptionText}"
+                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                    </StackPanel>
+                                                                    <StackPanel Grid.Column="2"
+                                                                                Margin="8,0,4,0"
+                                                                                VerticalAlignment="Center">
+                                                                        <TextBlock Text="{Binding WindowCountBadgeText, StringFormat={}{0} 窗口}"
+                                                                                   HorizontalAlignment="Right"
+                                                                                   Style="{StaticResource FocusMetaText}"
+                                                                                   Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                                        <TextBlock Text="&#xE70D;"
+                                                                                   Margin="0,3,0,0"
+                                                                                   HorizontalAlignment="Right"
+                                                                                   Style="{StaticResource FocusIconText}"
+                                                                                   FontSize="10"
+                                                                                   Visibility="{Binding HasMultipleWindows, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                            </Button>
+                                                        <ItemsControl ItemsSource="{Binding Windows}"
+                                                                      Margin="18,4,0,2"
+                                                                      Visibility="{Binding IsStatusCenterWindowListExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Grid Margin="0,0,0,4">
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="40"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <Button MinHeight="44"
+                                                                                Padding="10,4"
+                                                                                HorizontalContentAlignment="Stretch"
+                                                                                Style="{StaticResource FocusSecondaryButton}"
+                                                                                Command="{Binding DataContext.ActivateWindowCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                CommandParameter="{Binding}"
+                                                                                AutomationProperties.Name="{Binding Title, StringFormat=切换到窗口 {0}}">
+                                                                            <StackPanel>
+                                                                                <TextBlock Text="{Binding Title}"
+                                                                                           TextTrimming="CharacterEllipsis"
+                                                                                           Style="{StaticResource FocusBodyText}"/>
+                                                                                <TextBlock Text="{Binding State}"
+                                                                                           Style="{StaticResource FocusMetaText}"/>
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                        <Button Grid.Column="1"
+                                                                                Width="36"
+                                                                                Height="36"
+                                                                                Margin="4"
+                                                                                Style="{StaticResource FocusIconButton}"
+                                                                                Command="{Binding DataContext.CloseWindowCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                CommandParameter="{Binding}"
+                                                                                ToolTip="关闭窗口"
+                                                                                AutomationProperties.Name="{Binding Title, StringFormat=关闭窗口 {0}}">
+                                                                            <TextBlock Text="&#xE8BB;"
+                                                                                       Style="{StaticResource FocusIconText}"
+                                                                                       FontSize="12"/>
+                                                                        </Button>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                        <TextBlock Margin="4,12"
+                                                   HorizontalAlignment="Center"
+                                                   Text="没有固定、运行或后台应用">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock"
+                                                       BasedOn="{StaticResource FocusSecondaryBodyText}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding TaskbarApps.Count}" Value="0">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Margin="4,10,4,2"
+                                                   Text="第三方专属托盘菜单没有 Windows 公共协议；Panel 不读取 Explorer 私有结构，也不会弹出原生隐藏图标抽屉。"
+                                                   TextWrapping="Wrap"
+                                                   Style="{StaticResource FocusMetaText}"/>
+                                    </StackPanel>
+                                </Expander>
                                 <Expander x:Name="PanelNotificationsDetailsExpander"
                                           Style="{StaticResource FocusDetailsExpander}"
                                           Tag="{x:Static services:StatusCenterDetail.PanelNotifications}"
@@ -2249,7 +2442,8 @@
                                                   Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
                                                   Click="PanelStatusDetailMenuItem_Click"/>
                                         <MenuItem Header="应用与窗口总览 · Panel"
-                                                  Click="StatusCenterWindowOverview_Click"/>
+                                                  Tag="{x:Static services:StatusCenterDetail.Applications}"
+                                                  Click="PanelStatusDetailMenuItem_Click"/>
                                         <MenuItem Header="Panel 通知"
                                                   Tag="{x:Static services:StatusCenterDetail.PanelNotifications}"
                                                   Click="PanelStatusDetailMenuItem_Click"/>

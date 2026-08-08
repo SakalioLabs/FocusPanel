@@ -15,6 +15,11 @@ internal static class PanelStatusSearchCatalog
         new[]
         {
             new PanelStatusSearchEntry(
+                StatusCenterDetail.Applications,
+                "应用与窗口总览",
+                "\uE8FD",
+                "任务栏 应用 窗口 后台 后台应用 运行 固定 多窗口 tray apps windows taskbar"),
+            new PanelStatusSearchEntry(
                 StatusCenterDetail.Network,
                 "网络与无线",
                 "\uE701",

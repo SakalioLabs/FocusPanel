@@ -831,10 +831,13 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.Contains(
-            "Content=\"应用与窗口总览 · Panel\"",
+            "Text=\"应用与窗口总览\"",
             mainWindow);
         Assert.Contains(
-            "Click=\"StatusCenterWindowOverview_Click\"",
+            "Tag=\"{x:Static services:StatusCenterDetail.Applications}\"",
+            mainWindow);
+        Assert.Contains(
+            "x:Name=\"ApplicationsDetailsExpander\"",
             mainWindow);
         Assert.DoesNotContain(
             "OpenNotificationOverflow",
@@ -1491,10 +1494,13 @@ public sealed class XamlResourceContractTests
         string statusCenter = mainWindow[
             statusStart..calendarStart];
         Assert.Equal(
-            5,
+            6,
             statusCenter.Split(
                 "Style=\"{StaticResource FocusDetailsExpander}\"",
                 StringSplitOptions.None).Length - 1);
+        Assert.Contains(
+            "AutomationProperties.Name=\"Panel 应用与窗口抽屉\"",
+            statusCenter);
         Assert.Contains(
             "AutomationProperties.Name=\"网络与无线详情\"",
             statusCenter);
@@ -1509,6 +1515,9 @@ public sealed class XamlResourceContractTests
             statusCenter);
         Assert.Contains(
             "AutomationProperties.Name=\"Panel 通知历史\"",
+            statusCenter);
+        Assert.Contains(
+            "x:Name=\"ApplicationsDetailsExpander\"",
             statusCenter);
         Assert.Contains(
             "x:Name=\"NetworkDetailsExpander\"",
@@ -1526,12 +1535,12 @@ public sealed class XamlResourceContractTests
             "x:Name=\"PanelNotificationsDetailsExpander\"",
             statusCenter);
         Assert.Equal(
-            5,
+            6,
             statusCenter.Split(
                 "Expanded=\"StatusDetailsExpander_Expanded\"",
                 StringSplitOptions.None).Length - 1);
         Assert.Equal(
-            5,
+            6,
             statusCenter.Split(
                 "Collapsed=\"StatusDetailsExpander_Collapsed\"",
                 StringSplitOptions.None).Length - 1);
@@ -1646,7 +1655,7 @@ public sealed class XamlResourceContractTests
             "Header=\"应用与窗口总览 · Panel\"",
             compactDock);
         Assert.Contains(
-            "StatusCenterWindowOverview_Click",
+            "Tag=\"{x:Static services:StatusCenterDetail.Applications}\"",
             compactDock);
         Assert.DoesNotContain(
             "OpenNotificationOverflow",
@@ -2845,10 +2854,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            5,
+            6,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            5,
+            6,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -3024,7 +3033,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_UsesOneUnifiedApplicationCollection()
+    public void Shell_UsesOneUnifiedApplicationCollectionInDockAndDrawer()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
@@ -3032,8 +3041,14 @@ public sealed class XamlResourceContractTests
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
 
-        Assert.True(
-            Regex.Matches(mainWindow, "ItemsSource=\"\\{Binding TaskbarApps\\}\"").Count == 1);
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                mainWindow,
+                "ItemsSource=\"\\{Binding TaskbarApps\\}\"").Count);
+        Assert.Contains(
+            "AutomationProperties.Name=\"Panel 统一应用列表\"",
+            mainWindow);
         Assert.DoesNotContain("ItemsSource=\"{Binding PinnedApps}\"", mainWindow);
         Assert.DoesNotContain("ItemsSource=\"{Binding RunningApps}\"", mainWindow);
         Assert.Contains("ObservableCollection<TaskbarAppItem> TaskbarApps", viewModel);
@@ -3046,6 +3061,59 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "TryMovePinnedByOffsetAsync(",
             viewModel);
+    }
+
+    [Fact]
+    public void StatusCenter_AppDrawerStaysInsidePanelAndManagesWindows()
+    {
+        string root = FindRepositoryRoot();
+        string mainWindow = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "x:Name=\"ApplicationsDetailsExpander\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"Panel 统一应用列表\"",
+            mainWindow);
+        Assert.Contains(
+            "MaxHeight=\"420\"",
+            mainWindow);
+        Assert.Contains(
+            "VirtualizingPanel.VirtualizationMode=\"Recycling\"",
+            mainWindow);
+        Assert.Contains(
+            "Click=\"StatusCenterApp_Click\"",
+            mainWindow);
+        Assert.Contains(
+            "ContextMenuOpening=\"TaskbarApp_ContextMenuOpening\"",
+            mainWindow);
+        Assert.Contains(
+            "DataContext.ActivateWindowCommand",
+            mainWindow);
+        Assert.Contains(
+            "DataContext.CloseWindowCommand",
+            mainWindow);
+        Assert.Contains(
+            "StatusCenterAppActionPolicy.Resolve(",
+            codeBehind);
+        Assert.Contains(
+            "IsStatusCenterWindowListExpanded",
+            codeBehind);
+        Assert.Contains(
+            "ActivateTaskbarAppCommand",
+            codeBehind);
+        Assert.DoesNotContain(
+            "StatusCenterWindowOverview_Click",
+            mainWindow);
+        Assert.DoesNotContain(
+            "StatusCenterWindowOverview_Click",
+            codeBehind);
     }
 
     [Fact]
@@ -3341,7 +3409,7 @@ public sealed class XamlResourceContractTests
                 "AppIconPresenter.xaml"));
 
         Assert.Equal(
-            2,
+            3,
             Regex.Matches(
                 mainWindow,
                 @"<controls:AppIconPresenter(?:\s|>)").Count);
@@ -4210,7 +4278,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            6,
+            7,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);

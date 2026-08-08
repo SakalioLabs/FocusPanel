@@ -1459,26 +1459,33 @@ public partial class MainWindow :
         StatusCenterButton.Focus();
     }
 
-    private void StatusCenterWindowOverview_Click(
+    private void StatusCenterApp_Click(
         object sender,
         RoutedEventArgs e)
     {
-        ExpandSidebar();
-        _viewModel.IsStatusCenterOpen = false;
-        ApplySearchEntryState(
-            new ShellSearchEntryState(
-                ShellSearchScope.Windows,
-                string.Empty));
-        if (!_viewModel.IsSearchOpen)
+        if (sender is not Button
+            {
+                DataContext: TaskbarAppItem task
+            } button)
         {
-            _viewModel.ToggleSearchCommand
-                .Execute(null);
+            return;
         }
 
-        QueueOverlayFocus(
-            StatusCenterButton,
-            SearchBox,
-            () => _viewModel.IsSearchOpen);
+        StatusCenterAppAction action =
+            StatusCenterAppActionPolicy.Resolve(
+                task.WindowCount);
+        if (action
+            == StatusCenterAppAction.ToggleWindowList)
+        {
+            task.IsStatusCenterWindowListExpanded =
+                !task.IsStatusCenterWindowListExpanded;
+        }
+        else
+        {
+            _viewModel.ActivateTaskbarAppCommand
+                .Execute(task);
+        }
+        e.Handled = true;
     }
 
     private void StatusCenterDetailButton_Click(
@@ -1615,6 +1622,8 @@ public partial class MainWindow :
         {
             NetworkDetailsExpander.IsExpanded =
                 detail == StatusCenterDetail.Network;
+            ApplicationsDetailsExpander.IsExpanded =
+                detail == StatusCenterDetail.Applications;
             ApplicationAudioDetailsExpander
                 .IsExpanded =
                 detail
@@ -1644,6 +1653,8 @@ public partial class MainWindow :
 
         Expander? target = detail switch
         {
+            StatusCenterDetail.Applications =>
+                ApplicationsDetailsExpander,
             StatusCenterDetail.Network =>
                 NetworkDetailsExpander,
             StatusCenterDetail.ApplicationAudio =>
@@ -2462,6 +2473,7 @@ public partial class MainWindow :
         }
         return null;
     }
+
 
     private void TaskbarApp_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {

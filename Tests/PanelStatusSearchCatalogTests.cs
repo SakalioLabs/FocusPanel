@@ -11,6 +11,7 @@ public sealed class PanelStatusSearchCatalogTests
     {
         StatusCenterDetail[] expected =
         {
+            StatusCenterDetail.Applications,
             StatusCenterDetail.Network,
             StatusCenterDetail.ApplicationAudio,
             StatusCenterDetail.MediaAndBattery,
