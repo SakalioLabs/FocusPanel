@@ -3153,7 +3153,28 @@ public partial class MainWindow :
             });
         }
         if (task.Windows.Count > 0)
+        {
             menu.Items.Add(new Separator());
+            menu.Items.Add(new MenuItem
+            {
+                Header = "专注此应用（收起其他窗口）",
+                Command =
+                    _viewModel
+                        .FocusTaskWindowsCommand,
+                CommandParameter = task
+            });
+            if (_viewModel.HasWindowFocusSession)
+            {
+                menu.Items.Add(new MenuItem
+                {
+                    Header = "恢复专注前的窗口",
+                    Command =
+                        _viewModel
+                            .RestoreWindowFocusSessionCommand
+                });
+            }
+            menu.Items.Add(new Separator());
+        }
 
         TaskbarContextWindowSlice windowSlice =
             TaskbarContextWindowPolicy.Select(
@@ -3292,6 +3313,27 @@ public partial class MainWindow :
         ItemsControl windowMenu,
         WindowReference window)
     {
+        windowMenu.Items.Add(new MenuItem
+        {
+            Header = "专注此窗口（收起其他窗口）",
+            Command =
+                _viewModel
+                    .FocusWindowCommand,
+            CommandParameter = window
+        });
+        if (_viewModel.HasWindowFocusSession)
+        {
+            windowMenu.Items.Add(new MenuItem
+            {
+                Header = "恢复专注前的窗口",
+                Command =
+                    _viewModel
+                        .RestoreWindowFocusSessionCommand
+            });
+        }
+        windowMenu.Items.Add(
+            new Separator());
+
         foreach (WindowStateAction action
                  in WindowStateActionPolicy
                      .GetActions(

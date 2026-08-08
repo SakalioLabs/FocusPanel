@@ -274,6 +274,31 @@
                                 <TextBlock Margin="0,3,0,0"
                                            Text="{Binding SearchPanelInstruction}"
                                            Style="{StaticResource FocusCaptionText}"/>
+                                <Border Margin="0,10,0,0"
+                                        Padding="12,8"
+                                        CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                        Background="{DynamicResource FocusAccentSoftBrush}"
+                                        Visibility="{Binding HasWindowFocusSession, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                        AutomationProperties.Name="{Binding WindowFocusSessionSummary}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock VerticalAlignment="Center"
+                                                   Text="{Binding WindowFocusSessionSummary}"
+                                                   TextWrapping="Wrap"
+                                                   Style="{StaticResource FocusBodyText}"/>
+                                        <Button Grid.Column="1"
+                                                Margin="12,0,0,0"
+                                                MinHeight="40"
+                                                Padding="14,6"
+                                                Content="恢复窗口"
+                                                Style="{StaticResource FocusSecondaryButton}"
+                                                Command="{Binding RestoreWindowFocusSessionCommand}"
+                                                AutomationProperties.Name="恢复窗口专注会话"/>
+                                    </Grid>
+                                </Border>
                             </StackPanel>
                             <Grid Grid.Row="1" Margin="0,14,0,12">
                                 <TextBox x:Name="SearchBox"

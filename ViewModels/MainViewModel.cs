@@ -74,6 +74,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly TaskSearchCoordinator
         _taskSearch;
     private readonly TaskbarAppComposer _taskbarComposer = new();
+    private readonly WindowFocusSessionCoordinator
+        _windowFocusSession = new();
     private readonly TaskSummaryReader _taskSummaryReader = new();
     private readonly DispatcherTimer _clockTimer;
     private readonly DispatcherTimer _systemStatusTimer;
@@ -653,6 +655,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string systemActionMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool hasWindowFocusSession;
+
+    [ObservableProperty]
+    private string windowFocusSessionSummary =
+        string.Empty;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(
@@ -3101,6 +3110,70 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void FocusWindow(
+        WindowReference? window)
+    {
+        if (window == null)
+            return;
+
+        StartWindowFocusSession(
+            new[]
+            {
+                window.Handle
+            },
+            window.Title,
+            window);
+    }
+
+    [RelayCommand]
+    private void FocusTaskWindows(
+        TaskbarAppItem? task)
+    {
+        if (task == null
+            || task.WindowCount == 0)
+        {
+            return;
+        }
+
+        WindowReference target =
+            task.Windows.FirstOrDefault(
+                window => window.IsActive)
+            ?? task.Windows[0];
+        StartWindowFocusSession(
+            task.Windows.Select(window =>
+                window.Handle).ToArray(),
+            task.DisplayName,
+            target);
+    }
+
+    [RelayCommand]
+    private void RestoreWindowFocusSession()
+    {
+        WindowFocusRestoreResult result =
+            _windowFocusSession.Restore(
+                GetTrackedWindows(),
+                handle =>
+                    _windowTracker.Restore(handle),
+                handle =>
+                    _windowTracker.Maximize(handle));
+        UpdateWindowFocusSessionState();
+        if (result.RemainingCount == 0)
+        {
+            SystemActionMessage =
+                string.Empty;
+            return;
+        }
+
+        ReportTaskbarActionFailure(
+            $"仍有 {result.RemainingCount} 个专注窗口"
+            + "未能恢复。窗口可能已关闭、权限更高，"
+            + "或应用暂时拒绝状态更改；可以再次重试。"
+            + (result.RestoredCount > 0
+                ? $"另有 {result.RestoredCount} 个窗口已经恢复。"
+                : string.Empty));
+    }
+
+    [RelayCommand]
     private void ArrangeWindow(
         WindowLayoutRequest? request)
     {
@@ -4435,8 +4508,79 @@ public partial class MainViewModel : ObservableObject, IDisposable
         object? sender,
         EventArgs e)
     {
+        _windowFocusSession.Reconcile(
+            GetTrackedWindows());
+        UpdateWindowFocusSessionState();
         RefreshTaskbarApps();
         RefreshSearchResults();
+    }
+
+    private void StartWindowFocusSession(
+        IReadOnlyCollection<IntPtr> keepHandles,
+        string targetLabel,
+        WindowReference activationTarget)
+    {
+        WindowFocusStartResult result =
+            _windowFocusSession.Start(
+                GetTrackedWindows(),
+                keepHandles,
+                targetLabel,
+                handle =>
+                    _windowTracker.Minimize(handle),
+                handle =>
+                    _windowTracker.Restore(handle),
+                handle =>
+                    _windowTracker.Maximize(handle));
+        UpdateWindowFocusSessionState();
+        if (result.BlockedByPreviousSession)
+        {
+            ReportTaskbarActionFailure(
+                "上一次窗口专注仍有 "
+                + $"{result.PreviousRestoreFailedCount} 个窗口"
+                + "未能恢复；请先重试恢复，再开始新的专注。");
+            return;
+        }
+
+        bool activated =
+            SystemActionExecution.Try(
+                () => _windowTracker.Activate(
+                    activationTarget.Handle));
+        if (result.FailedCount > 0)
+        {
+            SystemActionMessage =
+                $"已收起 {result.MinimizedCount} 个窗口；"
+                + $"另有 {result.FailedCount} 个窗口"
+                + "拒绝最小化并保持原状。";
+        }
+        else if (!activated)
+        {
+            SystemActionMessage =
+                $"窗口专注已经建立，但无法切换到“"
+                + $"{activationTarget.Title}”。";
+        }
+        else
+        {
+            SystemActionMessage =
+                string.Empty;
+        }
+    }
+
+    private IReadOnlyList<WindowReference>
+        GetTrackedWindows() =>
+        _windowTracker.GetSnapshot()
+            .SelectMany(application =>
+                application.Windows)
+            .GroupBy(window =>
+                window.Handle)
+            .Select(group => group.First())
+            .ToArray();
+
+    private void UpdateWindowFocusSessionState()
+    {
+        HasWindowFocusSession =
+            _windowFocusSession.HasActiveSession;
+        WindowFocusSessionSummary =
+            _windowFocusSession.Summary;
     }
     private void Dashboard_NavigationRequested(
         string destination) =>
@@ -6285,6 +6429,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task DisposeCoreAsync()
     {
+        _windowFocusSession.Restore(
+            GetTrackedWindows(),
+            handle =>
+                _windowTracker.Restore(handle),
+            handle =>
+                _windowTracker.Maximize(handle));
+        UpdateWindowFocusSessionState();
         _isDisposed = true;
         _audioControl.Completed -=
             OnAudioControlCompleted;
