@@ -85,6 +85,8 @@ public partial class MainWindow :
     private TaskbarAppItem? _taskbarHoverTask;
     private FrameworkElement?
         _searchWindowHoverTarget;
+    private FrameworkElement?
+        _statusWindowPreviewTarget;
     private ShellSearchResult?
         _searchWindowHoverResult;
     private ContextMenu? _taskbarHoverMenu;
@@ -1486,6 +1488,66 @@ public partial class MainWindow :
                 .Execute(task);
         }
         e.Handled = true;
+    }
+
+    private void StatusCenterWindowPreviewButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement
+            {
+                DataContext: WindowReference window,
+                Tag: TaskbarAppItem task
+            } target)
+        {
+            return;
+        }
+
+        CancelTaskbarHoverPreview(
+            closeMenu: true);
+        _statusWindowPreviewTarget = target;
+        bool shown = TryOpenWindowPreview(
+            target,
+            preview => preview.Configure(
+                task.DisplayName,
+                new[] { window },
+                "点击画面切换；下方按钮可最小化、最大化或关闭。"));
+        if (!shown)
+        {
+            _statusWindowPreviewTarget = null;
+            _toastManager.Enqueue(
+                new FocusToastNotification(
+                    "window-preview-unavailable",
+                    "无法显示实时窗口画面",
+                    "该窗口或当前桌面环境不允许 DWM 预览；仍可点击窗口名称直接切换。",
+                    "\uE7F4",
+                    FocusToastKind.Warning));
+        }
+
+        e.Handled = true;
+    }
+
+    private void StatusCenterWindowPreviewButton_MouseEnter(
+        object sender,
+        MouseEventArgs e)
+    {
+        if (_taskbarWindowPreview?.IsVisible
+            == true)
+        {
+            _taskbarHoverCloseTimer.Stop();
+        }
+    }
+
+    private void StatusCenterWindowPreviewButton_MouseLeave(
+        object sender,
+        MouseEventArgs e)
+    {
+        if (ReferenceEquals(
+                sender,
+                _statusWindowPreviewTarget))
+        {
+            ScheduleTaskbarHoverPreviewClose();
+        }
     }
 
     private void StatusCenterDetailButton_Click(
@@ -3154,6 +3216,7 @@ public partial class MainWindow :
         _searchWindowHoverOpenTimer.Stop();
         _searchWindowHoverTarget = null;
         _searchWindowHoverResult = null;
+        _statusWindowPreviewTarget = null;
 
         if (_taskbarWindowPreview?.IsVisible
                 == true
@@ -3447,6 +3510,7 @@ public partial class MainWindow :
         _searchWindowHoverOpenTimer.Stop();
         _searchWindowHoverTarget = null;
         _searchWindowHoverResult = null;
+        _statusWindowPreviewTarget = null;
 
         if (_taskbarPreviewInteractionActive)
         {
@@ -3510,6 +3574,9 @@ public partial class MainWindow :
             || _searchWindowHoverTarget
                     ?.IsMouseOver
                 == true
+            || _statusWindowPreviewTarget
+                    ?.IsMouseOver
+                == true
             || _taskbarHoverMenu?.IsMouseOver
                 == true
             || _taskbarWindowPreview?.IsMouseOver
@@ -3545,6 +3612,7 @@ public partial class MainWindow :
         _taskbarHoverTask = null;
         _searchWindowHoverTarget = null;
         _searchWindowHoverResult = null;
+        _statusWindowPreviewTarget = null;
         if (_taskbarHoverMenu?.IsOpen
                 != true)
         {

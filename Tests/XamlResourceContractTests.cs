@@ -3339,6 +3339,47 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void StatusCenterWindowRows_ExposeExplicitLivePreviewCards()
+    {
+        string root = FindRepositoryRoot();
+        string xaml = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "Click=\"StatusCenterWindowPreviewButton_Click\"",
+            xaml);
+        Assert.Contains(
+            "ToolTip=\"实时预览窗口\"",
+            xaml);
+        Assert.Contains(
+            "Tag=\"{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBoxItem}}\"",
+            xaml);
+        Assert.Contains(
+            "private void StatusCenterWindowPreviewButton_Click(",
+            codeBehind);
+        Assert.Contains(
+            "preview.Configure(",
+            codeBehind);
+        Assert.Contains(
+            "_statusWindowPreviewTarget",
+            codeBehind);
+        Assert.Contains(
+            "该窗口或当前桌面环境不允许 DWM 预览",
+            codeBehind);
+        Assert.DoesNotContain(
+            "CopyFromScreen",
+            codeBehind);
+    }
+
+    [Fact]
     public void TaskbarAppMenu_OffersBatchWindowStateActions()
     {
         string root = FindRepositoryRoot();

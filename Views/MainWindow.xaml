@@ -840,7 +840,7 @@
                                     </Expander.Header>
                                     <StackPanel Margin="0,8,0,0">
                                         <TextBlock Margin="4,0,4,8"
-                                                   Text="固定、运行、后台和仅消息窗口应用共用同一身份与顺序。单窗口直接切换，多窗口在此展开。"
+                                                   Text="固定、运行、后台和仅消息窗口应用共用同一身份与顺序。多窗口可在此展开，点画面按钮查看 DWM 实时预览。"
                                                    TextWrapping="Wrap"
                                                    Style="{StaticResource FocusCaptionText}"/>
                                         <ListBox ItemsSource="{Binding TaskbarApps}"
@@ -931,6 +931,7 @@
                                                                         <Grid.ColumnDefinitions>
                                                                             <ColumnDefinition Width="*"/>
                                                                             <ColumnDefinition Width="40"/>
+                                                                            <ColumnDefinition Width="40"/>
                                                                         </Grid.ColumnDefinitions>
                                                                         <Button MinHeight="44"
                                                                                 Padding="10,4"
@@ -948,6 +949,21 @@
                                                                             </StackPanel>
                                                                         </Button>
                                                                         <Button Grid.Column="1"
+                                                                                Width="36"
+                                                                                Height="36"
+                                                                                Margin="4"
+                                                                                Style="{StaticResource FocusIconButton}"
+                                                                                Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                                                Click="StatusCenterWindowPreviewButton_Click"
+                                                                                MouseEnter="StatusCenterWindowPreviewButton_MouseEnter"
+                                                                                MouseLeave="StatusCenterWindowPreviewButton_MouseLeave"
+                                                                                ToolTip="实时预览窗口"
+                                                                                AutomationProperties.Name="{Binding Title, StringFormat=实时预览窗口 {0}}">
+                                                                            <TextBlock Text="&#xE7F4;"
+                                                                                       Style="{StaticResource FocusIconText}"
+                                                                                       FontSize="13"/>
+                                                                        </Button>
+                                                                        <Button Grid.Column="2"
                                                                                 Width="36"
                                                                                 Height="36"
                                                                                 Margin="4"
