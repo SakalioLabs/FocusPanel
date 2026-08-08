@@ -2129,7 +2129,7 @@
 
                         <StackPanel Grid.Row="0">
                             <Button x:Name="PanelPositionHandleButton"
-                                    Height="20"
+                                    Height="24"
                                     Margin="0,0,0,2"
                                     Padding="0"
                                     Style="{StaticResource FocusIconButton}"
@@ -2139,19 +2139,18 @@
                                     LostMouseCapture="PanelPositionHandleButton_LostMouseCapture"
                                     AutomationProperties.Name="调整 Panel 右侧固定位置"
                                     AutomationProperties.HelpText="单击直接选择右上、右中或右下；上下拖动后吸附；菜单还可选择 Panel 所在屏幕"
-                                    ToolTip="单击选择右上 / 右中 / 右下 · 拖动调整位置 · 菜单中可选择屏幕">
-                                <Grid Width="30" Height="12">
-                                    <Border Width="24"
-                                            Height="4"
-                                            HorizontalAlignment="Left"
-                                            CornerRadius="2"
-                                            Background="{DynamicResource FocusMutedTextBrush}"
-                                            Opacity="0.58"/>
-                                    <TextBlock Margin="22,-5,0,0"
+                                    ToolTip="{Binding PanelVerticalAnchorLabel, StringFormat={}{0} · 单击选择右上 / 右中 / 右下 · 可上下拖动}">
+                                <Grid Width="48" Height="20">
+                                    <TextBlock HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Style="{StaticResource FocusMetaText}"
+                                               Foreground="{DynamicResource FocusMutedTextBrush}"
+                                               Text="{Binding PanelVerticalAnchorLabel}"/>
+                                    <TextBlock Margin="0,0,1,0"
                                                HorizontalAlignment="Right"
                                                VerticalAlignment="Center"
                                                Style="{StaticResource FocusIconText}"
-                                               FontSize="10"
+                                               FontSize="8"
                                                Foreground="{DynamicResource FocusMutedTextBrush}"
                                                Text="&#xE70D;"/>
                                 </Grid>
@@ -2601,6 +2600,39 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </ScrollViewer>
+
+                            <Button Panel.ZIndex="1"
+                                    Width="48"
+                                    Height="48"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding RefreshRunningApplicationsCommand}"
+                                    ToolTip="{Binding RunningApplicationSummary}"
+                                    AutomationProperties.Name="刷新正在运行的应用">
+                                <Button.Style>
+                                    <Style TargetType="Button"
+                                           BasedOn="{StaticResource FocusIconButton}">
+                                        <Setter Property="Visibility"
+                                                Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasCompactTaskbarApps}"
+                                                         Value="True">
+                                                <Setter Property="Visibility"
+                                                        Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE72C;"
+                                               HorizontalAlignment="Center"
+                                               Style="{StaticResource FocusIconText}"/>
+                                    <TextBlock Margin="0,-1,0,0"
+                                               HorizontalAlignment="Center"
+                                               Style="{StaticResource FocusMetaText}"
+                                               Text="刷新"/>
+                                </StackPanel>
+                            </Button>
 
                             <Button x:Name="TaskbarScrollDownButton"
                                     Panel.ZIndex="2"

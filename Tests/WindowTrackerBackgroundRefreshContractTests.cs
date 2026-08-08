@@ -110,6 +110,12 @@ public sealed class WindowTrackerBackgroundRefreshContractTests
 
         Assert.True(subscription >= 0);
         Assert.True(initialRead > subscription);
+        Assert.Contains(
+            "_windowTracker.RequestRefresh();",
+            viewModel);
+        Assert.Contains(
+            "if (becameVisible)",
+            viewModel);
     }
 
     private static string ReadWindowTracker()

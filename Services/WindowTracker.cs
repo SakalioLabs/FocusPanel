@@ -26,6 +26,7 @@ public sealed class WindowTracker : IWindowTracker
     private const long WsThickFrame = 0x00040000L;
     private const long WsExTopmost = 0x00000008L;
     private const long WsExToolWindow = 0x00000080L;
+    private const long WsExAppWindow = 0x00040000L;
     private const long WsExNoActivate = 0x08000000L;
     private const int DwmwaCloaked = 14;
     private static readonly IntPtr HwndMessage =
@@ -102,6 +103,9 @@ public sealed class WindowTracker : IWindowTracker
 
     public IReadOnlyList<WindowTaskItem> GetSnapshot() =>
         _snapshotStore.Current;
+
+    public void RequestRefresh() =>
+        RequestSnapshotRefresh();
 
     public void SetTrackingActive(bool isActive)
     {
@@ -627,21 +631,27 @@ public sealed class WindowTracker : IWindowTracker
 
     private static bool IsTaskWindow(IntPtr hwnd)
     {
-        if (!NativeMethods.IsWindowVisible(hwnd))
-            return false;
-
-        long exStyle = NativeMethods.GetWindowLongPtr(hwnd, GwlExStyle).ToInt64();
-        if ((exStyle & (WsExToolWindow | WsExNoActivate)) != 0)
-            return false;
-
-        if (NativeMethods.GetWindow(hwnd, 4) != IntPtr.Zero)
-            return false;
-
-        if (NativeMethods.DwmGetWindowAttribute(hwnd, DwmwaCloaked, out int cloaked, sizeof(int)) == 0
-            && cloaked != 0)
-            return false;
-
-        return true;
+        long exStyle = NativeMethods
+            .GetWindowLongPtr(
+                hwnd,
+                GwlExStyle)
+            .ToInt64();
+        bool isCloaked =
+            NativeMethods.DwmGetWindowAttribute(
+                hwnd,
+                DwmwaCloaked,
+                out int cloaked,
+                sizeof(int)) == 0
+            && cloaked != 0;
+        return TaskWindowVisibilityPolicy
+            .ShouldInclude(
+                NativeMethods.IsWindowVisible(hwnd),
+                (exStyle & WsExToolWindow) != 0,
+                (exStyle & WsExNoActivate) != 0,
+                NativeMethods.GetWindow(hwnd, 4)
+                    != IntPtr.Zero,
+                (exStyle & WsExAppWindow) != 0,
+                isCloaked);
     }
 
     private static string GetWindowTitle(IntPtr hwnd)

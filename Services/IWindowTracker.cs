@@ -10,6 +10,7 @@ public interface IWindowTracker : IDisposable
     event EventHandler? SnapshotChanged;
     IReadOnlyList<WindowTaskItem> GetSnapshot();
     void SetTrackingActive(bool isActive);
+    void RequestRefresh();
     bool ActivateOrMinimize(WindowTaskItem task);
     bool Activate(IntPtr handle);
     bool Minimize(IntPtr handle);

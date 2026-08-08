@@ -3231,6 +3231,24 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "CompactTaskbarAppPolicy.Select(",
             viewModel);
+        Assert.Contains(
+            "Command=\"{Binding RefreshRunningApplicationsCommand}\"",
+            mainWindow);
+        Assert.Contains(
+            "AutomationProperties.Name=\"刷新正在运行的应用\"",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding PanelVerticalAnchorLabel}\"",
+            mainWindow);
+        Assert.Contains(
+            "\"位置 · 上\"",
+            viewModel);
+        Assert.Contains(
+            "\"位置 · 中\"",
+            viewModel);
+        Assert.Contains(
+            "\"位置 · 下\"",
+            viewModel);
         Assert.DoesNotContain(
             "_viewModel.TaskbarApps",
             codeBehind);

@@ -434,6 +434,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ShellDisplayTarget.OutermostRightValue;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(PanelVerticalAnchorLabel))]
     private string panelVerticalAnchor =
         ShellPanelVerticalAnchorPolicy
             .CenterValue;
@@ -871,6 +873,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _windowTracker.SnapshotChanged += OnWindowSnapshotChanged;
         _appCatalog.CatalogChanged += OnCatalogChanged;
         RefreshTaskbarApps();
+        _windowTracker.RequestRefresh();
         RefreshSearchResults();
         RequestSystemStatusRefresh();
         RequestTaskSummaryRefresh();
@@ -898,6 +901,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         get;
     } = new();
+    public bool HasCompactTaskbarApps =>
+        CompactTaskbarApps.Count > 0;
+    public int RunningApplicationCount =>
+        TaskbarApps.Count(item =>
+            item.IsRunning);
+    public string RunningApplicationSummary =>
+        RunningApplicationCount == 0
+            ? "尚未读取到运行应用，单击刷新"
+            : $"正在运行 {RunningApplicationCount} 个应用";
+    public string PanelVerticalAnchorLabel =>
+        ShellPanelVerticalAnchorPolicy
+            .Parse(PanelVerticalAnchor) switch
+        {
+            ShellPanelVerticalAnchor.Top => "位置 · 上",
+            ShellPanelVerticalAnchor.Bottom => "位置 · 下",
+            _ => "位置 · 中"
+        };
     public IReadOnlyList<TaskbarAppItem>
         FilteredBackgroundApps =>
             BackgroundAppFilterPolicy.Apply(
@@ -1340,6 +1360,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (becameVisible)
         {
             CurrentTime = DateTime.Now;
+            _windowTracker.RequestRefresh();
             RequestSystemStatusRefresh();
         }
         UpdateRefreshActivity();
@@ -3903,7 +3924,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         RefreshBackgroundAppViewPresentation();
+        OnPropertyChanged(
+            nameof(HasCompactTaskbarApps));
+        OnPropertyChanged(
+            nameof(RunningApplicationCount));
+        OnPropertyChanged(
+            nameof(RunningApplicationSummary));
     }
+
+    [RelayCommand]
+    private void RefreshRunningApplications() =>
+        _windowTracker.RequestRefresh();
 
     private void RememberActiveWindow(
         IntPtr handle)
