@@ -6512,6 +6512,21 @@ public sealed class XamlResourceContractTests
                     root,
                     "Views",
                     "MainWindow.xaml")));
+        Assert.Contains(
+            "ResolveNotificationAction",
+            mainWindow);
+        Assert.Contains(
+            "FocusNotificationActionKind.OpenUpdates",
+            mainWindow);
+        Assert.Contains(
+            "FocusNotificationActionKind.OpenPomodoro",
+            mainWindow);
+        Assert.Contains(
+            "FocusNotificationActionKind.OpenTasks",
+            mainWindow);
+        Assert.Contains(
+            "FocusNotificationActionKind\n                        .OpenDesktopOrganizer",
+            mainWindow.Replace("\r\n", "\n"));
         Assert.DoesNotContain(
             "ShowBalloonTip",
             mainWindow);

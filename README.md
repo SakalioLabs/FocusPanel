@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.52 让跨重启通知从“只能读”继续变成可操作入口：更新通知重新打开设置页的更新卡，任务收集/完成通知进入任务区，专注完成通知进入番茄钟，失败的桌面恢复通知进入桌面收纳。持久化文件只保存 `None / OpenUpdates / OpenPomodoro / OpenTasks / OpenDesktopOrganizer` 五种白名单语义，不保存路径、参数、命令行或委托；启动后由主壳重新绑定到现有 Panel 导航。旧版快照、未知枚举和解析失败仍保持不可执行并显示过期说明，不会因修改 JSON 获得任意代码执行能力。
+
+![跨重启通知只恢复白名单 Panel 导航](docs/images/persistent-notification-actions.svg)
+
 > 0.11.51 让 Panel 通知成为跨重启的真实历史：最多 50 条消息原子保存到 `%LOCALAPPDATA%\FocusPanel\panel-notifications.json`，不进入任务、收纳等业务数据库；连续变化只保留最新待写快照，正常退出、更新重启时会等待写入排空。损坏或超过 1 MB 的历史文件会带时间戳归档后安全从空列表继续，界面明确显示读写警告。重启前的消息仍可阅读和管理，但旧进程里的动作回调不会反序列化，卡片会直说“上次运行的操作已失效”，避免把过期按钮伪装成可执行。
 
 ![Panel 通知通过原子快照跨重启保留](docs/images/persistent-panel-notifications.svg)

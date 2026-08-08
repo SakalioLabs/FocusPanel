@@ -9,6 +9,15 @@ public enum FocusToastKind
     Warning
 }
 
+public enum FocusNotificationActionKind
+{
+    None,
+    OpenUpdates,
+    OpenPomodoro,
+    OpenTasks,
+    OpenDesktopOrganizer
+}
+
 public sealed record FocusToastNotification(
     string Key,
     string Title,
@@ -17,4 +26,6 @@ public sealed record FocusToastNotification(
     FocusToastKind Kind = FocusToastKind.Information,
     string? ActionLabel = null,
     Action? Action = null,
-    TimeSpan? Duration = null);
+    TimeSpan? Duration = null,
+    FocusNotificationActionKind ActionKind =
+        FocusNotificationActionKind.None);

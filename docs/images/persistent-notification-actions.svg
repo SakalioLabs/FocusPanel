@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="520" viewBox="0 0 1180 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0c1727"/><stop offset="1" stop-color="#263b5a"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#6fb6ff" stop-opacity=".06"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L9 3 0 6z" fill="#6fb6ff"/></marker>
+  </defs>
+  <rect width="1180" height="520" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f7f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">0.11.52 · 跨重启动作只走 Panel 白名单</text>
+  <text x="54" y="98" fill="#b9c6d9" font-family="Segoe UI, Microsoft YaHei" font-size="16">保存语义，不保存委托 · 主壳重新绑定 · 未知值拒绝执行</text>
+
+  <rect x="54" y="140" width="294" height="292" rx="22" fill="url(#glass)" stroke="#fff" stroke-opacity=".17"/>
+  <text x="84" y="185" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">持久化快照</text>
+  <rect x="82" y="216" width="238" height="46" rx="13" fill="#16243a"/><text x="201" y="245" text-anchor="middle" fill="#dceaff" font-family="Segoe UI, Microsoft YaHei" font-size="14">标题 · 消息 · 时间 · 未读</text>
+  <rect x="82" y="278" width="238" height="62" rx="13" fill="#174d78"/><text x="201" y="304" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="14">ActionKind</text><text x="201" y="326" text-anchor="middle" fill="#cfeaff" font-family="Segoe UI" font-size="12">OpenTasks</text>
+  <text x="201" y="377" text-anchor="middle" fill="#91a8c4" font-family="Segoe UI, Microsoft YaHei" font-size="13">无路径 · 无参数 · 无委托</text>
+
+  <path d="M360 286h66" stroke="#6fb6ff" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="434" y="140" width="312" height="292" rx="22" fill="url(#glass)" stroke="#fff" stroke-opacity=".17"/>
+  <text x="464" y="185" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">主壳白名单解析</text>
+  <text x="466" y="231" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">OpenUpdates → 更新卡</text>
+  <text x="466" y="267" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">OpenTasks → 任务区</text>
+  <text x="466" y="303" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">OpenPomodoro → 番茄钟</text>
+  <text x="466" y="339" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">OpenDesktopOrganizer → 收纳</text>
+  <rect x="464" y="366" width="252" height="40" rx="12" fill="#23684f"/><text x="590" y="391" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="13">仅绑定现有 Panel 内部方法</text>
+
+  <path d="M758 286h66" stroke="#6fb6ff" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="832" y="140" width="294" height="292" rx="22" fill="url(#glass)" stroke="#fff" stroke-opacity=".17"/>
+  <text x="862" y="185" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">恢复后的通知卡</text>
+  <rect x="860" y="220" width="238" height="92" rx="15" fill="#16243a" stroke="#5daeff"/>
+  <text x="880" y="250" fill="#f7f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="15" font-weight="650">已收集到 Inbox</text>
+  <text x="880" y="276" fill="#b9c6d9" font-family="Segoe UI, Microsoft YaHei" font-size="13">整理发布说明</text>
+  <rect x="880" y="286" width="86" height="34" rx="10" fill="#168de2"/><text x="923" y="308" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="12">查看任务</text>
+  <rect x="860" y="340" width="238" height="58" rx="14" fill="#6e3941"/><text x="979" y="363" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="13">未知 / 旧格式</text><text x="979" y="384" text-anchor="middle" fill="#ffd9de" font-family="Segoe UI, Microsoft YaHei" font-size="12">只读，不显示动作按钮</text>
+  <text x="590" y="477" text-anchor="middle" fill="#aebed3" font-family="Segoe UI, Microsoft YaHei" font-size="14">本地文件可编辑 ≠ 获得任意执行能力</text>
+</svg>

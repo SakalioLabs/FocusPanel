@@ -19,7 +19,9 @@ internal sealed record FocusNotificationSnapshot(
     FocusToastKind Kind,
     string? ActionLabel,
     DateTimeOffset CreatedAt,
-    bool IsUnread);
+    bool IsUnread,
+    FocusNotificationActionKind ActionKind =
+        FocusNotificationActionKind.None);
 
 internal sealed record FocusNotificationLoadResult(
     IReadOnlyList<FocusNotificationSnapshot> Items,
@@ -209,7 +211,8 @@ public sealed partial class FocusNotificationItem : ObservableObject
 {
     internal FocusNotificationItem(
         FocusToastNotification notification,
-        DateTimeOffset createdAt)
+        DateTimeOffset createdAt,
+        Action? resolvedAction)
         : this(
             notification.Key,
             notification.Title,
@@ -217,14 +220,16 @@ public sealed partial class FocusNotificationItem : ObservableObject
             notification.Glyph,
             notification.Kind,
             notification.ActionLabel,
-            notification.Action,
+            notification.Action ?? resolvedAction,
             createdAt,
-            isUnread: true)
+            isUnread: true,
+            notification.ActionKind)
     {
     }
 
     internal FocusNotificationItem(
-        FocusNotificationSnapshot snapshot)
+        FocusNotificationSnapshot snapshot,
+        Action? resolvedAction)
         : this(
             snapshot.Key,
             snapshot.Title,
@@ -232,9 +237,10 @@ public sealed partial class FocusNotificationItem : ObservableObject
             snapshot.Glyph,
             snapshot.Kind,
             snapshot.ActionLabel,
-            action: null,
+            resolvedAction,
             snapshot.CreatedAt,
-            snapshot.IsUnread)
+            snapshot.IsUnread,
+            snapshot.ActionKind)
     {
     }
 
@@ -247,7 +253,8 @@ public sealed partial class FocusNotificationItem : ObservableObject
         string? actionLabel,
         Action? action,
         DateTimeOffset createdAt,
-        bool isUnread)
+        bool isUnread,
+        FocusNotificationActionKind actionKind)
     {
         Key = key;
         Title = title;
@@ -257,6 +264,7 @@ public sealed partial class FocusNotificationItem : ObservableObject
         ActionLabel = actionLabel;
         Action = action;
         CreatedAt = createdAt;
+        ActionKind = actionKind;
         this.isUnread = isUnread;
     }
 
@@ -285,6 +293,8 @@ public sealed partial class FocusNotificationItem : ObservableObject
         Action == null
         && !string.IsNullOrWhiteSpace(ActionLabel);
 
+    public FocusNotificationActionKind ActionKind { get; }
+
     internal Action? Action { get; }
 
     [ObservableProperty]
@@ -299,7 +309,8 @@ public sealed partial class FocusNotificationItem : ObservableObject
             Kind,
             ActionLabel,
             CreatedAt,
-            IsUnread);
+            IsUnread,
+            ActionKind);
 }
 
 public sealed class FocusNotificationCenter
@@ -313,6 +324,9 @@ public sealed class FocusNotificationCenter
     private readonly ReadOnlyObservableCollection<FocusNotificationItem>
         _readOnlyItems;
     private readonly IFocusNotificationStore _store;
+    private readonly Func<
+        FocusNotificationActionKind,
+        Action?> _actionResolver;
     private IReadOnlyList<FocusNotificationSnapshot>?
         _pendingSave;
     private Task _saveProcessor = Task.CompletedTask;
@@ -320,15 +334,31 @@ public sealed class FocusNotificationCenter
     private bool _isAcceptingSaves = true;
 
     public FocusNotificationCenter()
-        : this(new JsonFocusNotificationStore())
+        : this(
+            new JsonFocusNotificationStore(),
+            actionResolver: null)
+    {
+    }
+
+    public FocusNotificationCenter(
+        Func<FocusNotificationActionKind, Action?>
+            actionResolver)
+        : this(
+            new JsonFocusNotificationStore(),
+            actionResolver)
     {
     }
 
     internal FocusNotificationCenter(
-        IFocusNotificationStore store)
+        IFocusNotificationStore store,
+        Func<FocusNotificationActionKind, Action?>?
+            actionResolver = null)
     {
         _store = store
             ?? throw new ArgumentNullException(nameof(store));
+        _actionResolver =
+            actionResolver
+            ?? (_ => null);
         _readOnlyItems =
             new ReadOnlyObservableCollection<FocusNotificationItem>(
                 _items);
@@ -384,7 +414,8 @@ public sealed class FocusNotificationCenter
             0,
             new FocusNotificationItem(
                 notification,
-                DateTimeOffset.Now));
+                DateTimeOffset.Now,
+                ResolveAction(notification.ActionKind)));
         UnreadCount++;
         TrimToCapacity();
         OnChangedAndQueueSave();
@@ -457,7 +488,9 @@ public sealed class FocusNotificationCenter
                 continue;
             }
 
-            var item = new FocusNotificationItem(normalized);
+            var item = new FocusNotificationItem(
+                normalized,
+                ResolveAction(normalized.ActionKind));
             _items.Add(item);
             if (item.IsUnread)
                 UnreadCount++;
@@ -570,6 +603,12 @@ public sealed class FocusNotificationCenter
             Enum.IsDefined(typeof(FocusToastKind), snapshot.Kind)
                 ? snapshot.Kind
                 : FocusToastKind.Information;
+        FocusNotificationActionKind actionKind =
+            Enum.IsDefined(
+                typeof(FocusNotificationActionKind),
+                snapshot.ActionKind)
+                ? snapshot.ActionKind
+                : FocusNotificationActionKind.None;
         DateTimeOffset createdAt = snapshot.CreatedAt == default
             ? DateTimeOffset.Now
             : snapshot.CreatedAt;
@@ -580,11 +619,31 @@ public sealed class FocusNotificationCenter
             Message = Truncate(snapshot.Message),
             Glyph = Truncate(snapshot.Glyph),
             Kind = kind,
+            ActionKind = actionKind,
             ActionLabel = string.IsNullOrWhiteSpace(snapshot.ActionLabel)
                 ? null
                 : Truncate(snapshot.ActionLabel),
             CreatedAt = createdAt
         };
+    }
+
+    private Action? ResolveAction(
+        FocusNotificationActionKind actionKind)
+    {
+        if (actionKind == FocusNotificationActionKind.None)
+            return null;
+
+        try
+        {
+            return _actionResolver(actionKind);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(
+                "恢复通知动作失败："
+                + ex.Message);
+            return null;
+        }
     }
 
     private static string Truncate(string? value)

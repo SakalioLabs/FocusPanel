@@ -113,7 +113,8 @@ public partial class MainWindow :
             startupIndicator;
         _coordinator = new ShellCoordinator();
         _notificationCenter =
-            new FocusNotificationCenter();
+            new FocusNotificationCenter(
+                ResolveNotificationAction);
         _viewModel = new MainViewModel(
             _coordinator.Apps,
             _coordinator.Windows,
@@ -296,7 +297,10 @@ public partial class MainWindow :
                 "\uE895",
                 FocusToastKind.Information,
                 "打开更新",
-                OpenUpdateSettings));
+                OpenUpdateSettings,
+                ActionKind:
+                    FocusNotificationActionKind
+                        .OpenUpdates));
     }
 
     private void ViewModel_PomodoroCompleted(
@@ -311,7 +315,10 @@ public partial class MainWindow :
                 "\uE823",
                 FocusToastKind.Success,
                 "查看专注",
-                OpenPomodoroWorkspace));
+                OpenPomodoroWorkspace,
+                ActionKind:
+                    FocusNotificationActionKind
+                        .OpenPomodoro));
     }
 
     private void ViewModel_TaskCaptured(
@@ -326,7 +333,10 @@ public partial class MainWindow :
                 "\uE73E",
                 FocusToastKind.Success,
                 "查看任务",
-                OpenTasksWorkspace));
+                OpenTasksWorkspace,
+                ActionKind:
+                    FocusNotificationActionKind
+                        .OpenTasks));
     }
 
     private void ViewModel_TaskCompleted(
@@ -341,7 +351,10 @@ public partial class MainWindow :
                 "\uE73E",
                 FocusToastKind.Success,
                 "查看任务",
-                OpenTasksWorkspace));
+                OpenTasksWorkspace,
+                ActionKind:
+                    FocusNotificationActionKind
+                        .OpenTasks));
     }
 
     private void OpenUpdateSettings()
@@ -414,7 +427,11 @@ public partial class MainWindow :
                     : "查看桌面收纳",
                 recovery.Failed == 0
                     ? null
-                    : OpenDesktopOrganizerWorkspace));
+                    : OpenDesktopOrganizerWorkspace,
+                ActionKind: recovery.Failed == 0
+                    ? FocusNotificationActionKind.None
+                    : FocusNotificationActionKind
+                        .OpenDesktopOrganizer));
     }
 
     private void OpenDesktopOrganizerWorkspace()
@@ -424,6 +441,21 @@ public partial class MainWindow :
         _viewModel.NavigateCommand.Execute("Files");
         Activate();
     }
+
+    private Action? ResolveNotificationAction(
+        FocusNotificationActionKind actionKind) =>
+        actionKind switch
+        {
+            FocusNotificationActionKind.OpenUpdates =>
+                OpenUpdateSettings,
+            FocusNotificationActionKind.OpenPomodoro =>
+                OpenPomodoroWorkspace,
+            FocusNotificationActionKind.OpenTasks =>
+                OpenTasksWorkspace,
+            FocusNotificationActionKind.OpenDesktopOrganizer =>
+                OpenDesktopOrganizerWorkspace,
+            _ => null
+        };
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
     {

@@ -121,6 +121,94 @@ public sealed class FocusNotificationCenterTests
     }
 
     [Fact]
+    public void Constructor_RestoresAllowlistedPanelAction()
+    {
+        int invocations = 0;
+        FocusNotificationSnapshot snapshot =
+            Snapshot("task") with
+            {
+                ActionLabel = "查看任务",
+                ActionKind =
+                    FocusNotificationActionKind.OpenTasks
+            };
+        var center = new FocusNotificationCenter(
+            new RecordingStore(snapshot),
+            actionKind =>
+                actionKind == FocusNotificationActionKind.OpenTasks
+                    ? () => invocations++
+                    : null);
+
+        FocusNotificationItem item = Assert.Single(center.Items);
+        Assert.True(item.HasAction);
+        Assert.False(item.IsExpiredAction);
+        center.Invoke(item);
+
+        Assert.Equal(1, invocations);
+        Assert.False(item.IsUnread);
+    }
+
+    [Fact]
+    public async Task Add_UsesResolverAndPersistsSemanticActionKind()
+    {
+        int invocations = 0;
+        var store = new RecordingStore();
+        var center = new FocusNotificationCenter(
+            store,
+            actionKind =>
+                actionKind
+                    == FocusNotificationActionKind.OpenPomodoro
+                    ? () => invocations++
+                    : null);
+        var notification = new FocusToastNotification(
+            "pomodoro",
+            "专注完成",
+            "休息一下",
+            "\uE823",
+            FocusToastKind.Success,
+            "查看专注",
+            Action: null,
+            ActionKind:
+                FocusNotificationActionKind.OpenPomodoro);
+
+        center.Add(notification);
+        center.Invoke(center.Items[0]);
+        await center.CompleteAsync();
+
+        Assert.Equal(1, invocations);
+        Assert.Equal(
+            FocusNotificationActionKind.OpenPomodoro,
+            store.Saves.Last()[0].ActionKind);
+    }
+
+    [Fact]
+    public void Constructor_UnknownActionKindCannotBecomeExecutable()
+    {
+        FocusNotificationSnapshot snapshot =
+            Snapshot("unknown") with
+            {
+                ActionLabel = "危险动作",
+                ActionKind =
+                    (FocusNotificationActionKind)999
+            };
+        int resolverCalls = 0;
+        var center = new FocusNotificationCenter(
+            new RecordingStore(snapshot),
+            _ =>
+            {
+                resolverCalls++;
+                return () => { };
+            });
+
+        FocusNotificationItem item = Assert.Single(center.Items);
+        Assert.Equal(
+            FocusNotificationActionKind.None,
+            item.ActionKind);
+        Assert.False(item.HasAction);
+        Assert.True(item.IsExpiredAction);
+        Assert.Equal(0, resolverCalls);
+    }
+
+    [Fact]
     public void Constructor_NormalizesAndBoundsUntrustedHistory()
     {
         FocusNotificationSnapshot[] snapshots =
