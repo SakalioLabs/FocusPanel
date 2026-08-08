@@ -73,6 +73,64 @@ public sealed class WindowFocusUiContractTests
         Assert.DoesNotContain("Activate();\n        ToggleWindowFocusFromHotkey", code);
     }
 
+    [Fact]
+    public void CompactDock_ShowsTransientRestoreWithoutGrowingMinimumHeight()
+    {
+        string root = FindRepositoryRoot();
+        string xaml = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+
+        Assert.Contains(
+            "Text=\"恢复\"",
+            xaml);
+        Assert.Contains(
+            "Text=\"{Binding WindowFocusHiddenWindowCountText}\"",
+            xaml);
+        Assert.Contains(
+            "AutomationProperties.HelpText=\"单击恢复本次窗口专注收起的窗口；也可再次按窗口专注全局快捷键\"",
+            xaml);
+        Assert.True(
+            CountOccurrences(
+                xaml,
+                "Command=\"{Binding RestoreWindowFocusSessionCommand}\"")
+            >= 2);
+        Assert.Contains(
+            "<Setter Property=\"MinHeight\" Value=\"98\"/>",
+            xaml);
+        Assert.Contains(
+            "<Setter Property=\"MinHeight\" Value=\"52\"/>",
+            xaml);
+        Assert.Contains(
+            "WindowFocusHiddenWindowCountText =",
+            viewModel);
+        Assert.Contains(
+            "_windowFocusSession.HiddenWindowCount",
+            viewModel);
+        Assert.Contains(
+            "? \"99+\"",
+            viewModel);
+    }
+
+    private static int CountOccurrences(
+        string source,
+        string value)
+    {
+        int count = 0;
+        int index = 0;
+        while ((index = source.IndexOf(
+                   value,
+                   index,
+                   StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += value.Length;
+        }
+
+        return count;
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

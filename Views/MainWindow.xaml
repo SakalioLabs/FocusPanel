@@ -2431,14 +2431,70 @@
                         </StackPanel>
 
                         <Grid Grid.Row="1"
-                              x:Name="TaskbarAppsHost"
-                              MinHeight="98"
-                              AllowDrop="True"
-                              PreviewMouseWheel="TaskbarAppsHost_PreviewMouseWheel"
-                              PreviewDragEnter="TaskbarAppsHost_PreviewDragEnter"
-                              PreviewDragOver="TaskbarAppsHost_PreviewDragOver"
-                              PreviewDragLeave="TaskbarAppsHost_PreviewDragLeave"
-                              PreviewDrop="TaskbarAppsHost_PreviewDrop">
+                              MinHeight="98">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Button Grid.Row="0"
+                                    Height="44"
+                                    Margin="0,0,0,2"
+                                    Style="{StaticResource FocusIconButton}"
+                                    Background="{DynamicResource FocusAccentSoftBrush}"
+                                    Command="{Binding RestoreWindowFocusSessionCommand}"
+                                    Visibility="{Binding HasWindowFocusSession, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    ToolTip="{Binding WindowFocusSessionSummary}"
+                                    AutomationProperties.Name="{Binding WindowFocusSessionSummary}"
+                                    AutomationProperties.HelpText="单击恢复本次窗口专注收起的窗口；也可再次按窗口专注全局快捷键">
+                                <Grid Width="48" Height="44">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   Style="{StaticResource FocusIconText}"
+                                                   Text="&#xE777;"/>
+                                        <TextBlock Margin="0,-2,0,0"
+                                                   HorizontalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Text="恢复"/>
+                                    </StackPanel>
+                                    <Border MinWidth="16"
+                                            Height="16"
+                                            Padding="2,0"
+                                            Margin="0,-3,-3,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusSurfaceStrongBrush}"
+                                            BorderBrush="{DynamicResource FocusAccentBrightBrush}"
+                                            BorderThickness="1"
+                                            IsHitTestVisible="False">
+                                        <TextBlock Text="{Binding WindowFocusHiddenWindowCountText}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Foreground="{DynamicResource FocusAccentBrightBrush}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
+                                </Grid>
+                            </Button>
+
+                            <Grid Grid.Row="1"
+                                  x:Name="TaskbarAppsHost"
+                                  AllowDrop="True"
+                                  PreviewMouseWheel="TaskbarAppsHost_PreviewMouseWheel"
+                                  PreviewDragEnter="TaskbarAppsHost_PreviewDragEnter"
+                                  PreviewDragOver="TaskbarAppsHost_PreviewDragOver"
+                                  PreviewDragLeave="TaskbarAppsHost_PreviewDragLeave"
+                                  PreviewDrop="TaskbarAppsHost_PreviewDrop">
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="MinHeight" Value="98"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasWindowFocusSession}" Value="True">
+                                                <Setter Property="MinHeight" Value="52"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
                             <Button x:Name="TaskbarScrollUpButton"
                                     Panel.ZIndex="2"
                                     Style="{StaticResource FocusIconButton}"
@@ -2744,6 +2800,7 @@
                                     </Border>
                                 </Grid>
                             </Button>
+                            </Grid>
                         </Grid>
 
                         <StackPanel Grid.Row="2">

@@ -668,6 +668,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         string.Empty;
 
     [ObservableProperty]
+    private string windowFocusHiddenWindowCountText =
+        string.Empty;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(HasOpenTasks))]
     [NotifyPropertyChangedFor(
@@ -4598,6 +4602,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _windowFocusSession.HasActiveSession;
         WindowFocusSessionSummary =
             _windowFocusSession.Summary;
+        WindowFocusHiddenWindowCountText =
+            _windowFocusSession.HiddenWindowCount > 99
+                ? "99+"
+                : _windowFocusSession
+                    .HiddenWindowCount
+                    .ToString(ChineseCulture);
     }
     private void Dashboard_NavigationRequested(
         string destination) =>
