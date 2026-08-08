@@ -104,6 +104,8 @@ internal static class TaskbarAppCollectionSynchronizer
                     && left.IsActive == right.IsActive
                     && left.State == right.State
                     && left.IsTopmost == right.IsTopmost
+                    && left.IsAttentionRequested
+                        == right.IsAttentionRequested
                     && string.Equals(left.Title, right.Title, StringComparison.Ordinal))
                 .All(equal => equal);
 }

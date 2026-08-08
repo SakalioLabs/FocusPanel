@@ -290,6 +290,33 @@ public sealed class TaskbarAppCollectionSynchronizerTests
             items[0].IdentityKey);
     }
 
+    [Fact]
+    public void AttentionChange_RefreshesExistingApplicationInstance()
+    {
+        TaskbarAppItem current = RunningApp(
+            "exe:c:\\chat.exe",
+            "聊天",
+            17,
+            false);
+        var items = new ObservableCollection<TaskbarAppItem>
+        {
+            current
+        };
+        TaskbarAppItem desired = RunningApp(
+            "exe:c:\\chat.exe",
+            "聊天",
+            17,
+            false,
+            attentionRequested: true);
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[] { desired });
+
+        Assert.Same(current, items[0]);
+        Assert.True(items[0].IsAttentionRequested);
+    }
+
     private static TaskbarAppItem App(string identity, string name) => new()
     {
         IdentityKey = identity,
@@ -303,7 +330,8 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         bool active,
         TrackedWindowState state =
             TrackedWindowState.Normal,
-        bool isTopmost = false) => new()
+        bool isTopmost = false,
+        bool attentionRequested = false) => new()
     {
         IdentityKey = identity,
         DisplayName = name,
@@ -320,7 +348,8 @@ public sealed class TaskbarAppCollectionSynchronizerTests
                     name,
                     false,
                     state,
-                    isTopmost)
+                    isTopmost,
+                    attentionRequested)
             }
         }
     };

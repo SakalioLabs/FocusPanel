@@ -56,6 +56,8 @@ public sealed class TaskbarAppItem : ObservableObject
     public bool IsBackgroundOnly =>
         IsRunning && WindowCount == 0;
     public bool IsActive => RunningTask?.IsActive == true;
+    public bool IsAttentionRequested =>
+        RunningTask?.IsAttentionRequested == true;
     public bool CanLaunchNewInstance =>
         !string.IsNullOrWhiteSpace(LaunchItem?.LaunchTarget)
         || !string.IsNullOrWhiteSpace(ApplicationUserModelId)
@@ -127,7 +129,9 @@ public sealed class TaskbarAppItem : ObservableObject
     }
     public string? ExecutablePath => RunningTask?.ExecutablePath;
     public string WindowSummary =>
-        IsBackgroundOnly
+        IsAttentionRequested
+            ? "需要注意"
+            : IsBackgroundOnly
             ? "后台运行 · 无可见窗口"
             : WindowCount == 0
                 ? "未运行"
@@ -135,6 +139,8 @@ public sealed class TaskbarAppItem : ObservableObject
     public string StatusSummary =>
         IsActive
             ? $"正在使用 · {WindowCount} 个窗口"
+            : IsAttentionRequested
+                ? $"需要注意 · {WindowCount} 个窗口"
             : IsFullyMinimized
                 ? $"已最小化 · {WindowCount} 个窗口"
                 : IsBackgroundOnly
@@ -397,6 +403,8 @@ public sealed class TaskbarAppItem : ObservableObject
         OnPropertyChanged(nameof(IsRunning));
         OnPropertyChanged(nameof(IsBackgroundOnly));
         OnPropertyChanged(nameof(IsActive));
+        OnPropertyChanged(
+            nameof(IsAttentionRequested));
         OnPropertyChanged(nameof(CanLaunchNewInstance));
         OnPropertyChanged(nameof(CanLaunchElevated));
         OnPropertyChanged(nameof(CanPin));

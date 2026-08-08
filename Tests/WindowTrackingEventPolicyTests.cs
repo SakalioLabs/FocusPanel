@@ -7,6 +7,8 @@ public sealed class WindowTrackingEventPolicyTests
 {
     [Theory]
     [InlineData(
+        WindowTrackingEventPolicy.EventSystemAlert)]
+    [InlineData(
         WindowTrackingEventPolicy.EventSystemForeground)]
     [InlineData(
         WindowTrackingEventPolicy.EventSystemMinimizeStart)]
@@ -47,6 +49,19 @@ public sealed class WindowTrackingEventPolicyTests
         Assert.False(
             WindowTrackingEventPolicy.ShouldQueueRefresh(
                 WindowTrackingEventPolicy.EventObjectNameChange,
+                objectId));
+    }
+
+    [Theory]
+    [InlineData(-4)]
+    [InlineData(-3)]
+    [InlineData(1)]
+    public void SystemAlert_QueuesRegardlessOfAccessibleObject(
+        int objectId)
+    {
+        Assert.True(
+            WindowTrackingEventPolicy.ShouldQueueRefresh(
+                WindowTrackingEventPolicy.EventSystemAlert,
                 objectId));
     }
 

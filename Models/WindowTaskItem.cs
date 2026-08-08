@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -22,6 +23,9 @@ public partial class WindowTaskItem : ObservableObject
     public ImageSource? Icon { get; init; }
     public IReadOnlyList<WindowReference> Windows { get; init; } = Array.Empty<WindowReference>();
     public int WindowCount => Windows.Count;
+    public bool IsAttentionRequested =>
+        Windows.Any(window =>
+            window.IsAttentionRequested);
     public IntPtr PrimaryHandle => Windows.Count == 0 ? IntPtr.Zero : Windows[0].Handle;
 
     [ObservableProperty]
@@ -34,4 +38,5 @@ public sealed record WindowReference(
     bool IsActive = false,
     TrackedWindowState State =
         TrackedWindowState.Normal,
-    bool IsTopmost = false);
+    bool IsTopmost = false,
+    bool IsAttentionRequested = false);

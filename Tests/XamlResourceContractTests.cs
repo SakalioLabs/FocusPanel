@@ -3143,7 +3143,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "item.IsActive,\n"
             + "                                item.State,\n"
-            + "                                item.IsTopmost))",
+            + "                                item.IsTopmost,\n"
+            + "                                !isActive\n"
+            + "                                && item.IsAttentionRequested))",
             tracker.Replace(
                 "\r\n",
                 "\n"));
@@ -6081,6 +6083,15 @@ public sealed class XamlResourceContractTests
                 "WindowTrackingEventPolicy.cs"));
 
         Assert.Contains(
+            "WindowTrackingEventPolicy.EventSystemAlert",
+            tracker);
+        Assert.Contains(
+            "_attention.Observe(",
+            tracker);
+        Assert.Contains(
+            "_attention.Retain(",
+            tracker);
+        Assert.Contains(
             "WindowTrackingEventPolicy.EventObjectCreate",
             tracker);
         Assert.Contains(
@@ -6104,6 +6115,53 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain(
             "eventType >= EventObjectShow",
             tracker);
+
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        Assert.Contains(
+            "AttentionTaskbarIdentity =",
+            viewModel);
+        Assert.Contains(
+            "RevealAttentionTaskbarApp",
+            codeBehind);
+    }
+
+    [Fact]
+    public void CompactTaskbar_ShowsAttentionWithoutNestedBorder()
+    {
+        string root = FindRepositoryRoot();
+        string view = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+
+        Assert.Contains(
+            "Binding IsAttentionRequested",
+            view);
+        Assert.Contains(
+            "AutomationProperties.Name=\"此应用需要注意\"",
+            view);
+        Assert.Contains(
+            "AutomationProperties.Name=\"此窗口需要注意\"",
+            view);
+        Assert.Contains(
+            "Value=\"{DynamicResource FocusWarningSoftBrush}\"",
+            view);
+        Assert.Contains(
+            "Fill=\"{DynamicResource FocusWarningBrush}\"",
+            view);
+        Assert.DoesNotContain(
+            "CornerRadius=\"7\"",
+            view);
     }
 
     [Fact]

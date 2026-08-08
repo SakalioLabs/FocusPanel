@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.57 补上原生任务栏隐藏后非常关键的“应用请求注意”反馈：聊天消息、安装确认或后台操作触发 Windows 系统警报时，Panel 中对应应用出现单层琥珀色 `!`，完整窗口总览也标出具体窗口；图标滚出可视区域时会自动露出一次，但不打乱固定顺序。状态来自微软公开 [`EVENT_SYSTEM_ALERT`](https://learn.microsoft.com/windows/win32/winauto/event-constants) 与 [`SetWinEventHook`](https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-setwineventhook)，复用现有事件快照，不轮询、不读取 Explorer。应用真正切到前台、窗口关闭或跟踪停止后徽标立即清除，不会留下永久假提醒。
+
+![Panel 在统一任务栏中显示并清除应用注意请求](docs/images/panel-app-attention.svg)
+
 > 0.11.56 让“只有后台宿主、暂时没有可见窗口”的用户应用也进入 Panel 中部统一任务栏：识别沿用现有窗口事件快照，不轮询全部进程，也不打开 Windows 的“显示隐藏图标”。同一应用按 AppUserModelID/可执行路径合并，只显示一个带状态圆点的图标；左键会通过可靠启动目标请求它重新显示界面，右键仍可固定和排序。系统进程、跨会话进程、崩溃辅助程序和 FocusPanel 自身会被过滤。由于第三方托盘菜单没有统一公开协议，本项目仍不会用 Explorer 注入假装复制菜单。
 
 ![后台应用进入 FocusPanel 统一任务栏](docs/images/panel-background-app-shelf.svg)

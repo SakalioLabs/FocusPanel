@@ -2,6 +2,7 @@ namespace FocusPanel.Services;
 
 internal static class WindowTrackingEventPolicy
 {
+    internal const uint EventSystemAlert = 0x0002;
     internal const uint EventSystemForeground = 0x0003;
     internal const uint EventSystemMinimizeStart = 0x0016;
     internal const uint EventSystemMinimizeEnd = 0x0017;
@@ -17,6 +18,9 @@ internal static class WindowTrackingEventPolicy
         uint eventType,
         int objectId)
     {
+        if (eventType == EventSystemAlert)
+            return true;
+
         if (objectId != ObjectIdWindow)
             return false;
 

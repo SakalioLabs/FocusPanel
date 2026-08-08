@@ -259,6 +259,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string? activeTaskbarIdentity;
 
     [ObservableProperty]
+    private string? attentionTaskbarIdentity;
+
+    [ObservableProperty]
     private bool isCalendarOpen;
 
     [ObservableProperty]
@@ -3597,6 +3600,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ActiveTaskbarIdentity =
             TaskbarApps.FirstOrDefault(
                 item => item.IsActive)
+            ?.IdentityKey;
+        AttentionTaskbarIdentity =
+            TaskbarApps.FirstOrDefault(
+                item =>
+                    item.IsAttentionRequested)
             ?.IdentityKey;
         WindowReference? activeWindow =
             TaskbarApps

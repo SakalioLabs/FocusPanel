@@ -1911,16 +1911,25 @@ public partial class MainWindow :
         }
 
         if (e.PropertyName
-            != nameof(
+            == nameof(
                 MainViewModel
                     .ActiveTaskbarIdentity))
         {
+            _ = Dispatcher.BeginInvoke(
+                RevealActiveTaskbarApp,
+                DispatcherPriority.Render);
             return;
         }
 
-        _ = Dispatcher.BeginInvoke(
-            RevealActiveTaskbarApp,
-            DispatcherPriority.Render);
+        if (e.PropertyName
+            == nameof(
+                MainViewModel
+                    .AttentionTaskbarIdentity))
+        {
+            _ = Dispatcher.BeginInvoke(
+                RevealAttentionTaskbarApp,
+                DispatcherPriority.Render);
+        }
     }
 
     private void ApplyCompactDockVisibilityPreference()
@@ -1951,11 +1960,21 @@ public partial class MainWindow :
     }
 
     private void RevealActiveTaskbarApp()
+        => RevealTaskbarApp(
+            _viewModel
+                .ActiveTaskbarIdentity);
+
+    private void RevealAttentionTaskbarApp()
+        => RevealTaskbarApp(
+            _viewModel
+                .AttentionTaskbarIdentity);
+
+    private void RevealTaskbarApp(
+        string? identity)
     {
         if (_isExit
             || string.IsNullOrWhiteSpace(
-                _viewModel
-                    .ActiveTaskbarIdentity))
+                identity))
         {
             return;
         }
@@ -1970,8 +1989,7 @@ public partial class MainWindow :
                     _viewModel
                         .TaskbarApps[index]
                         .IdentityKey,
-                    _viewModel
-                        .ActiveTaskbarIdentity,
+                    identity,
                     StringComparison
                         .OrdinalIgnoreCase))
             {

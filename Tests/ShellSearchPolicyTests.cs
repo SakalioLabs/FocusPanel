@@ -223,6 +223,31 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Fact]
+    public void WindowResult_ExposesAttentionState()
+    {
+        var application = new WindowTaskItem
+        {
+            DisplayName = "聊天",
+            IdentityKey = "exe:c:\\chat.exe"
+        };
+        ShellSearchResult result =
+            ShellSearchResult.FromWindow(
+                application,
+                new WindowReference(
+                    new IntPtr(45),
+                    "新消息",
+                    IsAttentionRequested: true));
+
+        Assert.Contains(
+            "需要注意",
+            result.SecondaryText);
+        Assert.Contains(
+            "需要注意",
+            result.AccessibleName);
+        Assert.True(result.IsAttentionRequested);
+    }
+
+    [Fact]
     public void Compose_SystemScopeOffersCommandsWithoutAQuery()
     {
         ShellSearchResult[] results =

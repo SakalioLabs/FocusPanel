@@ -37,6 +37,8 @@ public sealed class WindowTracker : IWindowTracker
     private readonly List<IntPtr> _hooks = new();
     private readonly IAppIdentityResolver _identityResolver;
     private readonly WindowCommandExecutor _commands;
+    private readonly WindowAttentionState
+        _attention = new();
     private readonly int _currentSessionId;
     private readonly string _windowsDirectory;
     private readonly ResilientSnapshotStore<WindowTaskItem>
@@ -74,6 +76,9 @@ public sealed class WindowTracker : IWindowTracker
             RefreshDebounce_Tick;
 
         AddHook(
+            WindowTrackingEventPolicy.EventSystemAlert,
+            WindowTrackingEventPolicy.EventSystemAlert);
+        AddHook(
             WindowTrackingEventPolicy.EventSystemForeground,
             WindowTrackingEventPolicy.EventSystemForeground);
         AddHook(
@@ -107,6 +112,8 @@ public sealed class WindowTracker : IWindowTracker
 
         _trackingActive = isActive;
         _refreshDebounce.Stop();
+        if (!isActive)
+            _attention.ClearAll();
         if (WindowTrackingActivityPolicy.ShouldRefreshAfterActivityChange(
                 wasActive,
                 isActive))
@@ -282,6 +289,7 @@ public sealed class WindowTracker : IWindowTracker
         var backgroundOwners =
             new Dictionary<uint, BackgroundAppObservation>();
         IntPtr foreground = NativeMethods.GetForegroundWindow();
+        _attention.Clear(foreground);
 
         bool enumerated =
             NativeMethods.EnumWindows((hwnd, _) =>
@@ -321,6 +329,13 @@ public sealed class WindowTracker : IWindowTracker
             .Select(group =>
             {
                 WindowEntry first = group.First();
+                bool isActive = group.Any(
+                    item => item.IsActive);
+                if (isActive)
+                {
+                    foreach (WindowEntry item in group)
+                        _attention.Clear(item.Handle);
+                }
                 string? resolvedExecutable = group
                     .Select(item => item.ExecutablePath)
                     .FirstOrDefault(value => value != null);
@@ -357,14 +372,18 @@ public sealed class WindowTracker : IWindowTracker
                                 item.Title,
                                 item.IsActive,
                                 item.State,
-                                item.IsTopmost))
+                                item.IsTopmost,
+                                !isActive
+                                && item.IsAttentionRequested))
                         .ToList(),
-                    IsActive = group.Any(item => item.IsActive)
+                    IsActive = isActive
                 };
             })
             .OrderByDescending(item => item.IsActive)
             .ThenBy(item => item.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
+        _attention.Retain(
+            windows.Select(item => item.Handle));
         return BackgroundAppSnapshotComposer.Append(
             taskWindows,
             backgroundOwners.Values);
@@ -530,7 +549,8 @@ public sealed class WindowTracker : IWindowTracker
                     hwnd,
                     GwlExStyle)
                 .ToInt64()
-             & WsExTopmost) != 0));
+             & WsExTopmost) != 0,
+            _attention.IsRequested(hwnd)));
     }
 
     private void PublishSnapshotChangedSafely()
@@ -613,7 +633,28 @@ public sealed class WindowTracker : IWindowTracker
             return;
         }
 
+        IntPtr attentionWindow =
+            NormalizeAttentionWindow(hwnd);
+        _attention.Observe(
+            eventType,
+            attentionWindow,
+            NativeMethods
+                .GetForegroundWindow());
+
         ScheduleSnapshotRefresh();
+    }
+
+    private static IntPtr NormalizeAttentionWindow(
+        IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+            return IntPtr.Zero;
+
+        IntPtr rootOwner =
+            NativeMethods.GetAncestor(hwnd, 3);
+        return rootOwner == IntPtr.Zero
+            ? hwnd
+            : rootOwner;
     }
 
     private void ScheduleSnapshotRefresh()
@@ -662,6 +703,7 @@ public sealed class WindowTracker : IWindowTracker
 
         _disposed = true;
         _trackingActive = false;
+        _attention.ClearAll();
         _snapshotRefresh.Dispose();
         _refreshDebounce.Stop();
         _refreshDebounce.Tick -=
@@ -680,7 +722,8 @@ public sealed class WindowTracker : IWindowTracker
         string? ApplicationUserModelId,
         TrackedWindowState State,
         bool IsActive,
-        bool IsTopmost);
+        bool IsTopmost,
+        bool IsAttentionRequested);
 
     private sealed record PendingWindowSnapshot(
         long Revision,
@@ -721,6 +764,11 @@ public sealed class WindowTracker : IWindowTracker
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetWindow(IntPtr hwnd, uint command);
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetAncestor(
+            IntPtr hwnd,
+            uint flags);
 
         [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
         internal static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int index);

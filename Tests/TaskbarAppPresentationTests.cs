@@ -10,6 +10,37 @@ namespace FocusPanel.Tests;
 public sealed class TaskbarAppPresentationTests
 {
     [Fact]
+    public void AttentionRequest_IsExposedInTaskbarPresentation()
+    {
+        var item = new TaskbarAppItem
+        {
+            IdentityKey = "exe:c:\\chat.exe",
+            DisplayName = "聊天",
+            RunningTask = new WindowTaskItem
+            {
+                AppKey = "exe:c:\\chat.exe",
+                IdentityKey = "exe:c:\\chat.exe",
+                DisplayName = "聊天",
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(17),
+                        "新消息",
+                        false,
+                        TrackedWindowState.Minimized,
+                        false,
+                        true)
+                }
+            }
+        };
+
+        Assert.True(item.IsAttentionRequested);
+        Assert.Equal("需要注意", item.WindowSummary);
+        Assert.Equal("需要注意 · 1 个窗口", item.StatusSummary);
+        Assert.Contains("需要注意", item.AccessibleName);
+    }
+
+    [Fact]
     public void ActiveApplication_DescribesCurrentUse()
     {
         TaskbarAppItem item = Running(

@@ -146,6 +146,9 @@ public sealed record ShellSearchResult
         Kind
         == ShellSearchResultKind.Window;
 
+    public bool IsAttentionRequested =>
+        Window?.IsAttentionRequested == true;
+
     public bool IsSystemCommand =>
         Kind
         == ShellSearchResultKind.SystemCommand;
@@ -245,6 +248,8 @@ public sealed record ShellSearchResult
         string state =
             window.IsActive
                 ? "当前窗口"
+                : window.IsAttentionRequested
+                    ? "需要注意"
                 : "已打开窗口";
         string topmost =
             window.IsTopmost
@@ -266,6 +271,9 @@ public sealed record ShellSearchResult
                 + application.DisplayName
                 + (window.IsTopmost
                     ? "，已置顶"
+                    : string.Empty)
+                + (window.IsAttentionRequested
+                    ? "，需要注意"
                     : string.Empty),
             Icon =
                 application.Icon,

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="560" viewBox="0 0 1180 560">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101721"/>
+      <stop offset="1" stop-color="#253044"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3f8ff" stop-opacity=".24"/>
+      <stop offset="1" stop-color="#91cfff" stop-opacity=".08"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="22" flood-color="#000" flood-opacity=".34"/></filter>
+  </defs>
+  <rect width="1180" height="560" rx="32" fill="url(#bg)"/>
+  <text x="52" y="64" fill="#f7fbff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">应用需要你时，Panel 会明确提醒</text>
+  <text x="52" y="98" fill="#a6b6c9" font-family="Segoe UI, Microsoft YaHei" font-size="16">公开 WinEvent 事件驱动 · 不依赖原生任务栏闪烁</text>
+
+  <g transform="translate(52 142)">
+    <rect width="292" height="270" rx="24" fill="#111927" stroke="#34465e"/>
+    <text x="24" y="40" fill="#d6e2ef" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="600">Windows 系统警报</text>
+    <rect x="24" y="66" width="244" height="82" rx="18" fill="#1b2839"/>
+    <rect x="42" y="84" width="46" height="46" rx="14" fill="#177fd0"/>
+    <path d="M55 101h20M55 109h15M55 117h11" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <text x="105" y="103" fill="#f5f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="16">聊天应用</text>
+    <text x="105" y="126" fill="#ffc857" font-family="Segoe UI, Microsoft YaHei" font-size="14">新消息需要注意</text>
+    <rect x="24" y="167" width="244" height="76" rx="16" fill="#151e2b"/>
+    <text x="42" y="196" fill="#70d7a5" font-family="Consolas, Segoe UI" font-size="14">EVENT_SYSTEM_ALERT</text>
+    <text x="42" y="222" fill="#8fa3ba" font-family="Segoe UI, Microsoft YaHei" font-size="14">沿用现有 SetWinEventHook</text>
+  </g>
+
+  <path d="M368 276h96" stroke="#ffc857" stroke-width="3" stroke-linecap="round"/>
+  <path d="M452 265l14 11-14 11" fill="none" stroke="#ffc857" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="382" y="251" fill="#ffdb8a" font-family="Segoe UI, Microsoft YaHei" font-size="13">根窗口去重</text>
+
+  <g transform="translate(484 124)" filter="url(#shadow)">
+    <rect width="104" height="330" rx="30" fill="url(#glass)" stroke="#9cd7ff" stroke-opacity=".38"/>
+    <circle cx="52" cy="48" r="22" fill="#198be0"/>
+    <path d="M43 48h18M52 39v18" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <g transform="translate(28 91)">
+      <rect width="48" height="48" rx="14" fill="#177fd0"/>
+      <path d="M14 18h20M14 25h15M14 32h11" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="41" cy="42" r="8" fill="#ffc857"/>
+      <text x="41" y="46" text-anchor="middle" fill="#2b2108" font-family="Segoe UI" font-size="11" font-weight="700">!</text>
+    </g>
+    <rect x="18" y="151" width="68" height="54" rx="16" fill="#ffc857" fill-opacity=".17"/>
+    <circle cx="52" cy="178" r="16" fill="#7c65d1"/>
+    <path d="M44 178h16M52 170v16" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="52" cy="242" r="22" fill="#e4ecf5"/>
+    <path d="M41 242h22" stroke="#40536b" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="52" cy="304" r="10" fill="#91cfff"/>
+  </g>
+
+  <g transform="translate(632 142)">
+    <rect width="496" height="270" rx="24" fill="#111927" stroke="#34465e"/>
+    <text x="24" y="40" fill="#d6e2ef" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="600">窗口总览同步定位</text>
+    <rect x="24" y="64" width="448" height="91" rx="18" fill="#ffc857" fill-opacity=".09" stroke="#ffc857" stroke-opacity=".34"/>
+    <rect x="42" y="82" width="54" height="54" rx="15" fill="#177fd0"/>
+    <path d="M56 99h25M56 107h19M56 115h14" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="90" cy="130" r="7" fill="#ffc857"/>
+    <text x="90" y="134" text-anchor="middle" fill="#2b2108" font-family="Segoe UI" font-size="9" font-weight="700">!</text>
+    <text x="116" y="102" fill="#f5f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="16" font-weight="600">新消息</text>
+    <text x="116" y="128" fill="#ffc857" font-family="Segoe UI, Microsoft YaHei" font-size="14">聊天应用 · 需要注意</text>
+    <rect x="367" y="88" width="82" height="42" rx="12" fill="#167fc7"/>
+    <text x="408" y="114" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="14">切换窗口</text>
+    <text x="27" y="194" fill="#76d9aa" font-family="Segoe UI, Microsoft YaHei" font-size="14">✓ 图标在滚动区外时只自动露出一次</text>
+    <text x="27" y="221" fill="#76d9aa" font-family="Segoe UI, Microsoft YaHei" font-size="14">✓ 同组窗口进入前台后立即清除</text>
+    <text x="27" y="248" fill="#9fb0c6" font-family="Segoe UI, Microsoft YaHei" font-size="14">关闭、退出与停止跟踪不会留下永久徽标</text>
+  </g>
+
+  <g transform="translate(52 462)">
+    <rect width="1076" height="54" rx="17" fill="#121b29" stroke="#34465e"/>
+    <text x="24" y="34" fill="#9fb0c6" font-family="Segoe UI, Microsoft YaHei" font-size="14">保持不变：</text>
+    <text x="112" y="34" fill="#d7e3ef" font-family="Segoe UI, Microsoft YaHei" font-size="14">固定顺序</text>
+    <text x="186" y="34" fill="#53667d" font-family="Segoe UI" font-size="14">·</text>
+    <text x="206" y="34" fill="#d7e3ef" font-family="Segoe UI, Microsoft YaHei" font-size="14">应用分组</text>
+    <text x="280" y="34" fill="#53667d" font-family="Segoe UI" font-size="14">·</text>
+    <text x="300" y="34" fill="#d7e3ef" font-family="Segoe UI, Microsoft YaHei" font-size="14">不抢焦点</text>
+    <text x="374" y="34" fill="#53667d" font-family="Segoe UI" font-size="14">·</text>
+    <text x="394" y="34" fill="#d7e3ef" font-family="Segoe UI, Microsoft YaHei" font-size="14">不操作 Explorer 或原生任务栏</text>
+  </g>
+</svg>
