@@ -115,6 +115,48 @@ public sealed class IconHelperTests
         }
     }
 
+    [Fact]
+    public void StandaloneIco_IsDecodedWithoutDependingOnShellExtraction()
+    {
+        string root = CreateTemporaryDirectory();
+        try
+        {
+            string iconPath = Path.Combine(
+                root,
+                "panel.ico");
+            byte[] png = Convert.FromBase64String(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ"
+                + "AAAADUlEQVR42mNk+M/wHwAF/gL+XxK5WQAAAABJRU5ErkJggg==");
+            using (var stream = File.Create(iconPath))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((ushort)0);
+                writer.Write((ushort)1);
+                writer.Write((ushort)1);
+                writer.Write((byte)1);
+                writer.Write((byte)1);
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+                writer.Write((ushort)1);
+                writer.Write((ushort)32);
+                writer.Write(png.Length);
+                writer.Write(22);
+                writer.Write(png);
+            }
+
+            var icon = IconHelper.GetIconFromLocation(
+                iconPath,
+                0,
+                true);
+
+            Assert.NotNull(icon);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
     private static string CreateTemporaryDirectory()
     {
         string path = Path.Combine(

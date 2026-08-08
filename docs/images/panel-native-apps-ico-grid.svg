@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1728"/><stop offset="1" stop-color="#243451"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".18"/><stop offset="1" stop-color="#7db9ff" stop-opacity=".07"/>
+    </linearGradient>
+  </defs>
+  <rect width="1180" height="500" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f7f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">0.11.48 · 应用入口、ICO 与图标网格一起修正</text>
+  <text x="54" y="98" fill="#b8c5d9" font-family="Segoe UI, Microsoft YaHei" font-size="16">不借原生任务栏 · 直接解码自定义图标 · 按真实宽度均匀排布</text>
+
+  <rect x="54" y="132" width="314" height="310" rx="22" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".17"/>
+  <rect x="82" y="164" width="258" height="52" rx="14" fill="#1888e8"/>
+  <circle cx="111" cy="190" r="13" fill="#ffffff" fill-opacity=".95"/>
+  <path d="M104 191h14M111 184v14" stroke="#1888e8" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="137" y="197" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="650">Panel 应用与窗口</text>
+  <text x="82" y="260" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="650">入口完全留在 Panel</text>
+  <text x="82" y="298" fill="#c9d4e5" font-family="Segoe UI, Microsoft YaHei" font-size="15">查看 · 切换 · 最小化 · 关闭</text>
+  <text x="82" y="329" fill="#c9d4e5" font-family="Segoe UI, Microsoft YaHei" font-size="15">不弹出任务栏隐藏图标区</text>
+  <text x="82" y="360" fill="#c9d4e5" font-family="Segoe UI, Microsoft YaHei" font-size="15">不临时显示 Shell_TrayWnd</text>
+  <rect x="82" y="390" width="190" height="30" rx="10" fill="#0d1a2d" fill-opacity=".7"/>
+  <text x="177" y="411" text-anchor="middle" fill="#82c4ff" font-family="Segoe UI, Microsoft YaHei" font-size="13">Panel 内置窗口总览</text>
+
+  <rect x="394" y="132" width="286" height="310" rx="22" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".17"/>
+  <rect x="426" y="164" width="92" height="92" rx="18" fill="#202c40" stroke="#62b0ff" stroke-width="2"/>
+  <path d="M447 230l17-22 14 13 17-27 10 36z" fill="#62b0ff"/><circle cx="452" cy="190" r="8" fill="#ffd166"/>
+  <text x="540" y="190" fill="#f5f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="700">.ICO</text>
+  <text x="540" y="218" fill="#9bcaff" font-family="Segoe UI, Microsoft YaHei" font-size="14">16 · 32 · 48 · 64</text>
+  <text x="426" y="298" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="650">直接读取多尺寸帧</text>
+  <text x="426" y="336" fill="#c9d4e5" font-family="Segoe UI, Microsoft YaHei" font-size="15">按目标尺寸与色深选择</text>
+  <text x="426" y="367" fill="#c9d4e5" font-family="Segoe UI, Microsoft YaHei" font-size="15">收纳、刷新、重启都保留</text>
+  <text x="426" y="398" fill="#c9d4e5" font-family="Segoe UI, Microsoft YaHei" font-size="15">Shell 仅作兼容回退</text>
+
+  <rect x="706" y="132" width="420" height="310" rx="22" fill="url(#glass)" stroke="#ffffff" stroke-opacity=".17"/>
+  <text x="738" y="174" fill="#f3f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="650">真实宽度决定列数</text>
+  <g transform="translate(738 204)">
+    <g fill="#21334d" stroke="#72b8ff" stroke-opacity=".7">
+      <rect x="0" y="0" width="64" height="76" rx="14"/><rect x="80" y="0" width="64" height="76" rx="14"/><rect x="160" y="0" width="64" height="76" rx="14"/><rect x="240" y="0" width="64" height="76" rx="14"/><rect x="320" y="0" width="64" height="76" rx="14"/>
+      <rect x="0" y="94" width="64" height="76" rx="14"/><rect x="80" y="94" width="64" height="76" rx="14"/><rect x="160" y="94" width="64" height="76" rx="14"/>
+    </g>
+    <g fill="#8bc6ff">
+      <circle cx="32" cy="29" r="14"/><circle cx="112" cy="29" r="14"/><circle cx="192" cy="29" r="14"/><circle cx="272" cy="29" r="14"/><circle cx="352" cy="29" r="14"/>
+      <circle cx="32" cy="123" r="14"/><circle cx="112" cy="123" r="14"/><circle cx="192" cy="123" r="14"/>
+    </g>
+    <g fill="#b7c9df"><rect x="13" y="55" width="38" height="6" rx="3"/><rect x="93" y="55" width="38" height="6" rx="3"/><rect x="173" y="55" width="38" height="6" rx="3"/><rect x="253" y="55" width="38" height="6" rx="3"/><rect x="333" y="55" width="38" height="6" rx="3"/></g>
+  </g>
+  <text x="738" y="408" fill="#c9d4e5" font-family="Segoe UI, Microsoft YaHei" font-size="15">加载后重算 · 行宽等分 · 间距一致</text>
+</svg>

@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.48 聚焦修复三处直接影响使用的问题：状态中心的入口明确收口为“Panel 应用与窗口”，只进入 Panel 自己的窗口总览，不触发原生任务栏隐藏图标区；用户选择的独立 `.ico` 现在由应用直接解码并选择最合适的尺寸，不再依赖不同机器表现不一致的 Shell 抽取；收纳图标视图会在真实宽度出现后强制重排，并把每一行宽度均匀分给固定尺寸图标卡，避免启动时锁成单列或左右留出怪异大洞。
+
+![Panel 自有应用入口、可靠 ICO 与均匀图标网格](docs/images/panel-native-apps-ico-grid.svg)
+
 > 0.11.47 让网络管理超出原生任务栏的“附近列表”：Panel 现在通过微软公开的 [`WlanGetProfileList`](https://learn.microsoft.com/windows/win32/api/wlanapi/nf-wlanapi-wlangetprofilelist) 枚举每张无线网卡的全部已保存配置，即使某个网络当前不在附近也会在列表末尾显示“离线 / 已保存·当前不在附近”，可直接忘记。附近网络仍独立保留最多 10 项，离线配置另保留最多 6 项，不会互相挤占；同名配置按网卡隔离，组策略下发的配置明确显示“组织管理”并禁用删除。
 
 ![Panel 同时管理附近网络与离线已保存配置](docs/images/panel-saved-wifi-profiles.svg)

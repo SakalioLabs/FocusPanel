@@ -134,6 +134,60 @@ public sealed class ViewportVirtualizingPanelMutationTests
         Assert.Null(failure);
     }
 
+    [Fact]
+    public void WrappedItems_ReflowAfterTheHostGrowsFromOneColumn()
+    {
+        Exception? failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var items = new ObservableCollection<string>();
+                for (int index = 0; index < 12; index++)
+                    items.Add($"item-{index}");
+
+                ItemsControl control = CreateControl(items);
+                var host = new Grid
+                {
+                    Width = 90,
+                    Children = { control }
+                };
+                var window = new Window
+                {
+                    Content = host,
+                    Width = 140,
+                    Height = 400,
+                    Left = -10000,
+                    Top = -10000,
+                    Opacity = 0,
+                    ShowInTaskbar = false,
+                    WindowStyle = WindowStyle.None
+                };
+                window.Show();
+                window.UpdateLayout();
+                Assert.Equal(
+                    1,
+                    FindPanel(control)!.ItemsPerRow);
+
+                host.Width = 560;
+                window.Width = 610;
+                window.UpdateLayout();
+
+                Assert.True(
+                    FindPanel(control)!.ItemsPerRow >= 6);
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(10)));
+        Assert.Null(failure);
+    }
+
     private static ItemsControl CreateControl(
         ObservableCollection<string> items)
     {

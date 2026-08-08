@@ -651,10 +651,10 @@
                                         Style="{StaticResource FocusSecondaryButton}"
                                         MinHeight="44"
                                         Margin="0,0,0,8"
-                                        Content="后台应用与窗口 · Panel 原生"
+                                        Content="Panel 应用与窗口"
                                         Click="StatusCenterWindowOverview_Click"
                                         AutomationProperties.Name="打开 Panel 窗口总览"
-                                        ToolTip="在 Panel 内查看、切换和管理应用，不弹出原生任务栏或隐藏图标窗口"/>
+                                        ToolTip="完全在 Panel 内查看、切换和管理应用；不会弹出原生任务栏或隐藏图标窗口"/>
                                 <UniformGrid Columns="4"
                                              Margin="0,0,0,12"
                                              AutomationProperties.Name="Panel 状态详情">

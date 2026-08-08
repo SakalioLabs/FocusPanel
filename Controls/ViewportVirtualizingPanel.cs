@@ -52,6 +52,7 @@ public sealed class ViewportVirtualizingPanel :
                     .AffectsMeasure));
 
     private ScrollViewer? _scrollOwner;
+    private FrameworkElement? _widthOwner;
     private ViewportVirtualizationLayout? _layout;
     private double _cellWidth = 1;
     private double _cellHeight = 1;
@@ -160,15 +161,6 @@ public sealed class ViewportVirtualizingPanel :
                     _layout.ItemsPerRow,
                     _cellWidth,
                     IsWrapping);
-        double rowWidth = IsWrapping
-            ? arrangedCellWidth
-                * _layout.ItemsPerRow
-            : finalSize.Width;
-        double rowOffset = IsWrapping
-            ? Math.Max(
-                0,
-                (finalSize.Width - rowWidth) / 2)
-            : 0;
         IItemContainerGenerator generator =
             ItemContainerGenerator;
         for (int childIndex = 0;
@@ -192,8 +184,7 @@ public sealed class ViewportVirtualizingPanel :
                 itemIndex
                 % _layout.ItemsPerRow;
             double x = IsWrapping
-                ? rowOffset
-                    + column * arrangedCellWidth
+                ? column * arrangedCellWidth
                 : 0;
             double width = IsWrapping
                 ? arrangedCellWidth
@@ -425,14 +416,14 @@ public sealed class ViewportVirtualizingPanel :
     private double ResolvePanelWidth(
         double availableWidth)
     {
-        double resolved = 0;
         if (!double.IsNaN(availableWidth)
             && !double.IsInfinity(availableWidth)
             && availableWidth > 0)
         {
-            resolved = availableWidth;
+            return availableWidth;
         }
 
+        double resolved = 0;
         if (_scrollOwner != null
             && _scrollOwner.ViewportWidth > 0)
         {
@@ -478,12 +469,52 @@ public sealed class ViewportVirtualizingPanel :
     private void Panel_Loaded(
         object sender,
         RoutedEventArgs e)
-        => AttachScrollOwner();
+    {
+        AttachScrollOwner();
+        AttachWidthOwner();
+        Dispatcher.BeginInvoke(
+            new Action(InvalidateMeasure),
+            System.Windows.Threading
+                .DispatcherPriority.Loaded);
+    }
 
     private void Panel_Unloaded(
         object sender,
         RoutedEventArgs e)
-        => DetachScrollOwner();
+    {
+        DetachWidthOwner();
+        DetachScrollOwner();
+    }
+
+    private void AttachWidthOwner()
+    {
+        FrameworkElement? owner =
+            VisualTreeHelper.GetParent(this)
+                as FrameworkElement;
+        if (ReferenceEquals(owner, _widthOwner))
+            return;
+
+        DetachWidthOwner();
+        _widthOwner = owner;
+        if (_widthOwner != null)
+            _widthOwner.SizeChanged += WidthOwner_SizeChanged;
+    }
+
+    private void DetachWidthOwner()
+    {
+        if (_widthOwner == null)
+            return;
+        _widthOwner.SizeChanged -= WidthOwner_SizeChanged;
+        _widthOwner = null;
+    }
+
+    private void WidthOwner_SizeChanged(
+        object sender,
+        SizeChangedEventArgs e)
+    {
+        if (e.WidthChanged)
+            InvalidateMeasure();
+    }
 
     private void AttachScrollOwner()
     {

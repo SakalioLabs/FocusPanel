@@ -804,7 +804,7 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.Contains(
-            "Content=\"后台应用与窗口 · Panel 原生\"",
+            "Content=\"Panel 应用与窗口\"",
             mainWindow);
         Assert.Contains(
             "Click=\"StatusCenterWindowOverview_Click\"",

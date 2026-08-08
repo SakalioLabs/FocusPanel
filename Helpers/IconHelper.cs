@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -233,13 +234,67 @@ public static class IconHelper
             }
         }
 
-        ImageSource? icon = ExtractIcon(
-            normalized,
-            iconIndex,
-            large);
+        ImageSource? icon =
+            TryLoadStandaloneIco(
+                normalized,
+                large)
+            ?? ExtractIcon(
+                normalized,
+                iconIndex,
+                large);
         if (icon != null)
             CacheIcon(cacheKey, icon);
         return icon;
+    }
+
+    private static ImageSource? TryLoadStandaloneIco(
+        string iconPath,
+        bool large)
+    {
+        if (!Path.GetExtension(iconPath).Equals(
+                ".ico",
+                StringComparison.OrdinalIgnoreCase)
+            || !File.Exists(iconPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var stream = new FileStream(
+                iconPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            BitmapDecoder decoder =
+                BitmapDecoder.Create(
+                    stream,
+                    BitmapCreateOptions
+                        .PreservePixelFormat,
+                    BitmapCacheOption.OnLoad);
+            int targetSize = large ? 64 : 16;
+            BitmapFrame? best = decoder.Frames
+                .OrderBy(frame =>
+                    Math.Abs(
+                        Math.Max(
+                            frame.PixelWidth,
+                            frame.PixelHeight)
+                        - targetSize))
+                .ThenByDescending(frame =>
+                    frame.Format.BitsPerPixel)
+                .FirstOrDefault();
+            if (best == null)
+                return null;
+
+            best.Freeze();
+            return best;
+        }
+        catch
+        {
+            // Some icon resources are PE containers rather than standalone
+            // ICO files. Let SHDefExtractIcon handle those below.
+            return null;
+        }
     }
 
     private static ImageSource? TryGetExplicitCustomIcon(

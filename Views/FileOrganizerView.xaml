@@ -75,6 +75,7 @@
             <Setter Property="Width" Value="{Binding DataContext.CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="Height" Value="{Binding DataContext.CardHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
             <Setter Property="Margin" Value="5"/>
             <Setter Property="Padding" Value="6"/>
             <Setter Property="CornerRadius" Value="{StaticResource FocusControlCornerRadius}"/>
@@ -383,7 +384,7 @@
                                                         <controls:ViewportVirtualizingPanel
                                                             ItemWidth="{Binding Data.CardWidth, Source={StaticResource VmProxy}}"
                                                             ItemHeight="{Binding Data.CardHeight, Source={StaticResource VmProxy}}"
-                                                            ItemSpacing="10"
+                                                            ItemSpacing="8"
                                                             IsWrapping="True"/>
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
