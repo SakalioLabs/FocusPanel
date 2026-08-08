@@ -127,7 +127,8 @@ public partial class MainWindow :
         _taskbarExternalFileDragActive;
     private bool _panelPositionDragActive;
     private bool _panelPositionDragMoved;
-    private int _panelPositionDragStartY;
+    private System.Drawing.Point
+        _panelPositionDragStart;
     private Button? _taskbarHoverButton;
     private TaskbarAppItem? _taskbarHoverTask;
     private FrameworkElement?
@@ -2480,9 +2481,9 @@ public partial class MainWindow :
         if (sender is not Button button)
             return;
 
-        _panelPositionDragStartY =
+        _panelPositionDragStart =
             System.Windows.Forms.Cursor
-                .Position.Y;
+                .Position;
         _panelPositionDragMoved = false;
         _panelPositionDragActive = true;
         BeginTransientInteraction();
@@ -2505,31 +2506,35 @@ public partial class MainWindow :
             return;
         }
 
-        int cursorY =
+        System.Drawing.Point cursor =
             System.Windows.Forms.Cursor
-                .Position.Y;
+                .Position;
         if (!_panelPositionDragMoved
             && Math.Abs(
-                cursorY
-                - _panelPositionDragStartY)
+                cursor.X
+                - _panelPositionDragStart.X)
+            < 4
+            && Math.Abs(
+                cursor.Y
+                - _panelPositionDragStart.Y)
             < 4)
         {
             return;
         }
 
         _panelPositionDragMoved = true;
-        string anchor =
-            PanelVerticalAnchorDragPolicy
+        PanelPositionDragTarget? target =
+            PanelPositionDragPolicy
                 .FromCursor(
-                    cursorY,
-                    GetTargetDisplayBounds());
-        if (!string.Equals(
-                _viewModel.PanelVerticalAnchor,
-                anchor,
-                StringComparison.Ordinal))
+                    cursor,
+                    ShellDisplayTarget
+                        .CaptureDisplays());
+        if (target != null)
         {
-            _viewModel.PanelVerticalAnchor =
-                anchor;
+            _viewModel.ApplyPanelPlacement(
+                target.DisplayTarget,
+                target.PanelEdge,
+                target.VerticalAnchor);
         }
     }
 

@@ -2160,8 +2160,8 @@
                                     PreviewMouseMove="PanelPositionHandleButton_PreviewMouseMove"
                                     LostMouseCapture="PanelPositionHandleButton_LostMouseCapture"
                                     AutomationProperties.Name="调整 Panel 屏幕边缘与固定位置"
-                                    AutomationProperties.HelpText="单击选择屏幕左侧或右侧以及上中下位置；上下拖动后吸附；菜单还可选择 Panel 所在屏幕"
-                                    ToolTip="{Binding PanelVerticalAnchorLabel, StringFormat={}{0} · 单击选择左 / 右与上 / 中 / 下 · 可上下拖动}">
+                                    AutomationProperties.HelpText="单击选择屏幕左侧或右侧以及上中下位置；拖到任意屏幕的左半边或右半边即可跨屏并吸附位置"
+                                    ToolTip="{Binding PanelVerticalAnchorLabel, StringFormat={}{0} · 单击选择位置 · 拖到任意屏幕左/右半边吸附}">
                                 <Grid Width="48" Height="20">
                                     <TextBlock HorizontalAlignment="Center"
                                                VerticalAlignment="Center"

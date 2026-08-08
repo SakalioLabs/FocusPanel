@@ -314,7 +314,7 @@ internal static class ShellDisplayTarget
             options);
     }
 
-    private static ShellDisplaySnapshot[]
+    internal static ShellDisplaySnapshot[]
         CaptureDisplays() =>
         Forms.Screen.AllScreens
             .Select(screen =>

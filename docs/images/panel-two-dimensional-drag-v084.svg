@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="620" viewBox="0 0 1180 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07111e"/><stop offset="1" stop-color="#112a42"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8ecff" stop-opacity=".20"/><stop offset="1" stop-color="#65b8ef" stop-opacity=".07"/></linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#dff3ff" stop-opacity=".34"/><stop offset="1" stop-color="#4da8e5" stop-opacity=".14"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".38"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0l10 5-10 5z" fill="#42b7f4"/></marker>
+  </defs>
+  <rect width="1180" height="620" rx="28" fill="url(#bg)"/>
+  <circle cx="1060" cy="520" r="250" fill="#4fd7c3" opacity=".07"/><circle cx="120" cy="80" r="180" fill="#329fff" opacity=".10"/>
+  <text x="58" y="70" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="30" font-weight="700">拖动一次，直接选择屏幕 · 左右边缘 · 上中下</text>
+  <text x="60" y="106" fill="#9fb4cb" font-family="Segoe UI, Microsoft YaHei" font-size="16">物理像素二维吸附；三项位置一次写入，只重定位一次</text>
+
+  <g transform="translate(58 150)" filter="url(#shadow)">
+    <rect width="470" height="330" rx="22" fill="url(#glass)" stroke="#b9ddff" stroke-opacity=".22"/>
+    <rect x="24" y="44" width="422" height="238" rx="16" fill="#10233a" stroke="#6c9bc1" stroke-opacity=".35"/>
+    <path d="M165 44v238M305 44v238" stroke="#86abc8" stroke-opacity=".18" stroke-dasharray="7 7"/>
+    <path d="M24 163h422" stroke="#42b7f4" stroke-opacity=".24" stroke-dasharray="7 7"/>
+    <rect x="24" y="44" width="14" height="238" rx="7" fill="#38a9ed" opacity=".90"/>
+    <rect x="44" y="58" width="54" height="134" rx="15" fill="url(#panel)" stroke="#70c7fa" stroke-opacity=".55"/>
+    <text x="235" y="27" text-anchor="middle" fill="#eaf5ff" font-family="Segoe UI, Microsoft YaHei" font-size="16" font-weight="600">显示器 2 · 拖到左上区域</text>
+    <path d="M288 230C245 205 192 170 108 115" fill="none" stroke="#42b7f4" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <circle cx="292" cy="233" r="14" fill="#edf8ff"/><path d="M292 218v30M277 233h30" stroke="#289bdc" stroke-width="3"/>
+    <text x="235" y="311" text-anchor="middle" fill="#8fa7bf" font-family="Segoe UI, Microsoft YaHei" font-size="14">结果：显示器 2 · 左侧 · 上方</text>
+  </g>
+
+  <g transform="translate(652 180)" filter="url(#shadow)">
+    <rect width="470" height="330" rx="22" fill="url(#glass)" stroke="#b9ddff" stroke-opacity=".22"/>
+    <rect x="24" y="44" width="422" height="238" rx="16" fill="#10233a" stroke="#6c9bc1" stroke-opacity=".35"/>
+    <path d="M165 44v238M305 44v238" stroke="#86abc8" stroke-opacity=".18" stroke-dasharray="7 7"/>
+    <path d="M24 163h422" stroke="#42b7f4" stroke-opacity=".24" stroke-dasharray="7 7"/>
+    <rect x="432" y="44" width="14" height="238" rx="7" fill="#38a9ed" opacity=".90"/>
+    <rect x="372" y="148" width="54" height="120" rx="15" fill="url(#panel)" stroke="#70c7fa" stroke-opacity=".55"/>
+    <text x="235" y="27" text-anchor="middle" fill="#eaf5ff" font-family="Segoe UI, Microsoft YaHei" font-size="16" font-weight="600">显示器 1 · 拖到右下区域</text>
+    <path d="M190 92C245 114 305 155 369 207" fill="none" stroke="#42b7f4" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <circle cx="186" cy="90" r="14" fill="#edf8ff"/><path d="M186 75v30M171 90h30" stroke="#289bdc" stroke-width="3"/>
+    <text x="235" y="311" text-anchor="middle" fill="#8fa7bf" font-family="Segoe UI, Microsoft YaHei" font-size="14">结果：显示器 1 · 右侧 · 下方</text>
+  </g>
+
+  <g transform="translate(495 520)">
+    <rect width="190" height="54" rx="16" fill="#14344d" stroke="#42b7f4" stroke-opacity=".40"/>
+    <text x="95" y="22" text-anchor="middle" fill="#dff2ff" font-family="Segoe UI, Microsoft YaHei" font-size="13">屏幕间隙</text>
+    <text x="95" y="41" text-anchor="middle" fill="#72c6f4" font-family="Segoe UI, Microsoft YaHei" font-size="13">自动吸附最近显示器</text>
+  </g>
+</svg>

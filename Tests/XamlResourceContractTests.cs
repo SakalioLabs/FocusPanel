@@ -3213,6 +3213,11 @@ public sealed class XamlResourceContractTests
                 root,
                 "Views",
                 "MainWindow.xaml.cs"));
+        string positionDragPolicy = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "PanelPositionDragPolicy.cs"));
 
         Assert.Single(
             Regex.Matches(
@@ -3301,7 +3306,31 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains(
             "PanelVerticalAnchorDragPolicy",
+            positionDragPolicy);
+        Assert.Contains(
+            "PanelPositionDragPolicy",
             codeBehind);
+        Assert.Contains(
+            "ShellDisplayTarget\n"
+            + "                        .CaptureDisplays()",
+            codeBehind);
+        Assert.Contains(
+            "_viewModel.ApplyPanelPlacement(",
+            codeBehind);
+        Assert.Contains(
+            "public void ApplyPanelPlacement(",
+            viewModel);
+        Assert.Contains(
+            "_applyingPanelPlacement = true;",
+            viewModel);
+        Assert.Matches(
+            "ApplyPanelPlacement\\([\\s\\S]*?"
+            + "DisplayTargetChanged\\?\\.Invoke\\(\\);[\\s\\S]*?"
+            + "RefreshDisplayTargetOptions\\(\\);",
+            viewModel);
+        Assert.Contains(
+            "拖到任意屏幕左/右半边吸附",
+            mainWindow);
         Assert.Contains(
             "CaptureMouse()",
             codeBehind);

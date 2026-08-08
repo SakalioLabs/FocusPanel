@@ -88,6 +88,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool> _protectedVisibilityRefresh;
     private readonly Task
         _shellPreferencesInitialization;
+    private bool _applyingPanelPlacement;
     private readonly Task<FileOrganizerViewModel>
         _fileOrganizerInitialization;
     private readonly WorkspaceLoadingViewModel
@@ -1755,6 +1756,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnDisplayTargetModeChanged(
         string value)
     {
+        if (_applyingPanelPlacement)
+            return;
+
         if (_refreshingDisplayTargetOptions)
             return;
 
@@ -1784,6 +1788,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnPanelVerticalAnchorChanged(
         string value)
     {
+        if (_applyingPanelPlacement)
+            return;
+
         string normalized =
             ShellPanelVerticalAnchorPolicy
                 .NormalizeValue(value);
@@ -1809,6 +1816,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnPanelEdgeChanged(
         string value)
     {
+        if (_applyingPanelPlacement)
+            return;
+
         string normalized =
             ShellPanelEdgePolicy
                 .NormalizeValue(value);
@@ -1829,6 +1839,80 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ShellPreferenceRepository
                     .PanelEdgeKey,
                 normalized);
+        }
+    }
+
+    public void ApplyPanelPlacement(
+        string displayTarget,
+        string panelEdge,
+        string verticalAnchor)
+    {
+        string normalizedTarget =
+            ShellDisplayTarget.NormalizeValue(
+                displayTarget);
+        string normalizedEdge =
+            ShellPanelEdgePolicy.NormalizeValue(
+                panelEdge);
+        string normalizedAnchor =
+            ShellPanelVerticalAnchorPolicy
+                .NormalizeValue(
+                    verticalAnchor);
+        bool targetChanged = !string.Equals(
+            DisplayTargetMode,
+            normalizedTarget,
+            StringComparison.Ordinal);
+        bool edgeChanged = !string.Equals(
+            PanelEdge,
+            normalizedEdge,
+            StringComparison.Ordinal);
+        bool anchorChanged = !string.Equals(
+            PanelVerticalAnchor,
+            normalizedAnchor,
+            StringComparison.Ordinal);
+        if (!targetChanged
+            && !edgeChanged
+            && !anchorChanged)
+        {
+            return;
+        }
+
+        _applyingPanelPlacement = true;
+        try
+        {
+            DisplayTargetMode = normalizedTarget;
+            PanelEdge = normalizedEdge;
+            PanelVerticalAnchor = normalizedAnchor;
+        }
+        finally
+        {
+            _applyingPanelPlacement = false;
+        }
+
+        DisplayTargetChanged?.Invoke();
+        RefreshDisplayTargetOptions();
+        if (_loadingShellPreferences)
+            return;
+
+        if (targetChanged)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .DisplayTargetModeKey,
+                normalizedTarget);
+        }
+        if (edgeChanged)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .PanelEdgeKey,
+                normalizedEdge);
+        }
+        if (anchorChanged)
+        {
+            QueueShellPreference(
+                ShellPreferenceRepository
+                    .PanelVerticalAnchorKey,
+                normalizedAnchor);
         }
     }
 
