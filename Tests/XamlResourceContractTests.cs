@@ -3054,17 +3054,25 @@ public sealed class XamlResourceContractTests
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
 
-        Assert.Equal(
-            2,
+        Assert.Single(
             Regex.Matches(
-                mainWindow,
-                "ItemsSource=\"\\{Binding TaskbarApps\\}\"").Count);
+                    mainWindow,
+                    "ItemsSource=\"\\{Binding TaskbarApps\\}\"")
+                .Cast<Match>());
+        Assert.Single(
+            Regex.Matches(
+                    mainWindow,
+                    "ItemsSource=\"\\{Binding FilteredBackgroundApps\\}\"")
+                .Cast<Match>());
         Assert.Contains(
             "AutomationProperties.Name=\"Panel 统一应用列表\"",
             mainWindow);
         Assert.DoesNotContain("ItemsSource=\"{Binding PinnedApps}\"", mainWindow);
         Assert.DoesNotContain("ItemsSource=\"{Binding RunningApps}\"", mainWindow);
         Assert.Contains("ObservableCollection<TaskbarAppItem> TaskbarApps", viewModel);
+        Assert.Contains(
+            "BackgroundAppFilterPolicy.Apply(\n                TaskbarApps,",
+            viewModel);
         Assert.DoesNotContain("ObservableCollection<AppLaunchItem> PinnedApps", viewModel);
         Assert.DoesNotContain("ObservableCollection<WindowTaskItem> RunningApps", viewModel);
         Assert.Contains("TrySetPinnedAsync(", viewModel);

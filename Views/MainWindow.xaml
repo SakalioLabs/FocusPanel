@@ -844,7 +844,7 @@
                                                        Style="{StaticResource FocusCardTitleText}"/>
                                             <TextBlock Grid.Column="1"
                                                        Margin="12,0,0,0"
-                                                       Text="{Binding TaskbarApps.Count, StringFormat={}{0} 项}"
+                                                       Text="{Binding BackgroundAppResultSummary}"
                                                        Style="{StaticResource FocusCaptionText}"/>
                                         </Grid>
                                     </Expander.Header>
@@ -853,7 +853,82 @@
                                                    Text="固定、运行、后台和仅消息窗口应用共用同一身份与顺序。多窗口可在此展开，点画面按钮查看 DWM 实时预览。"
                                                    TextWrapping="Wrap"
                                                    Style="{StaticResource FocusCaptionText}"/>
-                                        <ListBox ItemsSource="{Binding TaskbarApps}"
+                                        <Grid Margin="0,0,0,8">
+                                            <TextBox x:Name="BackgroundAppSearchBox"
+                                                     Height="44"
+                                                     Padding="14,0,44,0"
+                                                     VerticalContentAlignment="Center"
+                                                     Style="{StaticResource FocusSearchBox}"
+                                                     Text="{Binding BackgroundAppQuery, UpdateSourceTrigger=PropertyChanged}"
+                                                     AutomationProperties.Name="搜索应用与窗口"/>
+                                            <TextBlock Margin="16,0,48,0"
+                                                       VerticalAlignment="Center"
+                                                       Text="搜索应用与窗口"
+                                                       IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock"
+                                                           BasedOn="{StaticResource FocusSecondaryBodyText}">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding BackgroundAppQuery}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <Button Width="36"
+                                                    Height="36"
+                                                    Margin="0,4,4,4"
+                                                    HorizontalAlignment="Right"
+                                                    Command="{Binding ClearBackgroundAppSearchCommand}"
+                                                    ToolTip="清除搜索"
+                                                    AutomationProperties.Name="清除应用搜索">
+                                                <Button.Style>
+                                                    <Style TargetType="Button"
+                                                           BasedOn="{StaticResource FocusIconButton}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding BackgroundAppQuery}" Value="">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                                <TextBlock Text="&#xE711;"
+                                                           Style="{StaticResource FocusIconText}"
+                                                           FontSize="12"/>
+                                            </Button>
+                                        </Grid>
+                                        <UniformGrid Columns="3"
+                                                     Margin="0,0,0,8"
+                                                     AutomationProperties.Name="应用与窗口筛选">
+                                            <RadioButton Height="40"
+                                                         Margin="2"
+                                                         GroupName="BackgroundAppFilter"
+                                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                                         Content="全部"
+                                                         IsChecked="{Binding IsAllBackgroundAppScope, Mode=OneWay}"
+                                                         Command="{Binding SetBackgroundAppFilterScopeCommand}"
+                                                         CommandParameter="{x:Static services:BackgroundAppFilterScope.All}"/>
+                                            <RadioButton Height="40"
+                                                         Margin="2"
+                                                         GroupName="BackgroundAppFilter"
+                                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                                         Content="有窗口"
+                                                         IsChecked="{Binding IsWindowBackgroundAppScope, Mode=OneWay}"
+                                                         Command="{Binding SetBackgroundAppFilterScopeCommand}"
+                                                         CommandParameter="{x:Static services:BackgroundAppFilterScope.Windows}"/>
+                                            <RadioButton Height="40"
+                                                         Margin="2"
+                                                         GroupName="BackgroundAppFilter"
+                                                         Style="{StaticResource FocusSegmentRadioButton}"
+                                                         Content="纯后台"
+                                                         IsChecked="{Binding IsBackgroundOnlyAppScope, Mode=OneWay}"
+                                                         Command="{Binding SetBackgroundAppFilterScopeCommand}"
+                                                         CommandParameter="{x:Static services:BackgroundAppFilterScope.Background}"/>
+                                        </UniformGrid>
+                                        <ListBox ItemsSource="{Binding FilteredBackgroundApps}"
                                                  MaxHeight="420"
                                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -996,13 +1071,13 @@
                                         </ListBox>
                                         <TextBlock Margin="4,12"
                                                    HorizontalAlignment="Center"
-                                                   Text="没有固定、运行或后台应用">
+                                                   Text="{Binding BackgroundAppEmptyText}">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock"
                                                        BasedOn="{StaticResource FocusSecondaryBodyText}">
                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding TaskbarApps.Count}" Value="0">
+                                                        <DataTrigger Binding="{Binding HasFilteredBackgroundApps}" Value="False">
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>

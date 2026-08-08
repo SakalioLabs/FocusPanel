@@ -280,6 +280,37 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(
+        nameof(FilteredBackgroundApps))]
+    [NotifyPropertyChangedFor(
+        nameof(HasFilteredBackgroundApps))]
+    [NotifyPropertyChangedFor(
+        nameof(BackgroundAppResultSummary))]
+    [NotifyPropertyChangedFor(
+        nameof(BackgroundAppEmptyText))]
+    private string backgroundAppQuery =
+        string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(FilteredBackgroundApps))]
+    [NotifyPropertyChangedFor(
+        nameof(HasFilteredBackgroundApps))]
+    [NotifyPropertyChangedFor(
+        nameof(BackgroundAppResultSummary))]
+    [NotifyPropertyChangedFor(
+        nameof(BackgroundAppEmptyText))]
+    [NotifyPropertyChangedFor(
+        nameof(IsAllBackgroundAppScope))]
+    [NotifyPropertyChangedFor(
+        nameof(IsWindowBackgroundAppScope))]
+    [NotifyPropertyChangedFor(
+        nameof(IsBackgroundOnlyAppScope))]
+    private BackgroundAppFilterScope
+        backgroundAppScope =
+            BackgroundAppFilterScope.All;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
         nameof(IsDashboardWorkspaceActive))]
     [NotifyPropertyChangedFor(
         nameof(IsFilesWorkspaceActive))]
@@ -820,6 +851,38 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<ShellSearchResult> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+    public IReadOnlyList<TaskbarAppItem>
+        FilteredBackgroundApps =>
+            BackgroundAppFilterPolicy.Apply(
+                TaskbarApps,
+                BackgroundAppQuery,
+                BackgroundAppScope);
+    public bool HasFilteredBackgroundApps =>
+        FilteredBackgroundApps.Count > 0;
+    public string BackgroundAppResultSummary =>
+        $"{FilteredBackgroundApps.Count} / {TaskbarApps.Count} 项";
+    public string BackgroundAppEmptyText =>
+        TaskbarApps.Count == 0
+            ? "没有固定、运行或后台应用"
+            : !string.IsNullOrWhiteSpace(
+                BackgroundAppQuery)
+                ? $"没有匹配“{BackgroundAppQuery.Trim()}”的应用"
+                : BackgroundAppScope
+                == BackgroundAppFilterScope.Windows
+                ? "没有带可见窗口的应用"
+                : BackgroundAppScope
+                    == BackgroundAppFilterScope.Background
+                    ? "没有纯后台应用"
+                    : "没有匹配的应用";
+    public bool IsAllBackgroundAppScope =>
+        BackgroundAppScope
+        == BackgroundAppFilterScope.All;
+    public bool IsWindowBackgroundAppScope =>
+        BackgroundAppScope
+        == BackgroundAppFilterScope.Windows;
+    public bool IsBackgroundOnlyAppScope =>
+        BackgroundAppScope
+        == BackgroundAppFilterScope.Background;
     public ReadOnlyObservableCollection<FocusNotificationItem>
         PanelNotifications =>
             _notificationCenter.Items;
@@ -2984,6 +3047,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void SetBackgroundAppFilterScope(
+        BackgroundAppFilterScope scope) =>
+        BackgroundAppScope = scope;
+
+    [RelayCommand]
+    private void ClearBackgroundAppSearch() =>
+        BackgroundAppQuery = string.Empty;
+
+    [RelayCommand]
     private void ToggleCalendar()
     {
         bool open = !IsCalendarOpen;
@@ -3704,6 +3776,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _lastActiveExternalWindowHandle =
                 activeWindow.Handle;
         }
+
+        RefreshBackgroundAppViewPresentation();
+    }
+
+    private void RefreshBackgroundAppViewPresentation()
+    {
+        OnPropertyChanged(
+            nameof(FilteredBackgroundApps));
+        OnPropertyChanged(
+            nameof(HasFilteredBackgroundApps));
+        OnPropertyChanged(
+            nameof(BackgroundAppResultSummary));
+        OnPropertyChanged(
+            nameof(BackgroundAppEmptyText));
     }
 
     private void ApplyTaskbarShortcutStates()

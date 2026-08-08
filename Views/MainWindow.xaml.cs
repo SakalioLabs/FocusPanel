@@ -871,8 +871,9 @@ public partial class MainWindow :
                 StatusCenterDetail.Applications);
             QueueOverlayFocus(
                 BackgroundAppsButton,
-                ApplicationsDetailsExpander,
-                () => _viewModel.IsStatusCenterOpen);
+                BackgroundAppSearchBox,
+                () => _viewModel.IsStatusCenterOpen,
+                selectAllText: true);
             e.Handled = true;
             return;
         }
@@ -1863,7 +1864,8 @@ public partial class MainWindow :
     private void QueueOverlayFocus(
         FrameworkElement returnTarget,
         FrameworkElement initialTarget,
-        Func<bool> isOpen)
+        Func<bool> isOpen,
+        bool selectAllText = false)
     {
         if (!isOpen())
         {
@@ -1886,6 +1888,13 @@ public partial class MainWindow :
                 }
 
                 initialTarget.Focus();
+                if (selectAllText
+                    && initialTarget
+                        is TextBox textBox
+                    && textBox.IsKeyboardFocusWithin)
+                {
+                    textBox.SelectAll();
+                }
             }),
             DispatcherPriority.Input);
     }
