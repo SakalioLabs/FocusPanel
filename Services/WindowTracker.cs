@@ -29,9 +29,6 @@ public sealed class WindowTracker : IWindowTracker
     private const long WsExAppWindow = 0x00040000L;
     private const long WsExNoActivate = 0x08000000L;
     private const int DwmwaCloaked = 14;
-    private static readonly IntPtr HwndMessage =
-        new(-3);
-
     private readonly DispatcherTimer _refreshDebounce;
     private readonly Dispatcher _uiDispatcher;
     private readonly CoalescingBackgroundRefresh<
@@ -42,8 +39,6 @@ public sealed class WindowTracker : IWindowTracker
     private readonly WindowCommandExecutor _commands;
     private readonly WindowAttentionState
         _attention = new();
-    private readonly int _currentSessionId;
-    private readonly string _windowsDirectory;
     private readonly ResilientSnapshotStore<WindowTaskItem>
         _snapshotStore = new();
     private volatile bool _trackingActive = true;
@@ -57,10 +52,6 @@ public sealed class WindowTracker : IWindowTracker
     internal WindowTracker(IAppIdentityResolver identityResolver)
     {
         _identityResolver = identityResolver;
-        using (Process current = Process.GetCurrentProcess())
-            _currentSessionId = current.SessionId;
-        _windowsDirectory = Environment.GetFolderPath(
-            Environment.SpecialFolder.Windows);
         _uiDispatcher = Dispatcher.CurrentDispatcher;
         _commands = new WindowCommandExecutor(
             new WindowsWindowCommandBoundary());
@@ -308,8 +299,6 @@ public sealed class WindowTracker : IWindowTracker
     private IReadOnlyList<WindowTaskItem> CaptureSnapshot()
     {
         var windows = new List<WindowEntry>();
-        var backgroundOwners =
-            new Dictionary<uint, BackgroundAppObservation>();
         IReadOnlyDictionary<string,
             ShellDisplayPresentation> displays =
             ShellDisplayPresentationPolicy
@@ -328,9 +317,6 @@ public sealed class WindowTracker : IWindowTracker
         {
             try
             {
-                CaptureBackgroundOwner(
-                    hwnd,
-                    backgroundOwners);
                 CaptureWindow(
                     hwnd,
                     foreground,
@@ -356,9 +342,6 @@ public sealed class WindowTracker : IWindowTracker
                     error,
                     "Windows 未能枚举顶层窗口。");
         }
-
-        CaptureMessageOnlyBackgroundOwners(
-            backgroundOwners);
 
         List<WindowTaskItem> taskWindows = windows
             .GroupBy(item => item.IdentityKey, StringComparer.OrdinalIgnoreCase)
@@ -423,131 +406,7 @@ public sealed class WindowTracker : IWindowTracker
             .ToList();
         _attention.Retain(
             windows.Select(item => item.Handle));
-        return BackgroundAppSnapshotComposer.Append(
-            taskWindows,
-            backgroundOwners.Values);
-    }
-
-    private void CaptureMessageOnlyBackgroundOwners(
-        IDictionary<uint, BackgroundAppObservation>
-            owners)
-    {
-        try
-        {
-            IReadOnlyList<IntPtr> messageWindows =
-                MessageOnlyWindowEnumerator.Enumerate(
-                    previous =>
-                        NativeMethods.FindWindowEx(
-                            HwndMessage,
-                            previous,
-                            null,
-                            null));
-            foreach (IntPtr hwnd in messageWindows)
-            {
-                try
-                {
-                    CaptureBackgroundOwner(
-                        hwnd,
-                        owners);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(
-                        "Skipping message-only window "
-                        + $"0x{hwnd.ToInt64():X}: "
-                        + ex.Message);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine(
-                "Message-only window enumeration failed; "
-                + "visible windows remain available: "
-                + ex.Message);
-        }
-    }
-
-    private void CaptureBackgroundOwner(
-        IntPtr hwnd,
-        IDictionary<uint, BackgroundAppObservation>
-            owners)
-    {
-        NativeMethods.GetWindowThreadProcessId(
-            hwnd,
-            out uint processId);
-        if (processId == 0
-            || processId == Environment.ProcessId
-            || owners.ContainsKey(processId))
-        {
-            return;
-        }
-
-        try
-        {
-            using Process process =
-                Process.GetProcessById(
-                    (int)processId);
-            string? executablePath =
-                process.MainModule?.FileName;
-            if (!BackgroundAppVisibilityPolicy
-                    .ShouldInclude(
-                        processId,
-                        Environment.ProcessId,
-                        process.SessionId,
-                        _currentSessionId,
-                        executablePath,
-                        _windowsDirectory))
-            {
-                return;
-            }
-
-            ResolvedAppIdentity identity =
-                _identityResolver.ResolveWindow(
-                    hwnd,
-                    processId,
-                    executablePath);
-            ImageSource? icon = null;
-            try
-            {
-                icon = IconHelper.GetIcon(
-                    executablePath!);
-            }
-            catch
-            {
-                // Text and launch target remain useful when icon extraction fails.
-            }
-
-            string? description = null;
-            try
-            {
-                description = process.MainModule
-                    ?.FileVersionInfo
-                    .FileDescription;
-            }
-            catch
-            {
-                // Protected metadata falls back to the process name.
-            }
-
-            owners.Add(
-                processId,
-                new BackgroundAppObservation(
-                    processId,
-                    BackgroundAppVisibilityPolicy
-                        .GetDisplayName(
-                            process.ProcessName,
-                            description),
-                    identity.ExecutablePath
-                        ?? executablePath!,
-                    identity.Key,
-                    identity.ApplicationUserModelId,
-                    icon));
-        }
-        catch
-        {
-            // Protected, short-lived and cross-session processes are skipped.
-        }
+        return taskWindows;
     }
 
     private void CaptureWindow(
@@ -883,16 +742,6 @@ public sealed class WindowTracker : IWindowTracker
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetWindow(IntPtr hwnd, uint command);
-
-        [DllImport(
-            "user32.dll",
-            CharSet = CharSet.Unicode,
-            SetLastError = true)]
-        internal static extern IntPtr FindWindowEx(
-            IntPtr parent,
-            IntPtr childAfter,
-            string? className,
-            string? windowName);
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetAncestor(

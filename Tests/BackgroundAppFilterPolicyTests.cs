@@ -26,11 +26,13 @@ public sealed class BackgroundAppFilterPolicyTests
                 null,
                 BackgroundAppFilterScope.All);
 
-        Assert.Equal(source, result);
+        Assert.Equal(
+            new[] { source[0], source[1] },
+            result);
     }
 
     [Fact]
-    public void Scope_SeparatesVisibleWindowsAndPureBackgroundApps()
+    public void Scope_ExcludesPureBackgroundAppsFromEveryView()
     {
         TaskbarAppItem pinned = Pinned("编辑器");
         TaskbarAppItem windowed =
@@ -51,11 +53,11 @@ public sealed class BackgroundAppFilterPolicyTests
                 null,
                 BackgroundAppFilterScope.Windows));
         Assert.Equal(
-            new[] { background },
+            new[] { pinned, windowed },
             BackgroundAppFilterPolicy.Apply(
                 source,
                 null,
-                BackgroundAppFilterScope.Background));
+                BackgroundAppFilterScope.All));
     }
 
     [Theory]
@@ -68,7 +70,7 @@ public sealed class BackgroundAppFilterPolicyTests
     {
         TaskbarAppItem[] source =
         {
-            Background("同步助手", @"C:\Apps\SyncAgent.exe"),
+            Windowed("同步助手", @"C:\Apps\SyncAgent.exe"),
             Windowed("浏览器", @"C:\Apps\Browser.exe")
         };
 
@@ -95,7 +97,7 @@ public sealed class BackgroundAppFilterPolicyTests
         Assert.Contains("ItemsSource=\"{Binding FilteredBackgroundApps}\"", xaml);
         Assert.Contains("Content=\"全部\"", xaml);
         Assert.Contains("Content=\"有窗口\"", xaml);
-        Assert.Contains("Content=\"纯后台\"", xaml);
+        Assert.DoesNotContain("Content=\"纯后台\"", xaml);
         Assert.Contains(
             "BackgroundAppSearchBox.Focus();",
             code);

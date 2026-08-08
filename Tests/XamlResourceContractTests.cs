@@ -831,7 +831,7 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("Visibility=\"{Binding IsFocusCenterOpen", mainWindow);
         Assert.Contains("EnableReplacementCommand", mainWindow);
         Assert.Contains(
-            "Text=\"后台应用与窗口\"",
+            "Text=\"任务栏应用与窗口\"",
             mainWindow);
         Assert.Contains(
             "Tag=\"{x:Static services:StatusCenterDetail.Applications}\"",
@@ -1714,7 +1714,7 @@ public sealed class XamlResourceContractTests
             "SubmenuOpened=\"PanelDisplayTargetMenuItem_SubmenuOpened\"",
             compactDock);
         Assert.Contains(
-            "Header=\"后台应用与窗口 · Panel\"",
+            "Header=\"任务栏应用与窗口 · Panel\"",
             compactDock);
         Assert.Contains(
             "Tag=\"{x:Static services:StatusCenterDetail.Applications}\"",
@@ -1730,12 +1730,10 @@ public sealed class XamlResourceContractTests
             compactDock);
         Assert.DoesNotContain("ToggleSettingsCommand", compactDock);
         Assert.DoesNotContain("BatteryPercent", compactDock);
+        Assert.DoesNotContain("Content=\"纯后台\"", compactDock);
         Assert.Contains(
-            "Visibility=\"{Binding IsBackgroundOnly, Converter={StaticResource BooleanToVisibilityConverter}}\"",
-            compactDock);
-        Assert.Contains(
-            "AutomationProperties.Name=\"后台运行，无可见窗口\"",
-            compactDock);
+            "后台宿主、消息窗口和任务管理器式进程不会出现在这里",
+            mainWindow);
 
         string systemStatus = File.ReadAllText(
             Path.Combine(root, "Services", "SystemStatusService.cs"));

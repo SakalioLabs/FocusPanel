@@ -772,8 +772,8 @@
                                               Tag="{x:Static services:StatusCenterDetail.Applications}"
                                               IsChecked="{Binding IsExpanded, ElementName=ApplicationsDetailsExpander, Mode=OneWay}"
                                               Click="StatusCenterDetailButton_Click"
-                                              AutomationProperties.Name="展开 Panel 自有后台应用与窗口"
-                                              ToolTip="只展开 Panel 自有应用抽屉，不调用 Windows 任务栏或隐藏图标抽屉">
+                                               AutomationProperties.Name="展开任务栏应用与窗口"
+                                               ToolTip="只显示固定应用和 Windows 任务栏语义的可切换窗口">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="44"/>
@@ -785,7 +785,7 @@
                                                    VerticalAlignment="Center"
                                                    Style="{StaticResource FocusIconText}"/>
                                         <TextBlock Grid.Column="1"
-                                                   Text="后台应用与窗口"
+                                                    Text="任务栏应用与窗口"
                                                    VerticalAlignment="Center"
                                                    Style="{StaticResource FocusCardTitleText}"/>
                                         <TextBlock Grid.Column="2"
@@ -957,7 +957,7 @@
                                     </Expander.Header>
                                     <StackPanel Margin="0,8,0,0">
                                         <TextBlock Margin="4,0,4,8"
-                                                   Text="固定、运行、后台和仅消息窗口应用共用同一身份与顺序。多窗口可在此展开，点画面按钮查看 DWM 实时预览。"
+                                                   Text="这里只显示固定应用，以及普通、最大化或最小化的可切换窗口。多窗口可在此展开，点画面按钮查看 DWM 实时预览。"
                                                    TextWrapping="Wrap"
                                                    Style="{StaticResource FocusCaptionText}"/>
                                         <Grid Margin="0,0,0,8">
@@ -1007,7 +1007,7 @@
                                                            FontSize="12"/>
                                             </Button>
                                         </Grid>
-                                        <UniformGrid Columns="3"
+                                        <UniformGrid Columns="2"
                                                      Margin="0,0,0,8"
                                                      AutomationProperties.Name="应用与窗口筛选">
                                             <RadioButton Height="40"
@@ -1026,14 +1026,6 @@
                                                          IsChecked="{Binding IsWindowBackgroundAppScope, Mode=OneWay}"
                                                          Command="{Binding SetBackgroundAppFilterScopeCommand}"
                                                          CommandParameter="{x:Static services:BackgroundAppFilterScope.Windows}"/>
-                                            <RadioButton Height="40"
-                                                         Margin="2"
-                                                         GroupName="BackgroundAppFilter"
-                                                         Style="{StaticResource FocusSegmentRadioButton}"
-                                                         Content="纯后台"
-                                                         IsChecked="{Binding IsBackgroundOnlyAppScope, Mode=OneWay}"
-                                                         Command="{Binding SetBackgroundAppFilterScopeCommand}"
-                                                         CommandParameter="{x:Static services:BackgroundAppFilterScope.Background}"/>
                                         </UniformGrid>
                                         <ListBox ItemsSource="{Binding FilteredBackgroundApps}"
                                                  MaxHeight="420"
@@ -1192,7 +1184,7 @@
                                             </TextBlock.Style>
                                         </TextBlock>
                                         <TextBlock Margin="4,10,4,2"
-                                                   Text="第三方专属托盘菜单没有 Windows 公共协议；Panel 不读取 Explorer 私有结构，也不会弹出原生隐藏图标抽屉。"
+                                                   Text="后台宿主、消息窗口和任务管理器式进程不会出现在这里。第三方托盘图标没有稳定的 Windows 公共枚举协议，Panel 不读取 Explorer 私有结构。"
                                                    TextWrapping="Wrap"
                                                    Style="{StaticResource FocusMetaText}"/>
                                     </StackPanel>
@@ -2916,7 +2908,7 @@
                                         <MenuItem Header="应用音量 · Panel"
                                                   Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
                                                   Click="PanelStatusDetailMenuItem_Click"/>
-                                        <MenuItem Header="后台应用与窗口 · Panel"
+                    <MenuItem Header="任务栏应用与窗口 · Panel"
                                                   Tag="{x:Static services:StatusCenterDetail.Applications}"
                                                   Click="PanelStatusDetailMenuItem_Click"/>
                                         <MenuItem Header="Panel 通知"

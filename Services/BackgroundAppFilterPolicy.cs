@@ -9,8 +9,7 @@ namespace FocusPanel.Services;
 public enum BackgroundAppFilterScope
 {
     All,
-    Windows,
-    Background
+    Windows
 }
 
 internal static class BackgroundAppFilterPolicy
@@ -23,6 +22,7 @@ internal static class BackgroundAppFilterPolicy
         ArgumentNullException.ThrowIfNull(apps);
 
         return apps
+            .Where(CompactTaskbarAppPolicy.ShouldShow)
             .Where(item => MatchesScope(item, scope))
             .Where(item => MatchesQuery(item, query))
             .ToList();
@@ -35,8 +35,6 @@ internal static class BackgroundAppFilterPolicy
         {
             BackgroundAppFilterScope.Windows =>
                 item.WindowCount > 0,
-            BackgroundAppFilterScope.Background =>
-                item.IsBackgroundOnly,
             _ => true
         };
 

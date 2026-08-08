@@ -7,7 +7,7 @@ namespace FocusPanel.Tests;
 public sealed class WindowTrackerBackgroundAppContractTests
 {
     [Fact]
-    public void Tracker_ReusesTopLevelEventSnapshotWithoutProcessPolling()
+    public void Tracker_OnlyCapturesTaskbarEligibleTopLevelWindows()
     {
         string root = FindRepositoryRoot();
         string tracker = File.ReadAllText(
@@ -16,27 +16,15 @@ public sealed class WindowTrackerBackgroundAppContractTests
                 "Services",
                 "WindowTracker.cs"));
 
-        Assert.Contains(
-            "CaptureBackgroundOwner(",
-            tracker);
-        Assert.Contains(
-            "BackgroundAppVisibilityPolicy",
-            tracker);
-        Assert.Contains(
-            "BackgroundAppSnapshotComposer.Append(",
-            tracker);
-        Assert.Contains(
-            "CaptureMessageOnlyBackgroundOwners(",
-            tracker);
-        Assert.Contains(
-            "MessageOnlyWindowEnumerator.Enumerate(",
-            tracker);
-        Assert.Contains(
-            "NativeMethods.FindWindowEx(",
-            tracker);
-        Assert.Contains(
-            "new(-3)",
-            tracker);
+        Assert.Contains("IsTaskWindow(hwnd)", tracker);
+        Assert.Contains("TaskWindowVisibilityPolicy", tracker);
+        Assert.DoesNotContain("CaptureBackgroundOwner(", tracker);
+        Assert.DoesNotContain("BackgroundAppVisibilityPolicy", tracker);
+        Assert.DoesNotContain("BackgroundAppSnapshotComposer.Append(", tracker);
+        Assert.DoesNotContain("CaptureMessageOnlyBackgroundOwners(", tracker);
+        Assert.DoesNotContain("MessageOnlyWindowEnumerator.Enumerate(", tracker);
+        Assert.DoesNotContain("NativeMethods.FindWindowEx(", tracker);
+        Assert.DoesNotContain("new(-3)", tracker);
         Assert.DoesNotContain(
             "Process.GetProcesses()",
             tracker);

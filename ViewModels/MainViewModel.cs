@@ -326,8 +326,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         nameof(IsAllBackgroundAppScope))]
     [NotifyPropertyChangedFor(
         nameof(IsWindowBackgroundAppScope))]
-    [NotifyPropertyChangedFor(
-        nameof(IsBackgroundOnlyAppScope))]
     private BackgroundAppFilterScope
         backgroundAppScope =
             BackgroundAppFilterScope.All;
@@ -985,26 +983,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         $"{FilteredBackgroundApps.Count} / {TaskbarApps.Count} 项";
     public string BackgroundAppEmptyText =>
         TaskbarApps.Count == 0
-            ? "没有固定、运行或后台应用"
+            ? "没有固定应用或可切换窗口"
             : !string.IsNullOrWhiteSpace(
                 BackgroundAppQuery)
                 ? $"没有匹配“{BackgroundAppQuery.Trim()}”的应用"
                 : BackgroundAppScope
                 == BackgroundAppFilterScope.Windows
                 ? "没有带可见窗口的应用"
-                : BackgroundAppScope
-                    == BackgroundAppFilterScope.Background
-                    ? "没有纯后台应用"
-                    : "没有匹配的应用";
+                : "没有匹配的任务栏应用";
     public bool IsAllBackgroundAppScope =>
         BackgroundAppScope
         == BackgroundAppFilterScope.All;
     public bool IsWindowBackgroundAppScope =>
         BackgroundAppScope
         == BackgroundAppFilterScope.Windows;
-    public bool IsBackgroundOnlyAppScope =>
-        BackgroundAppScope
-        == BackgroundAppFilterScope.Background;
     public ReadOnlyObservableCollection<FocusNotificationItem>
         PanelNotifications =>
             _notificationCenter.Items;
