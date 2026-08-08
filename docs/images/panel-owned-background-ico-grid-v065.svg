@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 自有后台入口、自定义 ICO 与自适应密排</title>
+  <desc id="desc">展示紧凑栏后台按钮、Panel 自有应用抽屉、自定义图标持久化，以及按宽度密排的收纳图标。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#101827"/><stop offset="1" stop-color="#26354a"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eef7ff" stop-opacity=".25"/><stop offset="1" stop-color="#95b9df" stop-opacity=".10"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1200" height="620" rx="34" fill="url(#bg)"/>
+  <circle cx="1050" cy="85" r="220" fill="#3aa8ff" opacity=".10"/>
+  <text x="54" y="66" fill="#f5f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="29" font-weight="700">不用任务栏，也能找到后台应用</text>
+  <text x="54" y="101" fill="#a9bed6" font-family="Segoe UI, Microsoft YaHei" font-size="17">Panel 自有入口 · ICO 持久绑定 · 图标按真实宽度密排</text>
+
+  <g filter="url(#shadow)">
+    <rect x="52" y="135" width="92" height="430" rx="25" fill="url(#glass)" stroke="#b9d8f4" stroke-opacity=".35"/>
+    <g font-family="Segoe Fluent Icons, Segoe UI Symbol" font-size="23" fill="#ddecfb" text-anchor="middle">
+      <text x="98" y="189">⌂</text><text x="98" y="247">⌕</text>
+    </g>
+    <rect x="66" y="267" width="64" height="67" rx="15" fill="#1689df"/>
+    <circle cx="98" cy="292" r="13" fill="none" stroke="#fff" stroke-width="2"/><circle cx="94" cy="291" r="3" fill="#fff"/><circle cx="103" cy="291" r="3" fill="#fff"/>
+    <text x="98" y="322" fill="#fff" font-family="Microsoft YaHei" font-size="13" text-anchor="middle">后台</text>
+    <g fill="#cfe4f6"><circle cx="98" cy="377" r="15"/><circle cx="98" cy="435" r="15"/><circle cx="98" cy="493" r="15"/></g>
+
+    <rect x="166" y="135" width="400" height="430" rx="25" fill="url(#glass)" stroke="#b9d8f4" stroke-opacity=".35"/>
+    <text x="194" y="180" fill="#f3f8ff" font-family="Microsoft YaHei" font-size="21" font-weight="600">后台应用与窗口 · Panel</text>
+    <text x="194" y="208" fill="#a9bed6" font-family="Microsoft YaHei" font-size="14">不调用“显示隐藏图标”</text>
+    <g font-family="Microsoft YaHei" font-size="16">
+      <g transform="translate(194 238)"><rect width="344" height="68" rx="14" fill="#132235" fill-opacity=".70"/><rect x="15" y="14" width="40" height="40" rx="10" fill="#29a6e8"/><text x="70" y="30" fill="#f4f8ff">浏览器</text><text x="70" y="51" fill="#9fb5ca" font-size="13">3 个窗口 · 正在运行</text></g>
+      <g transform="translate(194 318)"><rect width="344" height="68" rx="14" fill="#132235" fill-opacity=".70"/><rect x="15" y="14" width="40" height="40" rx="10" fill="#55c76b"/><text x="70" y="30" fill="#f4f8ff">聊天</text><text x="70" y="51" fill="#9fb5ca" font-size="13">后台运行 · 可固定</text></g>
+      <g transform="translate(194 398)"><rect width="344" height="68" rx="14" fill="#132235" fill-opacity=".70"/><rect x="15" y="14" width="40" height="40" rx="10" fill="#8c78df"/><text x="70" y="30" fill="#f4f8ff">设计工具</text><text x="70" y="51" fill="#9fb5ca" font-size="13">单窗口 · 点击切换</text></g>
+    </g>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="594" y="135" width="554" height="430" rx="25" fill="url(#glass)" stroke="#b9d8f4" stroke-opacity=".35"/>
+    <text x="624" y="180" fill="#f3f8ff" font-family="Microsoft YaHei" font-size="21" font-weight="600">收纳盒 · 自适应图标视图</text>
+    <text x="624" y="208" fill="#a9bed6" font-family="Microsoft YaHei" font-size="14">自定义 ICO 刷新后仍保留 · 末行从左连续排列</text>
+    <g transform="translate(624 238)">
+      <g font-family="Microsoft YaHei" font-size="12" fill="#dce9f7" text-anchor="middle">
+        <g transform="translate(0 0)"><rect width="112" height="112" rx="16" fill="#14263a"/><circle cx="56" cy="43" r="25" fill="#ff765e"/><text x="56" y="88">Paint.NET</text></g>
+        <g transform="translate(124 0)"><rect width="112" height="112" rx="16" fill="#14263a"/><rect x="31" y="18" width="50" height="50" rx="12" fill="#42a5f5"/><text x="56" y="88">项目资料</text></g>
+        <g transform="translate(248 0)"><rect width="112" height="112" rx="16" fill="#14263a"/><path d="M33 65V25h46v40z" fill="#f7c94c"/><text x="56" y="88">文档</text></g>
+        <g transform="translate(372 0)"><rect width="112" height="112" rx="16" fill="#14263a"/><circle cx="56" cy="43" r="25" fill="#8d7bf2"/><text x="56" y="88">设计</text></g>
+        <g transform="translate(0 124)"><rect width="112" height="112" rx="16" fill="#14263a"/><rect x="30" y="18" width="52" height="50" rx="10" fill="#4ec38d"/><text x="56" y="88">工具</text></g>
+        <g transform="translate(124 124)"><rect width="112" height="112" rx="16" fill="#14263a"/><circle cx="56" cy="43" r="25" fill="#f29d49"/><text x="56" y="88">临时</text></g>
+      </g>
+      <path d="M10 268h460" stroke="#72bfff" stroke-width="2" stroke-dasharray="7 7" opacity=".7"/>
+      <text x="0" y="300" fill="#9fc8ed" font-family="Microsoft YaHei" font-size="14">可用宽度变化 → 立即重算列数，不遗留随机空洞</text>
+    </g>
+  </g>
+</svg>

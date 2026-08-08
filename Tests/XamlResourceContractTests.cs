@@ -1582,7 +1582,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_HasSixFixedEntriesAndOneScrollableApplicationList()
+    public void CompactDock_HasSevenFixedEntriesAndOneScrollableApplicationList()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
@@ -1593,13 +1593,16 @@ public sealed class XamlResourceContractTests
 
         Assert.True(dockStart >= 0 && onboardingStart > dockStart);
         string compactDock = mainWindow[dockStart..onboardingStart];
-        Assert.Equal(6, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
+        Assert.Equal(7, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
         Assert.Equal(1, compactDock.Split("ItemsSource=\"{Binding TaskbarApps}\"").Length - 1);
         int start = compactDock.IndexOf(
             "Click=\"StartButton_Click\"",
             StringComparison.Ordinal);
         int search = compactDock.IndexOf(
             "x:Name=\"SearchButton\"",
+            StringComparison.Ordinal);
+        int backgroundApps = compactDock.IndexOf(
+            "x:Name=\"BackgroundAppsButton\"",
             StringComparison.Ordinal);
         int applications = compactDock.IndexOf(
             "x:Name=\"TaskbarAppsScrollViewer\"",
@@ -1619,7 +1622,8 @@ public sealed class XamlResourceContractTests
         Assert.True(
             start >= 0
             && start < search
-            && search < applications
+            && search < backgroundApps
+            && backgroundApps < applications
             && applications < organizer
             && organizer < tasks
             && tasks < statusCenter
@@ -1644,6 +1648,15 @@ public sealed class XamlResourceContractTests
             compactDock);
         Assert.Contains(
             "x:Name=\"StatusCenterButton\"",
+            compactDock);
+        Assert.Contains(
+            "x:Name=\"BackgroundAppsButton\"",
+            compactDock);
+        Assert.Contains(
+            "Click=\"BackgroundAppsButton_Click\"",
+            compactDock);
+        Assert.Contains(
+            "只显示 Panel 已识别的固定、运行和后台应用，不调用 Windows 任务栏隐藏图标",
             compactDock);
         Assert.Contains(
             "按 Shift+Enter 直接打开或收起 Panel 通知",
@@ -1778,7 +1791,7 @@ public sealed class XamlResourceContractTests
         string compactDock =
             mainWindow[dockStart..onboardingStart];
         Assert.Equal(
-            6,
+            7,
             compactDock.Split(
                 "Style=\"{StaticResource CompactLabeledEntryButton}\"",
                 StringSplitOptions.None).Length - 1);
@@ -4482,7 +4495,10 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"全宽图标收纳盒\">",
             organizer);
         Assert.Contains(
-            "<WrapPanel Orientation=\"Horizontal\"/>",
+            "<controls:AdaptiveIconGridPanel",
+            organizer);
+        Assert.Contains(
+            "MinimumItemWidth=\"{Binding Data.CardWidth, Source={StaticResource VmProxy}}\"",
             organizer);
         Assert.Contains(
             "<Setter Property=\"Margin\" Value=\"6\"/>",
@@ -4491,7 +4507,7 @@ public sealed class XamlResourceContractTests
             "HorizontalContentAlignment=\"Stretch\"",
             organizer);
         Assert.Contains(
-            "Property=\"HorizontalAlignment\" Value=\"Center\"",
+            "Property=\"HorizontalAlignment\" Value=\"Stretch\"",
             organizer);
     }
 
@@ -5533,7 +5549,7 @@ public sealed class XamlResourceContractTests
                 xaml,
                 "VirtualizingPanel.VirtualizationMode=\"Recycling\""));
         Assert.Contains(
-            "<WrapPanel Orientation=\"Horizontal\"/>",
+            "<controls:AdaptiveIconGridPanel",
             xaml);
         Assert.Contains(
             "<Setter Property=\"Margin\" Value=\"6\"/>",

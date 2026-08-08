@@ -15,6 +15,9 @@ public interface IWindowTracker : IDisposable
     bool Minimize(IntPtr handle);
     bool Maximize(IntPtr handle);
     bool Restore(IntPtr handle);
+    bool Arrange(
+        IntPtr handle,
+        WindowLayoutTarget target);
     bool CanMoveToDisplay(
         IntPtr handle,
         Rectangle targetWorkArea);

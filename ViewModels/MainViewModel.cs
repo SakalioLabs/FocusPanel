@@ -2716,6 +2716,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void ArrangeWindow(
+        WindowLayoutRequest? request)
+    {
+        if (request == null)
+            return;
+
+        CompleteTaskbarWindowAction(
+            SystemActionExecution.Try(
+                () => _windowTracker.Arrange(
+                    request.Window.Handle,
+                    request.Target)),
+            $"无法把“{request.Window.Title}”排列到"
+            + $"{WindowLayoutPresentation.GetName(request.Target)}。"
+            + "窗口可能已经关闭、没有标准布局能力，"
+            + "或当前应用拒绝了位置更改。");
+    }
+
+    [RelayCommand]
     private void MoveWindowToPanelDisplay(
         WindowReference? window)
     {

@@ -124,6 +124,38 @@ internal sealed class WindowCommandExecutor
             handle,
             isTopmost);
 
+    internal bool Arrange(
+        IntPtr handle,
+        WindowLayoutTarget target)
+    {
+        if (!IsUsable(handle))
+            return false;
+
+        Rectangle bounds =
+            WindowLayoutPolicy.CalculateBounds(
+                _native.GetWorkingArea(handle),
+                target);
+        if (bounds == Rectangle.Empty
+            || !_native.SetRestoredBounds(
+                handle,
+                bounds))
+        {
+            return false;
+        }
+
+        if (_native.IsIconic(handle)
+            || _native.IsZoomed(handle))
+        {
+            _native.ShowWindow(
+                handle,
+                RestoreCommand);
+            return !_native.IsIconic(handle)
+                && !_native.IsZoomed(handle);
+        }
+
+        return true;
+    }
+
     internal bool Minimize(IntPtr handle)
     {
         if (!IsUsable(handle))

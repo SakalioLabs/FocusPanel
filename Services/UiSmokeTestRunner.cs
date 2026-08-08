@@ -2061,8 +2061,8 @@ internal static class UiSmokeTestRunner
             window.Show();
             window.UpdateLayout();
 
-            WrapPanel? panel =
-                FindVisualChild<WrapPanel>(
+            AdaptiveIconGridPanel? panel =
+                FindVisualChild<AdaptiveIconGridPanel>(
                     organizer);
             if (panel == null)
             {

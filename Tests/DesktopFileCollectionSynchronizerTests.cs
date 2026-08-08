@@ -55,6 +55,39 @@ public sealed class DesktopFileCollectionSynchronizerTests
     }
 
     [Fact]
+    public void MetadataRefresh_PreservesSavedCustomIconBinding()
+    {
+        DesktopFile current = File(
+            "tool.lnk",
+            @"C:\Desktop\tool.lnk");
+        var all = new ObservableCollection<DesktopFile> { current };
+        var visible = new ObservableCollection<DesktopFile> { current };
+        DesktopFile refreshed = File(
+            current.Name,
+            current.FullPath);
+        refreshed.CustomIconPath =
+            @"C:\Users\User\AppData\Roaming\FocusPanel\Icons\tool.ico";
+        refreshed.CustomIconIndex = 3;
+
+        DesktopFileCollectionSynchronizer.Apply(
+            all,
+            visible,
+            new[]
+            {
+                new DesktopItemRefresh(
+                    current.FullPath,
+                    refreshed,
+                    false)
+            });
+
+        Assert.Same(current, Assert.Single(all));
+        Assert.Equal(
+            refreshed.CustomIconPath,
+            current.CustomIconPath);
+        Assert.Equal(3, current.CustomIconIndex);
+    }
+
+    [Fact]
     public void Rename_UpdatesExistingObjectWithoutReplacingIt()
     {
         DesktopFile current = File(

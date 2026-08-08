@@ -72,9 +72,9 @@
         <Style x:Key="FileGridItemStyle" TargetType="Border">
             <EventSetter Event="PreviewMouseLeftButtonDown" Handler="FileCard_PreviewMouseLeftButtonDown"/>
             <EventSetter Event="MouseMove" Handler="FileCard_MouseMove"/>
-            <Setter Property="Width" Value="{Binding DataContext.CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Setter Property="MinWidth" Value="{Binding DataContext.CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <Setter Property="Height" Value="{Binding DataContext.CardHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Top"/>
             <Setter Property="Margin" Value="6"/>
             <Setter Property="Padding" Value="6"/>
@@ -380,7 +380,9 @@
                                                           HorizontalContentAlignment="Stretch">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
-                                                        <WrapPanel Orientation="Horizontal"/>
+                                                        <controls:AdaptiveIconGridPanel
+                                                            MinimumItemWidth="{Binding Data.CardWidth, Source={StaticResource VmProxy}}"
+                                                            Spacing="8"/>
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>

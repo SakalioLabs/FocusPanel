@@ -858,6 +858,32 @@ public partial class MainWindow :
         _viewModel.SearchQuery = entry.Query;
     }
 
+    private void BackgroundAppsButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        ExpandSidebar();
+        if (!_viewModel.IsStatusCenterOpen
+            || _openStatusCenterDetail
+                != StatusCenterDetail.Applications)
+        {
+            _viewModel.ShowStatusCenterDetail(
+                StatusCenterDetail.Applications);
+            QueueOverlayFocus(
+                BackgroundAppsButton,
+                ApplicationsDetailsExpander,
+                () => _viewModel.IsStatusCenterOpen);
+            e.Handled = true;
+            return;
+        }
+
+        SetOpenStatusCenterDetail(
+            StatusCenterDetail.None,
+            bringIntoView: false);
+        BackgroundAppsButton.Focus();
+        e.Handled = true;
+    }
+
     private void SearchSuggestion_Click(
         object sender,
         RoutedEventArgs e)
@@ -2806,6 +2832,31 @@ public partial class MainWindow :
             windowMenu.Items.Add(
                 item);
         }
+
+        var layoutMenu = new MenuItem
+        {
+            Header = "排列窗口"
+        };
+        foreach (WindowLayoutTarget target
+                 in Enum.GetValues<
+                     WindowLayoutTarget>())
+        {
+            layoutMenu.Items.Add(
+                new MenuItem
+                {
+                    Header =
+                        WindowLayoutPresentation
+                            .GetName(target),
+                    Command =
+                        _viewModel
+                            .ArrangeWindowCommand,
+                    CommandParameter =
+                        new WindowLayoutRequest(
+                            window,
+                            target)
+                });
+        }
+        windowMenu.Items.Add(layoutMenu);
 
         windowMenu.Items.Add(
             new MenuItem

@@ -111,6 +111,10 @@ internal static class DesktopFileCollectionSynchronizer
         destination.NeedsRecovery = source.NeedsRecovery;
         destination.DesktopX = source.DesktopX;
         destination.DesktopY = source.DesktopY;
+        destination.CustomIconPath =
+            source.CustomIconPath;
+        destination.CustomIconIndex =
+            source.CustomIconIndex;
         if (source.Icon != null)
             destination.Icon = source.Icon;
     }

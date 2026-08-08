@@ -158,6 +158,22 @@ public sealed class WindowTracker : IWindowTracker
         return succeeded;
     }
 
+    public bool Arrange(
+        IntPtr handle,
+        WindowLayoutTarget target)
+    {
+        bool succeeded =
+            _commands.Arrange(
+                handle,
+                target);
+        if (succeeded)
+        {
+            RequestSnapshotRefresh();
+            ScheduleSnapshotRefresh();
+        }
+        return succeeded;
+    }
+
     public bool CanMoveToDisplay(
         IntPtr handle,
         Rectangle targetWorkArea) =>

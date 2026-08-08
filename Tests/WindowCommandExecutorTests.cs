@@ -27,6 +27,10 @@ public sealed class WindowCommandExecutorTests
         Assert.False(executor.Maximize(Handle));
         Assert.False(executor.Restore(Handle));
         Assert.False(
+            executor.Arrange(
+                Handle,
+                WindowLayoutTarget.LeftHalf));
+        Assert.False(
             executor.SetTopmost(
                 Handle,
                 true));
@@ -37,6 +41,7 @@ public sealed class WindowCommandExecutorTests
         Assert.Equal(0, native.ForegroundCalls);
         Assert.Equal(0, native.CloseCalls);
         Assert.Empty(native.TopmostRequests);
+        Assert.Equal(0, native.SetBoundsCalls);
     }
 
     [Fact]
@@ -329,6 +334,102 @@ public sealed class WindowCommandExecutorTests
         Assert.True(
             Assert.Single(
                 native.TopmostRequests));
+    }
+
+    [Fact]
+    public void Arrange_NormalWindowWritesTargetBoundsWithoutActivation()
+    {
+        var native = new FakeBoundary
+        {
+            WorkingArea =
+                new Rectangle(
+                    -1920,
+                    0,
+                    1920,
+                    1040),
+            SetBoundsResult = true
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.True(
+            executor.Arrange(
+                Handle,
+                WindowLayoutTarget
+                    .BottomRightQuarter));
+        Assert.Equal(
+            new Rectangle(
+                -960,
+                520,
+                960,
+                520),
+            native.LastSetBounds);
+        Assert.Empty(native.ShowCommands);
+        Assert.Equal(0, native.ForegroundCalls);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void Arrange_RestoresIconicOrZoomedWindowAfterBoundsWrite(
+        bool iconic,
+        bool zoomed)
+    {
+        var native = new FakeBoundary
+        {
+            Iconic = iconic,
+            Zoomed = zoomed,
+            SetBoundsResult = true
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.True(
+            executor.Arrange(
+                Handle,
+                WindowLayoutTarget.LeftHalf));
+        Assert.Equal(
+            WindowCommandExecutor.RestoreCommand,
+            Assert.Single(native.ShowCommands));
+        Assert.False(native.Iconic);
+        Assert.False(native.Zoomed);
+    }
+
+    [Fact]
+    public void Arrange_RejectedBoundsDoNotChangeWindowState()
+    {
+        var native = new FakeBoundary
+        {
+            Zoomed = true,
+            SetBoundsResult = false
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.False(
+            executor.Arrange(
+                Handle,
+                WindowLayoutTarget.RightHalf));
+        Assert.Empty(native.ShowCommands);
+        Assert.True(native.Zoomed);
+    }
+
+    [Fact]
+    public void Arrange_InvalidWorkAreaDoesNotWritePlacement()
+    {
+        var native = new FakeBoundary
+        {
+            WorkingArea = Rectangle.Empty,
+            SetBoundsResult = true
+        };
+        var executor =
+            new WindowCommandExecutor(native);
+
+        Assert.False(
+            executor.Arrange(
+                Handle,
+                WindowLayoutTarget.LeftHalf));
+        Assert.Equal(0, native.SetBoundsCalls);
     }
 
     private static WindowTaskItem Task(
