@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1220"/><stop offset="1" stop-color="#192941"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2c3a52" stop-opacity=".96"/><stop offset="1" stop-color="#172235" stop-opacity=".92"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dy="18" stdDeviation="24" flood-opacity=".42"/></filter>
+  </defs>
+  <rect width="1200" height="650" fill="url(#bg)"/>
+  <circle cx="1060" cy="90" r="260" fill="#2d92e7" opacity=".1"/><circle cx="90" cy="620" r="220" fill="#7865e8" opacity=".08"/>
+  <text x="70" y="78" fill="#f4f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="34" font-weight="700">任务栏到底有没有接管成功，现在可以验证</text>
+  <text x="70" y="118" fill="#afbdd0" font-family="Segoe UI, Microsoft YaHei" font-size="20">四项只读检查，不隐藏、不修复、不重启 Explorer</text>
+
+  <g transform="translate(75 165)" filter="url(#shadow)">
+    <rect width="570" height="400" rx="24" fill="url(#glass)" stroke="#7184a1" stroke-opacity=".5"/>
+    <text x="28" y="42" fill="#f3f7fb" font-family="Segoe UI, Microsoft YaHei" font-size="22" font-weight="700">侧边任务栏完整替代</text>
+    <text x="28" y="73" fill="#aebcd0" font-family="Segoe UI, Microsoft YaHei" font-size="16">侧边任务栏运行中 · Windows 任务栏已完整隐藏</text>
+    <g transform="translate(28 98)" font-family="Segoe UI, Microsoft YaHei" font-size="15">
+      <rect width="82" height="42" rx="12" fill="#258fe6"/><text x="41" y="27" fill="#fff" text-anchor="middle">启用</text>
+      <rect x="94" width="154" height="42" rx="12" fill="#fff" fill-opacity=".07" stroke="#7689a4" stroke-opacity=".45"/><text x="171" y="27" fill="#dbe5f1" text-anchor="middle">恢复原任务栏设置</text>
+      <rect x="260" width="138" height="42" rx="12" fill="#fff" fill-opacity=".07" stroke="#4fa9ee" stroke-opacity=".7"/><text x="329" y="27" fill="#9bd5ff" text-anchor="middle">检查接管状态</text>
+    </g>
+    <line x1="28" y1="160" x2="542" y2="160" stroke="#7184a1" stroke-opacity=".38"/>
+    <text x="28" y="197" fill="#63c0ff" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">接管检查正常</text>
+    <text x="28" y="228" fill="#c9d7e7" font-family="Segoe UI, Microsoft YaHei" font-size="16">原生边缘呼出已关闭，主屏工作区已释放，</text>
+    <text x="28" y="254" fill="#c9d7e7" font-family="Segoe UI, Microsoft YaHei" font-size="16">呈现抑制为窗口区域 + DWM 双层保护。</text>
+    <g transform="translate(28 286)" font-family="Segoe UI, Microsoft YaHei" font-size="15">
+      <g><circle cx="12" cy="12" r="12" fill="#2693e8"/><path d="M6 12l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.5"/><text x="34" y="17" fill="#dce6f2">Explorer 宿主</text></g>
+      <g transform="translate(250 0)"><circle cx="12" cy="12" r="12" fill="#2693e8"/><path d="M6 12l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.5"/><text x="34" y="17" fill="#dce6f2">边缘呼出关闭</text></g>
+      <g transform="translate(0 48)"><circle cx="12" cy="12" r="12" fill="#2693e8"/><path d="M6 12l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.5"/><text x="34" y="17" fill="#dce6f2">工作区释放</text></g>
+      <g transform="translate(250 48)"><circle cx="12" cy="12" r="12" fill="#2693e8"/><path d="M6 12l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.5"/><text x="34" y="17" fill="#dce6f2">双层呈现保护</text></g>
+    </g>
+  </g>
+
+  <g transform="translate(715 180)">
+    <text x="0" y="25" fill="#f4f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">问题会落到具体一层</text>
+    <g transform="translate(0 60)" font-family="Segoe UI, Microsoft YaHei">
+      <rect width="415" height="76" rx="17" fill="#fff" fill-opacity=".06" stroke="#fff" stroke-opacity=".12"/>
+      <text x="24" y="31" fill="#ebf2f9" font-size="18" font-weight="600">① Explorer 主任务栏宿主</text><text x="24" y="56" fill="#aebcd0" font-size="15">是否还是接管时的同一个窗口</text>
+      <rect y="94" width="415" height="76" rx="17" fill="#fff" fill-opacity=".06" stroke="#fff" stroke-opacity=".12"/>
+      <text x="24" y="125" fill="#ebf2f9" font-size="18" font-weight="600">② 原生边缘呼出</text><text x="24" y="150" fill="#aebcd0" font-size="15">Windows 自动隐藏边缘是否真的关闭</text>
+      <rect y="188" width="415" height="76" rx="17" fill="#fff" fill-opacity=".06" stroke="#fff" stroke-opacity=".12"/>
+      <text x="24" y="219" fill="#ebf2f9" font-size="18" font-weight="600">③ 主屏工作区</text><text x="24" y="244" fill="#aebcd0" font-size="15">最大化窗口是否拿回完整屏幕</text>
+      <rect y="282" width="415" height="76" rx="17" fill="#258fe6" fill-opacity=".13" stroke="#399be6" stroke-opacity=".55"/>
+      <text x="24" y="313" fill="#d8efff" font-size="18" font-weight="600">④ 呈现抑制层</text><text x="24" y="338" fill="#9ed6ff" font-size="15">窗口区域 / DWM / 双层保护是否有效</text>
+    </g>
+    <text x="0" y="453" fill="#7fcaff" font-family="Segoe UI, Microsoft YaHei" font-size="16">只读检查 · 后台执行 · 不进入隐藏/显示循环</text>
+  </g>
+</svg>

@@ -93,6 +93,126 @@ public sealed class TaskbarControllerStateTests
     }
 
     [Fact]
+    public void Diagnostics_ReadsHealthyReplacementWithoutMutatingTaskbar()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    native,
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+            Assert.True(
+                controller.TryEnableReplacement(
+                    out _));
+            int appBarWrites =
+                native.AppBarStateWriteCount;
+            int workAreaWrites =
+                native.WorkAreaWriteCount;
+            int visibilityWrites =
+                native.TaskbarVisibilityWriteCount;
+            int surfaceWrites =
+                native.SurfaceSuppressionWriteCount;
+            int cloakWrites =
+                native.CloakWriteCount;
+
+            TaskbarReplacementDiagnostics result =
+                controller.GetDiagnostics();
+
+            Assert.True(result.IsEnabled);
+            Assert.True(result.IsHealthy);
+            Assert.True(result.IsExplorerHostCurrent);
+            Assert.True(result.IsNativeRevealDisabled);
+            Assert.True(result.IsWorkAreaReleased);
+            Assert.True(result.IsWindowHidden);
+            Assert.True(result.IsSurfaceSuppressed);
+            Assert.True(result.IsDwmCloaked);
+            Assert.Contains(
+                "双层保护",
+                result.Summary);
+            Assert.Equal(
+                appBarWrites,
+                native.AppBarStateWriteCount);
+            Assert.Equal(
+                workAreaWrites,
+                native.WorkAreaWriteCount);
+            Assert.Equal(
+                visibilityWrites,
+                native.TaskbarVisibilityWriteCount);
+            Assert.Equal(
+                surfaceWrites,
+                native.SurfaceSuppressionWriteCount);
+            Assert.Equal(
+                cloakWrites,
+                native.CloakWriteCount);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
+    public void Diagnostics_ReportsReenabledNativeEdgeWithoutRepairWrite()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            "FocusPanel.Tests",
+            Guid.NewGuid().ToString("N"));
+        string sessionFile = Path.Combine(
+            directory,
+            "taskbar-session.json");
+        var native = new FakeTaskbarNativeApi();
+
+        try
+        {
+            using var controller =
+                new TaskbarController(
+                    native,
+                    new FakeWatchdogLauncher(),
+                    sessionFile);
+            Assert.True(
+                controller.TryEnableReplacement(
+                    out _));
+            native.AppBarState = 3;
+            int appBarWrites =
+                native.AppBarStateWriteCount;
+
+            TaskbarReplacementDiagnostics result =
+                controller.GetDiagnostics();
+
+            Assert.True(result.IsEnabled);
+            Assert.False(result.IsHealthy);
+            Assert.False(
+                result.IsNativeRevealDisabled);
+            Assert.Contains(
+                "又启用了原生边缘呼出",
+                result.Summary);
+            Assert.Equal(
+                appBarWrites,
+                native.AppBarStateWriteCount);
+            Assert.Equal(
+                (uint)3,
+                native.AppBarState);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
     public void Restore_PreservesOriginallyHiddenTaskbar()
     {
         string directory = Path.Combine(

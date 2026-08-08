@@ -171,6 +171,106 @@ public sealed class TaskbarController : ITaskbarController
         return true;
     }
 
+    public TaskbarReplacementDiagnostics
+        GetDiagnostics()
+    {
+        if (!IsReplacementEnabled)
+        {
+            return TaskbarReplacementDiagnosticsComposer
+                .Compose(
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false);
+        }
+
+        try
+        {
+            using var mutation =
+                AcquireMutationMutex();
+            TaskbarSessionState? state =
+                _state;
+            if (state == null)
+            {
+                return TaskbarReplacementDiagnosticsComposer
+                    .Failure(
+                        true,
+                        "恢复会话不可用");
+            }
+
+            IntPtr taskbar =
+                _native.FindPrimaryTaskbar();
+            bool hostCurrent =
+                taskbar != IntPtr.Zero
+                && (_activeTaskbarHandle
+                        == IntPtr.Zero
+                    || taskbar
+                        == _activeTaskbarHandle);
+            if (!hostCurrent)
+            {
+                return TaskbarReplacementDiagnosticsComposer
+                    .Compose(
+                        true,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false);
+            }
+
+            bool revealDisabled =
+                (_native.GetAppBarState(taskbar)
+                 & AbsAutoHide) == 0;
+            bool surfaceSuppressed =
+                state.UsesEmptyWindowRegion
+                && _native
+                    .IsTaskbarSurfaceSuppressed(
+                        taskbar);
+            bool dwmCloaked =
+                state.UsesDwmCloak
+                && _native
+                    .TryGetTaskbarAppCloaked(
+                        taskbar,
+                        out bool appCloaked)
+                && appCloaked;
+            bool windowHidden =
+                !_native.IsWindowVisible(
+                    taskbar);
+            bool workAreaReleased =
+                _native.TryGetPrimaryMonitorInfo(
+                    taskbar,
+                    out NativeRect workArea,
+                    out NativeRect bounds)
+                && RectsEqual(
+                    bounds,
+                    state.PrimaryBounds)
+                && RectsEqual(
+                    workArea,
+                    state.PrimaryBounds);
+
+            return TaskbarReplacementDiagnosticsComposer
+                .Compose(
+                    true,
+                    true,
+                    revealDisabled,
+                    workAreaReleased,
+                    windowHidden,
+                    surfaceSuppressed,
+                    dwmCloaked);
+        }
+        catch (Exception ex)
+        {
+            return TaskbarReplacementDiagnosticsComposer
+                .Failure(
+                    IsReplacementEnabled,
+                    ex.Message);
+        }
+    }
+
     public void Restore()
     {
         if (Interlocked.Exchange(ref _restoring, 1) != 0)

@@ -8,5 +8,6 @@ public interface ITaskbarController : IDisposable
 
     bool IsReplacementEnabled { get; }
     bool TryEnableReplacement(out string? error);
+    TaskbarReplacementDiagnostics GetDiagnostics();
     void Restore();
 }

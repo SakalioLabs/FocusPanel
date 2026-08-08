@@ -6334,6 +6334,101 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
+    public void TaskbarReplacement_ExposesReadOnlyUserFacingDiagnostics()
+    {
+        string root = FindRepositoryRoot();
+        string controller = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "TaskbarController.cs"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+        string viewModel = File.ReadAllText(
+            Path.Combine(
+                root,
+                "ViewModels",
+                "MainViewModel.cs"));
+
+        int diagnosticsStart =
+            controller.IndexOf(
+                "public TaskbarReplacementDiagnostics",
+                StringComparison.Ordinal);
+        int diagnosticsEnd =
+            controller.IndexOf(
+                "public void Restore()",
+                diagnosticsStart,
+                StringComparison.Ordinal);
+        Assert.True(
+            diagnosticsStart >= 0
+            && diagnosticsEnd > diagnosticsStart);
+        string diagnostics = controller[
+            diagnosticsStart..diagnosticsEnd];
+        Assert.Contains(
+            "GetDiagnostics()",
+            diagnostics);
+        Assert.Contains(
+            "GetAppBarState(taskbar)",
+            diagnostics);
+        Assert.Contains(
+            "IsTaskbarSurfaceSuppressed(",
+            diagnostics);
+        Assert.Contains(
+            "TryGetTaskbarAppCloaked(",
+            diagnostics);
+        Assert.Contains(
+            "TryGetPrimaryMonitorInfo(",
+            diagnostics);
+        Assert.DoesNotContain(
+            "SetAppBarState(",
+            diagnostics);
+        Assert.DoesNotContain(
+            "SetWorkArea(",
+            diagnostics);
+        Assert.DoesNotContain(
+            "SetTaskbarVisible(",
+            diagnostics);
+        Assert.DoesNotContain(
+            "SetTaskbarSurfaceSuppressed(",
+            diagnostics);
+        Assert.DoesNotContain(
+            "SetTaskbarAppCloaked(",
+            diagnostics);
+        Assert.Contains(
+            "Content=\"检查接管状态\"",
+            mainWindow);
+        Assert.Contains(
+            "Command=\"{Binding InspectTaskbarReplacementCommand}\"",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding ReplacementDiagnostics}\"",
+            mainWindow);
+        Assert.Contains(
+            "RequestInspectTaskbarReplacement",
+            viewModel);
+        Assert.Contains(
+            "MarkReplacementDiagnostics(",
+            viewModel);
+        Assert.Contains(
+            "InspectTaskbarReplacement();",
+            codeBehind);
+        Assert.Contains(
+            "await Task.Run(() =>",
+            codeBehind);
+        Assert.Contains(
+            ".GetDiagnostics());",
+            codeBehind);
+    }
+
+    [Fact]
     public void OrganizerDrag_UsesNamedViewportAndStopsOnEveryExitPath()
     {
         string root = FindRepositoryRoot();

@@ -189,6 +189,8 @@ public partial class MainWindow :
         _viewModel.RequestClose += ForceClose;
         _viewModel.RequestEnableReplacement += EnableTaskbarReplacement;
         _viewModel.RequestDisableReplacement += DisableTaskbarReplacement;
+        _viewModel.RequestInspectTaskbarReplacement +=
+            InspectTaskbarReplacement;
         _viewModel.RequestApplyUpdate += ApplyDownloadedUpdate;
         _viewModel.UpdateAvailable += ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted +=
@@ -4441,6 +4443,7 @@ public partial class MainWindow :
         if (_coordinator.TryEnableTaskbarReplacement(out string? error))
         {
             _viewModel.MarkReplacementEnabled(true);
+            InspectTaskbarReplacement();
             RegisterTaskbarSlotHotkeys();
             return;
         }
@@ -4461,6 +4464,19 @@ public partial class MainWindow :
         UnregisterTaskbarSlotHotkeys();
         _coordinator.RestoreTaskbar();
         _viewModel.MarkReplacementEnabled(false);
+    }
+
+    private async void InspectTaskbarReplacement()
+    {
+        TaskbarReplacementDiagnostics diagnostics =
+            await Task.Run(() =>
+                _coordinator.Taskbar
+                    .GetDiagnostics());
+        if (_isExit)
+            return;
+
+        _viewModel.MarkReplacementDiagnostics(
+            diagnostics);
     }
 
     private void Taskbar_ReplacementStopped(TaskbarReplacementStoppedEvent stopped)
@@ -4615,6 +4631,8 @@ public partial class MainWindow :
         _viewModel.RequestClose -= ForceClose;
         _viewModel.RequestEnableReplacement -= EnableTaskbarReplacement;
         _viewModel.RequestDisableReplacement -= DisableTaskbarReplacement;
+        _viewModel.RequestInspectTaskbarReplacement -=
+            InspectTaskbarReplacement;
         _viewModel.RequestApplyUpdate -= ApplyDownloadedUpdate;
         _viewModel.UpdateAvailable -= ViewModel_UpdateAvailable;
         _viewModel.PomodoroCompleted -=

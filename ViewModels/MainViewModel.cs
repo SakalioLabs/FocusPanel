@@ -349,6 +349,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string replacementError = string.Empty;
 
     [ObservableProperty]
+    private string replacementDiagnostics = string.Empty;
+
+    [ObservableProperty]
+    private bool hasReplacementDiagnostics;
+
+    [ObservableProperty]
+    private bool isReplacementDiagnosticsHealthy;
+
+    [ObservableProperty]
     private TaskbarReplacementStopReason? replacementStopReason;
 
     [ObservableProperty]
@@ -1308,6 +1317,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public event Action? RequestClose;
     public event Action? RequestEnableReplacement;
     public event Action? RequestDisableReplacement;
+    public event Action? RequestInspectTaskbarReplacement;
     public event Func<Task>? RequestApplyUpdate;
     public event Action<AppUpdateInfo>? UpdateAvailable;
     public event Action<string>? WorkspaceRequested;
@@ -3526,6 +3536,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void DisableReplacement() => RequestDisableReplacement?.Invoke();
 
     [RelayCommand]
+    private void InspectTaskbarReplacement() =>
+        RequestInspectTaskbarReplacement?.Invoke();
+
+    [RelayCommand]
     private void SkipOnboarding()
     {
         IsOnboardingVisible = false;
@@ -3556,6 +3570,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ? "Windows 任务栏已安全恢复"
                 : "替代模式未启用，Windows 任务栏保持原设置";
         ReplacementError = error ?? string.Empty;
+        ReplacementDiagnostics = string.Empty;
+        HasReplacementDiagnostics = false;
+        IsReplacementDiagnosticsHealthy = false;
         QueueShellPreference(
             ShellPreferenceRepository
                 .FirstRunAcceptedKey,
@@ -3580,6 +3597,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         ReplacementStopReason = reason;
         MarkReplacementEnabled(false, message);
+    }
+
+    public void MarkReplacementDiagnostics(
+        TaskbarReplacementDiagnostics diagnostics)
+    {
+        ArgumentNullException.ThrowIfNull(
+            diagnostics);
+        ReplacementDiagnostics =
+            diagnostics.Summary;
+        HasReplacementDiagnostics = true;
+        IsReplacementDiagnosticsHealthy =
+            diagnostics.IsHealthy;
     }
 
     [RelayCommand]
