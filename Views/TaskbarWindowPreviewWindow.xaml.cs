@@ -55,6 +55,17 @@ public partial class TaskbarWindowPreviewWindow :
         WindowReference,
         WindowStateAction>?
         StateActionRequested;
+    internal event Action<
+        WindowReference,
+        WindowLayoutTarget>?
+        LayoutRequested;
+    internal event Action<bool>?
+        LayoutMenuVisibilityChanged;
+    internal bool IsLayoutMenuOpen
+    {
+        get;
+        private set;
+    }
 
     internal void Configure(
         TaskbarAppItem task) =>
@@ -442,6 +453,57 @@ public partial class TaskbarWindowPreviewWindow :
             e);
     }
 
+    private void LayoutWindowButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is Button
+            {
+                ContextMenu: not null
+            } button)
+        {
+            button.ContextMenu.PlacementTarget =
+                button;
+            button.ContextMenu.IsOpen = true;
+            e.Handled = true;
+        }
+    }
+
+    private void LayoutMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is MenuItem
+            {
+                DataContext:
+                    WindowReference window,
+                Tag: WindowLayoutTarget target
+            })
+        {
+            LayoutRequested?.Invoke(
+                window,
+                target);
+            Close();
+            e.Handled = true;
+        }
+    }
+
+    private void LayoutContextMenu_Opened(
+        object sender,
+        RoutedEventArgs e)
+    {
+        IsLayoutMenuOpen = true;
+        LayoutMenuVisibilityChanged?.Invoke(true);
+    }
+
+    private void LayoutContextMenu_Closed(
+        object sender,
+        RoutedEventArgs e)
+    {
+        IsLayoutMenuOpen = false;
+        LayoutMenuVisibilityChanged?.Invoke(false);
+    }
+
     private void ResizeWindowButton_Click(
         object sender,
         RoutedEventArgs e)
@@ -493,6 +555,7 @@ public partial class TaskbarWindowPreviewWindow :
             return;
 
         _disposed = true;
+        IsLayoutMenuOpen = false;
         _source?.RemoveHook(
             WindowMessageHook);
         _source = null;

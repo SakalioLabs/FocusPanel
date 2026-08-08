@@ -3412,6 +3412,10 @@ public partial class MainWindow :
             TaskbarWindowPreview_CloseRequested;
         preview.StateActionRequested +=
             TaskbarWindowPreview_StateActionRequested;
+        preview.LayoutRequested +=
+            TaskbarWindowPreview_LayoutRequested;
+        preview.LayoutMenuVisibilityChanged +=
+            TaskbarWindowPreview_LayoutMenuVisibilityChanged;
         preview.MouseEnter +=
             TaskbarWindowPreview_MouseEnter;
         preview.MouseLeave +=
@@ -3518,6 +3522,22 @@ public partial class MainWindow :
     }
 
     private void
+        TaskbarWindowPreview_LayoutRequested(
+            WindowReference window,
+            WindowLayoutTarget target)
+    {
+        var request = new WindowLayoutRequest(
+            window,
+            target);
+        if (_viewModel.ArrangeWindowCommand
+                .CanExecute(request))
+        {
+            _viewModel.ArrangeWindowCommand
+                .Execute(request);
+        }
+    }
+
+    private void
         TaskbarWindowPreview_MouseEnter(
             object sender,
             MouseEventArgs e) =>
@@ -3526,8 +3546,35 @@ public partial class MainWindow :
     private void
         TaskbarWindowPreview_MouseLeave(
             object sender,
-            MouseEventArgs e) =>
+            MouseEventArgs e)
+    {
+        if (sender is TaskbarWindowPreviewWindow
+            {
+                IsLayoutMenuOpen: true
+            })
+        {
+            return;
+        }
+
         ScheduleTaskbarHoverPreviewClose();
+    }
+
+    private void
+        TaskbarWindowPreview_LayoutMenuVisibilityChanged(
+            bool isOpen)
+    {
+        if (isOpen)
+        {
+            _taskbarHoverCloseTimer.Stop();
+            return;
+        }
+
+        if (_taskbarWindowPreview?.IsMouseOver
+            != true)
+        {
+            ScheduleTaskbarHoverPreviewClose();
+        }
+    }
 
     private void TaskbarWindowPreview_Closed(
         object? sender,
@@ -3546,6 +3593,10 @@ public partial class MainWindow :
             TaskbarWindowPreview_CloseRequested;
         preview.StateActionRequested -=
             TaskbarWindowPreview_StateActionRequested;
+        preview.LayoutRequested -=
+            TaskbarWindowPreview_LayoutRequested;
+        preview.LayoutMenuVisibilityChanged -=
+            TaskbarWindowPreview_LayoutMenuVisibilityChanged;
         preview.MouseEnter -=
             TaskbarWindowPreview_MouseEnter;
         preview.MouseLeave -=

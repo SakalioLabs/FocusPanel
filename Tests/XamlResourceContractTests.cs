@@ -3308,6 +3308,24 @@ public sealed class XamlResourceContractTests
             "ResizeWindowButton_Click",
             previewXaml);
         Assert.Contains(
+            "Click=\"LayoutWindowButton_Click\"",
+            previewXaml);
+        Assert.Contains(
+            "AutomationProperties.Name=\"排列此窗口\"",
+            previewXaml);
+        Assert.Contains(
+            "Handler=\"LayoutContextMenu_Opened\"",
+            previewXaml);
+        Assert.Contains(
+            "Handler=\"LayoutContextMenu_Closed\"",
+            previewXaml);
+        Assert.Equal(
+            6,
+            Regex.Matches(
+                    previewXaml,
+                    "Tag=\"\\{x:Static services:WindowLayoutTarget\\.")
+                .Count);
+        Assert.Contains(
             "TrackedWindowState.Maximized",
             previewXaml);
         Assert.Contains(
@@ -3348,6 +3366,30 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains(
             "TaskbarWindowPreview_StateActionRequested",
+            mainWindow);
+        Assert.Contains(
+            "preview.LayoutRequested +=",
+            mainWindow);
+        Assert.Contains(
+            "preview.LayoutRequested -=",
+            mainWindow);
+        Assert.Contains(
+            "TaskbarWindowPreview_LayoutRequested",
+            mainWindow);
+        Assert.Contains(
+            "preview.LayoutMenuVisibilityChanged +=",
+            mainWindow);
+        Assert.Contains(
+            "preview.LayoutMenuVisibilityChanged -=",
+            mainWindow);
+        Assert.Contains(
+            "IsLayoutMenuOpen: true",
+            mainWindow);
+        Assert.Contains(
+            "_taskbarHoverCloseTimer.Stop();",
+            mainWindow);
+        Assert.Contains(
+            "_viewModel.ArrangeWindowCommand",
             mainWindow);
     }
 
