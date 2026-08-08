@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="680" viewBox="0 0 1180 680" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 紧凑任务栏独立显示与恢复桌面入口</title>
+  <desc id="desc">右侧半透明紧凑任务栏最末端突出显示桌面按钮，左侧说明一次点击显示桌面、再次点击恢复窗口。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151f34"/>
+      <stop offset="0.58" stop-color="#263b59"/>
+      <stop offset="1" stop-color="#12333e"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef7ff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#b9dcf8" stop-opacity="0.10"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#78ccff"/>
+      <stop offset="1" stop-color="#4ea4ed"/>
+    </linearGradient>
+    <filter id="shadow" x="-40%" y="-30%" width="180%" height="170%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#02060c" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <rect width="1180" height="680" fill="url(#bg)"/>
+  <circle cx="208" cy="122" r="190" fill="#577fd2" opacity="0.12"/>
+  <circle cx="760" cy="600" r="290" fill="#28a893" opacity="0.09"/>
+
+  <text x="72" y="82" fill="#f4f9ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="31" font-weight="650">显示桌面，不再猜隐藏手势</text>
+  <text x="72" y="120" fill="#b6c9de" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="18">任务栏最末端直接切换 · 不展开工作区 · 不发送 Win+D</text>
+
+  <g transform="translate(72 180)">
+    <rect width="710" height="372" rx="24" fill="url(#glass)" stroke="#e1f1ff" stroke-opacity="0.20" filter="url(#shadow)"/>
+    <text x="38" y="61" fill="#f4f9ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="22" font-weight="650">一次点击</text>
+    <text x="38" y="96" fill="#aebfd3" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="16">显示原生桌面，Panel 自动收起其他弹层</text>
+    <rect x="38" y="127" width="286" height="174" rx="16" fill="#101a2a" fill-opacity="0.72"/>
+    <rect x="58" y="149" width="246" height="132" rx="11" fill="#254b70"/>
+    <rect x="72" y="164" width="218" height="98" rx="7" fill="#5f91bd" opacity="0.45"/>
+    <g fill="#eff8ff">
+      <rect x="86" y="177" width="27" height="31" rx="5" opacity="0.90"/>
+      <rect x="130" y="177" width="27" height="31" rx="5" opacity="0.74"/>
+      <rect x="174" y="177" width="27" height="31" rx="5" opacity="0.84"/>
+    </g>
+    <rect x="58" y="267" width="246" height="14" rx="7" fill="#142b41"/>
+
+    <path d="M355 214h48" stroke="#77c9ff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M391 202l12 12-12 12" fill="none" stroke="#77c9ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="437" y="61" fill="#f4f9ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="22" font-weight="650">再次点击</text>
+    <text x="437" y="96" fill="#aebfd3" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="16">恢复刚才的应用窗口，不需要寻找原任务栏</text>
+    <rect x="437" y="127" width="235" height="174" rx="16" fill="#101a2a" fill-opacity="0.72"/>
+    <rect x="457" y="149" width="195" height="132" rx="11" fill="#193550"/>
+    <rect x="474" y="166" width="161" height="97" rx="8" fill="#e9f4ff" opacity="0.82"/>
+    <rect x="488" y="181" width="91" height="10" rx="5" fill="#4f7fa8"/>
+    <rect x="488" y="202" width="128" height="7" rx="3.5" fill="#7294b2" opacity="0.72"/>
+    <rect x="488" y="220" width="111" height="7" rx="3.5" fill="#7294b2" opacity="0.52"/>
+
+    <rect x="38" y="325" width="634" height="1" fill="#dbeeff" opacity="0.14"/>
+    <text x="38" y="354" fill="#8ed5ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="15">Shell.Application.ToggleDesktop</text>
+    <text x="283" y="354" fill="#9fb2c8" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="15">公开 Shell 自动化 · 无键盘模拟 · 无任务栏宿主依赖</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="918" y="108" width="76" height="516" rx="24" fill="url(#glass)" stroke="#e0f2ff" stroke-opacity="0.22"/>
+    <rect x="944" y="126" width="24" height="4" rx="2" fill="#c1d5e8" opacity="0.66"/>
+    <g fill="#e4f1fc" font-family="Segoe UI Symbol, sans-serif" font-size="21" text-anchor="middle">
+      <text x="956" y="184">⊞</text>
+      <text x="956" y="237">⌕</text>
+      <text x="956" y="290">●</text>
+      <text x="956" y="380">▣</text>
+      <text x="956" y="430">✓</text>
+      <text x="956" y="480">◉</text>
+    </g>
+    <text x="956" y="530" text-anchor="middle" fill="#edf7ff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="12" font-weight="600">18:42</text>
+    <text x="956" y="548" text-anchor="middle" fill="#9db2c8" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="10">8/8</text>
+
+    <rect x="929" y="561" width="54" height="44" rx="12" fill="url(#accent)" fill-opacity="0.30" stroke="#85d2ff" stroke-opacity="0.72"/>
+    <rect x="941" y="570" width="30" height="18" rx="3" fill="#dff4ff" opacity="0.94"/>
+    <rect x="946" y="574" width="20" height="10" rx="2" fill="#5ca8dc" opacity="0.80"/>
+    <text x="956" y="599" text-anchor="middle" fill="#f1faff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="10">桌面</text>
+  </g>
+
+  <path d="M803 575h106" stroke="#7acbff" stroke-width="2" stroke-dasharray="5 7"/>
+  <circle cx="803" cy="575" r="5" fill="#7acbff"/>
+  <text x="804" y="557" fill="#9edcff" font-family="Segoe UI Variable, Segoe UI, sans-serif" font-size="14">44px 直接入口</text>
+</svg>

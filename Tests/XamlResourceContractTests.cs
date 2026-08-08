@@ -1582,7 +1582,7 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_HasSevenFixedEntriesAndOneScrollableApplicationList()
+    public void CompactDock_HasEightFixedEntriesAndOneScrollableApplicationList()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
@@ -1593,7 +1593,7 @@ public sealed class XamlResourceContractTests
 
         Assert.True(dockStart >= 0 && onboardingStart > dockStart);
         string compactDock = mainWindow[dockStart..onboardingStart];
-        Assert.Equal(7, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
+        Assert.Equal(8, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
         Assert.Equal(
             1,
             compactDock.Split(
@@ -1623,6 +1623,9 @@ public sealed class XamlResourceContractTests
         int time = compactDock.IndexOf(
             "Click=\"CalendarPanelButton_Click\"",
             StringComparison.Ordinal);
+        int desktop = compactDock.IndexOf(
+            "Click=\"DesktopToggleButton_Click\"",
+            StringComparison.Ordinal);
         Assert.True(
             start >= 0
             && start < search
@@ -1631,7 +1634,8 @@ public sealed class XamlResourceContractTests
             && applications < organizer
             && organizer < tasks
             && tasks < statusCenter
-            && statusCenter < time);
+            && statusCenter < time
+            && time < desktop);
         Assert.Contains("Click=\"OrganizerButton_Click\"", compactDock);
         Assert.Contains("Click=\"TasksButton_Click\"", compactDock);
         Assert.Contains("Click=\"StatusCenterButton_Click\"", compactDock);
@@ -1655,6 +1659,15 @@ public sealed class XamlResourceContractTests
             compactDock);
         Assert.Contains(
             "x:Name=\"BackgroundAppsButton\"",
+            compactDock);
+        Assert.Contains(
+            "x:Name=\"DesktopToggleButton\"",
+            compactDock);
+        Assert.Contains(
+            "AutomationProperties.Name=\"显示或恢复桌面\"",
+            compactDock);
+        Assert.Contains(
+            "Style=\"{StaticResource CompactDesktopEntryButton}\"",
             compactDock);
         Assert.Contains(
             "Click=\"BackgroundAppsButton_Click\"",
@@ -2679,6 +2692,29 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "_viewModel.ShowDesktopCommand.Execute(null)",
             codeBehind);
+        Assert.Contains(
+            "x:Name=\"DesktopToggleButton\"",
+            mainWindow);
+        Assert.Contains(
+            "Click=\"DesktopToggleButton_Click\"",
+            mainWindow);
+        Assert.Contains(
+            "private void DesktopToggleButton_Click(",
+            codeBehind);
+        Assert.Matches(
+            "DesktopToggleButton_Click\\([\\s\\S]*?"
+            + "ShowDesktopFromCompactEntry\\(\\);",
+            codeBehind);
+        Assert.DoesNotContain(
+            "Win+D",
+            mainWindow[mainWindow.IndexOf(
+                "x:Name=\"DesktopToggleButton\"",
+                StringComparison.Ordinal)..mainWindow.IndexOf(
+                "</Button>",
+                mainWindow.IndexOf(
+                    "x:Name=\"DesktopToggleButton\"",
+                    StringComparison.Ordinal),
+                StringComparison.Ordinal)]);
     }
 
     [Fact]

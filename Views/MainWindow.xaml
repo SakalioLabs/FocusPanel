@@ -35,6 +35,14 @@
             <Setter Property="Height" Value="54"/>
         </Style>
 
+        <Style x:Key="CompactDesktopEntryButton"
+               TargetType="Button"
+               BasedOn="{StaticResource FocusIconButton}">
+            <Setter Property="Width" Value="54"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Margin" Value="0,1,0,0"/>
+        </Style>
+
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
             <local:DashboardView/>
         </DataTemplate>
@@ -2741,6 +2749,24 @@
                                             IsHitTestVisible="False"
                                             Visibility="{Binding IsCalendarOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 </Grid>
+                            </Button>
+                            <Button x:Name="DesktopToggleButton"
+                                    Style="{StaticResource CompactDesktopEntryButton}"
+                                    Tag="CompactFixedEntry"
+                                    Click="DesktopToggleButton_Click"
+                                    AutomationProperties.Name="显示或恢复桌面"
+                                    AutomationProperties.HelpText="按 Enter 在显示桌面与恢复刚才窗口之间切换；不调用 Windows 原生任务栏"
+                                    ToolTip="显示 / 恢复桌面">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE7F4;"
+                                               HorizontalAlignment="Center"
+                                               Style="{StaticResource FocusIconText}"
+                                               FontSize="14"/>
+                                    <TextBlock Margin="0,-2,0,0"
+                                               HorizontalAlignment="Center"
+                                               Style="{StaticResource FocusMetaText}"
+                                               Text="桌面"/>
+                                </StackPanel>
                             </Button>
                         </StackPanel>
                     </Grid>

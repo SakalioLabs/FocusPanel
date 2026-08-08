@@ -1857,6 +1857,11 @@ public partial class MainWindow :
         ScheduleAutoHide(900);
     }
 
+    private void DesktopToggleButton_Click(
+        object sender,
+        RoutedEventArgs e) =>
+        ShowDesktopFromCompactEntry();
+
     private void ToggleCompactOverlay(
         Func<bool> hasOwnedSurfaceOpen,
         Action openSurface,
