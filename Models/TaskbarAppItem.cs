@@ -300,6 +300,8 @@ public sealed class TaskbarAppItem : ObservableObject
 
         if (window.IsTopmost)
             states.Add("已置顶");
+        if (window.HasDisplayLabel)
+            states.Add(window.DisplayLabel);
         return states.Count == 0
             ? string.Empty
             : " · " + string.Join(" · ", states);

@@ -360,6 +360,47 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         Assert.True(items[0].IsAttentionRequested);
     }
 
+    [Fact]
+    public void DisplayChange_RefreshesExistingApplicationInstance()
+    {
+        TaskbarAppItem current = RunningApp(
+            "exe:c:\\editor.exe",
+            "编辑器",
+            19,
+            false,
+            displayDeviceName: "DISPLAY1",
+            displayLabel: "显示器 1",
+            displayOrder: 0);
+        var items = new ObservableCollection<TaskbarAppItem>
+        {
+            current
+        };
+
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            items,
+            new[]
+            {
+                RunningApp(
+                    "exe:c:\\editor.exe",
+                    "编辑器",
+                    19,
+                    false,
+                    displayDeviceName: "DISPLAY2",
+                    displayLabel: "显示器 2 · 主屏",
+                    displayOrder: 1)
+            });
+
+        Assert.Same(current, items[0]);
+        Assert.Equal(
+            "DISPLAY2",
+            items[0].Windows[0]
+                .DisplayDeviceName);
+        Assert.Equal(
+            "显示器 2 · 主屏",
+            items[0].Windows[0]
+                .DisplayLabel);
+    }
+
     private static TaskbarAppItem App(string identity, string name) => new()
     {
         IdentityKey = identity,
@@ -374,7 +415,10 @@ public sealed class TaskbarAppCollectionSynchronizerTests
         TrackedWindowState state =
             TrackedWindowState.Normal,
         bool isTopmost = false,
-        bool attentionRequested = false) => new()
+        bool attentionRequested = false,
+        string displayDeviceName = "",
+        string displayLabel = "",
+        int displayOrder = int.MaxValue) => new()
     {
         IdentityKey = identity,
         DisplayName = name,
@@ -392,7 +436,10 @@ public sealed class TaskbarAppCollectionSynchronizerTests
                     false,
                     state,
                     isTopmost,
-                    attentionRequested)
+                    attentionRequested,
+                    displayDeviceName,
+                    displayLabel,
+                    displayOrder)
             }
         }
     };

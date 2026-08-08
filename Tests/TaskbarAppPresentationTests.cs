@@ -158,6 +158,31 @@ public sealed class TaskbarAppPresentationTests
     }
 
     [Fact]
+    public void WindowPreview_IdentifiesThePhysicalDisplay()
+    {
+        var item = new TaskbarAppItem
+        {
+            DisplayName = "编辑器",
+            RunningTask = new WindowTaskItem
+            {
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(18),
+                        "跨屏文档",
+                        DisplayDeviceName: "DISPLAY2",
+                        DisplayLabel: "显示器 2 · 主屏",
+                        DisplayOrder: 1)
+                }
+            }
+        };
+
+        Assert.Equal(
+            "• 跨屏文档 · 显示器 2 · 主屏",
+            item.WindowPreviewText);
+    }
+
+    [Fact]
     public void MultiWindowApplication_ProvidesBadgeAndBoundedPreview()
     {
         TaskbarAppItem item = Running(

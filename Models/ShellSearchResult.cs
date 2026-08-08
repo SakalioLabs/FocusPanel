@@ -269,6 +269,10 @@ public sealed record ShellSearchResult
             window.IsTopmost
                 ? " · 已置顶"
                 : string.Empty;
+        string display =
+            window.HasDisplayLabel
+                ? " · " + window.DisplayLabel
+                : string.Empty;
         return new ShellSearchResult
         {
             Kind =
@@ -279,7 +283,8 @@ public sealed record ShellSearchResult
             DisplayName = title,
             SecondaryText =
                 $"{application.DisplayName} · {state}"
-                + topmost,
+                + topmost
+                + display,
             AccessibleName =
                 $"切换到{state} {title}，"
                 + application.DisplayName
@@ -288,6 +293,9 @@ public sealed record ShellSearchResult
                     : string.Empty)
                 + (window.IsAttentionRequested
                     ? "，需要注意"
+                    : string.Empty)
+                + (window.HasDisplayLabel
+                    ? "，位于" + window.DisplayLabel
                     : string.Empty),
             Icon =
                 application.Icon,

@@ -52,7 +52,7 @@
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="162"/>
-                                    <RowDefinition Height="48"/>
+                                    <RowDefinition Height="56"/>
                                 </Grid.RowDefinitions>
 
                                 <Border x:Name="ThumbnailSurface"
@@ -95,11 +95,17 @@
                                                 CornerRadius="2"
                                                 Background="{DynamicResource FocusAccentBrightBrush}"
                                                 Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Title}"
-                                                   VerticalAlignment="Center"
-                                                   Style="{StaticResource FocusBodyText}"
-                                                   TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Grid.Column="1"
+                                                    VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}"
+                                                       Style="{StaticResource FocusBodyText}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding DisplayLabel}"
+                                                       Margin="0,2,0,0"
+                                                       Style="{StaticResource FocusMetaText}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Visibility="{Binding HasDisplayLabel, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                        </StackPanel>
                                         <Button Grid.Column="2"
                                                 Width="36"
                                                 Height="36"

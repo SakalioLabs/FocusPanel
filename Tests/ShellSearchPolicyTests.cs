@@ -207,6 +207,58 @@ public sealed class ShellSearchPolicyTests
     [Theory]
     [InlineData("")]
     [InlineData("文档")]
+    public void WindowDisplayFilter_AppliesToOverviewAndTypedSearch(
+        string query)
+    {
+        var running = new[]
+        {
+            new WindowTaskItem
+            {
+                DisplayName = "编辑器",
+                IdentityKey = "exe:c:\\editor.exe",
+                Windows = new[]
+                {
+                    new WindowReference(
+                        new IntPtr(111),
+                        "左侧文档",
+                        DisplayDeviceName: "LEFT",
+                        DisplayLabel: "显示器 1",
+                        DisplayOrder: 0),
+                    new WindowReference(
+                        new IntPtr(112),
+                        "右侧文档",
+                        DisplayDeviceName: "RIGHT",
+                        DisplayLabel: "显示器 2 · 主屏",
+                        DisplayOrder: 1)
+                }
+            }
+        };
+
+        ShellSearchResult result =
+            Assert.Single(
+                ShellSearchPolicy.Compose(
+                    Array.Empty<AppLaunchItem>(),
+                    running,
+                    query,
+                    scope:
+                        ShellSearchScope.Windows,
+                    windowDisplayDeviceFilter:
+                        "right"));
+
+        Assert.Equal(
+            new IntPtr(112),
+            result.Window?.Handle);
+        Assert.Contains(
+            "显示器 2 · 主屏",
+            result.SecondaryText);
+        Assert.Contains(
+            "位于显示器 2 · 主屏",
+            result.AccessibleName);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("文档")]
     public void WindowIdentityFilter_DoesNotMergeSameNamedApplications(
         string query)
     {

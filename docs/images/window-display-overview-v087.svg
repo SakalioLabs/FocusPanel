@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="620" viewBox="0 0 1180 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07111e"/><stop offset="1" stop-color="#102a42"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d9edff" stop-opacity=".20"/><stop offset="1" stop-color="#5ab9ef" stop-opacity=".07"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity=".38"/></filter>
+  </defs>
+  <rect width="1180" height="620" rx="28" fill="url(#bg)"/>
+  <circle cx="90" cy="75" r="185" fill="#319fff" opacity=".10"/><circle cx="1080" cy="525" r="270" fill="#42d0c1" opacity=".07"/>
+  <text x="58" y="70" fill="#f4f8ff" font-family="Segoe UI, Microsoft YaHei" font-size="30" font-weight="700">窗口在哪块屏幕，一眼就知道</text>
+  <text x="60" y="106" fill="#9fb4cb" font-family="Segoe UI, Microsoft YaHei" font-size="16">按显示器筛选 · 每条窗口明确标识 · 实时缩略卡同步位置</text>
+
+  <g transform="translate(58 142)" filter="url(#shadow)">
+    <rect width="640" height="423" rx="24" fill="url(#glass)" stroke="#b9ddff" stroke-opacity=".22"/>
+    <text x="28" y="43" fill="#edf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">全部窗口</text>
+    <text x="28" y="68" fill="#8fa9c0" font-family="Segoe UI, Microsoft YaHei" font-size="13">↑↓ 选择，Enter 切换，Delete 关闭</text>
+    <rect x="28" y="88" width="584" height="50" rx="13" fill="#102d45" stroke="#52bbed" stroke-opacity=".30"/>
+    <text x="46" y="119" fill="#a8bfd3" font-family="Segoe UI, Microsoft YaHei" font-size="14">显示窗口</text>
+    <rect x="145" y="96" width="455" height="34" rx="10" fill="#173b58"/>
+    <text x="160" y="118" fill="#ecf7ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">显示器 2 · 主屏 · 3 个窗口</text><text x="578" y="118" text-anchor="end" fill="#67c4f5" font-family="Segoe UI" font-size="15">⌄</text>
+
+    <g transform="translate(28 155)">
+      <rect width="584" height="72" rx="14" fill="#173b58" stroke="#4ab8ef" stroke-opacity=".48"/>
+      <circle cx="36" cy="36" r="20" fill="#2689d6"/><text x="36" y="42" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="16">e</text>
+      <text x="70" y="30" fill="#f0f7ff" font-family="Segoe UI, Microsoft YaHei" font-size="15" font-weight="600">FocusPanel 发布说明</text>
+      <text x="70" y="53" fill="#92abc1" font-family="Segoe UI, Microsoft YaHei" font-size="13">编辑器 · 当前窗口 · 显示器 2 · 主屏</text>
+      <text x="546" y="42" text-anchor="end" fill="#62c2f5" font-family="Segoe UI" font-size="18">▣</text>
+    </g>
+    <g transform="translate(28 237)">
+      <rect width="584" height="72" rx="14" fill="#102a41"/>
+      <circle cx="36" cy="36" r="20" fill="#1ea38b"/><text x="36" y="42" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="16">w</text>
+      <text x="70" y="30" fill="#e4eff8" font-family="Segoe UI, Microsoft YaHei" font-size="15">项目看板</text>
+      <text x="70" y="53" fill="#829db4" font-family="Segoe UI, Microsoft YaHei" font-size="13">浏览器 · 普通窗口 · 显示器 2 · 主屏</text>
+      <text x="546" y="42" text-anchor="end" fill="#6e8ba4" font-family="Segoe UI" font-size="18">▣</text>
+    </g>
+    <g transform="translate(28 319)">
+      <rect width="584" height="72" rx="14" fill="#102a41"/>
+      <circle cx="36" cy="36" r="20" fill="#6858d8"/><text x="36" y="42" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="16">t</text>
+      <text x="70" y="30" fill="#e4eff8" font-family="Segoe UI, Microsoft YaHei" font-size="15">团队讨论</text>
+      <text x="70" y="53" fill="#829db4" font-family="Segoe UI, Microsoft YaHei" font-size="13">通信应用 · 已最小化 · 显示器 2 · 主屏</text>
+      <text x="546" y="42" text-anchor="end" fill="#6e8ba4" font-family="Segoe UI" font-size="18">▣</text>
+    </g>
+  </g>
+
+  <g transform="translate(735 172)" filter="url(#shadow)">
+    <rect width="387" height="350" rx="24" fill="url(#glass)" stroke="#b9ddff" stroke-opacity=".22"/>
+    <text x="26" y="42" fill="#edf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">实时窗口缩略卡</text>
+    <rect x="24" y="62" width="339" height="205" rx="15" fill="#0b2033" stroke="#3d83ae" stroke-opacity=".42"/>
+    <rect x="42" y="82" width="303" height="30" rx="8" fill="#14344d"/>
+    <circle cx="58" cy="97" r="6" fill="#f06b69"/><circle cx="78" cy="97" r="6" fill="#efbd50"/><circle cx="98" cy="97" r="6" fill="#51c783"/>
+    <rect x="42" y="128" width="190" height="16" rx="6" fill="#255372"/><rect x="42" y="156" width="265" height="10" rx="5" fill="#1c425e"/>
+    <rect x="42" y="178" width="235" height="10" rx="5" fill="#1c425e"/><rect x="42" y="210" width="110" height="30" rx="9" fill="#1979b9"/>
+    <rect x="24" y="279" width="339" height="52" rx="13" fill="#102d45"/>
+    <rect x="38" y="293" width="4" height="25" rx="2" fill="#43b5f1"/>
+    <text x="55" y="301" fill="#edf6ff" font-family="Segoe UI, Microsoft YaHei" font-size="14">FocusPanel 发布说明</text>
+    <text x="55" y="320" fill="#78a7c5" font-family="Segoe UI, Microsoft YaHei" font-size="12">显示器 2 · 主屏</text>
+    <text x="338" y="311" text-anchor="end" fill="#67c4f5" font-family="Segoe UI" font-size="16">—　□　×</text>
+  </g>
+  <text x="928" y="553" text-anchor="middle" fill="#86a7bf" font-family="Segoe UI, Microsoft YaHei" font-size="13">窗口跨屏后由 WinEvent 自动刷新，不轮询</text>
+</svg>

@@ -106,6 +106,16 @@ internal static class TaskbarAppCollectionSynchronizer
                     && left.IsTopmost == right.IsTopmost
                     && left.IsAttentionRequested
                         == right.IsAttentionRequested
+                    && string.Equals(
+                        left.DisplayDeviceName,
+                        right.DisplayDeviceName,
+                        StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(
+                        left.DisplayLabel,
+                        right.DisplayLabel,
+                        StringComparison.Ordinal)
+                    && left.DisplayOrder
+                        == right.DisplayOrder
                     && string.Equals(left.Title, right.Title, StringComparison.Ordinal))
                 .All(equal => equal);
 }

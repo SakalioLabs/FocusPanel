@@ -197,6 +197,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(
         nameof(IsWindowSearchScope))]
     [NotifyPropertyChangedFor(
+        nameof(IsWindowDisplayFilterVisible))]
+    [NotifyPropertyChangedFor(
         nameof(IsApplicationSearchScope))]
     [NotifyPropertyChangedFor(
         nameof(IsSystemSearchScope))]
@@ -220,6 +222,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
         nameof(SearchPlaceholder))]
     private ShellSearchScope searchScope =
         ShellSearchScope.All;
+
+    private bool _refreshingWindowDisplayFilter;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(IsWindowDisplayFilterActive))]
+    [NotifyPropertyChangedFor(
+        nameof(SearchPanelTitle))]
+    [NotifyPropertyChangedFor(
+        nameof(AppSearchStatusText))]
+    private string selectedWindowDisplayFilter =
+        WindowDisplayOverviewPolicy
+            .AllDisplaysValue;
 
     private string? _windowOverviewIdentityFilter;
     private string _windowOverviewApplicationName =
@@ -1088,6 +1103,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         get;
     } = new();
+    public ObservableCollection<
+        WindowDisplayFilterOption>
+        WindowDisplayFilterOptions
+    {
+        get;
+    } = new();
     public string AppSearchStatusText
     {
         get
@@ -1106,7 +1127,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return SearchScope switch
             {
                 ShellSearchScope.Windows =>
-                    IsWindowApplicationFilterActive
+                    IsWindowDisplayFilterActive
+                        ? "所选屏幕当前没有可切换的窗口"
+                        : IsWindowApplicationFilterActive
                         ? "该应用当前没有可切换的窗口"
                         : "当前没有可切换的窗口",
                 ShellSearchScope.Applications =>
@@ -1124,6 +1147,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SearchScope == ShellSearchScope.All;
     public bool IsWindowSearchScope =>
         SearchScope == ShellSearchScope.Windows;
+    public bool IsWindowDisplayFilterVisible =>
+        IsWindowSearchScope
+        && WindowDisplayOverviewPolicy.IsUseful(
+            WindowDisplayFilterOptions);
+    public bool IsWindowDisplayFilterActive =>
+        IsWindowSearchScope
+        && !string.Equals(
+            SelectedWindowDisplayFilter,
+            WindowDisplayOverviewPolicy
+                .AllDisplaysValue,
+            StringComparison.Ordinal);
     public bool IsApplicationSearchScope =>
         SearchScope == ShellSearchScope.Applications;
     public bool IsSystemSearchScope =>
@@ -1259,7 +1293,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ShellSearchScope.Windows =>
                     IsWindowApplicationFilterActive
                         ? $"{_windowOverviewApplicationName} 的窗口"
-                        : "全部窗口",
+                        : IsWindowDisplayFilterActive
+                            ? "所选屏幕的窗口"
+                            : "全部窗口",
                 ShellSearchScope.Applications =>
                     "开始 · 全部应用",
                 ShellSearchScope.System =>
@@ -1576,8 +1612,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ShellSearchScope value)
     {
         if (value != ShellSearchScope.Windows)
+        {
             ClearWindowOverviewFilterCore();
+            _refreshingWindowDisplayFilter = true;
+            SelectedWindowDisplayFilter =
+                WindowDisplayOverviewPolicy
+                    .AllDisplaysValue;
+            _refreshingWindowDisplayFilter = false;
+        }
         RefreshSearchResults();
+    }
+
+    partial void OnSelectedWindowDisplayFilterChanged(
+        string value)
+    {
+        if (!_refreshingWindowDisplayFilter)
+            RefreshSearchResults();
     }
 
     partial void OnIsSearchOpenChanged(bool value)
@@ -4244,6 +4294,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         IReadOnlyList<WindowTaskItem> windows =
             _windowTracker.GetSnapshot();
+        RefreshWindowDisplayFilterOptions(
+            windows);
         OpenWindowCount = windows
             .SelectMany(
                 item => item.Windows)
@@ -4263,6 +4315,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 windowIdentityFilter:
                     IsWindowApplicationFilterActive
                         ? _windowOverviewIdentityFilter
+                        : null,
+                windowDisplayDeviceFilter:
+                    IsWindowDisplayFilterActive
+                        ? SelectedWindowDisplayFilter
                         : null,
                 recentApplicationIdentities:
                     recentApplicationIdentities,
@@ -4294,6 +4350,40 @@ public partial class MainViewModel : ObservableObject, IDisposable
             nameof(IsAppSearchStatusVisible));
         OnPropertyChanged(
             nameof(AppSearchStatusText));
+    }
+
+    private void RefreshWindowDisplayFilterOptions(
+        IReadOnlyList<WindowTaskItem> windows)
+    {
+        IReadOnlyList<WindowDisplayFilterOption>
+            options = WindowDisplayOverviewPolicy
+                .CreateOptions(windows);
+        string selection =
+            WindowDisplayOverviewPolicy
+                .NormalizeSelection(
+                    SelectedWindowDisplayFilter,
+                    options);
+        _refreshingWindowDisplayFilter = true;
+        try
+        {
+            ReplaceCollection(
+                WindowDisplayFilterOptions,
+                options);
+            SelectedWindowDisplayFilter =
+                selection;
+        }
+        finally
+        {
+            _refreshingWindowDisplayFilter =
+                false;
+        }
+
+        OnPropertyChanged(
+            nameof(IsWindowDisplayFilterVisible));
+        OnPropertyChanged(
+            nameof(IsWindowDisplayFilterActive));
+        OnPropertyChanged(
+            nameof(SearchPanelTitle));
     }
 
     private async Task

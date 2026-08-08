@@ -22,6 +22,7 @@ internal static class ShellSearchPolicy
             ShellSearchScope scope =
                 ShellSearchScope.All,
             string? windowIdentityFilter = null,
+            string? windowDisplayDeviceFilter = null,
             IReadOnlySet<string>?
                 recentApplicationIdentities = null,
             IEnumerable<
@@ -54,6 +55,7 @@ internal static class ShellSearchPolicy
                     runningApplications,
                     limit,
                     windowIdentityFilter,
+                    windowDisplayDeviceFilter,
                     recentWindowHandles);
             }
 
@@ -277,7 +279,9 @@ internal static class ShellSearchPolicy
                      windowIdentityFilter))
         {
             foreach (WindowReference window
-                     in running.Windows)
+                     in FilterWindows(
+                         running.Windows,
+                         windowDisplayDeviceFilter))
             {
                 int? rank =
                     AppSearchPolicy
@@ -414,6 +418,7 @@ internal static class ShellSearchPolicy
                 runningApplications,
             int limit,
             string? windowIdentityFilter,
+            string? windowDisplayDeviceFilter,
             IReadOnlyList<IntPtr>?
                 recentWindowHandles)
     {
@@ -426,7 +431,10 @@ internal static class ShellSearchPolicy
             windowIdentityFilter)
         .SelectMany(
             application =>
-                application.Windows.Select(
+                FilterWindows(
+                    application.Windows,
+                    windowDisplayDeviceFilter)
+                .Select(
                     window => new
                     {
                         Application = application,
@@ -502,6 +510,29 @@ internal static class ShellSearchPolicy
             string.Equals(
                 application.IdentityKey,
                 identityFilter,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<WindowReference>
+        FilterWindows(
+        IEnumerable<WindowReference> windows,
+        string? displayDeviceFilter)
+    {
+        if (string.IsNullOrWhiteSpace(
+                displayDeviceFilter)
+            || string.Equals(
+                displayDeviceFilter,
+                WindowDisplayOverviewPolicy
+                    .AllDisplaysValue,
+                StringComparison.Ordinal))
+        {
+            return windows;
+        }
+
+        return windows.Where(window =>
+            string.Equals(
+                window.DisplayDeviceName,
+                displayDeviceFilter,
                 StringComparison.OrdinalIgnoreCase));
     }
 

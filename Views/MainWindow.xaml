@@ -265,6 +265,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <StackPanel>
@@ -486,7 +487,27 @@
                                             Command="{Binding ClearWindowApplicationFilterCommand}"/>
                                 </Grid>
                             </Border>
-                            <Grid Grid.Row="5">
+                            <Grid Grid.Row="5"
+                                  Margin="2,0,2,10"
+                                  Visibility="{Binding IsWindowDisplayFilterVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                  AutomationProperties.Name="按显示器筛选窗口">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Margin="4,0,12,0"
+                                           VerticalAlignment="Center"
+                                           Text="显示窗口"
+                                           Style="{StaticResource FocusCaptionText}"/>
+                                <ComboBox Grid.Column="1"
+                                          MinHeight="44"
+                                          ItemsSource="{Binding WindowDisplayFilterOptions}"
+                                          DisplayMemberPath="DisplayName"
+                                          SelectedValuePath="Value"
+                                          SelectedValue="{Binding SelectedWindowDisplayFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          AutomationProperties.Name="选择要查看窗口的显示器"/>
+                            </Grid>
+                            <Grid Grid.Row="6">
                                 <ListBox x:Name="SearchResultsList"
                                          ItemsSource="{Binding SearchResults}"
                                          SelectedItem="{Binding SelectedSearchResult, Mode=TwoWay}"
@@ -1090,7 +1111,7 @@
                                                                                 <TextBlock Text="{Binding Title}"
                                                                                            TextTrimming="CharacterEllipsis"
                                                                                            Style="{StaticResource FocusBodyText}"/>
-                                                                                <TextBlock Text="{Binding State}"
+                                                                                <TextBlock Text="{Binding StateAndDisplayText}"
                                                                                            Style="{StaticResource FocusMetaText}"/>
                                                                             </StackPanel>
                                                                         </Button>

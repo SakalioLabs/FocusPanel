@@ -5042,6 +5042,8 @@ public partial class MainWindow :
                 closeMenu: true);
             _viewModel
                 .RefreshDisplayTargetOptions();
+            _coordinator.Windows
+                .RequestRefresh();
             PositionAtTargetEdge();
             _toastManager.Reposition();
             _hotZoneMonitor?.RefreshDisplayBounds();

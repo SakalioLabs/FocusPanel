@@ -3502,7 +3502,10 @@ public sealed class XamlResourceContractTests
             + "                                item.State,\n"
             + "                                item.IsTopmost,\n"
             + "                                !isActive\n"
-            + "                                && item.IsAttentionRequested))",
+            + "                                && item.IsAttentionRequested,\n"
+            + "                                item.DisplayDeviceName,\n"
+            + "                                item.DisplayLabel,\n"
+            + "                                item.DisplayOrder))",
             tracker.Replace(
                 "\r\n",
                 "\n"));
@@ -3511,6 +3514,15 @@ public sealed class XamlResourceContractTests
             synchronizer);
         Assert.Contains(
             "left.IsTopmost == right.IsTopmost",
+            synchronizer);
+        Assert.Contains(
+            "left.DisplayDeviceName",
+            synchronizer);
+        Assert.Contains(
+            "left.DisplayLabel",
+            synchronizer);
+        Assert.Contains(
+            "left.DisplayOrder",
             synchronizer);
         Assert.Contains(
             "NativeMethods.IsIconic(hwnd)",
@@ -4365,6 +4377,24 @@ public sealed class XamlResourceContractTests
             "IsChecked=\"{Binding IsWindowSearchScope, Mode=OneWay}\"",
             mainWindow);
         Assert.Contains(
+            "AutomationProperties.Name=\"按显示器筛选窗口\"",
+            mainWindow);
+        Assert.Contains(
+            "ItemsSource=\"{Binding WindowDisplayFilterOptions}\"",
+            mainWindow);
+        Assert.Contains(
+            "SelectedValue=\"{Binding SelectedWindowDisplayFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}\"",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding StateAndDisplayText}\"",
+            mainWindow);
+        Assert.Contains(
+            "WindowDisplayOverviewPolicy",
+            viewModel);
+        Assert.Contains(
+            "windowDisplayDeviceFilter:",
+            viewModel);
+        Assert.Contains(
             "private void SelectSearchScope(",
             viewModel);
         Assert.Contains(
@@ -4384,8 +4414,51 @@ public sealed class XamlResourceContractTests
             File.ReadAllText(
                 Path.Combine(
                     root,
-                    "Views",
-                    "MainWindow.xaml.cs")));
+                "Views",
+                "MainWindow.xaml.cs")));
+    }
+
+    [Fact]
+    public void WindowPreviewAndTracker_ExposeCurrentDisplayWithoutPolling()
+    {
+        string root = FindRepositoryRoot();
+        string preview = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "TaskbarWindowPreviewWindow.xaml"));
+        string tracker = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Services",
+                "WindowTracker.cs"));
+        string mainWindow = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
+
+        Assert.Contains(
+            "Text=\"{Binding DisplayLabel}\"",
+            preview);
+        Assert.Contains(
+            "Visibility=\"{Binding HasDisplayLabel",
+            preview);
+        Assert.Contains(
+            "ShellDisplayPresentationPolicy",
+            tracker);
+        Assert.Contains(
+            ".FromHandle(hwnd)",
+            tracker);
+        Assert.Contains(
+            "item.DisplayDeviceName",
+            tracker);
+        Assert.Contains(
+            "SystemEvents.DisplaySettingsChanged",
+            mainWindow);
+        Assert.Contains(
+            ".RequestRefresh();",
+            mainWindow);
     }
 
     [Fact]

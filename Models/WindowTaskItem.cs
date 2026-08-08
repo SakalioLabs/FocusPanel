@@ -39,4 +39,29 @@ public sealed record WindowReference(
     TrackedWindowState State =
         TrackedWindowState.Normal,
     bool IsTopmost = false,
-    bool IsAttentionRequested = false);
+    bool IsAttentionRequested = false,
+    string DisplayDeviceName = "",
+    string DisplayLabel = "",
+    int DisplayOrder = int.MaxValue)
+{
+    public bool HasDisplayLabel =>
+        !string.IsNullOrWhiteSpace(
+            DisplayLabel);
+
+    public string StateText =>
+        IsActive
+            ? "当前窗口"
+            : State switch
+            {
+                TrackedWindowState.Minimized =>
+                    "已最小化",
+                TrackedWindowState.Maximized =>
+                    "已最大化",
+                _ => "普通窗口"
+            };
+
+    public string StateAndDisplayText =>
+        HasDisplayLabel
+            ? StateText + " · " + DisplayLabel
+            : StateText;
+}

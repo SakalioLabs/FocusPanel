@@ -310,6 +310,16 @@ public sealed class WindowTracker : IWindowTracker
         var windows = new List<WindowEntry>();
         var backgroundOwners =
             new Dictionary<uint, BackgroundAppObservation>();
+        IReadOnlyDictionary<string,
+            ShellDisplayPresentation> displays =
+            ShellDisplayPresentationPolicy
+                .Create(
+                    ShellDisplayTarget
+                        .CaptureDisplays())
+                .ToDictionary(
+                    display =>
+                        display.DeviceName,
+                    StringComparer.OrdinalIgnoreCase);
         IntPtr foreground = NativeMethods.GetForegroundWindow();
         _attention.Clear(foreground);
 
@@ -324,6 +334,7 @@ public sealed class WindowTracker : IWindowTracker
                 CaptureWindow(
                     hwnd,
                     foreground,
+                    displays,
                     windows);
             }
             catch (Exception ex)
@@ -399,7 +410,10 @@ public sealed class WindowTracker : IWindowTracker
                                 item.State,
                                 item.IsTopmost,
                                 !isActive
-                                && item.IsAttentionRequested))
+                                && item.IsAttentionRequested,
+                                item.DisplayDeviceName,
+                                item.DisplayLabel,
+                                item.DisplayOrder))
                         .ToList(),
                     IsActive = isActive
                 };
@@ -539,6 +553,8 @@ public sealed class WindowTracker : IWindowTracker
     private void CaptureWindow(
         IntPtr hwnd,
         IntPtr foreground,
+        IReadOnlyDictionary<string,
+            ShellDisplayPresentation> displays,
         ICollection<WindowEntry> windows)
     {
         if (!IsTaskWindow(hwnd))
@@ -593,6 +609,32 @@ public sealed class WindowTracker : IWindowTracker
                 executablePath);
         }
 
+        string displayDeviceName = string.Empty;
+        string displayLabel = string.Empty;
+        int displayOrder = int.MaxValue;
+        try
+        {
+            displayDeviceName = Forms.Screen
+                .FromHandle(hwnd)
+                .DeviceName;
+            if (displays.TryGetValue(
+                    displayDeviceName,
+                    out ShellDisplayPresentation?
+                        display))
+            {
+                displayLabel =
+                    display.CompactName;
+                displayOrder =
+                    display.OrderIndex;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(
+                "Window display resolution failed: "
+                + ex.Message);
+        }
+
         windows.Add(new WindowEntry(
             hwnd,
             title,
@@ -615,7 +657,10 @@ public sealed class WindowTracker : IWindowTracker
                     GwlExStyle)
                 .ToInt64()
              & WsExTopmost) != 0,
-            _attention.IsRequested(hwnd)));
+            _attention.IsRequested(hwnd),
+            displayDeviceName,
+            displayLabel,
+            displayOrder));
     }
 
     private void PublishSnapshotChangedSafely()
@@ -794,7 +839,10 @@ public sealed class WindowTracker : IWindowTracker
         TrackedWindowState State,
         bool IsActive,
         bool IsTopmost,
-        bool IsAttentionRequested);
+        bool IsAttentionRequested,
+        string DisplayDeviceName,
+        string DisplayLabel,
+        int DisplayOrder);
 
     private sealed record PendingWindowSnapshot(
         long Revision,
