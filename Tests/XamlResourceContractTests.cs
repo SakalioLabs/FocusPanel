@@ -3310,9 +3310,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "PanelPositionDragPolicy",
             codeBehind);
-        Assert.Contains(
-            "ShellDisplayTarget\n"
-            + "                        .CaptureDisplays()",
+        Assert.Matches(
+            "ShellDisplayTarget\\s*"
+            + "\\.CaptureDisplays\\(\\)",
             codeBehind);
         Assert.Contains(
             "_viewModel.ApplyPanelPlacement(",
