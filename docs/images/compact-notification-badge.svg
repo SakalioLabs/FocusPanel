@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0c1727"/><stop offset="1" stop-color="#263b5a"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#6fb6ff" stop-opacity=".06"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L9 3 0 6z" fill="#6fb6ff"/></marker>
+  </defs>
+  <rect width="1180" height="500" rx="30" fill="url(#bg)"/>
+  <text x="54" y="62" fill="#f7f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">0.11.53 · 不展开 Panel 也能看见未读</text>
+  <text x="54" y="98" fill="#b9c6d9" font-family="Segoe UI, Microsoft YaHei" font-size="16">紧凑栏徽标 · Shift 一步直达 · 二次执行只收区块</text>
+
+  <rect x="54" y="132" width="248" height="308" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".17"/>
+  <rect x="134" y="158" width="88" height="256" rx="28" fill="#182638" stroke="#fff" stroke-opacity=".16"/>
+  <circle cx="178" cy="218" r="25" fill="#22354d"/><text x="178" y="226" text-anchor="middle" fill="#dceaff" font-family="Segoe UI Symbol" font-size="23">◉</text>
+  <circle cx="204" cy="194" r="14" fill="#168de2"/><text x="204" y="199" text-anchor="middle" fill="#fff" font-family="Segoe UI" font-size="11" font-weight="700">3</text>
+  <text x="178" y="258" text-anchor="middle" fill="#dceaff" font-family="Segoe UI, Microsoft YaHei" font-size="12">40%</text>
+  <circle cx="178" cy="310" r="25" fill="#22354d"/><text x="178" y="317" text-anchor="middle" fill="#dceaff" font-family="Segoe UI Symbol" font-size="21">☷</text>
+  <circle cx="178" cy="374" r="25" fill="#22354d"/><text x="178" y="381" text-anchor="middle" fill="#dceaff" font-family="Segoe UI" font-size="13">18:42</text>
+  <text x="178" y="430" text-anchor="middle" fill="#91a8c4" font-family="Segoe UI, Microsoft YaHei" font-size="12">76px 紧凑栏</text>
+
+  <path d="M318 286h68" stroke="#6fb6ff" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="394" y="132" width="328" height="308" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".17"/>
+  <text x="424" y="179" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">Shift+点击 / Enter</text>
+  <rect x="424" y="212" width="268" height="58" rx="14" fill="#174d78"/><text x="558" y="247" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="15">一步展开 Panel 通知</text>
+  <text x="424" y="312" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">• 标记当前历史为已读</text>
+  <text x="424" y="348" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">• 徽标和读屏摘要立即同步</text>
+  <text x="424" y="384" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">• 焦点进入通知详情</text>
+
+  <path d="M734 286h68" stroke="#6fb6ff" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="810" y="132" width="316" height="308" rx="24" fill="url(#glass)" stroke="#fff" stroke-opacity=".17"/>
+  <text x="840" y="179" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="650">再次 Shift 执行</text>
+  <rect x="840" y="212" width="256" height="58" rx="14" fill="#23684f"/><text x="968" y="247" text-anchor="middle" fill="#fff" font-family="Segoe UI, Microsoft YaHei" font-size="15">只收起通知区块</text>
+  <text x="840" y="312" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">✓ 状态中心继续保持打开</text>
+  <text x="840" y="348" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">✓ 焦点回到状态入口</text>
+  <text x="840" y="384" fill="#cad7e9" font-family="Segoe UI, Microsoft YaHei" font-size="14">✓ 不把整个 Panel 收回</text>
+  <text x="590" y="476" text-anchor="middle" fill="#aebed3" font-family="Segoe UI, Microsoft YaHei" font-size="14">普通点击、滚轮、中键、右键原语义全部保留</text>
+</svg>

@@ -1422,6 +1422,19 @@ public partial class MainWindow :
 
     private void StatusCenterButton_Click(object sender, RoutedEventArgs e)
     {
+        StatusCenterEntryAction action =
+            StatusCenterEntryActionPolicy.Resolve(
+                (Keyboard.Modifiers
+                 & ModifierKeys.Shift) != 0);
+        if (action
+            == StatusCenterEntryAction
+                .TogglePanelNotifications)
+        {
+            TogglePanelNotificationsFromCompactEntry();
+            e.Handled = true;
+            return;
+        }
+
         ToggleCompactOverlay(
             () => _viewModel.IsStatusCenterOpen
                 || _viewModel.IsPowerMenuOpen,
@@ -1431,6 +1444,28 @@ public partial class MainWindow :
             StatusCenterWindowOverviewButton,
             isOpenAfterToggle:
                 () => _viewModel.IsStatusCenterOpen);
+    }
+
+    private void TogglePanelNotificationsFromCompactEntry()
+    {
+        ExpandSidebar();
+        if (!_viewModel.IsStatusCenterOpen
+            || _openStatusCenterDetail
+                != StatusCenterDetail.PanelNotifications)
+        {
+            _viewModel.ShowStatusCenterDetail(
+                StatusCenterDetail.PanelNotifications);
+            QueueOverlayFocus(
+                StatusCenterButton,
+                PanelNotificationsDetailsExpander,
+                () => _viewModel.IsStatusCenterOpen);
+            return;
+        }
+
+        SetOpenStatusCenterDetail(
+            StatusCenterDetail.None,
+            bringIntoView: false);
+        StatusCenterButton.Focus();
     }
 
     private void StatusCenterWindowOverview_Click(

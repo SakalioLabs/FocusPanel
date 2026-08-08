@@ -992,7 +992,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SystemStatusSummaryComposer.Compose(
             NetworkSummary,
             AudioSummary,
-            BatterySummary);
+            BatterySummary,
+            UnreadPanelNotificationCount);
     public string StatusCenterAutomationName =>
         $"状态中心，{StatusCenterSummary}";
 
@@ -3116,6 +3117,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasUnreadPanelNotifications));
         OnPropertyChanged(nameof(UnreadPanelNotificationCount));
         OnPropertyChanged(nameof(PanelNotificationBadgeText));
+        OnPropertyChanged(nameof(StatusCenterSummary));
+        OnPropertyChanged(nameof(StatusCenterAutomationName));
     }
 
     private void NotificationCenter_PersistenceStatusChanged(

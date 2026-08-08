@@ -55,4 +55,16 @@ public sealed class SystemStatusSummaryComposerTests
                 " ",
                 null));
     }
+
+    [Fact]
+    public void UnreadPanelNotifications_AreAppendedToSummary()
+    {
+        Assert.Equal(
+            "网络 WLAN · 音量 40% · Panel 通知 3 条未读",
+            SystemStatusSummaryComposer.Compose(
+                "网络 WLAN",
+                "音量 40%",
+                batterySummary: null,
+                unreadPanelNotificationCount: 3));
+    }
 }

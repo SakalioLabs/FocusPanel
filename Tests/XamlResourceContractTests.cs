@@ -774,8 +774,17 @@ public sealed class XamlResourceContractTests
             "MouseEnter=\"StatusCenterButton_MouseEnter\"",
             mainWindow);
         Assert.Contains(
-            "右键打开状态快捷菜单",
+            "按 Shift+Enter 直接打开或收起 Panel 通知",
             mainWindow);
+        Assert.Contains(
+            "Visibility=\"{Binding HasUnreadPanelNotifications",
+            mainWindow);
+        Assert.Contains(
+            "Text=\"{Binding PanelNotificationBadgeText}\"",
+            mainWindow);
+        Assert.Contains(
+            "TogglePanelNotificationsFromCompactEntry",
+            mainWindowCode);
         Assert.DoesNotContain(
             "MouseRightButtonUp=\"VolumeButton_MouseRightButtonUp\"",
             mainWindow);
@@ -1615,6 +1624,12 @@ public sealed class XamlResourceContractTests
             compactDock);
         Assert.Contains(
             "x:Name=\"StatusCenterButton\"",
+            compactDock);
+        Assert.Contains(
+            "按 Shift+Enter 直接打开或收起 Panel 通知",
+            compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding HasUnreadPanelNotifications",
             compactDock);
         Assert.Contains(
             "Header=\"窗口总览\"",

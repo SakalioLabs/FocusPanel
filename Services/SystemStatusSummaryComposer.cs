@@ -19,7 +19,8 @@ internal static class SystemStatusSummaryComposer
     internal static string Compose(
         string networkSummary,
         string audioSummary,
-        string? batterySummary)
+        string? batterySummary,
+        int unreadPanelNotificationCount = 0)
     {
         string network = string.IsNullOrWhiteSpace(
             networkSummary)
@@ -29,8 +30,12 @@ internal static class SystemStatusSummaryComposer
             audioSummary)
             ? "音频状态未知"
             : audioSummary.Trim();
-        return string.IsNullOrWhiteSpace(batterySummary)
+        string summary = string.IsNullOrWhiteSpace(batterySummary)
             ? $"{network} · {audio}"
             : $"{network} · {audio} · {batterySummary.Trim()}";
+        return unreadPanelNotificationCount > 0
+            ? $"{summary} · Panel 通知 "
+              + $"{unreadPanelNotificationCount} 条未读"
+            : summary;
     }
 }

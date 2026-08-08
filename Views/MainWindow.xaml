@@ -2143,12 +2143,12 @@
                                     PreviewMouseDown="StatusCenterButton_PreviewMouseDown"
                                     MouseEnter="StatusCenterButton_MouseEnter"
                                     AutomationProperties.Name="{Binding StatusCenterAutomationName}"
-                                    AutomationProperties.HelpText="鼠标滚轮调节音量，右键打开状态快捷菜单，中键播放或暂停媒体">
+                                    AutomationProperties.HelpText="按 Enter 打开状态中心，按 Shift+Enter 直接打开或收起 Panel 通知；鼠标滚轮调节音量，右键打开快捷菜单，中键播放或暂停媒体">
                                 <Button.ToolTip>
                                     <StackPanel>
                                         <TextBlock Text="{Binding StatusCenterSummary}"/>
                                         <TextBlock Margin="0,4,0,0"
-                                                   Text="滚轮调音量 · 右键快捷菜单 · 中键播放/暂停"
+                                                   Text="Shift+点击通知 · 滚轮调音量 · 右键菜单"
                                                    Style="{StaticResource FocusCaptionText}"/>
                                     </StackPanel>
                                 </Button.ToolTip>
@@ -2209,6 +2209,23 @@
                                             Background="{DynamicResource FocusAccentBrightBrush}"
                                             IsHitTestVisible="False"
                                             Visibility="{Binding IsStatusEntryActive, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    <Border MinWidth="16"
+                                            Height="16"
+                                            Padding="2,0"
+                                            Margin="0,-4,-4,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            CornerRadius="{StaticResource FocusControlCornerRadius}"
+                                            Background="{DynamicResource FocusAccentBrightBrush}"
+                                            IsHitTestVisible="False"
+                                            Visibility="{Binding HasUnreadPanelNotifications, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="{Binding PanelNotificationBadgeText}"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource FocusWarningTextBrush}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
                                 </Grid>
                             </Button>
                             <Button x:Name="TimeButton"
