@@ -1659,6 +1659,12 @@ public sealed class XamlResourceContractTests
             compactDock);
         Assert.DoesNotContain("ToggleSettingsCommand", compactDock);
         Assert.DoesNotContain("BatteryPercent", compactDock);
+        Assert.Contains(
+            "Visibility=\"{Binding IsBackgroundOnly, Converter={StaticResource BooleanToVisibilityConverter}}\"",
+            compactDock);
+        Assert.Contains(
+            "AutomationProperties.Name=\"后台运行，无可见窗口\"",
+            compactDock);
 
         string systemStatus = File.ReadAllText(
             Path.Combine(root, "Services", "SystemStatusService.cs"));

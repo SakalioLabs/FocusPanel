@@ -49,6 +49,27 @@ public sealed class TaskbarAppPresentationTests
     }
 
     [Fact]
+    public void BackgroundOnlyApplication_OffersPanelRecoveryAction()
+    {
+        TaskbarAppItem item = Running(
+            windowCount: 0,
+            active: false);
+
+        Assert.True(item.IsBackgroundOnly);
+        Assert.True(item.IsRunning);
+        Assert.Equal(
+            "后台运行 · 无可见窗口",
+            item.StatusSummary);
+        Assert.Equal(
+            "后台运行 · 无可见窗口",
+            item.WindowSummary);
+        Assert.StartsWith(
+            "左键请求应用打开界面，右键管理应用",
+            item.InteractionHint);
+        Assert.False(item.HasWindowPreview);
+    }
+
+    [Fact]
     public void MinimizedApplication_DescribesRestoreInsteadOfAmbiguousToggle()
     {
         TaskbarAppItem item = Running(

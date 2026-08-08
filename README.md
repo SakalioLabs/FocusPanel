@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.56 让“只有后台宿主、暂时没有可见窗口”的用户应用也进入 Panel 中部统一任务栏：识别沿用现有窗口事件快照，不轮询全部进程，也不打开 Windows 的“显示隐藏图标”。同一应用按 AppUserModelID/可执行路径合并，只显示一个带状态圆点的图标；左键会通过可靠启动目标请求它重新显示界面，右键仍可固定和排序。系统进程、跨会话进程、崩溃辅助程序和 FocusPanel 自身会被过滤。由于第三方托盘菜单没有统一公开协议，本项目仍不会用 Explorer 注入假装复制菜单。
+
+![后台应用进入 FocusPanel 统一任务栏](docs/images/panel-background-app-shelf.svg)
+
 > 0.11.55 把 FocusPanel 自己也从 Windows 通知区撤出：程序不再创建任务栏托盘图标，普通关闭只折回 76px 紧凑栏并保留右缘与全局快捷键，因此不用再从底部“显示隐藏图标”寻找 Panel。状态中心的“后台应用与窗口 · Panel”只进入 Panel 自有总览，不触发原生溢出抽屉；Windows 没有公开接口允许第三方安全搬走其他应用的托盘图标及菜单，本项目不会用 Explorer 注入冒充完整接管。桌面收纳同时修复真实宽度被首次单卡片测量锁死的问题，改为固定 12px 图标节奏；用户选择的 `.ico` 会复制进 `%APPDATA%\FocusPanel\Icons` 并按完整路径/文件标识绑定，同名桌面项不会串图标。显示桌面也改用公开 `Shell.Application.ToggleDesktop`，不再模拟 `Win+D`。
 
 ![Panel 不再依赖任务栏托盘，并稳定保留 ICO 与图标网格](docs/images/panel-independent-tray-ico-grid.svg)

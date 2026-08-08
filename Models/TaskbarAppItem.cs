@@ -53,6 +53,8 @@ public sealed class TaskbarAppItem : ObservableObject
     }
     public bool IsPinned => PinnedLaunches.Count > 0;
     public bool IsRunning => RunningTask != null;
+    public bool IsBackgroundOnly =>
+        IsRunning && WindowCount == 0;
     public bool IsActive => RunningTask?.IsActive == true;
     public bool CanLaunchNewInstance =>
         !string.IsNullOrWhiteSpace(LaunchItem?.LaunchTarget)
@@ -124,12 +126,19 @@ public sealed class TaskbarAppItem : ObservableObject
         }
     }
     public string? ExecutablePath => RunningTask?.ExecutablePath;
-    public string WindowSummary => WindowCount == 0 ? "未运行" : $"{WindowCount} 个窗口";
+    public string WindowSummary =>
+        IsBackgroundOnly
+            ? "后台运行 · 无可见窗口"
+            : WindowCount == 0
+                ? "未运行"
+                : $"{WindowCount} 个窗口";
     public string StatusSummary =>
         IsActive
             ? $"正在使用 · {WindowCount} 个窗口"
             : IsFullyMinimized
                 ? $"已最小化 · {WindowCount} 个窗口"
+                : IsBackgroundOnly
+                    ? "后台运行 · 无可见窗口"
                 : IsRunning
                     ? $"后台运行 · {WindowCount} 个窗口"
                     : IsPinned
@@ -170,6 +179,8 @@ public sealed class TaskbarAppItem : ObservableObject
         {
             string primaryAction = WindowCount > 1
                 ? "左键打开此应用窗口总览，Ctrl+左键或 Ctrl+滚轮循环窗口，右键管理应用"
+                : IsBackgroundOnly
+                    ? "左键请求应用打开界面，右键管理应用"
                 : IsFullyMinimized
                     ? "左键还原并切换，右键管理应用"
                     : IsActive
@@ -384,6 +395,7 @@ public sealed class TaskbarAppItem : ObservableObject
     {
         OnPropertyChanged(nameof(IsPinned));
         OnPropertyChanged(nameof(IsRunning));
+        OnPropertyChanged(nameof(IsBackgroundOnly));
         OnPropertyChanged(nameof(IsActive));
         OnPropertyChanged(nameof(CanLaunchNewInstance));
         OnPropertyChanged(nameof(CanLaunchElevated));

@@ -1989,6 +1989,22 @@
                                                                        Foreground="{DynamicResource FocusAccentBrightBrush}"
                                                                        FontWeight="SemiBold"/>
                                                         </Border>
+                                                        <Grid Width="14"
+                                                              Height="14"
+                                                              Margin="0,-3,-3,0"
+                                                              HorizontalAlignment="Right"
+                                                              VerticalAlignment="Top"
+                                                              IsHitTestVisible="False"
+                                                              Visibility="{Binding IsBackgroundOnly, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                              ToolTip="后台运行，无可见窗口"
+                                                              AutomationProperties.Name="后台运行，无可见窗口">
+                                                            <Ellipse Fill="{DynamicResource FocusSurfaceStrongBrush}"
+                                                                     Stroke="{DynamicResource FocusAccentBrightBrush}"
+                                                                     StrokeThickness="1"/>
+                                                            <Ellipse Width="4"
+                                                                     Height="4"
+                                                                     Fill="{DynamicResource FocusAccentBrightBrush}"/>
+                                                        </Grid>
                                                     </Grid>
                                                 </Button>
                                                 <Border Width="4"

@@ -37,6 +37,8 @@ public sealed class WindowTracker : IWindowTracker
     private readonly List<IntPtr> _hooks = new();
     private readonly IAppIdentityResolver _identityResolver;
     private readonly WindowCommandExecutor _commands;
+    private readonly int _currentSessionId;
+    private readonly string _windowsDirectory;
     private readonly ResilientSnapshotStore<WindowTaskItem>
         _snapshotStore = new();
     private volatile bool _trackingActive = true;
@@ -50,6 +52,10 @@ public sealed class WindowTracker : IWindowTracker
     internal WindowTracker(IAppIdentityResolver identityResolver)
     {
         _identityResolver = identityResolver;
+        using (Process current = Process.GetCurrentProcess())
+            _currentSessionId = current.SessionId;
+        _windowsDirectory = Environment.GetFolderPath(
+            Environment.SpecialFolder.Windows);
         _uiDispatcher = Dispatcher.CurrentDispatcher;
         _commands = new WindowCommandExecutor(
             new WindowsWindowCommandBoundary());
@@ -273,6 +279,8 @@ public sealed class WindowTracker : IWindowTracker
     private IReadOnlyList<WindowTaskItem> CaptureSnapshot()
     {
         var windows = new List<WindowEntry>();
+        var backgroundOwners =
+            new Dictionary<uint, BackgroundAppObservation>();
         IntPtr foreground = NativeMethods.GetForegroundWindow();
 
         bool enumerated =
@@ -280,6 +288,9 @@ public sealed class WindowTracker : IWindowTracker
         {
             try
             {
+                CaptureBackgroundOwner(
+                    hwnd,
+                    backgroundOwners);
                 CaptureWindow(
                     hwnd,
                     foreground,
@@ -305,7 +316,7 @@ public sealed class WindowTracker : IWindowTracker
                     "Windows 未能枚举顶层窗口。");
         }
 
-        return windows
+        List<WindowTaskItem> taskWindows = windows
             .GroupBy(item => item.IdentityKey, StringComparer.OrdinalIgnoreCase)
             .Select(group =>
             {
@@ -354,6 +365,91 @@ public sealed class WindowTracker : IWindowTracker
             .OrderByDescending(item => item.IsActive)
             .ThenBy(item => item.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
+        return BackgroundAppSnapshotComposer.Append(
+            taskWindows,
+            backgroundOwners.Values);
+    }
+
+    private void CaptureBackgroundOwner(
+        IntPtr hwnd,
+        IDictionary<uint, BackgroundAppObservation>
+            owners)
+    {
+        NativeMethods.GetWindowThreadProcessId(
+            hwnd,
+            out uint processId);
+        if (processId == 0
+            || processId == Environment.ProcessId
+            || owners.ContainsKey(processId))
+        {
+            return;
+        }
+
+        try
+        {
+            using Process process =
+                Process.GetProcessById(
+                    (int)processId);
+            string? executablePath =
+                process.MainModule?.FileName;
+            if (!BackgroundAppVisibilityPolicy
+                    .ShouldInclude(
+                        processId,
+                        Environment.ProcessId,
+                        process.SessionId,
+                        _currentSessionId,
+                        executablePath,
+                        _windowsDirectory))
+            {
+                return;
+            }
+
+            ResolvedAppIdentity identity =
+                _identityResolver.ResolveWindow(
+                    hwnd,
+                    processId,
+                    executablePath);
+            ImageSource? icon = null;
+            try
+            {
+                icon = IconHelper.GetIcon(
+                    executablePath!);
+            }
+            catch
+            {
+                // Text and launch target remain useful when icon extraction fails.
+            }
+
+            string? description = null;
+            try
+            {
+                description = process.MainModule
+                    ?.FileVersionInfo
+                    .FileDescription;
+            }
+            catch
+            {
+                // Protected metadata falls back to the process name.
+            }
+
+            owners.Add(
+                processId,
+                new BackgroundAppObservation(
+                    processId,
+                    BackgroundAppVisibilityPolicy
+                        .GetDisplayName(
+                            process.ProcessName,
+                            description),
+                    identity.ExecutablePath
+                        ?? executablePath!,
+                    identity.Key,
+                    identity.ApplicationUserModelId,
+                    icon));
+        }
+        catch
+        {
+            // Protected, short-lived and cross-session processes are skipped.
+        }
     }
 
     private void CaptureWindow(

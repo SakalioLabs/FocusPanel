@@ -89,6 +89,32 @@ public sealed class TaskbarAppComposerTests
     }
 
     [Fact]
+    public void BackgroundOnlyItem_RemainsLaunchableAndPinnable()
+    {
+        var composer = new TaskbarAppComposer();
+        var background = new WindowTaskItem
+        {
+            AppKey = "exe:c:\\apps\\sync.exe",
+            IdentityKey = "exe:c:\\apps\\sync.exe",
+            DisplayName = "Sync",
+            ExecutablePath = @"C:\Apps\Sync.exe",
+            Windows = Array.Empty<WindowReference>()
+        };
+
+        TaskbarAppItem item = Assert.Single(
+            composer.Compose(
+                Array.Empty<AppLaunchItem>(),
+                new[] { background }));
+
+        Assert.True(item.IsRunning);
+        Assert.True(item.IsBackgroundOnly);
+        Assert.True(item.CanPin);
+        AppLaunchItem launch = Assert.IsType<AppLaunchItem>(
+            item.CreateLaunchItem());
+        Assert.Equal(@"C:\Apps\Sync.exe", launch.LaunchTarget);
+    }
+
+    [Fact]
     public void UnpinnedRunningItem_RemainsUntilItsLastWindowCloses()
     {
         var composer = new TaskbarAppComposer();

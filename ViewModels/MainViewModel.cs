@@ -2365,7 +2365,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ActivateTaskbarApp(
         TaskbarAppItem? task)
     {
-        if (task?.RunningTask != null)
+        TaskbarPrimaryAction action =
+            TaskbarPrimaryActionPolicy.Get(task);
+        if (action
+            == TaskbarPrimaryAction
+                .ActivateOrMinimize
+            && task?.RunningTask != null)
         {
             CompleteTaskbarWindowAction(
                 SystemActionExecution.Try(
@@ -2375,6 +2380,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 + "或 Windows 暂时阻止了前台切换。");
             return;
         }
+        if (action != TaskbarPrimaryAction.Launch)
+            return;
         AppLaunchItem? launch = task?.CreateLaunchItem();
         if (launch != null)
             await TryLaunchAppAsync(launch);
