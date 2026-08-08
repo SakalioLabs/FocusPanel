@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1220"/><stop offset="1" stop-color="#1a2940"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2b3a52" stop-opacity=".95"/><stop offset="1" stop-color="#151f31" stop-opacity=".9"/></linearGradient>
+    <filter id="shadow" x="-60%" y="-30%" width="220%" height="180%"><feDropShadow dy="16" stdDeviation="20" flood-opacity=".42"/></filter>
+  </defs>
+  <rect width="1200" height="650" fill="url(#bg)"/>
+  <circle cx="1050" cy="110" r="240" fill="#2d92e6" opacity=".1"/><circle cx="130" cy="590" r="210" fill="#7764e8" opacity=".09"/>
+  <text x="70" y="78" fill="#f5f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="34" font-weight="700">短屏不再牺牲运行应用</text>
+  <text x="70" y="118" fill="#aebcd0" font-family="Segoe UI, Microsoft YaHei" font-size="20">固定入口按高度重组，而不是继续挤压中间任务栏</text>
+
+  <g transform="translate(90 165)">
+    <text x="38" y="-18" fill="#aebcd0" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="17">普通高度 · 8 个入口</text>
+    <rect width="76" height="430" rx="24" fill="url(#glass)" stroke="#7588a6" stroke-opacity=".48" filter="url(#shadow)"/>
+    <rect x="25" y="15" width="26" height="4" rx="2" fill="#9eacc2"/>
+    <g font-family="Segoe UI, Microsoft YaHei" text-anchor="middle" font-size="12" fill="#dbe5f2">
+      <g transform="translate(10 32)"><rect width="56" height="42" rx="12" fill="#ffffff" fill-opacity=".05"/><text x="28" y="26">开始</text></g>
+      <g transform="translate(10 77)"><rect width="56" height="42" rx="12" fill="#ffffff" fill-opacity=".05"/><text x="28" y="26">窗口</text></g>
+      <g transform="translate(10 122)"><rect width="56" height="42" rx="12" fill="#ffffff" fill-opacity=".05"/><text x="28" y="26">后台</text></g>
+      <line x1="15" y1="174" x2="61" y2="174" stroke="#8292aa" stroke-opacity=".45"/>
+      <g transform="translate(15 184)"><rect width="46" height="46" rx="12" fill="#2e87df"/><text x="23" y="28" fill="#fff">应用</text></g>
+      <g transform="translate(15 235)"><rect width="46" height="46" rx="12" fill="#253248"/><text x="23" y="28">应用</text></g>
+      <line x1="15" y1="292" x2="61" y2="292" stroke="#8292aa" stroke-opacity=".45"/>
+      <text x="38" y="317">收纳</text><text x="38" y="342">任务</text><text x="38" y="367">状态</text><text x="38" y="392">时间</text><text x="38" y="417">桌面</text>
+    </g>
+  </g>
+
+  <path d="M245 365h130" stroke="#58b5ff" stroke-width="3" stroke-linecap="round"/><path d="M365 355l14 10-14 10" fill="none" stroke="#58b5ff" stroke-width="3"/>
+  <text x="310" y="340" fill="#82c9ff" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="18">低于 640 DIP</text>
+
+  <g transform="translate(415 205)">
+    <text x="38" y="-18" fill="#f0f5fb" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei" font-size="18" font-weight="600">短屏 · 6 个入口</text>
+    <rect width="76" height="350" rx="24" fill="url(#glass)" stroke="#3d9ae8" stroke-opacity=".8" filter="url(#shadow)"/>
+    <rect x="25" y="15" width="26" height="4" rx="2" fill="#9eacc2"/>
+    <g font-family="Segoe UI, Microsoft YaHei" text-anchor="middle" font-size="12" fill="#dbe5f2">
+      <text x="38" y="53">开始</text><text x="38" y="92">窗口</text>
+      <line x1="15" y1="108" x2="61" y2="108" stroke="#8292aa" stroke-opacity=".45"/>
+      <g transform="translate(15 119)"><rect width="46" height="46" rx="12" fill="#2e87df"/><text x="23" y="28" fill="#fff">应用</text></g>
+      <g transform="translate(15 170)"><rect width="46" height="46" rx="12" fill="#253248"/><text x="23" y="28">应用</text></g>
+      <line x1="15" y1="228" x2="61" y2="228" stroke="#8292aa" stroke-opacity=".45"/>
+      <text x="38" y="255" fill="#9dcbff" font-weight="600">Focus</text><text x="38" y="283">状态</text><text x="38" y="310">时间</text><text x="38" y="337">桌面</text>
+    </g>
+  </g>
+
+  <g transform="translate(570 180)">
+    <text x="0" y="24" fill="#f5f8fc" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">能力没有被藏起来</text>
+    <g transform="translate(0 55)">
+      <rect width="540" height="95" rx="18" fill="#fff" fill-opacity=".06" stroke="#fff" stroke-opacity=".12"/>
+      <circle cx="42" cy="47" r="20" fill="#2f93e7"/><text x="42" y="54" fill="#fff" text-anchor="middle" font-family="Segoe UI" font-size="20">1</text>
+      <text x="78" y="40" fill="#edf4fb" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="600">后台应用 → 状态中心应用抽屉</text>
+      <text x="78" y="68" fill="#aebcd0" font-family="Segoe UI, Microsoft YaHei" font-size="16">运行应用仍直接显示在中间滚动任务栏</text>
+    </g>
+    <g transform="translate(0 170)">
+      <rect width="540" height="95" rx="18" fill="#fff" fill-opacity=".06" stroke="#fff" stroke-opacity=".12"/>
+      <circle cx="42" cy="47" r="20" fill="#7764e8"/><text x="42" y="54" fill="#fff" text-anchor="middle" font-family="Segoe UI" font-size="20">2</text>
+      <text x="78" y="40" fill="#edf4fb" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="600">收纳 + 任务 → Focus 中心</text>
+      <text x="78" y="68" fill="#aebcd0" font-family="Segoe UI, Microsoft YaHei" font-size="16">打开最近模块，顶部导航一步切换全部功能</text>
+    </g>
+    <g transform="translate(0 285)">
+      <rect width="540" height="95" rx="18" fill="#248ce3" fill-opacity=".14" stroke="#338fdf" stroke-opacity=".55"/>
+      <text x="28" y="39" fill="#d9efff" font-family="Segoe UI, Microsoft YaHei" font-size="19" font-weight="600">释放 88 DIP 固定区域</text>
+      <text x="28" y="68" fill="#9ed5ff" font-family="Segoe UI, Microsoft YaHei" font-size="16">运行应用槽位和滚动按钮留在屏幕内</text>
+    </g>
+  </g>
+</svg>

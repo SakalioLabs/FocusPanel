@@ -47,6 +47,23 @@ public partial class MainWindow :
             value);
     }
 
+    public static readonly DependencyProperty
+        IsCompactDockDenseProperty =
+            DependencyProperty.Register(
+                nameof(IsCompactDockDense),
+                typeof(bool),
+                typeof(MainWindow),
+                new PropertyMetadata(false));
+
+    public bool IsCompactDockDense
+    {
+        get => (bool)GetValue(
+            IsCompactDockDenseProperty);
+        private set => SetValue(
+            IsCompactDockDenseProperty,
+            value);
+    }
+
     private const double CompactWidth = 76;
     private const double ExpandedWidth = 720;
     private const double ScreenMargin =
@@ -614,6 +631,9 @@ public partial class MainWindow :
         CompactFixedEntryHeight =
             CompactDockDensityPolicy
                 .GetEntryHeight(Height);
+        IsCompactDockDense =
+            CompactDockDensityPolicy
+                .UsesCombinedFocusEntry(Height);
         ShellWindowPlacement.Apply(hwnd, bounds);
     }
 
@@ -1464,6 +1484,22 @@ public partial class MainWindow :
         object sender,
         RoutedEventArgs e) =>
         OpenFocusWorkspace("Files");
+
+    private void DenseFocusCenterButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        string destination =
+            _viewModel.LastWorkspace is
+                "Dashboard"
+                or "Tasks"
+                or "Pomodoro"
+                or "Files"
+                or "AI"
+                ? _viewModel.LastWorkspace
+                : "Dashboard";
+        OpenFocusWorkspace(destination);
+    }
 
     private void TasksButton_Click(
         object sender,

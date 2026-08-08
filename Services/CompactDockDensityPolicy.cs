@@ -22,4 +22,11 @@ internal static class CompactDockDensityPolicy
             ? DenseEntryHeightDip
             : NormalEntryHeightDip;
     }
+
+    internal static bool UsesCombinedFocusEntry(
+        double panelHeightDip) =>
+        double.IsFinite(panelHeightDip)
+        && panelHeightDip > 0
+        && panelHeightDip
+           < DenseHeightThresholdDip;
 }

@@ -1582,10 +1582,12 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void CompactDock_HasEightFixedEntriesAndOneScrollableApplicationList()
+    public void CompactDock_AdaptsEightFullEntriesToSixShortScreenEntries()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(Path.Combine(root, "Views", "MainWindow.xaml"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(root, "Views", "MainWindow.xaml.cs"));
         int dockStart = mainWindow.IndexOf("<!-- Compact app dock -->", StringComparison.Ordinal);
         int onboardingStart = mainWindow.IndexOf(
             "<!-- First-run safety onboarding -->",
@@ -1593,7 +1595,7 @@ public sealed class XamlResourceContractTests
 
         Assert.True(dockStart >= 0 && onboardingStart > dockStart);
         string compactDock = mainWindow[dockStart..onboardingStart];
-        Assert.Equal(8, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
+        Assert.Equal(9, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
         Assert.Equal(
             1,
             compactDock.Split(
@@ -1614,6 +1616,9 @@ public sealed class XamlResourceContractTests
         int organizer = compactDock.IndexOf(
             "Click=\"OrganizerButton_Click\"",
             StringComparison.Ordinal);
+        int denseFocus = compactDock.IndexOf(
+            "Click=\"DenseFocusCenterButton_Click\"",
+            StringComparison.Ordinal);
         int tasks = compactDock.IndexOf(
             "Click=\"TasksButton_Click\"",
             StringComparison.Ordinal);
@@ -1631,12 +1636,14 @@ public sealed class XamlResourceContractTests
             && start < search
             && search < backgroundApps
             && backgroundApps < applications
-            && applications < organizer
+            && applications < denseFocus
+            && denseFocus < organizer
             && organizer < tasks
             && tasks < statusCenter
             && statusCenter < time
             && time < desktop);
         Assert.Contains("Click=\"OrganizerButton_Click\"", compactDock);
+        Assert.Contains("Click=\"DenseFocusCenterButton_Click\"", compactDock);
         Assert.Contains("Click=\"TasksButton_Click\"", compactDock);
         Assert.Contains("Click=\"StatusCenterButton_Click\"", compactDock);
         Assert.DoesNotContain(
@@ -1669,6 +1676,23 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "Style=\"{StaticResource CompactDesktopEntryButton}\"",
             compactDock);
+        Assert.Contains(
+            "Style=\"{StaticResource CompactDenseOnlyEntryButton}\"",
+            compactDock);
+        Assert.Equal(
+            3,
+            compactDock.Split(
+                    "Style=\"{StaticResource CompactFullOnlyEntryButton}\"")
+                .Length - 1);
+        Assert.Matches(
+            "CompactDockDensityPolicy\\s*"
+            + "\\.UsesCombinedFocusEntry\\(Height\\)",
+            codeBehind);
+        Assert.Matches(
+            "DenseFocusCenterButton_Click\\([\\s\\S]*?"
+            + "_viewModel\\.LastWorkspace[\\s\\S]*?"
+            + "OpenFocusWorkspace\\(destination\\);",
+            codeBehind);
         Assert.Contains(
             "Click=\"BackgroundAppsButton_Click\"",
             compactDock);
@@ -1820,14 +1844,24 @@ public sealed class XamlResourceContractTests
         string compactDock =
             mainWindow[dockStart..onboardingStart];
         Assert.Equal(
-            7,
+            4,
             compactDock.Split(
                 "Style=\"{StaticResource CompactLabeledEntryButton}\"",
                 StringSplitOptions.None).Length - 1);
+        Assert.Equal(
+            3,
+            compactDock.Split(
+                "Style=\"{StaticResource CompactFullOnlyEntryButton}\"",
+                StringSplitOptions.None).Length - 1);
+        Assert.Single(
+            compactDock.Split(
+                "Style=\"{StaticResource CompactDenseOnlyEntryButton}\"",
+                StringSplitOptions.None)[1..]);
         Assert.Contains("Text=\"开始\"", compactDock);
         Assert.Contains("Text=\"窗口\"", compactDock);
         Assert.Contains("Text=\"收纳\"", compactDock);
         Assert.Contains("Text=\"任务\"", compactDock);
+        Assert.Contains("Text=\"Focus\"", compactDock);
         Assert.Contains(
             "Text=\"{Binding AudioCompactValueText}\"",
             compactDock);

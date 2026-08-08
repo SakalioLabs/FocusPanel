@@ -36,6 +36,29 @@
                     Value="{Binding CompactFixedEntryHeight, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"/>
         </Style>
 
+        <Style x:Key="CompactFullOnlyEntryButton"
+               TargetType="Button"
+               BasedOn="{StaticResource CompactLabeledEntryButton}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCompactDockDense, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                             Value="True">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CompactDenseOnlyEntryButton"
+               TargetType="Button"
+               BasedOn="{StaticResource CompactLabeledEntryButton}">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCompactDockDense, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                             Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="CompactDesktopEntryButton"
                TargetType="Button"
                BasedOn="{StaticResource FocusIconButton}">
@@ -2237,7 +2260,7 @@
                             </Button>
                             <Button x:Name="BackgroundAppsButton"
                                     Tag="CompactFixedEntry"
-                                    Style="{StaticResource CompactLabeledEntryButton}"
+                                    Style="{StaticResource CompactFullOnlyEntryButton}"
                                     Click="BackgroundAppsButton_Click"
                                     AutomationProperties.Name="打开 Panel 自有后台应用抽屉"
                                     AutomationProperties.HelpText="只显示 Panel 已识别的固定、运行和后台应用，不调用 Windows 任务栏隐藏图标"
@@ -2528,8 +2551,27 @@
 
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Margin="11,6" Background="{DynamicResource FocusStrokeBrush}"/>
+                            <Button x:Name="DenseFocusCenterButton"
+                                    Style="{StaticResource CompactDenseOnlyEntryButton}"
+                                    Tag="CompactFixedEntry"
+                                    Click="DenseFocusCenterButton_Click"
+                                    AutomationProperties.Name="Focus 中心"
+                                    AutomationProperties.HelpText="打开最近使用的 FocusPanel 模块，顶部可直接切换桌面收纳、任务、番茄钟、AI 和设置"
+                                    ToolTip="Focus 中心 · 打开最近模块">
+                                <Grid Width="48" Height="44">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource FocusIconText}"
+                                                   HorizontalAlignment="Center"
+                                                   Text="&#xE80F;"/>
+                                        <TextBlock Margin="0,-2,0,0"
+                                                   HorizontalAlignment="Center"
+                                                   Style="{StaticResource FocusMetaText}"
+                                                   Text="Focus"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
                             <Button x:Name="OrganizerButton"
-                                    Style="{StaticResource CompactLabeledEntryButton}"
+                                    Style="{StaticResource CompactFullOnlyEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="OrganizerButton_Click"
                                     AutomationProperties.Name="{Binding OrganizerEntryAutomationName}"
@@ -2575,7 +2617,7 @@
                                 </Grid>
                             </Button>
                             <Button x:Name="TasksButton"
-                                    Style="{StaticResource CompactLabeledEntryButton}"
+                                    Style="{StaticResource CompactFullOnlyEntryButton}"
                                     Tag="CompactFixedEntry"
                                     Click="TasksButton_Click"
                                     AutomationProperties.Name="{Binding TasksEntryAutomationName}"

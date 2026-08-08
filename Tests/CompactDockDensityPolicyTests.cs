@@ -34,4 +34,22 @@ public sealed class CompactDockDensityPolicyTests
             CompactDockDensityPolicy
                 .GetEntryHeight(panelHeight));
     }
+
+    [Theory]
+    [InlineData(488, true)]
+    [InlineData(639.9, true)]
+    [InlineData(640, false)]
+    [InlineData(820, false)]
+    [InlineData(0, false)]
+    [InlineData(double.NaN, false)]
+    public void CombinedFocusEntry_IsUsedOnlyForValidShortPanels(
+        double panelHeight,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            CompactDockDensityPolicy
+                .UsesCombinedFocusEntry(
+                    panelHeight));
+    }
 }
