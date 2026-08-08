@@ -7,11 +7,6 @@ public sealed class SystemStatusShellEntryTests
 {
     [Theory]
     [InlineData(
-        "SoundOutput",
-        0x56,
-        true,
-        false)]
-    [InlineData(
         "ScreenSnipping",
         0x53,
         false,
@@ -42,8 +37,6 @@ public sealed class SystemStatusShellEntryTests
 
         bool succeeded = action switch
         {
-            "SoundOutput" =>
-                service.OpenSoundOutput(),
             "ScreenSnipping" =>
                 service.OpenScreenSnipping(),
             "ProjectDisplay" =>

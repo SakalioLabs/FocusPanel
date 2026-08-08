@@ -1505,7 +1505,7 @@ public sealed class XamlResourceContractTests
             "AutomationProperties.Name=\"网络与无线详情\"",
             statusCenter);
         Assert.Contains(
-            "AutomationProperties.Name=\"应用音量详情\"",
+            "AutomationProperties.Name=\"声音与应用音量详情\"",
             statusCenter);
         Assert.Contains(
             "AutomationProperties.Name=\"媒体与电池详情\"",
@@ -3613,7 +3613,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "WindowsShellAction.ShowDesktop",
             shellSearchCatalog);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "WindowsShellAction.SoundOutput",
             shellSearchCatalog);
         Assert.Contains(
@@ -3649,7 +3649,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "_systemStatus.ShowDesktop",
             viewModel);
-        Assert.Contains(
+        Assert.DoesNotContain(
             "_systemStatus.OpenSoundOutput",
             viewModel);
         Assert.Contains(

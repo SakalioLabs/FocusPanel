@@ -1501,14 +1501,14 @@
                                           Tag="{x:Static services:StatusCenterDetail.ApplicationAudio}"
                                           Expanded="StatusDetailsExpander_Expanded"
                                           Collapsed="StatusDetailsExpander_Collapsed"
-                                          AutomationProperties.Name="应用音量详情">
+                                          AutomationProperties.Name="声音与应用音量详情">
                                     <Expander.Header>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="应用音量"
+                                            <TextBlock Text="声音与应用音量"
                                                        Style="{StaticResource FocusCardTitleText}"/>
                                             <TextBlock Grid.Column="1"
                                                        Margin="12,0,0,0"

@@ -32,20 +32,6 @@ public sealed class WindowsShellShortcutTests
     }
 
     [Fact]
-    public void SoundOutput_UsesWindowsControlV()
-    {
-        WindowsShellShortcut shortcut =
-            WindowsShellShortcutMap.Get(
-                WindowsShellAction.SoundOutput);
-
-        Assert.True(shortcut.UsesWindowsKey);
-        Assert.True(shortcut.UsesControl);
-        Assert.False(shortcut.UsesAlt);
-        Assert.False(shortcut.UsesShift);
-        Assert.Equal((ushort)0x56, shortcut.Key);
-    }
-
-    [Fact]
     public void ScreenSnipping_UsesWindowsShiftS()
     {
         WindowsShellShortcut shortcut =

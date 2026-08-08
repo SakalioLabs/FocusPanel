@@ -15,11 +15,6 @@ internal static class WindowsShellSearchCatalog
         new[]
         {
             new WindowsShellSearchEntry(
-                WindowsShellAction.SoundOutput,
-                "声音输出",
-                "\uE767",
-                "声音设备 输出设备 音量混合器 sound output audio device volume mixer Win Ctrl V"),
-            new WindowsShellSearchEntry(
                 WindowsShellAction.ScreenSnipping,
                 "屏幕截图",
                 "\uE7C4",

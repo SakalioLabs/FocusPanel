@@ -2177,8 +2177,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         Func<bool> operation =
             action switch
             {
-                WindowsShellAction.SoundOutput =>
-                    _systemStatus.OpenSoundOutput,
                 WindowsShellAction.ScreenSnipping =>
                     _systemStatus.OpenScreenSnipping,
                 WindowsShellAction.ProjectDisplay =>

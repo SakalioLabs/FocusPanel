@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">声音搜索只进入 Panel 自有音频详情</title>
+  <desc id="desc">统一搜索中的声音输出查询直接进入 FocusPanel 的主音量、静音与逐应用混音器，不发送 Windows 快捷键。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0e1726"/><stop offset="1" stop-color="#263950"/></linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#273d57"/><stop offset="1" stop-color="#17263a"/></linearGradient>
+  </defs>
+  <rect width="1200" height="560" rx="36" fill="url(#bg)"/>
+  <text x="50" y="64" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="28" font-weight="700">声音控制留在 Panel，不再跳回 Windows 浮层</text>
+  <text x="50" y="94" fill="#9db5cf" font-family="Segoe UI, Microsoft YaHei" font-size="15">0.11.63 · 一个搜索结果 · 主音量 + 静音 + 逐应用混音</text>
+
+  <rect x="42" y="128" width="430" height="382" rx="25" fill="url(#card)" stroke="#4a6481"/>
+  <text x="72" y="170" fill="#eaf2fc" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="600">统一搜索</text>
+  <rect x="68" y="194" width="378" height="54" rx="15" fill="#102034" stroke="#4f6f91"/>
+  <text x="92" y="228" fill="#f3f7fc" font-family="Segoe UI, Microsoft YaHei" font-size="17">声音输出</text>
+  <rect x="68" y="270" width="378" height="92" rx="16" fill="#315374" stroke="#65a4d7"/>
+  <circle cx="107" cy="316" r="22" fill="#3b82f6"/>
+  <path d="M99 310h8l10-8v28l-10-8h-8z" fill="#fff"/>
+  <text x="145" y="307" fill="#f6f9ff" font-family="Segoe UI, Microsoft YaHei" font-size="17" font-weight="600">声音与应用音量</text>
+  <text x="145" y="332" fill="#bdd5ec" font-family="Segoe UI, Microsoft YaHei" font-size="13">Panel 状态详情 · 唯一结果</text>
+  <rect x="68" y="386" width="378" height="68" rx="14" fill="#183c46"/>
+  <text x="257" y="414" text-anchor="middle" fill="#87e2c6" font-family="Segoe UI, Microsoft YaHei" font-size="14">不发送 Win+Ctrl+V</text>
+  <text x="257" y="436" text-anchor="middle" fill="#6ecdb1" font-family="Segoe UI, Microsoft YaHei" font-size="12">不出现第二个 Shell 搜索结果</text>
+
+  <path d="M492 318h92" stroke="#79dbc0" stroke-width="3"/><path d="m572 310 13 8-13 8" fill="none" stroke="#79dbc0" stroke-width="3"/>
+
+  <rect x="606" y="128" width="552" height="382" rx="25" fill="url(#card)" stroke="#4a6481"/>
+  <text x="636" y="170" fill="#eaf2fc" font-family="Segoe UI, Microsoft YaHei" font-size="20" font-weight="600">声音与应用音量</text>
+  <text x="1128" y="170" text-anchor="end" fill="#82dfc4" font-family="Segoe UI, Microsoft YaHei" font-size="13">Panel 原生</text>
+  <text x="638" y="210" fill="#afc5db" font-family="Segoe UI, Microsoft YaHei" font-size="14">主音量</text>
+  <rect x="638" y="226" width="360" height="8" rx="4" fill="#324b66"/><rect x="638" y="226" width="252" height="8" rx="4" fill="#60a5fa"/><circle cx="890" cy="230" r="12" fill="#dbeafe"/>
+  <rect x="1018" y="207" width="104" height="46" rx="13" fill="#28435e"/><text x="1070" y="235" text-anchor="middle" fill="#e9f3fc" font-family="Segoe UI, Microsoft YaHei" font-size="14">静音</text>
+  <text x="638" y="286" fill="#afc5db" font-family="Segoe UI, Microsoft YaHei" font-size="14">逐应用混音</text>
+  <g font-family="Segoe UI, Microsoft YaHei" font-size="14">
+    <rect x="638" y="304" width="484" height="62" rx="14" fill="#223850"/><circle cx="670" cy="335" r="17" fill="#60a5fa"/><text x="700" y="340" fill="#eef5fc">浏览器</text><rect x="820" y="331" width="240" height="7" rx="4" fill="#3b536b"/><rect x="820" y="331" width="168" height="7" rx="4" fill="#74b7ed"/><text x="1092" y="340" text-anchor="end" fill="#b9cee1">70%</text>
+    <rect x="638" y="378" width="484" height="62" rx="14" fill="#223850"/><circle cx="670" cy="409" r="17" fill="#a78bfa"/><text x="700" y="414" fill="#eef5fc">音乐</text><rect x="820" y="405" width="240" height="7" rx="4" fill="#3b536b"/><rect x="820" y="405" width="216" height="7" rx="4" fill="#a78bfa"/><text x="1092" y="414" text-anchor="end" fill="#b9cee1">90%</text>
+  </g>
+  <text x="880" y="476" text-anchor="middle" fill="#8ddfc8" font-family="Segoe UI, Microsoft YaHei" font-size="13">无需恢复原生任务栏，也不离开当前侧栏</text>
+</svg>

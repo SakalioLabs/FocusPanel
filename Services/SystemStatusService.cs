@@ -493,10 +493,6 @@ public sealed class SystemStatusService : ISystemStatusService
             WindowsShellAction
                 .VirtualDesktopClose);
 
-    public bool OpenSoundOutput() =>
-        TrySendWindowsShortcut(
-            WindowsShellAction.SoundOutput);
-
     public bool OpenScreenSnipping() =>
         TrySendWindowsShortcut(
             WindowsShellAction.ScreenSnipping);

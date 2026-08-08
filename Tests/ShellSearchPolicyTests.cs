@@ -476,7 +476,6 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
-    [InlineData("音量混合器", "SoundOutput")]
     [InlineData("截屏", "ScreenSnipping")]
     [InlineData("扩展屏", "ProjectDisplay")]
     [InlineData("无线显示器", "CastDevices")]
@@ -542,6 +541,9 @@ public sealed class ShellSearchPolicyTests
     [InlineData("win a", "Network")]
     [InlineData("快捷设置", "Network")]
     [InlineData("音量混合器", "ApplicationAudio")]
+    [InlineData("声音输出", "ApplicationAudio")]
+    [InlineData("输出设备", "ApplicationAudio")]
+    [InlineData("sound output", "ApplicationAudio")]
     [InlineData("电池", "MediaAndBattery")]
     [InlineData("键盘", "InputMethod")]
     [InlineData("win space", "InputMethod")]

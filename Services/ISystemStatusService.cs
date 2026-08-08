@@ -23,7 +23,6 @@ public interface ISystemStatusService : IDisposable
         VirtualDesktopDirection direction);
     bool CreateVirtualDesktop();
     bool CloseCurrentVirtualDesktop();
-    bool OpenSoundOutput();
     bool OpenScreenSnipping();
     bool OpenProjectDisplay();
     bool OpenCastDevices();

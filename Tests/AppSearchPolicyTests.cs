@@ -18,8 +18,8 @@ public sealed class AppSearchPolicyTests
                 "win a");
         int? separatedPrefixes =
             AppSearchPolicy.GetTextRank(
-                "声音输出",
-                "声音设备 audio device Win Ctrl V",
+                "声音工具",
+                "声音设备 audio device windows audio",
                 "win a");
 
         Assert.NotNull(exactPhrase);

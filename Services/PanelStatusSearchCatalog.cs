@@ -26,9 +26,9 @@ internal static class PanelStatusSearchCatalog
                 "快捷设置 网络 WiFi 无线 蓝牙 蓝牙开关 quick settings network bluetooth Win A"),
             new PanelStatusSearchEntry(
                 StatusCenterDetail.ApplicationAudio,
-                "应用音量",
+                "声音与应用音量",
                 "\uE767",
-                "音量 音量混合器 应用声音 app volume mixer audio"),
+                "声音 声音输出 声音设备 输出设备 音频输出 音量 音量混合器 应用声音 sound output audio device app volume mixer audio"),
             new PanelStatusSearchEntry(
                 StatusCenterDetail.MediaAndBattery,
                 "媒体与电池",
