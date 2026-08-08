@@ -3471,9 +3471,9 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "TaskbarWindowPreview_FullOverviewRequested",
             mainWindow);
-        Assert.Contains(
-            "if (_taskbarWindowPreviewPinned\n"
-            + "            && _taskbarWindowPreview?.IsVisible",
+        Assert.Matches(
+            "if\\s*\\(_taskbarWindowPreviewPinned\\s*"
+            + "&&\\s*_taskbarWindowPreview\\?\\.IsVisible",
             mainWindow);
         Assert.Contains(
             "PopulateTaskbarWindowList(",
