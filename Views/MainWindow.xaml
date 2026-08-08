@@ -2014,6 +2014,24 @@
                         KeyboardNavigation.TabNavigation="Cycle"
                         KeyboardNavigation.DirectionalNavigation="Cycle"
                         AutomationProperties.Name="FocusPanel 侧边任务栏">
+                    <Border.ContextMenu>
+                        <ContextMenu Style="{StaticResource FocusContextMenu}"
+                                     Opened="TransientContextMenu_Opened"
+                                     Closed="TransientContextMenu_Closed">
+                            <MenuItem Header="固定到右上"
+                                      Tag="Top"
+                                      IsCheckable="True"
+                                      Click="PanelVerticalAnchorMenuItem_Click"/>
+                            <MenuItem Header="固定到右中"
+                                      Tag="Center"
+                                      IsCheckable="True"
+                                      Click="PanelVerticalAnchorMenuItem_Click"/>
+                            <MenuItem Header="固定到右下"
+                                      Tag="Bottom"
+                                      IsCheckable="True"
+                                      Click="PanelVerticalAnchorMenuItem_Click"/>
+                        </ContextMenu>
+                    </Border.ContextMenu>
                     <Grid Margin="0,3">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -2258,7 +2276,7 @@
                                           Focusable="False"
                                           ScrollChanged="TaskbarAppsScrollViewer_ScrollChanged">
                                 <ItemsControl x:Name="TaskbarAppsItemsControl"
-                                              ItemsSource="{Binding TaskbarApps}"
+                                              ItemsSource="{Binding CompactTaskbarApps}"
                                               KeyboardNavigation.DirectionalNavigation="Continue">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>

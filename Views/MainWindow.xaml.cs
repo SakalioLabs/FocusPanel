@@ -2126,12 +2126,12 @@ public partial class MainWindow :
         int activeIndex = -1;
         for (int index = 0;
              index < _viewModel
-                 .TaskbarApps.Count;
+                 .CompactTaskbarApps.Count;
              index++)
         {
             if (string.Equals(
                     _viewModel
-                        .TaskbarApps[index]
+                        .CompactTaskbarApps[index]
                         .IdentityKey,
                     identity,
                     StringComparison
@@ -2152,7 +2152,8 @@ public partial class MainWindow :
     {
         if (itemIndex < 0
             || itemIndex
-                >= _viewModel.TaskbarApps.Count
+                >= _viewModel
+                    .CompactTaskbarApps.Count
             || TaskbarAppsItemsControl
                 .ItemContainerGenerator
                 .ContainerFromIndex(
@@ -2214,6 +2215,25 @@ public partial class MainWindow :
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
+
+    private void PanelVerticalAnchorMenuItem_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (sender is not MenuItem
+            {
+                Tag: string anchor
+            })
+        {
+            return;
+        }
+
+        _viewModel.PanelVerticalAnchor =
+            ShellPanelVerticalAnchorPolicy
+                .NormalizeValue(anchor);
+        ScheduleAutoHide();
+    }
+
     private void PowerButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
     private void SystemButton_Click(object sender, RoutedEventArgs e) => ExpandSidebar();
     private void NotificationsButton_Click(object sender, RoutedEventArgs e) => ScheduleAutoHide();
@@ -2236,9 +2256,39 @@ public partial class MainWindow :
     private void TransientContextMenu_Opened(object sender, RoutedEventArgs e)
     {
         if (sender is ContextMenu menu)
+        {
             FocusMenuTheme.Apply(menu);
+            UpdatePanelAnchorMenuChecks(
+                menu);
+        }
 
         BeginTransientInteraction();
+    }
+
+    private void UpdatePanelAnchorMenuChecks(
+        ContextMenu menu)
+    {
+        foreach (MenuItem item
+                 in menu.Items.OfType<MenuItem>())
+        {
+            if (item.Tag is not string anchor
+                || anchor is not (
+                    ShellPanelVerticalAnchorPolicy
+                        .TopValue
+                    or ShellPanelVerticalAnchorPolicy
+                        .CenterValue
+                    or ShellPanelVerticalAnchorPolicy
+                        .BottomValue))
+            {
+                continue;
+            }
+
+            item.IsCheckable = true;
+            item.IsChecked = string.Equals(
+                _viewModel.PanelVerticalAnchor,
+                anchor,
+                StringComparison.Ordinal);
+        }
     }
 
     private void TransientContextMenu_Closed(object sender, RoutedEventArgs e)
@@ -2516,7 +2566,8 @@ public partial class MainWindow :
         }
 
         int currentIndex =
-            _viewModel.TaskbarApps.IndexOf(task);
+            _viewModel.CompactTaskbarApps
+                .IndexOf(task);
         CompactTaskbarScrollState scrollState =
             CompactTaskbarScrollPolicy.GetState(
                 TaskbarAppsScrollViewer.VerticalOffset,
@@ -2536,7 +2587,8 @@ public partial class MainWindow :
             TaskbarKeyboardNavigationPolicy
                 .GetTargetIndex(
                     currentIndex,
-                    _viewModel.TaskbarApps.Count,
+                    _viewModel
+                        .CompactTaskbarApps.Count,
                     action,
                     pageSize);
         if (targetIndex >= 0)
@@ -2554,7 +2606,8 @@ public partial class MainWindow :
     {
         if (itemIndex < 0
             || itemIndex
-                >= _viewModel.TaskbarApps.Count
+                >= _viewModel
+                    .CompactTaskbarApps.Count
             || TaskbarAppsItemsControl
                 .ItemContainerGenerator
                 .ContainerFromIndex(itemIndex)
@@ -4423,14 +4476,16 @@ public partial class MainWindow :
 
         TaskbarAppItem? task =
             binding.SlotIndex
-                < _viewModel.TaskbarApps.Count
-                ? _viewModel.TaskbarApps[
+                < _viewModel
+                    .CompactTaskbarApps.Count
+                ? _viewModel.CompactTaskbarApps[
                     binding.SlotIndex]
                 : null;
         TaskbarSlotInvocationKind invocation =
             TaskbarSlotHotkeyPolicy
                 .GetInvocation(
-                    _viewModel.TaskbarApps.Count,
+                    _viewModel
+                        .CompactTaskbarApps.Count,
                     binding,
                     task?.CanLaunchNewInstance
                         == true);
@@ -4817,7 +4872,7 @@ public partial class MainWindow :
         bool isFirstUnpinned =
             !target.IsPinned
             && ReferenceEquals(
-                _viewModel.TaskbarApps
+                _viewModel.CompactTaskbarApps
                     .FirstOrDefault(item =>
                         !item.IsPinned),
                 target);

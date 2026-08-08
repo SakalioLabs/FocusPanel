@@ -1594,7 +1594,11 @@ public sealed class XamlResourceContractTests
         Assert.True(dockStart >= 0 && onboardingStart > dockStart);
         string compactDock = mainWindow[dockStart..onboardingStart];
         Assert.Equal(7, compactDock.Split("Tag=\"CompactFixedEntry\"").Length - 1);
-        Assert.Equal(1, compactDock.Split("ItemsSource=\"{Binding TaskbarApps}\"").Length - 1);
+        Assert.Equal(
+            1,
+            compactDock.Split(
+                    "ItemsSource=\"{Binding CompactTaskbarApps}\"")
+                .Length - 1);
         int start = compactDock.IndexOf(
             "Click=\"StartButton_Click\"",
             StringComparison.Ordinal);
@@ -1663,6 +1667,9 @@ public sealed class XamlResourceContractTests
             compactDock);
         Assert.Contains(
             "Visibility=\"{Binding HasUnreadPanelNotifications",
+            compactDock);
+        Assert.Contains(
+            "Click=\"PanelVerticalAnchorMenuItem_Click\"",
             compactDock);
         Assert.Contains(
             "Header=\"后台应用与窗口 · Panel\"",
@@ -2911,10 +2918,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Views", "FileOrganizerView.xaml"));
 
         Assert.Equal(
-            6,
+            7,
             Regex.Matches(mainWindow, "Opened=\"TransientContextMenu_Opened\"").Count);
         Assert.Equal(
-            6,
+            7,
             Regex.Matches(mainWindow, "Closed=\"TransientContextMenu_Closed\"").Count);
         Assert.Contains("Mouse.Captured != null", mainWindowCode);
         Assert.Contains("_transientInteractionDepth > 0", mainWindowCode);
@@ -3090,18 +3097,23 @@ public sealed class XamlResourceContractTests
     }
 
     [Fact]
-    public void Shell_UsesOneUnifiedApplicationCollectionInDockAndDrawer()
+    public void Shell_UsesOneAuthoritativeApplicationCollectionWithCompactProjection()
     {
         string root = FindRepositoryRoot();
         string mainWindow = File.ReadAllText(
             Path.Combine(root, "Views", "MainWindow.xaml"));
         string viewModel = File.ReadAllText(
             Path.Combine(root, "ViewModels", "MainViewModel.cs"));
+        string codeBehind = File.ReadAllText(
+            Path.Combine(
+                root,
+                "Views",
+                "MainWindow.xaml.cs"));
 
         Assert.Single(
             Regex.Matches(
                     mainWindow,
-                    "ItemsSource=\"\\{Binding TaskbarApps\\}\"")
+                    "ItemsSource=\"\\{Binding CompactTaskbarApps\\}\"")
                 .Cast<Match>());
         Assert.Single(
             Regex.Matches(
@@ -3114,6 +3126,21 @@ public sealed class XamlResourceContractTests
         Assert.DoesNotContain("ItemsSource=\"{Binding PinnedApps}\"", mainWindow);
         Assert.DoesNotContain("ItemsSource=\"{Binding RunningApps}\"", mainWindow);
         Assert.Contains("ObservableCollection<TaskbarAppItem> TaskbarApps", viewModel);
+        Assert.Contains(
+            "CompactTaskbarApps",
+            viewModel);
+        Assert.Contains(
+            "CompactTaskbarAppPolicy.Select(",
+            viewModel);
+        Assert.DoesNotContain(
+            "_viewModel.TaskbarApps",
+            codeBehind);
+        Assert.Contains(
+            "CompactTaskbarApps.Count",
+            codeBehind);
+        Assert.Contains(
+            "UpdatePanelAnchorMenuChecks(",
+            codeBehind);
         Assert.Contains(
             "BackgroundAppFilterPolicy.Apply(",
             viewModel);
@@ -4433,7 +4460,7 @@ public sealed class XamlResourceContractTests
             "menu.Items.Add(new MenuItem",
             codeBehind);
         Assert.Equal(
-            7,
+            8,
             Regex.Matches(
                 mainWindow,
                 "ContextMenu Style=\"\\{StaticResource FocusContextMenu\\}\"").Count);

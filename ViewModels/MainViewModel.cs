@@ -862,6 +862,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<ShellSearchResult> SearchResults { get; } = new();
     public ObservableCollection<TaskbarAppItem> TaskbarApps { get; } = new();
+    public ObservableCollection<TaskbarAppItem>
+        CompactTaskbarApps
+    {
+        get;
+    } = new();
     public IReadOnlyList<TaskbarAppItem>
         FilteredBackgroundApps =>
             BackgroundAppFilterPolicy.Apply(
@@ -3801,6 +3806,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         TaskbarAppCollectionSynchronizer.Synchronize(
             TaskbarApps,
             _taskbarComposer.Compose(_appCatalog.GetPinned(), _windowTracker.GetSnapshot()));
+        TaskbarAppCollectionSynchronizer.Synchronize(
+            CompactTaskbarApps,
+            CompactTaskbarAppPolicy.Select(
+                TaskbarApps));
         ApplyTaskbarShortcutStates();
         ActiveTaskbarIdentity =
             TaskbarApps.FirstOrDefault(
@@ -3863,12 +3872,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void ApplyTaskbarShortcutStates()
     {
+        foreach (TaskbarAppItem item
+                 in TaskbarApps)
+        {
+            item.SetShortcutState(
+                TaskbarSlotShortcutState.None);
+        }
+
         for (int index = 0;
-             index < TaskbarApps.Count;
+             index < CompactTaskbarApps.Count;
              index++)
         {
             TaskbarAppItem item =
-                TaskbarApps[index];
+                CompactTaskbarApps[index];
             TaskbarSlotShortcutState state =
                 _taskbarSlotHotkeyRegistration
                     .GetShortcutState(index);
