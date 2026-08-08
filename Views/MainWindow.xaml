@@ -818,16 +818,30 @@
                                         </Grid>
                                     </Expander.Header>
                                     <StackPanel Margin="0,8,0,0">
-                                        <TextBlock Text="更新、任务、番茄钟和恢复消息会跨重启保留，不再随 7 秒提示一起消失。"
+                                        <TextBlock Text="更新、任务、番茄钟和恢复消息会跨重启保留；查看详情不会擅自清除未读状态。"
                                                    Margin="4,0,4,6"
                                                    TextWrapping="Wrap"
                                                    Style="{StaticResource FocusSecondaryBodyText}"/>
+                                        <Grid Margin="4,0,4,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding PanelNotificationCountText}"
+                                                       VerticalAlignment="Center"
+                                                       Style="{StaticResource FocusCaptionText}"/>
+                                            <CheckBox Grid.Column="1"
+                                                      MinHeight="40"
+                                                      Content="只看未读"
+                                                      IsChecked="{Binding ShowUnreadPanelNotificationsOnly}"
+                                                      AutomationProperties.Name="只显示未读 Panel 通知"/>
+                                        </Grid>
                                         <TextBlock Text="{Binding NotificationPersistenceError}"
                                                    Margin="4,0,4,10"
                                                    Foreground="{DynamicResource FocusDangerBrush}"
                                                    TextWrapping="Wrap"
                                                    Visibility="{Binding HasNotificationPersistenceError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                        <TextBlock Text="还没有 Panel 通知"
+                                        <TextBlock Text="{Binding PanelNotificationEmptyText}"
                                                    Margin="4,10"
                                                    HorizontalAlignment="Center">
                                             <TextBlock.Style>
@@ -835,16 +849,33 @@
                                                        BasedOn="{StaticResource FocusSecondaryBodyText}">
                                                     <Setter Property="Visibility" Value="Visible"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding HasPanelNotifications}" Value="True">
+                                                        <DataTrigger Binding="{Binding HasFilteredPanelNotifications}" Value="True">
                                                             <Setter Property="Visibility" Value="Collapsed"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                        <ItemsControl ItemsSource="{Binding PanelNotifications}"
-                                                      Visibility="{Binding HasPanelNotifications, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                            <ItemsControl.ItemTemplate>
+                                        <ListBox ItemsSource="{Binding FilteredPanelNotifications}"
+                                                 MaxHeight="360"
+                                                 Style="{StaticResource FocusListBox}"
+                                                 BorderThickness="0"
+                                                 Background="Transparent"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                 VirtualizingPanel.IsVirtualizing="True"
+                                                 VirtualizingPanel.VirtualizationMode="Recycling"
+                                                 Visibility="{Binding HasFilteredPanelNotifications, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                 AutomationProperties.Name="Panel 通知列表">
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="ListBoxItem"
+                                                       BasedOn="{StaticResource FocusListBoxItem}">
+                                                    <Setter Property="Padding" Value="0"/>
+                                                    <Setter Property="Margin" Value="0"/>
+                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+                                            <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="{x:Type services:FocusNotificationItem}">
                                                     <Border Margin="0,0,0,8"
                                                             Padding="12"
@@ -883,21 +914,45 @@
                                                                            Visibility="{Binding IsExpiredAction, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                             </StackPanel>
                                                             <StackPanel Grid.Column="2"
+                                                                        Width="84"
                                                                         HorizontalAlignment="Right">
                                                                 <TextBlock Text="{Binding TimeText}"
+                                                                           HorizontalAlignment="Right"
                                                                            Style="{StaticResource FocusMetaText}"/>
-                                                                <Ellipse Width="7"
-                                                                         Height="7"
-                                                                         Margin="0,8,0,0"
-                                                                         HorizontalAlignment="Right"
-                                                                         Fill="{DynamicResource FocusAccentBrightBrush}"
-                                                                         Visibility="{Binding IsUnread, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                                <StackPanel Margin="0,6,0,0"
+                                                                            Orientation="Horizontal"
+                                                                            HorizontalAlignment="Right">
+                                                                    <Button Width="40"
+                                                                            Height="40"
+                                                                            Margin="0,0,4,0"
+                                                                            Style="{StaticResource FocusIconButton}"
+                                                                            ToolTip="标为已读"
+                                                                            AutomationProperties.Name="标记这条通知为已读"
+                                                                            Command="{Binding DataContext.MarkPanelNotificationReadCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Visibility="{Binding IsUnread, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                        <TextBlock Text="&#xE73E;"
+                                                                                   Style="{StaticResource FocusIconText}"
+                                                                                   FontSize="13"/>
+                                                                    </Button>
+                                                                    <Button Width="40"
+                                                                            Height="40"
+                                                                            Style="{StaticResource FocusIconButton}"
+                                                                            ToolTip="删除通知"
+                                                                            AutomationProperties.Name="从 Panel 历史删除这条通知"
+                                                                            Command="{Binding DataContext.RemovePanelNotificationCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                            CommandParameter="{Binding}">
+                                                                        <TextBlock Text="&#xE711;"
+                                                                                   Style="{StaticResource FocusIconText}"
+                                                                                   FontSize="12"/>
+                                                                    </Button>
+                                                                </StackPanel>
                                                             </StackPanel>
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
                                         <UniformGrid Columns="2"
                                                      Margin="0,2,0,8">
                                             <Button Style="{StaticResource FocusSecondaryButton}"
@@ -911,22 +966,10 @@
                                                     Command="{Binding ClearPanelNotificationsCommand}"
                                                     IsEnabled="{Binding HasPanelNotifications}"/>
                                         </UniformGrid>
-                                        <Border Padding="12"
-                                                CornerRadius="{StaticResource FocusControlCornerRadius}"
-                                                Background="{DynamicResource FocusSurfaceBrush}">
-                                            <StackPanel>
-                                                <TextBlock Text="Windows 系统通知"
-                                                           Style="{StaticResource FocusCardTitleText}"/>
-                                                <TextBlock Margin="0,4,0,8"
-                                                           Text="第三方应用的完整通知需要 Windows 安装包身份、清单能力和你的单独授权；当前版本不伪装成已经接管。"
-                                                           TextWrapping="Wrap"
-                                                           Style="{StaticResource FocusSecondaryBodyText}"/>
-                                                <Button Style="{StaticResource FocusSecondaryButton}"
-                                                        MinHeight="40"
-                                                        Content="打开 Windows 系统通知（兼容入口）"
-                                                        Command="{Binding OpenNotificationsCommand}"/>
-                                            </StackPanel>
-                                        </Border>
+                                        <TextBlock Margin="4,0,4,2"
+                                                   Text="通知的查看、筛选、已读、删除和历史保存全部在 Panel 内完成，不会唤起 Windows 任务栏或通知中心。"
+                                                   TextWrapping="Wrap"
+                                                   Style="{StaticResource FocusMetaText}"/>
                                     </StackPanel>
                                 </Expander>
                                 <Expander x:Name="NetworkDetailsExpander"
@@ -1726,8 +1769,6 @@
                                         <MenuItem Header="文件资源管理器"
                                                   Command="{Binding PlacementTarget.DataContext.OpenManagementToolCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{x:Static services:SystemManagementTool.FileExplorer}"/>
-                                        <MenuItem Header="小组件"
-                                                  Command="{Binding PlacementTarget.DataContext.OpenWidgetsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                         <MenuItem Header="Panel 运行…"
                                                   Click="OpenPanelRunMenuItem_Click"/>
                                         <Separator/>

@@ -59,6 +59,36 @@ public sealed class FocusNotificationCenterTests
     }
 
     [Fact]
+    public void MarkRead_ChangesOnlyTheRequestedNotification()
+    {
+        var center = CreateCenter();
+        center.Add(Create("first", "第一条"));
+        center.Add(Create("second", "第二条"));
+
+        center.MarkRead(center.Items[1]);
+
+        Assert.False(center.Items[1].IsUnread);
+        Assert.True(center.Items[0].IsUnread);
+        Assert.Equal(1, center.UnreadCount);
+    }
+
+    [Fact]
+    public void Remove_DeletesOneItemAndKeepsUnreadCountConsistent()
+    {
+        var center = CreateCenter();
+        center.Add(Create("first", "第一条"));
+        center.Add(Create("second", "第二条"));
+        FocusNotificationItem removed = center.Items[0];
+
+        center.Remove(removed);
+
+        Assert.Equal("first", Assert.Single(center.Items).Key);
+        Assert.Equal(1, center.UnreadCount);
+        center.Remove(removed);
+        Assert.Equal(1, center.UnreadCount);
+    }
+
+    [Fact]
     public void Invoke_MarksItemReadAndRunsItsAction()
     {
         var center = CreateCenter();

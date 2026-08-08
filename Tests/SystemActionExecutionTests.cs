@@ -95,7 +95,7 @@ public sealed class SystemActionExecutionTests
             CountOccurrences(
                 viewModel,
                 "await RunSystemActionAsync(")
-            >= 15);
+            >= 13);
         Assert.Contains(
             "await _systemActions.ExecuteAsync(",
             viewModel);
@@ -110,6 +110,12 @@ public sealed class SystemActionExecutionTests
             viewModel);
         Assert.DoesNotContain(
             "_systemStatus.OpenQuickSettings()",
+            viewModel);
+        Assert.DoesNotContain(
+            "OpenNotifications",
+            viewModel);
+        Assert.DoesNotContain(
+            "OpenWidgets",
             viewModel);
         Assert.DoesNotContain(
             "_systemStatus.OpenManagementTool(tool)",

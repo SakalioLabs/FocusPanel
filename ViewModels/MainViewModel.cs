@@ -268,6 +268,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(
+        nameof(FilteredPanelNotifications))]
+    [NotifyPropertyChangedFor(
+        nameof(HasFilteredPanelNotifications))]
+    [NotifyPropertyChangedFor(
+        nameof(PanelNotificationEmptyText))]
+    private bool showUnreadPanelNotificationsOnly;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
         nameof(IsDashboardWorkspaceActive))]
     [NotifyPropertyChangedFor(
         nameof(IsFilesWorkspaceActive))]
@@ -813,6 +822,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _notificationCenter.Items;
     public bool HasPanelNotifications =>
         PanelNotifications.Count > 0;
+    public IReadOnlyList<FocusNotificationItem>
+        FilteredPanelNotifications =>
+            PanelNotificationFilterPolicy.Apply(
+                PanelNotifications,
+                ShowUnreadPanelNotificationsOnly);
+    public bool HasFilteredPanelNotifications =>
+        !ShowUnreadPanelNotificationsOnly
+            ? HasPanelNotifications
+            : HasUnreadPanelNotifications;
+    public string PanelNotificationEmptyText =>
+        ShowUnreadPanelNotificationsOnly
+            ? "没有未读通知"
+            : "还没有 Panel 通知";
+    public string PanelNotificationCountText =>
+        $"共 {PanelNotifications.Count} 条 · "
+        + $"{UnreadPanelNotificationCount} 条未读";
     public bool HasUnreadPanelNotifications =>
         _notificationCenter.UnreadCount > 0;
     public int UnreadPanelNotificationCount =>
@@ -2149,10 +2174,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         Func<bool> operation =
             action switch
             {
-                WindowsShellAction.Notifications =>
-                    _systemStatus.OpenNotifications,
-                WindowsShellAction.Widgets =>
-                    _systemStatus.OpenWidgets,
                 WindowsShellAction.SoundOutput =>
                     _systemStatus.OpenSoundOutput,
                 WindowsShellAction.ScreenSnipping =>
@@ -3088,26 +3109,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
             + "请进入“设置 > 隐私和安全性 > 位置”。");
 
     [RelayCommand]
-    private async Task OpenNotifications()
-        => await RunSystemActionAsync(
-            _systemStatus.OpenNotifications,
-            "无法唤起 Windows 通知中心，请使用 Win+N。");
-
-    [RelayCommand]
     private void MarkAllPanelNotificationsRead() =>
         _notificationCenter.MarkAllRead();
+
+    [RelayCommand]
+    private void MarkPanelNotificationRead(
+        FocusNotificationItem? notification) =>
+            _notificationCenter.MarkRead(notification);
 
     [RelayCommand]
     private void ClearPanelNotifications() =>
         _notificationCenter.Clear();
 
     [RelayCommand]
+    private void RemovePanelNotification(
+        FocusNotificationItem? notification) =>
+            _notificationCenter.Remove(notification);
+
+    [RelayCommand]
     private void InvokePanelNotification(
         FocusNotificationItem? notification) =>
         _notificationCenter.Invoke(notification);
-
-    internal void MarkPanelNotificationsRead() =>
-        _notificationCenter.MarkAllRead();
 
     private void NotificationCenter_Changed(
         object? sender,
@@ -3117,6 +3139,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasUnreadPanelNotifications));
         OnPropertyChanged(nameof(UnreadPanelNotificationCount));
         OnPropertyChanged(nameof(PanelNotificationBadgeText));
+        OnPropertyChanged(nameof(FilteredPanelNotifications));
+        OnPropertyChanged(nameof(HasFilteredPanelNotifications));
+        OnPropertyChanged(nameof(PanelNotificationEmptyText));
+        OnPropertyChanged(nameof(PanelNotificationCountText));
         OnPropertyChanged(nameof(StatusCenterSummary));
         OnPropertyChanged(nameof(StatusCenterAutomationName));
     }
@@ -3216,12 +3242,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _systemStatus
                 .CloseCurrentVirtualDesktop,
             "无法关闭当前虚拟桌面，请使用 Win+Ctrl+F4。");
-
-    [RelayCommand]
-    private async Task OpenWidgets()
-        => await RunSystemActionAsync(
-            _systemStatus.OpenWidgets,
-            "无法唤起 Windows 小组件，请使用 Win+W。");
 
     [RelayCommand]
     private async Task OpenManagementTool(

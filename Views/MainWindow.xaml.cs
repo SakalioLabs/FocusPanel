@@ -1665,8 +1665,6 @@ public partial class MainWindow :
                 PanelNotificationsDetailsExpander,
             _ => null
         };
-        if (detail == StatusCenterDetail.PanelNotifications)
-            _viewModel.MarkPanelNotificationsRead();
         if (!bringIntoView || target == null)
             return;
 

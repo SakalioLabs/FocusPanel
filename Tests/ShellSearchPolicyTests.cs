@@ -451,8 +451,6 @@ public sealed class ShellSearchPolicyTests
     }
 
     [Theory]
-    [InlineData("消息", "Notifications")]
-    [InlineData("天气", "Widgets")]
     [InlineData("音量混合器", "SoundOutput")]
     [InlineData("截屏", "ScreenSnipping")]
     [InlineData("扩展屏", "ProjectDisplay")]
@@ -492,6 +490,22 @@ public sealed class ShellSearchPolicyTests
             result.ManagementTool);
         Assert.False(
             result.CanTogglePin);
+    }
+
+    [Theory]
+    [InlineData("消息")]
+    [InlineData("通知中心")]
+    [InlineData("天气")]
+    [InlineData("小组件")]
+    public void Compose_RemovedTaskbarSurfacesDoNotReturnShellActions(
+        string query)
+    {
+        Assert.DoesNotContain(
+            ShellSearchPolicy.Compose(
+                Array.Empty<AppLaunchItem>(),
+                Array.Empty<WindowTaskItem>(),
+                query),
+            item => item.ShellAction.HasValue);
     }
 
     [Theory]

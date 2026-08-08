@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="620" viewBox="0 0 1180 620" role="img" aria-labelledby="title desc">
+  <title id="title">FocusPanel 原生通知历史</title>
+  <desc id="desc">紧凑栏未读徽标连接到 Panel 内的通知列表，可筛选未读、逐条已读或删除，不再调用 Windows 通知中心和小组件。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#121722"/>
+      <stop offset="1" stop-color="#232b3a"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#35435b" stop-opacity=".92"/>
+      <stop offset="1" stop-color="#202938" stop-opacity=".82"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <rect width="1180" height="620" fill="url(#bg)"/>
+  <circle cx="174" cy="88" r="150" fill="#49a7ff" opacity=".11"/>
+  <circle cx="1026" cy="522" r="210" fill="#826bff" opacity=".10"/>
+
+  <text x="64" y="66" fill="#f5f7fb" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="30" font-weight="650">通知留在 Panel，未读由你决定</text>
+  <text x="64" y="98" fill="#aeb9cb" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="16">不发送 Win+N / Win+W · 不唤起隐藏的任务栏表面</text>
+
+  <g filter="url(#shadow)">
+    <rect x="62" y="132" width="92" height="420" rx="30" fill="url(#glass)" stroke="#687891" stroke-opacity=".5"/>
+    <g fill="#dbe6f7" font-family="Segoe Fluent Icons" font-size="22" text-anchor="middle">
+      <text x="108" y="184">&#xE71D;</text>
+      <text x="108" y="242">&#xE721;</text>
+      <text x="108" y="300">&#xE8B7;</text>
+      <text x="108" y="358">&#xE8A5;</text>
+      <text x="108" y="416">&#xE767;</text>
+      <text x="108" y="500">&#xE823;</text>
+    </g>
+    <rect x="128" y="383" width="28" height="22" rx="11" fill="#42a5ff"/>
+    <text x="142" y="399" fill="#08121f" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" text-anchor="middle">3</text>
+    <rect x="67" y="390" width="4" height="32" rx="2" fill="#60b7ff"/>
+  </g>
+
+  <path d="M174 401 C224 401 224 340 274 340" fill="none" stroke="#62b8ff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M264 333 L277 340 L264 347" fill="none" stroke="#62b8ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="278" y="132" width="642" height="420" rx="26" fill="url(#glass)" stroke="#687891" stroke-opacity=".5"/>
+    <text x="314" y="180" fill="#f7f9fc" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="24" font-weight="650">Panel 通知</text>
+    <text x="314" y="208" fill="#9eacc1" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="14">共 12 条 · 3 条未读</text>
+    <rect x="758" y="161" width="126" height="42" rx="12" fill="#293749" stroke="#60748f"/>
+    <rect x="774" y="174" width="16" height="16" rx="4" fill="#48aaff"/>
+    <path d="M778 182 l4 4 7-9" fill="none" stroke="#071321" stroke-width="2" stroke-linecap="round"/>
+    <text x="805" y="188" fill="#e8eef8" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="14">只看未读</text>
+
+    <g transform="translate(310 232)">
+      <rect width="574" height="82" rx="16" fill="#263243" stroke="#50627b"/>
+      <circle cx="30" cy="28" r="17" fill="#174f78"/>
+      <text x="30" y="34" fill="#70c1ff" font-family="Segoe Fluent Icons" font-size="15" text-anchor="middle">&#xE7E7;</text>
+      <text x="58" y="28" fill="#f2f6fc" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="15" font-weight="600">发现新版本</text>
+      <text x="58" y="54" fill="#aab7ca" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="13">0.11.54 已准备好，可以安全更新</text>
+      <text x="462" y="27" fill="#8998ae" font-family="Segoe UI, sans-serif" font-size="12">10:24</text>
+      <rect x="454" y="39" width="48" height="30" rx="10" fill="#31445b"/>
+      <text x="478" y="59" fill="#72c4ff" font-family="Segoe Fluent Icons" font-size="13" text-anchor="middle">&#xE73E;</text>
+      <rect x="510" y="39" width="48" height="30" rx="10" fill="#31445b"/>
+      <text x="534" y="59" fill="#d8e2f0" font-family="Segoe Fluent Icons" font-size="12" text-anchor="middle">&#xE711;</text>
+    </g>
+
+    <g transform="translate(310 326)">
+      <rect width="574" height="82" rx="16" fill="#263243" stroke="#50627b"/>
+      <circle cx="30" cy="28" r="17" fill="#245b45"/>
+      <text x="30" y="34" fill="#7be2af" font-family="Segoe Fluent Icons" font-size="15" text-anchor="middle">&#xE73E;</text>
+      <text x="58" y="28" fill="#f2f6fc" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="15" font-weight="600">任务已完成</text>
+      <text x="58" y="54" fill="#aab7ca" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="13">整理本周资料</text>
+      <text x="462" y="27" fill="#8998ae" font-family="Segoe UI, sans-serif" font-size="12">09:52</text>
+      <rect x="510" y="39" width="48" height="30" rx="10" fill="#31445b"/>
+      <text x="534" y="59" fill="#d8e2f0" font-family="Segoe Fluent Icons" font-size="12" text-anchor="middle">&#xE711;</text>
+    </g>
+
+    <g transform="translate(310 420)">
+      <rect width="574" height="82" rx="16" fill="#263243" stroke="#50627b"/>
+      <circle cx="30" cy="28" r="17" fill="#5b4626"/>
+      <text x="30" y="34" fill="#ffd17b" font-family="Segoe Fluent Icons" font-size="15" text-anchor="middle">&#xE823;</text>
+      <text x="58" y="28" fill="#f2f6fc" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="15" font-weight="600">专注完成</text>
+      <text x="58" y="54" fill="#aab7ca" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="13">25 分钟专注已记录</text>
+      <text x="462" y="27" fill="#8998ae" font-family="Segoe UI, sans-serif" font-size="12">08:40</text>
+      <rect x="454" y="39" width="48" height="30" rx="10" fill="#31445b"/>
+      <text x="478" y="59" fill="#72c4ff" font-family="Segoe Fluent Icons" font-size="13" text-anchor="middle">&#xE73E;</text>
+      <rect x="510" y="39" width="48" height="30" rx="10" fill="#31445b"/>
+      <text x="534" y="59" fill="#d8e2f0" font-family="Segoe Fluent Icons" font-size="12" text-anchor="middle">&#xE711;</text>
+    </g>
+  </g>
+
+  <g transform="translate(960 166)">
+    <rect width="158" height="74" rx="18" fill="#2b303b" stroke="#5a6678"/>
+    <text x="79" y="31" fill="#c8d2e1" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="14" text-anchor="middle">Windows 通知</text>
+    <text x="79" y="53" fill="#8996aa" font-family="Segoe UI, sans-serif" font-size="12" text-anchor="middle">Win + N</text>
+    <path d="M18 14 L140 60" stroke="#ff6b78" stroke-width="4" stroke-linecap="round"/>
+    <path d="M140 14 L18 60" stroke="#ff6b78" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(960 262)">
+    <rect width="158" height="74" rx="18" fill="#2b303b" stroke="#5a6678"/>
+    <text x="79" y="31" fill="#c8d2e1" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="14" text-anchor="middle">Windows 小组件</text>
+    <text x="79" y="53" fill="#8996aa" font-family="Segoe UI, sans-serif" font-size="12" text-anchor="middle">Win + W</text>
+    <path d="M18 14 L140 60" stroke="#ff6b78" stroke-width="4" stroke-linecap="round"/>
+    <path d="M140 14 L18 60" stroke="#ff6b78" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="1039" y="384" fill="#8fa1b8" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="14" text-anchor="middle">不再从 Panel 调用</text>
+  <text x="1039" y="408" fill="#8fa1b8" font-family="Segoe UI, Microsoft YaHei UI, sans-serif" font-size="14" text-anchor="middle">任务栏承载的 Shell 表面</text>
+</svg>

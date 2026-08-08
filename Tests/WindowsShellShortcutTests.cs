@@ -11,8 +11,6 @@ public sealed class WindowsShellShortcutTests
     {
         var expected = new (WindowsShellAction Action, ushort Key)[]
         {
-            (WindowsShellAction.Notifications, 0x4E),
-            (WindowsShellAction.Widgets, 0x57),
             (WindowsShellAction.ProjectDisplay, 0x50),
             (WindowsShellAction.CastDevices, 0x4B),
             (WindowsShellAction.ShowDesktop, 0x44)

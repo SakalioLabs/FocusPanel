@@ -5,12 +5,10 @@ namespace FocusPanel.Services;
 
 internal enum WindowsShellAction
 {
-    Notifications,
     VirtualDesktopPrevious,
     VirtualDesktopNext,
     VirtualDesktopCreate,
     VirtualDesktopClose,
-    Widgets,
     SoundOutput,
     ScreenSnipping,
     ProjectDisplay,
@@ -88,7 +86,6 @@ internal static class WindowsShellShortcutMap
 {
     internal static WindowsShellShortcut Get(WindowsShellAction action) => action switch
     {
-        WindowsShellAction.Notifications => new(0x4E, true),
         WindowsShellAction.VirtualDesktopPrevious =>
             new(0x25, true, UsesControl: true),
         WindowsShellAction.VirtualDesktopNext =>
@@ -97,7 +94,6 @@ internal static class WindowsShellShortcutMap
             new(0x44, true, UsesControl: true),
         WindowsShellAction.VirtualDesktopClose =>
             new(0x73, true, UsesControl: true),
-        WindowsShellAction.Widgets => new(0x57, true),
         WindowsShellAction.SoundOutput =>
             new(0x56, true, UsesControl: true),
         WindowsShellAction.ScreenSnipping =>

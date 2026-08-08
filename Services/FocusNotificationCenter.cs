@@ -433,6 +433,20 @@ public sealed class FocusNotificationCenter
         OnChangedAndQueueSave();
     }
 
+    public void MarkRead(FocusNotificationItem? item)
+    {
+        if (item == null
+            || !_items.Contains(item)
+            || !item.IsUnread)
+        {
+            return;
+        }
+
+        item.IsUnread = false;
+        UnreadCount--;
+        OnChangedAndQueueSave();
+    }
+
     public void Invoke(FocusNotificationItem? item)
     {
         if (item == null || !_items.Contains(item))
@@ -455,6 +469,17 @@ public sealed class FocusNotificationCenter
 
         _items.Clear();
         UnreadCount = 0;
+        OnChangedAndQueueSave();
+    }
+
+    public void Remove(FocusNotificationItem? item)
+    {
+        if (item == null || !_items.Contains(item))
+            return;
+
+        if (item.IsUnread)
+            UnreadCount--;
+        _items.Remove(item);
         OnChangedAndQueueSave();
     }
 

@@ -734,7 +734,15 @@ public sealed class XamlResourceContractTests
         Assert.Contains("MarkAllPanelNotificationsReadCommand", mainWindow);
         Assert.Contains("ClearPanelNotificationsCommand", mainWindow);
         Assert.Contains("InvokePanelNotificationCommand", mainWindow);
-        Assert.Contains("打开 Windows 系统通知（兼容入口）", mainWindow);
+        Assert.Contains("FilteredPanelNotifications", mainWindow);
+        Assert.Contains("ShowUnreadPanelNotificationsOnly", mainWindow);
+        Assert.Contains("MarkPanelNotificationReadCommand", mainWindow);
+        Assert.Contains("RemovePanelNotificationCommand", mainWindow);
+        Assert.Contains("MaxHeight=\"360\"", mainWindow);
+        Assert.Contains("VirtualizingPanel.VirtualizationMode=\"Recycling\"", mainWindow);
+        Assert.Contains("不会唤起 Windows 任务栏或通知中心", mainWindow);
+        Assert.DoesNotContain("OpenNotificationsCommand", mainWindow);
+        Assert.DoesNotContain("Win+N", mainWindow);
         Assert.DoesNotContain("Content=\"Windows 通知中心\"", mainWindow);
         Assert.DoesNotContain("OpenInputSwitcherCommand", mainWindow);
         Assert.Contains(
@@ -784,6 +792,9 @@ public sealed class XamlResourceContractTests
             mainWindow);
         Assert.Contains(
             "TogglePanelNotificationsFromCompactEntry",
+            mainWindowCode);
+        Assert.DoesNotContain(
+            "MarkPanelNotificationsRead",
             mainWindowCode);
         Assert.DoesNotContain(
             "MouseRightButtonUp=\"VolumeButton_MouseRightButtonUp\"",
@@ -1655,6 +1666,10 @@ public sealed class XamlResourceContractTests
             Path.Combine(root, "Services", "ISystemStatusService.cs"));
         Assert.DoesNotContain("OpenNotificationOverflow", systemStatus);
         Assert.DoesNotContain("OpenNotificationOverflow", statusContract);
+        Assert.DoesNotContain("OpenNotifications", systemStatus);
+        Assert.DoesNotContain("OpenNotifications", statusContract);
+        Assert.DoesNotContain("OpenWidgets", systemStatus);
+        Assert.DoesNotContain("OpenWidgets", statusContract);
         Assert.DoesNotContain("System.Windows.Automation", systemStatus);
         Assert.DoesNotContain(
             "DesktopWindowContentBridge",
@@ -2888,7 +2903,7 @@ public sealed class XamlResourceContractTests
         Assert.Contains(
             "WorkspaceRequested?.Invoke(\"Status\")",
             viewModel);
-        Assert.Contains("OpenWidgetsCommand", mainWindow);
+        Assert.DoesNotContain("OpenWidgetsCommand", mainWindow);
         Assert.Contains(
             "Click=\"OpenPanelRunMenuItem_Click\"",
             mainWindow);

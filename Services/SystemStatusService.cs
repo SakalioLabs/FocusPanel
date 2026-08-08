@@ -466,8 +466,6 @@ public sealed class SystemStatusService : ISystemStatusService
         }
     }
 
-    public bool OpenNotifications() => TrySendWindowsShortcut(WindowsShellAction.Notifications);
-
     public bool SwitchVirtualDesktop(
         VirtualDesktopDirection direction) =>
         TrySendWindowsShortcut(
@@ -487,8 +485,6 @@ public sealed class SystemStatusService : ISystemStatusService
         TrySendWindowsShortcut(
             WindowsShellAction
                 .VirtualDesktopClose);
-
-    public bool OpenWidgets() => TrySendWindowsShortcut(WindowsShellAction.Widgets);
 
     public bool OpenSoundOutput() =>
         TrySendWindowsShortcut(

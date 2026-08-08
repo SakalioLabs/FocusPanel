@@ -15,16 +15,6 @@ internal static class WindowsShellSearchCatalog
         new[]
         {
             new WindowsShellSearchEntry(
-                WindowsShellAction.Notifications,
-                "通知中心",
-                "\uE7F4",
-                "通知 消息 notification center Win N"),
-            new WindowsShellSearchEntry(
-                WindowsShellAction.Widgets,
-                "小组件",
-                "\uECA5",
-                "资讯 天气 widgets Win W"),
-            new WindowsShellSearchEntry(
                 WindowsShellAction.SoundOutput,
                 "声音输出",
                 "\uE767",
