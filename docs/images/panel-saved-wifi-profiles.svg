@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13243e"/><stop offset=".52" stop-color="#3d2e4f"/><stop offset="1" stop-color="#123e45"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f8ff" stop-opacity=".2"/><stop offset="1" stop-color="#c1d1ed" stop-opacity=".1"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="28" flood-color="#000" flood-opacity=".34"/></filter>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/><circle cx="220" cy="130" r="210" fill="#337fff" opacity=".14"/><circle cx="1010" cy="610" r="270" fill="#3be0b9" opacity=".1"/>
+  <g font-family="Segoe UI, sans-serif">
+    <text x="72" y="228" fill="#fff" font-size="39" font-weight="680">不在附近，也能管理</text>
+    <text x="74" y="279" fill="#bdc9dc" font-size="18">已保存 Wi‑Fi 不再藏进系统设置</text>
+    <rect x="74" y="326" width="430" height="188" rx="22" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".12"/>
+    <text x="104" y="368" fill="#80b9ff" font-size="16" font-weight="650">两段稳定容量</text>
+    <text x="104" y="407" fill="#d6dfed" font-size="15">附近网络　最多 10 项</text>
+    <text x="104" y="439" fill="#d6dfed" font-size="15">离线配置　另外 6 项</text>
+    <text x="104" y="471" fill="#d6dfed" font-size="15">组织策略　明确只读</text>
+  </g>
+  <g font-family="Segoe UI, sans-serif" filter="url(#shadow)">
+    <rect x="565" y="28" width="585" height="664" rx="28" fill="url(#glass)" stroke="#fff" stroke-opacity=".18"/>
+    <text x="605" y="78" fill="#f8faff" font-size="26" font-weight="650">附近 Wi‑Fi</text><text x="605" y="109" fill="#c6d1e5" font-size="15">3 个附近网络 · 2 个已保存网络当前不在附近</text>
+    <rect x="600" y="140" width="515" height="86" rx="16" fill="#fff" fill-opacity=".1"/>
+    <text x="626" y="173" fill="#fff" font-size="18" font-weight="600">Studio-5G</text><text x="626" y="200" fill="#77e2b7" font-size="14">已连接 · 92%</text><rect x="1002" y="161" width="88" height="44" rx="12" fill="#378bff"/><text x="1030" y="189" fill="#fff" font-size="14">断开</text>
+    <rect x="600" y="238" width="515" height="86" rx="16" fill="#fff" fill-opacity=".065"/>
+    <text x="626" y="271" fill="#fff" font-size="18" font-weight="600">FocusLab</text><text x="626" y="298" fill="#b8c5d8" font-size="14">已保存 · 安全网络 · 81%</text><rect x="1002" y="259" width="88" height="44" rx="12" fill="#378bff"/><text x="1030" y="287" fill="#fff" font-size="14">连接</text>
+    <line x1="620" y1="351" x2="1095" y2="351" stroke="#fff" stroke-opacity=".14"/>
+    <text x="605" y="385" fill="#aebbd0" font-size="14" font-weight="600">已保存 · 当前不在附近</text>
+    <rect x="600" y="404" width="515" height="86" rx="16" fill="#fff" fill-opacity=".055"/>
+    <text x="626" y="437" fill="#fff" font-size="18" font-weight="600">Home Backup</text><text x="626" y="464" fill="#9eacc2" font-size="14">已保存 · 当前不在附近　　离线</text><rect x="1002" y="425" width="88" height="44" rx="12" fill="#fff" fill-opacity=".1"/><text x="1030" y="453" fill="#f2f6ff" font-size="14">忘记</text>
+    <rect x="600" y="502" width="515" height="86" rx="16" fill="#fff" fill-opacity=".055"/>
+    <text x="626" y="535" fill="#fff" font-size="18" font-weight="600">Corporate Wi‑Fi</text><text x="626" y="562" fill="#d1b98e" font-size="14">组织管理 · 当前不在附近　　离线</text><rect x="1002" y="523" width="88" height="44" rx="12" fill="#fff" fill-opacity=".055"/><text x="1022" y="551" fill="#8794a8" font-size="14">保持只读</text>
+    <text x="605" y="632" fill="#bdc9dc" font-size="14">配置来自 Windows WLAN 服务，不读取或导出 Wi‑Fi 密钥。</text>
+  </g>
+</svg>

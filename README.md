@@ -1,5 +1,9 @@
 # FocusPanel
 
+> 0.11.47 让网络管理超出原生任务栏的“附近列表”：Panel 现在通过微软公开的 [`WlanGetProfileList`](https://learn.microsoft.com/windows/win32/api/wlanapi/nf-wlanapi-wlangetprofilelist) 枚举每张无线网卡的全部已保存配置，即使某个网络当前不在附近也会在列表末尾显示“离线 / 已保存·当前不在附近”，可直接忘记。附近网络仍独立保留最多 10 项，离线配置另保留最多 6 项，不会互相挤占；同名配置按网卡隔离，组策略下发的配置明确显示“组织管理”并禁用删除。
+
+![Panel 同时管理附近网络与离线已保存配置](docs/images/panel-saved-wifi-profiles.svg)
+
 > 0.11.46 让 Wi‑Fi 管理形成完整闭环：当前网络不再是不可点击的“当前”，可直接从 Panel 断开；每个已保存网络都提供明确的“忘记”动作。忘记当前网络会先二次确认，再按“断开 → 确认断开 → 删除 Windows 配置 → 确认配置消失”的顺序执行。全部操作使用微软公开的 [`WlanDisconnect`](https://learn.microsoft.com/windows/win32/api/wlanapi/nf-wlanapi-wlandisconnect) 与 [`WlanDeleteProfile`](https://learn.microsoft.com/windows/win32/api/wlanapi/nf-wlanapi-wlandeleteprofile)，权限拒绝、无线服务异常和状态未确认不会显示成成功。
 
 ![Panel 内完成 Wi-Fi 连接、断开和忘记网络](docs/images/panel-native-wifi-lifecycle.svg)
@@ -297,7 +301,7 @@ FocusPanel 是面向 Windows 11 的右侧玻璃任务栏与桌面效率工作区
 
 ![状态中心直接切换 Wi-Fi 与蓝牙](docs/images/direct-radio-controls.svg)
 
-- 状态中心可直接查找附近 Wi‑Fi 并连接 Windows 已保存的网络：用户点击“查找网络”后才调用公开 Native Wi‑Fi API，等待扫描完成通知并按“当前连接优先、信号强度、名称”稳定排列，最多显示 10 项，避免网络较多时淹没其他状态控制。点击已保存网络后调用 `WlanConnect`，但只有重新读取到真实 Connected 标记才显示成功；网络离开范围、配置删除、Radio 关闭、WLAN AutoConfig 停止或连接超时都会保留 Panel 并说明原因。未保存网络不会读取或保存密码，也不会自动跳出 Panel；首次凭据仍需用户明确进入 Windows 网络设置保存。
+- 状态中心直接完成 Wi‑Fi 生命周期：用户点击“查找网络”后才扫描，附近网络按“当前连接优先、信号强度、名称”稳定排列并最多显示 10 项；Windows 已保存但当前不在附近的配置另列最多 6 项。已保存网络可连接，当前网络可断开，任意非策略配置可经确认后忘记；首次连接开放网络或 WPA/WPA2/WPA3 Personal 也直接在 Panel 完成。连接、断开和删除都必须重新读取到 Windows 真实状态才显示成功；网络离开、权限拒绝、Radio 关闭、WLAN AutoConfig 停止或超时都会保留列表并说明原因。密码不进入 FocusPanel 数据库、设置或日志，临时字符缓冲区提交后立即清零。
 - Windows 11 24H2 会把附近 Wi‑Fi 列表作为精确位置能力管理；首次扫描可能出现一次系统授权，拒绝时 Panel 显示“打开位置权限”，直达“设置 > 隐私和安全性 > 位置”。依据见微软的 [Wi‑Fi 访问和位置行为变更](https://learn.microsoft.com/en-us/windows/win32/nativewifi/wi-fi-access-location-changes)、[`WlanScan`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlanscan)、[`WlanGetAvailableNetworkList`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlangetavailablenetworklist) 与 [`WlanConnect`](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlanconnect)。FocusPanel 不导出 Wi‑Fi 配置、不读取明文密钥，也不注入 Explorer 网络面板。
 
 ![状态中心附近 Wi-Fi 与已保存网络直连](docs/images/wifi-network-chooser.svg)

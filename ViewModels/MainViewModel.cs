@@ -4544,13 +4544,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     private static string ComposeWifiListStatus(
-        WifiNetworkListResult result) =>
-        result.Status switch
+        WifiNetworkListResult result)
+    {
+        int savedOutOfRange =
+            result.Networks.Count(network =>
+                network.IsSavedOutOfRange);
+        int nearby =
+            result.Networks.Count
+            - savedOutOfRange;
+        return result.Status switch
         {
             WifiNetworkListStatus.Succeeded
-                when result.Networks.Count > 0 =>
-                $"找到 {result.Networks.Count} 个网络；"
+                when nearby > 0
+                    && savedOutOfRange > 0 =>
+                $"{nearby} 个附近网络 · "
+                + $"{savedOutOfRange} 个已保存网络当前不在附近",
+            WifiNetworkListStatus.Succeeded
+                when nearby > 0 =>
+                $"找到 {nearby} 个附近网络；"
                 + "首次密码也可直接在 Panel 输入",
+            WifiNetworkListStatus.Succeeded
+                when savedOutOfRange > 0 =>
+                $"已列出 {savedOutOfRange} 个已保存网络；"
+                + "当前没有可连接的附近网络",
             WifiNetworkListStatus.Succeeded =>
                 "附近暂时没有可显示的 Wi‑Fi",
             WifiNetworkListStatus.AccessDenied =>
@@ -4566,6 +4582,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _ =>
                 "无法读取附近 Wi‑Fi，请检查无线服务后重试"
         };
+    }
 
     private async Task
         RefreshBluetoothDevicesCoreAsync()

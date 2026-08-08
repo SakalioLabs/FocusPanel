@@ -61,6 +61,16 @@ public sealed class WifiNetworkUiContractTests
             ReadRepositoryFile(
                 "Services",
                 "WifiNetworkService.cs"));
+        Assert.Contains(
+            "WlanGetProfileList",
+            ReadRepositoryFile(
+                "Services",
+                "WifiNetworkService.cs"));
+        Assert.Contains(
+            "IsSavedOutOfRange",
+            ReadRepositoryFile(
+                "Services",
+                "WifiNetworkService.cs"));
     }
 
     [Fact]
@@ -117,6 +127,9 @@ public sealed class WifiNetworkUiContractTests
             tests);
         Assert.DoesNotContain(
             "WlanDeleteProfile(",
+            tests);
+        Assert.DoesNotContain(
+            "WlanGetProfileList(",
             tests);
     }
 

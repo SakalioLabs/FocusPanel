@@ -43,8 +43,14 @@ public sealed record WifiNetworkSnapshot(
         WifiNetworkSecurityKind.Wpa2Personal,
     string SsidHex = "",
     uint AuthenticationAlgorithm = 7,
-    uint CipherAlgorithm = 4)
+    uint CipherAlgorithm = 4,
+    bool IsPolicyManaged = false)
 {
+    public bool IsSavedOutOfRange =>
+        HasProfile
+        && !IsConnectable
+        && !IsConnected;
+
     public bool CanConnect =>
         !IsConnected
         && IsConnectable
@@ -53,11 +59,19 @@ public sealed record WifiNetworkSnapshot(
             ProfileName);
 
     public string SignalText =>
-        $"{Math.Min(SignalQuality, 100)}%";
+        IsSavedOutOfRange
+            ? "离线"
+            : $"{Math.Min(SignalQuality, 100)}%";
 
     public string SecurityText =>
         IsConnected
             ? "已连接"
+            : IsPolicyManaged
+                ? IsSavedOutOfRange
+                    ? "组织管理 · 当前不在附近"
+                    : "组织管理"
+            : IsSavedOutOfRange
+                ? "已保存 · 当前不在附近"
             : !IsConnectable
                 ? "暂时不可连接"
             : HasProfile
@@ -109,6 +123,7 @@ public sealed record WifiNetworkSnapshot(
 
     public bool CanForget =>
         HasProfile
+        && !IsPolicyManaged
         && !string.IsNullOrWhiteSpace(ProfileName);
 
     public bool NeedsCredentials =>
@@ -327,7 +342,7 @@ public sealed class WifiNetworkService :
         if (!result.Succeeded)
             return Empty(result.Status);
 
-        WifiNetworkSnapshot[] networks =
+        WifiNetworkSnapshot[] normalized =
             result.Networks
                 .Where(network =>
                     !string.IsNullOrWhiteSpace(
@@ -354,7 +369,17 @@ public sealed class WifiNetworkService :
                         network.DisplayName,
                     StringComparer
                         .CurrentCultureIgnoreCase)
+                .ToArray();
+        WifiNetworkSnapshot[] networks =
+            normalized
+                .Where(network =>
+                    !network.IsSavedOutOfRange)
                 .Take(10)
+                .Concat(
+                    normalized
+                        .Where(network =>
+                            network.IsSavedOutOfRange)
+                        .Take(6))
                 .ToArray();
         return new WifiNetworkListResult(
             WifiNetworkListStatus.Succeeded,
@@ -563,6 +588,13 @@ public sealed class WifiNetworkService :
             CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(network);
+        if (network.IsPolicyManaged)
+        {
+            return ManageResult(
+                WifiNetworkManageStatus.AccessDenied,
+                WifiNetworkManageAction.Forget,
+                network);
+        }
         if (!network.HasProfile
             || string.IsNullOrWhiteSpace(
                 network.ProfileName))
@@ -998,6 +1030,74 @@ public sealed class WifiNetworkService :
     }
 }
 
+internal sealed record WifiSavedProfileObservation(
+    string InterfaceId,
+    string ProfileName,
+    bool IsPolicyManaged);
+
+internal static class WifiSavedProfileComposer
+{
+    internal static void Merge(
+        List<WifiNetworkSnapshot> destination,
+        WifiSavedProfileObservation profile)
+    {
+        string interfaceId =
+            profile.InterfaceId.Trim();
+        string profileName =
+            profile.ProfileName.Trim();
+        if (string.IsNullOrWhiteSpace(interfaceId)
+            || string.IsNullOrWhiteSpace(profileName))
+        {
+            return;
+        }
+
+        int availableIndex =
+            destination.FindIndex(network =>
+                string.Equals(
+                    network.InterfaceId,
+                    interfaceId,
+                    StringComparison.Ordinal)
+                && string.Equals(
+                    network.ProfileName,
+                    profileName,
+                    StringComparison.Ordinal));
+        if (availableIndex >= 0)
+        {
+            WifiNetworkSnapshot available =
+                destination[availableIndex];
+            if (available.IsPolicyManaged
+                != profile.IsPolicyManaged)
+            {
+                destination[availableIndex] =
+                    available with
+                    {
+                        IsPolicyManaged =
+                            profile.IsPolicyManaged
+                    };
+            }
+            return;
+        }
+
+        destination.Add(
+            new WifiNetworkSnapshot(
+                string.Join(
+                    "|",
+                    interfaceId,
+                    $"profile:{profileName}"),
+                interfaceId,
+                profileName,
+                profileName,
+                0,
+                false,
+                true,
+                true,
+                false,
+                WifiNetworkSecurityKind.Unsupported,
+                IsPolicyManaged:
+                    profile.IsPolicyManaged));
+    }
+}
+
 internal static class WifiProfileXmlBuilder
 {
     internal static bool IsCredentialValid(
@@ -1328,6 +1428,25 @@ internal sealed class NativeWifiNetworkApi :
                 {
                     return Empty(
                         MapListStatus(status));
+                }
+
+                uint profileStatus =
+                    ReadSavedProfiles(
+                        clientHandle,
+                        adapter,
+                        networks);
+                if (profileStatus
+                    == NativeMethods.ErrorSuccess)
+                {
+                    sawSuccess = true;
+                }
+                else if (profileStatus
+                         is NativeMethods.ErrorAccessDenied
+                         or NativeMethods
+                             .ErrorServiceNotActive)
+                {
+                    return Empty(
+                        MapListStatus(profileStatus));
                 }
             }
 
@@ -1832,7 +1951,7 @@ internal sealed class NativeWifiNetworkApi :
     private static uint ReadAvailableNetworks(
         IntPtr clientHandle,
         InterfaceObservation adapter,
-        ICollection<WifiNetworkSnapshot>
+        List<WifiNetworkSnapshot>
             destination)
     {
         Guid id = adapter.Id;
@@ -1939,6 +2058,71 @@ internal sealed class NativeWifiNetworkApi :
                         Convert.ToHexString(ssidBytes),
                         item.DefaultAuthAlgorithm,
                         item.DefaultCipherAlgorithm));
+            }
+
+            return NativeMethods.ErrorSuccess;
+        }
+        finally
+        {
+            NativeMethods.WlanFreeMemory(
+                listPointer);
+        }
+    }
+
+    private static uint ReadSavedProfiles(
+        IntPtr clientHandle,
+        InterfaceObservation adapter,
+        List<WifiNetworkSnapshot> destination)
+    {
+        Guid id = adapter.Id;
+        uint status =
+            NativeMethods.WlanGetProfileList(
+                clientHandle,
+                ref id,
+                IntPtr.Zero,
+                out IntPtr listPointer);
+        if (status != NativeMethods.ErrorSuccess
+            || listPointer == IntPtr.Zero)
+        {
+            return status;
+        }
+
+        try
+        {
+            uint count =
+                unchecked(
+                    (uint)Marshal.ReadInt32(
+                        listPointer));
+            int offset = sizeof(uint) * 2;
+            int itemSize =
+                Marshal.SizeOf<WlanProfileInfo>();
+            string interfaceId =
+                adapter.Id.ToString("D");
+            for (uint index = 0;
+                 index < count;
+                 index++)
+            {
+                IntPtr itemPointer =
+                    IntPtr.Add(
+                        listPointer,
+                        checked(
+                            offset
+                            + (int)index
+                            * itemSize));
+                WlanProfileInfo item =
+                    Marshal.PtrToStructure<
+                        WlanProfileInfo>(
+                        itemPointer);
+                WifiSavedProfileComposer.Merge(
+                    destination,
+                    new WifiSavedProfileObservation(
+                        interfaceId,
+                        item.ProfileName
+                        ?? string.Empty,
+                        (item.Flags
+                         & NativeMethods
+                             .ProfileGroupPolicy)
+                        != 0));
             }
 
             return NativeMethods.ErrorSuccess;
@@ -2184,6 +2368,19 @@ internal struct WlanAvailableNetwork
     internal uint Reserved;
 }
 
+[StructLayout(
+    LayoutKind.Sequential,
+    CharSet = CharSet.Unicode)]
+internal struct WlanProfileInfo
+{
+    [MarshalAs(
+        UnmanagedType.ByValTStr,
+        SizeConst = 256)]
+    internal string ProfileName;
+
+    internal uint Flags;
+}
+
 internal static class NativeMethods
 {
     internal const uint ErrorSuccess = 0;
@@ -2201,6 +2398,8 @@ internal static class NativeMethods
         0x00000001;
     internal const uint AvailableNetworkHasProfile =
         0x00000002;
+    internal const uint ProfileGroupPolicy =
+        0x00000001;
 
     [DllImport("wlanapi.dll")]
     internal static extern uint WlanOpenHandle(
@@ -2227,6 +2426,13 @@ internal static class NativeMethods
         uint flags,
         IntPtr reserved,
         out IntPtr availableNetworkList);
+
+    [DllImport("wlanapi.dll")]
+    internal static extern uint WlanGetProfileList(
+        IntPtr clientHandle,
+        ref Guid interfaceGuid,
+        IntPtr reserved,
+        out IntPtr profileList);
 
     [DllImport("wlanapi.dll")]
     internal static extern uint WlanScan(

@@ -29,6 +29,9 @@ public sealed class WifiNetworkServiceTests
             40,
             Marshal.SizeOf<
                 WlanConnectionParameters>());
+        Assert.Equal(
+            516,
+            Marshal.SizeOf<WlanProfileInfo>());
     }
 
     [Fact]
@@ -110,6 +113,163 @@ public sealed class WifiNetworkServiceTests
         Assert.Equal(
             20u,
             result.Networks[9].SignalQuality);
+    }
+
+    [Fact]
+    public async Task GetNetworks_KeepsSixSavedOutOfRangeProfilesAfterNearbyLimit()
+    {
+        var native = new FakeWifiNetworkNativeApi();
+        for (int index = 0; index < 14; index++)
+        {
+            native.Networks.Add(
+                Network(
+                    $"near-{index}",
+                    $"Nearby {index}",
+                    signal: unchecked((uint)(90 - index))));
+        }
+        for (int index = 0; index < 9; index++)
+        {
+            native.Networks.Add(
+                Network(
+                    $"saved-{index}",
+                    $"Saved {index}",
+                    hasProfile: true,
+                    connectable: false));
+        }
+        using var service = CreateService(native);
+
+        WifiNetworkListResult result =
+            await service.GetNetworksAsync(
+                false,
+                CancellationToken.None);
+
+        Assert.Equal(16, result.Networks.Count);
+        Assert.Equal(
+            10,
+            result.Networks.Count(item =>
+                !item.IsSavedOutOfRange));
+        Assert.Equal(
+            6,
+            result.Networks.Count(item =>
+                item.IsSavedOutOfRange));
+        Assert.All(
+            result.Networks.Take(10),
+            item => Assert.False(
+                item.IsSavedOutOfRange));
+    }
+
+    [Fact]
+    public void SavedOutOfRangeProfile_HasExplicitPresentation()
+    {
+        WifiNetworkSnapshot network =
+            Network(
+                "saved",
+                "Studio",
+                hasProfile: true,
+                connectable: false);
+
+        Assert.True(network.IsSavedOutOfRange);
+        Assert.Equal("离线", network.SignalText);
+        Assert.Equal(
+            "已保存 · 当前不在附近",
+            network.SecurityText);
+        Assert.True(network.CanForget);
+        Assert.False(network.CanInvokeAction);
+    }
+
+    [Fact]
+    public async Task PolicyManagedProfile_CannotBeForgotten()
+    {
+        var native = new FakeWifiNetworkNativeApi();
+        using var service = CreateService(native);
+        WifiNetworkSnapshot network =
+            Network(
+                "work",
+                "Corporate",
+                hasProfile: true,
+                connectable: false) with
+            {
+                IsPolicyManaged = true
+            };
+
+        WifiNetworkManageResult result =
+            await service.ForgetAsync(
+                network,
+                CancellationToken.None);
+
+        Assert.False(network.CanForget);
+        Assert.Contains("组织管理", network.SecurityText);
+        Assert.Equal(
+            WifiNetworkManageStatus.AccessDenied,
+            result.Status);
+        Assert.Equal(0, native.ForgetRequests);
+    }
+
+    [Fact]
+    public void SavedProfileComposer_MergesMatchingAvailableNetwork()
+    {
+        var networks = new List<WifiNetworkSnapshot>
+        {
+            Network(
+                "available",
+                "Corporate",
+                hasProfile: true)
+        };
+
+        WifiSavedProfileComposer.Merge(
+            networks,
+            new WifiSavedProfileObservation(
+                networks[0].InterfaceId,
+                "Corporate",
+                true));
+
+        Assert.Single(networks);
+        Assert.True(networks[0].IsPolicyManaged);
+        Assert.False(networks[0].CanForget);
+    }
+
+    [Fact]
+    public void SavedProfileComposer_AddsOutOfRangeProfile()
+    {
+        var networks = new List<WifiNetworkSnapshot>();
+        string interfaceId =
+            "00000000-0000-0000-0000-000000000001";
+
+        WifiSavedProfileComposer.Merge(
+            networks,
+            new WifiSavedProfileObservation(
+                interfaceId,
+                "  Home Backup  ",
+                false));
+
+        WifiNetworkSnapshot network =
+            Assert.Single(networks);
+        Assert.Equal("Home Backup", network.DisplayName);
+        Assert.Equal(interfaceId, network.InterfaceId);
+        Assert.True(network.IsSavedOutOfRange);
+        Assert.True(network.CanForget);
+    }
+
+    [Fact]
+    public void SavedProfileComposer_KeepsSameNameOnDifferentAdapters()
+    {
+        var networks = new List<WifiNetworkSnapshot>();
+
+        WifiSavedProfileComposer.Merge(
+            networks,
+            new WifiSavedProfileObservation(
+                "adapter-a",
+                "Shared",
+                false));
+        WifiSavedProfileComposer.Merge(
+            networks,
+            new WifiSavedProfileObservation(
+                "adapter-b",
+                "Shared",
+                false));
+
+        Assert.Equal(2, networks.Count);
+        Assert.NotEqual(networks[0].Key, networks[1].Key);
     }
 
     [Theory]
